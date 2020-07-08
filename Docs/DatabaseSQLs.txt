@@ -1,0 +1,233 @@
+#StackPuzzle DB 테이블 생성 SQL
+CREATE TABLE users (
+	userPk SERIAL primary key,
+	userName varchar,
+	score integer,
+	deviceName varchar,
+	ipAddress varchar,
+	firstTime timestamp
+);
+CREATE TABLE log (
+	logPk SERIAL primary key,
+	userPk integer,
+	logTime timestamp,
+	message varchar
+);
+
+#테스트용 데이터 삽입
+INSERT INTO users (userName, score, deviceName, ipAddress, firstTime) VALUES ('lee', 15, 'EFW2G32D', '192.168.10.20', now());
+INSERT INTO log (userPk, logTime, message) VALUES (1, now(), 'Test');
+
+
+
+
+
+============ Postgresql 관련 DB 명령어 정리 =============
+
+
+#접속(윈도우)
+> psql -U postgres(스키마명)
+암호 : postgres
+
+#접속(리눅스)
+> su - postgres(사용자명)
+$ psql
+
+# postgres 예약 명령어 설명
+postgres=# \l			--데이터베이스 목록을 보여준다.
+postgres=# \c dbname;	--데이터베이스 사용 선언한다.
+postgres=# \du;			--사용자 목록 표시
+postgres=# \drop database dbname;	--db 삭제
+postgres=# \drop table tablename;	--table 삭제
+postgres=# \delete from tablename;	--table안의 데이터만 삭제(테이블은 유지)
+postgres=# \i filename.sql;			--파일로 명령어 수행
+postgres=# \dt				--테이블 리스트 보기
+postgres=# \d tablename;	--테이블 정보 보기
+
+#데이터 추가, 변경, 삭제
+postgres=# INSERT INTO tablename VALUES('name', 'type', 0, now(), now());
+postgres=# UPDATE tablename SET type='image' WHERE name='sjlee';
+postgres=# DELETE FROM tablename WHERE city = 'cityname';
+
+#컬럼 추가 삭제 변경
+postgres=# ALTER TABLE tablename ADD columnname type;
+postgres=# ALTER TABLE tablename DROP columnname;
+postgres=# ALTER TABLE tablename ALTER COLUMN columnname SET DEFAULT value;
+postgres=# ALTER TABLE tablename ALTER COLUMN columnname DROP DEFAULT;
+postgres=# ALTER TABLE tablename ALTER COLUMN columnname SET NOT NULL;
+postgres=# ALTER TABLE tablename ALTER COLUMN columnname DROP NOT NULL;
+postgres=# ALTER TABLE tablename RENAME COLUMN columnname TO columnname2;
+postgres=# ALTER TABLE tablename RENAME COLUMN columnname TYPE text;
+postgres=# ALTER TABLE tablename ADD FOREIGN KEY (book_id) REFERENCES books (id);
+postgres=# ALTER TABLE tablename ADD CHECK (type='p' OR type='h');
+
+
+#테이블 조인
+SELECT * FROM weather INNER JOIN cities ON (weather.city = cities.name);
+SELECT * FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
+- 상세내용은 7.2 참고
+
+#시퀀스생성
+create sequence seqMusicID;
+
+#집계함수
+SELECT max(temp_lo) FROM weather;
+SELECT city, max(temp_lo) FROM weather GROUP BY city; --각 도시별로 low온도 최대값 출력
+SELECT city, max(temp_lo) FROM weather GROUP BY city HAVING max(temp_lo) < 40; --그중에서도 40이하만 출력
+--윈도우함수와 차이점은 윈도우함수는 그룹별 다수행 출력가능
+--집계함수 안쓸경우 그룹별 평균 구하기
+select 
+  city, (select avg(temp_lo) from weather where weather.city = wt.city) as avg 
+from 
+  (select distinct city from weather) as wt;
+
+#서브쿼리
+SELECT city FROM weather WHERE temp_lo = (SELECT max(temp_lo) FROM weather);
+
+#VIEW
+CREATE VIEW myview AS SELECT city, temp_lo, date, location FROM weather, cities WHERE city = name;
+
+#참조키
+CREATE TABLE weather (city varchar(80) references tablename(columnname) );
+
+#트랜잭션
+BEGIN;
+UPDATE accounts SET balance = balance - 100.00
+    WHERE name = 'Alice';
+-- etc etc
+COMMIT;
+
+#윈도우 함수
+SELECT depname, empno, salary,
+	   rank() OVER (PARTITION BY depname ORDER BY salary DESC)
+FROM empsalary;
+--집계함수와 차이점은 집계함수는 그룹별 단일행만 출력가능
+
+#상속
+CREATE TABLE capitals (
+  state      char(2)
+) INHERITS (cities);
+
+#프로시져 함수
+CREATE FUNCTION concat_lower_or_upper(a text, b text, uppercase boolean DEFAULT false)
+RETURNS text
+AS
+$$
+ SELECT CASE
+        WHEN $3 THEN UPPER($1 || ' ' || $2)
+        ELSE LOWER($1 || ' ' || $2)
+        END;
+$$
+LANGUAGE SQL IMMUTABLE STRICT;
+
+#데이터 타입
+SERIAL, 
+
+#CONSTRAINTS
+- CHECK, NOT NULL, UNIQUE, PRIMARY KEY, REFERENCES tablename(columnname), FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
+- ON DELETE CASCADE 삭제시 참조되는 다른 테이블 데이터까지 같이 삭제
+
+#Privileges 권한주기
+GRANT UPDATE ON tablename TO joe;
+REVOKE ALL ON tablename FROM PUBLIC;
+
+#스키마, 상속, 파티션닝(Partitioning)
+관련 내용은 5.8 - 5.10
+
+#반환값(Returning Data) - 데이터 추가, 변경, 삭제 후 변경된 항목의 id 값 바로 읽어오기
+CREATE TABLE users (firstname text, lastname text, id serial primary key);
+INSERT INTO users (firstname, lastname) VALUES ('Joe', 'Cool') RETURNING id;
+UPDATE products SET price = price * 1.10
+  WHERE price <= 99.99
+  RETURNING name, price AS new_price;
+RETURNING *;
+
+#WHERE 절 구문
+SELECT ... FROM fdt WHERE c1 > 5
+SELECT ... FROM fdt WHERE c1 IN (1, 2, 3)
+SELECT ... FROM fdt WHERE c1 IN (SELECT c1 FROM t2)
+SELECT ... FROM fdt WHERE c1 IN (SELECT c3 FROM t2 WHERE c2 = fdt.c1 + 10)
+SELECT ... FROM fdt WHERE c1 BETWEEN (SELECT c3 FROM t2 WHERE c2 = fdt.c1 + 10) AND 100
+SELECT ... FROM fdt WHERE EXISTS (SELECT c1 FROM t2 WHERE c2 > fdt.c1)
+
+
+#LIMIT, OFFSET
+SELECT * FROM tablename LIMIT 3 OFFSET 2;
+
+#UNION, EXCEPT, INTERSECT
+- 합집합, 차집합, 교집합 (먼저 있는 쿼리를 기준으로...)
+
+#WITH 구문
+WITH moved_rows AS (
+    DELETE FROM products
+    WHERE
+        "date" >= '2010-10-01' AND
+        "date" < '2010-11-01'
+    RETURNING *
+)
+INSERT INTO products_log
+SELECT * FROM moved_rows;
+
+#INDEX 생성
+CREATE INDEX indexname ON tablename (columnname);
+CREATE INDEX indexname ON tablename (columnname1, columnname2);
+
+#TRIGGER 사용
+- Data Row에 대한 변경시 발생
+- 주로 데이터 추가, 수정, 삭제시 로깅을 위한 용도
+CREATE TABLE emp (
+    empname text,
+    salary integer,
+    last_date timestamp,
+    last_user text
+);
+CREATE FUNCTION emp_stamp_func() RETURNS trigger AS $emp_stamp$
+    BEGIN
+        -- Check that empname and salary are given
+        IF NEW.empname IS NULL THEN
+            RAISE EXCEPTION 'empname cannot be null';
+        END IF;
+        IF NEW.salary IS NULL THEN
+            RAISE EXCEPTION '% cannot have null salary', NEW.empname;
+        END IF;
+
+        -- Who works for us when they must pay for it?
+        IF NEW.salary < 0 THEN
+            RAISE EXCEPTION '% cannot have a negative salary', NEW.empname;
+        END IF;
+
+        -- Remember who changed the payroll when
+        NEW.last_date := current_timestamp;
+        NEW.last_user := current_user;
+        RETURN NEW;
+    END;
+$emp_stamp$ LANGUAGE plpgsql;
+CREATE TRIGGER emp_stamp BEFORE INSERT OR UPDATE ON emp
+    FOR EACH ROW EXECUTE FUNCTION emp_stamp_func();
+
+#database 기본 저장 위치
+/usr/local/pgsql/data
+/var/lib/pgsql/data
+$ initdb -D /usr/local/pgsql/data //데이터베이스 초기화
+
+
+
+
+
+#postgresql 설치 및 실행과 관련된 기본 리눅스 폴더 경로
+/usr/pgsql-9.3/bin
+/usr/lib/systemd/system/postgresql-9.3.service
+/var/lib/pgsql/9.3/data
+
+
+
+
+
+
+
+
+
+
+
+
+
