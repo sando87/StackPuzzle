@@ -10,7 +10,7 @@ namespace Consolation
     ///
     /// Version: 1.1.2
     /// </summary>
-    class Console : MonoBehaviour
+    class ConsoleInGame : MonoBehaviour
     {
         #region Inspector Settings
 
