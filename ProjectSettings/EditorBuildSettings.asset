@@ -6,6 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Main.unity
-    guid: ae7c400441a05ff418772e9f4a26e49f
-  m_configObjects: {}
+    path: Assets/JellyGarden/Scenes/main.unity
+    guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/JellyGarden/Scenes/game.unity
+    guid: 00000000000000000000000000000000
