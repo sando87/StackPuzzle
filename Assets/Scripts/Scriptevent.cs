@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Scriptevent : MonoBehaviour
 {
-    void OnClickNewGame()
+    public void OnClickNewGame()
     {
         Debug.Log("새 게임");
     }
