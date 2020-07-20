@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProductColor { Blue, Gray, Purple, Red, Yellow };
+public enum ProductColor { Blue, Green, Orange, Purple, Red, Yellow };
 
 public class Product : MonoBehaviour
 {
-    private ProductColor mColor;
     private bool mLocked;
     private Frame mParent;
+    public ProductColor mColor;
     public Animator mAnimator;
+
+    public bool Locked { get { return mLocked; } }
 
     // Start is called before the first frame update
     void Start()
@@ -25,8 +27,11 @@ public class Product : MonoBehaviour
     #region MatchCycle
     public void StartSwipe(Frame target)
     {
+        if (mLocked)
+            return;
+
         mLocked = true;
-        mAnimator.SetTrigger("swipe");
+        //mAnimator.SetTrigger("swipe");
         StartCoroutine(AnimateSwipe(target));
     }
     IEnumerator AnimateSwipe(Frame target)
@@ -37,6 +42,7 @@ public class Product : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, dest, ProductManager.GridSize * Time.deltaTime);
             yield return null;
         }
+        transform.position = dest;
         EndSwipe(target);
     }
     void EndSwipe(Frame target)
@@ -44,7 +50,7 @@ public class Product : MonoBehaviour
         transform.SetParent(target.transform);
         mParent = target;
         mLocked = false;
-        DoMatch();
+        StartCoroutine(DoMatch());
     }
     void StartDestroy()
     {
@@ -61,12 +67,13 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         mParent = parent;
+        transform.localScale = Vector3.zero;
         mAnimator.SetTrigger("create");
     }
     void EndCreate()
     {
         mLocked = false;
-        DoMatch();
+        StartCoroutine(DoMatch());
     }
     #endregion
 
@@ -74,6 +81,9 @@ public class Product : MonoBehaviour
     void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
         if (mLocked || mColor != color)
+            return;
+
+        if (products.Contains(this))
             return;
 
         products.Add(this);
@@ -92,16 +102,17 @@ public class Product : MonoBehaviour
         if (nearProduct != null)
             nearProduct.SearchMatchedProducts(products, color);
     }
-    void DoMatch()
+    IEnumerator DoMatch()
     {
+        yield return null;
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
-        if (matchList.Count < ProductManager.MatchCount)
-            return;
-
-        foreach (Product pro in matchList)
+        if (matchList.Count >= ProductManager.MatchCount)
         {
-            pro.StartDestroy();
+            foreach (Product pro in matchList)
+            {
+                pro.StartDestroy();
+            }
         }
     }
     public Product Left()

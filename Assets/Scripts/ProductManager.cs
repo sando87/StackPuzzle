@@ -8,9 +8,9 @@ public class ProductManager : MonoBehaviour
     public static ProductManager Inst = null;
 
     public const int MatchCount = 3;
-    public const int SwipeDetectRange = 1;
-    public const int XCount = 10;
-    public const int YCount = 10;
+    public const float SwipeDetectRange = 0.1f;
+    public const int XCount = 5;
+    public const int YCount = 5;
     public const int GridSize = 1;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab;
@@ -52,7 +52,7 @@ public class ProductManager : MonoBehaviour
     public void CreateNewProduct(Frame parent)
     {
         int typeIdx = Random.Range(0, ProductPrefabs.Length);
-        GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], new Vector3(0, 0, 0), Quaternion.identity, parent.transform);
+        GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         obj.GetComponent<Product>().StartCreate(parent);
     }
     void CheckSwipe()
@@ -87,7 +87,7 @@ public class ProductManager : MonoBehaviour
                     if (_currentSwipe.x > 0 && _currentSwipe.y > -0.5f && _currentSwipe.y < 0.5f)
                         target = mDownProduct.Right();
 
-                    if (target != null)
+                    if (target != null && !mDownProduct.Locked && !target.Locked)
                     {
                         mDownProduct.StartSwipe(target.GetComponentInParent<Frame>());
                         target.StartSwipe(mDownProduct.GetComponentInParent<Frame>());
