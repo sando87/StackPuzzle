@@ -1,0 +1,156 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum ProductColor { Blue, Gray, Purple, Red, Yellow };
+
+public class Product : MonoBehaviour
+{
+    private ProductColor mColor;
+    private bool mLocked;
+    private Frame mParent;
+    public Animator mAnimator;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+    }
+
+
+    #region MatchCycle
+    public void StartSwipe(Frame target)
+    {
+        mLocked = true;
+        mAnimator.SetTrigger("swipe");
+        StartCoroutine(AnimateSwipe(target));
+    }
+    IEnumerator AnimateSwipe(Frame target)
+    {
+        Vector3 dest = target.transform.position;
+        while ((transform.position - dest).magnitude > 0.05f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, dest, ProductManager.GridSize * Time.deltaTime);
+            yield return null;
+        }
+        EndSwipe(target);
+    }
+    void EndSwipe(Frame target)
+    {
+        transform.SetParent(target.transform);
+        mParent = target;
+        mLocked = false;
+        DoMatch();
+    }
+    void StartDestroy()
+    {
+        mLocked = true;
+        mAnimator.SetTrigger("destroy");
+    }
+    void EndDestroy()
+    {
+        mLocked = false;
+        ProductManager.Inst.CreateNewProduct(mParent);
+        Destroy(this);
+    }
+    public void StartCreate(Frame parent)
+    {
+        mLocked = true;
+        mParent = parent;
+        mAnimator.SetTrigger("create");
+    }
+    void EndCreate()
+    {
+        mLocked = false;
+        DoMatch();
+    }
+    #endregion
+
+    #region Support Functions
+    void SearchMatchedProducts(List<Product> products, ProductColor color)
+    {
+        if (mLocked || mColor != color)
+            return;
+
+        products.Add(this);
+
+        Product nearProduct = null;
+        nearProduct = Left();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Right();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Up();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Down();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(products, color);
+    }
+    void DoMatch()
+    {
+        List<Product> matchList = new List<Product>();
+        SearchMatchedProducts(matchList, mColor);
+        if (matchList.Count < ProductManager.MatchCount)
+            return;
+
+        foreach (Product pro in matchList)
+        {
+            pro.StartDestroy();
+        }
+    }
+    public Product Left()
+    {
+        Frame nearFrame = mParent.Left();
+        if (nearFrame == null)
+            return null;
+
+        Product pro = nearFrame.GetComponentInChildren<Product>();
+        if (pro == null)
+            return null;
+
+        return pro;
+    }
+    public Product Right()
+    {
+        Frame nearFrame = mParent.Right();
+        if (nearFrame == null)
+            return null;
+
+        Product pro = nearFrame.GetComponentInChildren<Product>();
+        if (pro == null)
+            return null;
+
+        return pro;
+    }
+    public Product Up()
+    {
+        Frame nearFrame = mParent.Up();
+        if (nearFrame == null)
+            return null;
+
+        Product pro = nearFrame.GetComponentInChildren<Product>();
+        if (pro == null)
+            return null;
+
+        return pro;
+    }
+    public Product Down()
+    {
+        Frame nearFrame = mParent.Down();
+        if (nearFrame == null)
+            return null;
+
+        Product pro = nearFrame.GetComponentInChildren<Product>();
+        if (pro == null)
+            return null;
+
+        return pro;
+    }
+    #endregion
+}
