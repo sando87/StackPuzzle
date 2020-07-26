@@ -67,7 +67,8 @@ public class InGameManager : MonoBehaviour
         {
             for (int x = 0; x < info.RowCount; x++)
             {
-                GameObject frameObj = GameObject.Instantiate(FramePrefab, new Vector3(GridSize * x, GridSize * y, 0), Quaternion.identity, GameField.transform);
+                GameObject frameObj = GameObject.Instantiate(FramePrefab, GameField.transform, false);
+                frameObj.transform.localPosition = new Vector3(GridSize * x, GridSize * y, 0);
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(x, y, this);
                 CreateNewProduct(mFrames[x, y]);
@@ -115,6 +116,7 @@ public class InGameManager : MonoBehaviour
     {
         int typeIdx = Random.Range(0, ProductPrefabs.Length);
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
+        obj.transform.localPosition = new Vector3(0, 0, -1);
         obj.GetComponent<Product>().SetParentFrame(parent);
     }
     void CheckSwipe()

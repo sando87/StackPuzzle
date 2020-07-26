@@ -18,7 +18,6 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         transform.localScale = Vector3.zero;
-        mAnimator.SetTrigger("create");
     }
 
     // Update is called once per frame
@@ -40,6 +39,7 @@ public class Product : MonoBehaviour
     IEnumerator AnimateSwipe(Frame target)
     {
         Vector3 dest = target.transform.position;
+        dest.z = transform.position.z;
         while ((transform.position - dest).magnitude > 0.05f)
         {
             transform.position = Vector3.MoveTowards(transform.position, dest, InGameManager.GridSize * Time.deltaTime);
@@ -65,7 +65,7 @@ public class Product : MonoBehaviour
         mLocked = false;
         InGameManager.Inst.Score += 10;
         InGameManager.Inst.CreateNewProduct(mParent);
-        Destroy(this);
+        Destroy(gameObject);
     }
     public void SetParentFrame(Frame parent)
     {
