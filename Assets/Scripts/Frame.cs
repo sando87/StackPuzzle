@@ -20,7 +20,7 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(int idxX, int idxY, ProductManager pm)
+    public void Initialize(int idxX, int idxY, InGameManager pm)
     {
         mIndexX = idxX;
         mIndexY = idxY;
@@ -28,19 +28,19 @@ public class Frame : MonoBehaviour
 
     public Frame Left()
     {
-        return mIndexX <= 0 ? null : ProductManager.Inst.GetFrame(mIndexX - 1, mIndexY);
+        return mIndexX <= 0 ? null : InGameManager.Inst.GetFrame(mIndexX - 1, mIndexY);
     }
     public Frame Right()
     {
-        return ProductManager.XCount - 1 <= mIndexX ? null : ProductManager.Inst.GetFrame(mIndexX + 1, mIndexY);
+        return InGameManager.Inst.XCount - 1 <= mIndexX ? null : InGameManager.Inst.GetFrame(mIndexX + 1, mIndexY);
     }
     public Frame Down()
     {
-        return mIndexY <= 0 ? null : ProductManager.Inst.GetFrame(mIndexX, mIndexY - 1);
+        return mIndexY <= 0 ? null : InGameManager.Inst.GetFrame(mIndexX, mIndexY - 1);
     }
     public Frame Up()
     {
-        return ProductManager.YCount - 1 <= mIndexY ? null : ProductManager.Inst.GetFrame(mIndexX, mIndexY + 1);
+        return InGameManager.Inst.YCount - 1 <= mIndexY ? null : InGameManager.Inst.GetFrame(mIndexX, mIndexY + 1);
     }
 
 }

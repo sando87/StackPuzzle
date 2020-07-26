@@ -11,11 +11,14 @@ public class Product : MonoBehaviour
     public ProductColor mColor;
     public Animator mAnimator;
 
-    public bool Locked { get { return mLocked; } }
+    public bool IsLocked() { return mLocked; }
 
     // Start is called before the first frame update
     void Start()
     {
+        mLocked = true;
+        transform.localScale = Vector3.zero;
+        mAnimator.SetTrigger("create");
     }
 
     // Update is called once per frame
@@ -39,7 +42,7 @@ public class Product : MonoBehaviour
         Vector3 dest = target.transform.position;
         while ((transform.position - dest).magnitude > 0.05f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, ProductManager.GridSize * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, dest, InGameManager.GridSize * Time.deltaTime);
             yield return null;
         }
         transform.position = dest;
@@ -60,15 +63,13 @@ public class Product : MonoBehaviour
     void EndDestroy()
     {
         mLocked = false;
-        ProductManager.Inst.CreateNewProduct(mParent);
+        InGameManager.Inst.Score += 10;
+        InGameManager.Inst.CreateNewProduct(mParent);
         Destroy(this);
     }
-    public void StartCreate(Frame parent)
+    public void SetParentFrame(Frame parent)
     {
-        mLocked = true;
         mParent = parent;
-        transform.localScale = Vector3.zero;
-        mAnimator.SetTrigger("create");
     }
     void EndCreate()
     {
@@ -107,7 +108,7 @@ public class Product : MonoBehaviour
         yield return null;
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
-        if (matchList.Count >= ProductManager.MatchCount)
+        if (matchList.Count >= InGameManager.MatchCount)
         {
             foreach (Product pro in matchList)
             {
