@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,16 +34,19 @@ public class Product : MonoBehaviour
             return;
 
         mLocked = true;
-        //mAnimator.SetTrigger("swipe");
+        mAnimator.SetTrigger("swap");
         StartCoroutine(AnimateSwipe(target));
     }
     IEnumerator AnimateSwipe(Frame target)
     {
+        int frameCount = 20;
         Vector3 dest = target.transform.position;
         dest.z = transform.position.z;
-        while ((transform.position - dest).magnitude > 0.05f)
+        float distPerFrame = (float)InGameManager.GridSize / ((float)frameCount * Time.deltaTime);
+        while (frameCount > 0)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, InGameManager.GridSize * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame * Time.deltaTime);
+            frameCount--;
             yield return null;
         }
         transform.position = dest;
