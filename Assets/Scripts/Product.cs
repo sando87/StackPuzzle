@@ -9,8 +9,10 @@ public class Product : MonoBehaviour
 {
     private bool mLocked;
     private Frame mParent;
+    private Frame mDropTarget;
     public ProductColor mColor;
     public Animator mAnimator;
+    public Product mComboProduct;
 
     public bool IsLocked() { return mLocked; }
 
@@ -59,17 +61,24 @@ public class Product : MonoBehaviour
         mLocked = false;
         StartCoroutine(DoMatch());
     }
-    void StartDestroy()
+    IEnumerator StartDestroy()
     {
         mLocked = true;
+        yield return null;
         mAnimator.SetTrigger("destroy");
+        mComboProduct = FindComboableProduct();
+        if (mComboProduct != null)
+            mComboProduct.StartDrop(mParent);
     }
     void EndDestroy()
     {
         mLocked = false;
-        InGameManager.Inst.Score += 10;
-        InGameManager.Inst.CreateNewProduct(mParent);
         Destroy(gameObject);
+        InGameManager.Inst.Score += 10;
+
+        if(mComboProduct == null)
+            InGameManager.Inst.CreateNewProduct(mParent);
+        
     }
     public void SetParentFrame(Frame parent)
     {
@@ -78,6 +87,25 @@ public class Product : MonoBehaviour
     void EndCreate()
     {
         mLocked = false;
+        StartCoroutine(DoMatch());
+    }
+    void StartDrop(Frame frame)
+    {
+        mLocked = true;
+        mAnimator.SetTrigger("drop");
+        mDropTarget = frame;
+    }
+    void MidDrop()
+    {
+        //instantiateBeamUp Effect
+        transform.position = mDropTarget.transform.position;
+        transform.SetParent(mDropTarget.transform);
+        mParent = mDropTarget;
+    }
+    void EndDrop()
+    {
+        mLocked = false;
+        mDropTarget = null;
         StartCoroutine(DoMatch());
     }
     #endregion
@@ -116,9 +144,39 @@ public class Product : MonoBehaviour
         {
             foreach (Product pro in matchList)
             {
-                pro.StartDestroy();
+                StartCoroutine(pro.StartDestroy());
             }
         }
+    }
+    Product FindComboableProduct()
+    {
+        Product downPro = Down();
+        if (downPro != null && downPro.IsLocked())
+            return null;
+
+        Product curPro = Up();
+        while (curPro != null && curPro.IsLocked())
+            curPro = curPro.Up();
+
+        if (curPro == null)
+            return curPro;
+
+        List<Product> matchList = new List<Product>();
+        Product nearProduct = null;
+        nearProduct = Left();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+        nearProduct = Right();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+        nearProduct = Down();
+        if (nearProduct != null)
+            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+
+        if (matchList.Count < InGameManager.MatchCount - 1)
+            return null;
+
+        return curPro;
     }
     public Product Left()
     {
