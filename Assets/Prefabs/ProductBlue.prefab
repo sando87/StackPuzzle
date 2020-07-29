@@ -117,11 +117,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mColor: 0
   mAnimator: {fileID: 6110258088731720928}
-  mSprites:
-  - {fileID: 21300000, guid: 5d58cba78b4922a4388f365cc6a47a78, type: 3}
-  - {fileID: 21300000, guid: a66945fc4baf95c498f4ff7911ba18da, type: 3}
-  - {fileID: 21300000, guid: 9459a4f4e80827544b3b9155f3069c9c, type: 3}
-  - {fileID: 21300000, guid: bf26f55954b2ac0479ab382c95c448ef, type: 3}
+  mComboProduct: {fileID: 0}
+  mBeamUpEffect: {fileID: 125942, guid: 1e41a3ea739b02b44b622284bb585789, type: 3}
 --- !u!61 &5074820504115643339
 BoxCollider2D:
   m_ObjectHideFlags: 0

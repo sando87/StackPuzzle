@@ -13,6 +13,7 @@ public class Product : MonoBehaviour
     public ProductColor mColor;
     public Animator mAnimator;
     public Product mComboProduct;
+    public GameObject mBeamUpEffect;
 
     public bool IsLocked() { return mLocked; }
 
@@ -97,7 +98,10 @@ public class Product : MonoBehaviour
     }
     void MidDrop()
     {
-        //instantiateBeamUp Effect
+        Vector3 midPos = (mParent.transform.position + mDropTarget.transform.position) * 0.5f;
+        midPos.z = -2;
+        GameObject.Instantiate(mBeamUpEffect, midPos, Quaternion.identity, transform);
+        InGameManager.Inst.CreateNewProduct(mParent);
         transform.position = mDropTarget.transform.position;
         transform.SetParent(mDropTarget.transform);
         mParent = mDropTarget;

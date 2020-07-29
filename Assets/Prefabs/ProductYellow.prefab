@@ -117,6 +117,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mColor: 5
   mAnimator: {fileID: 4850324064398543570}
+  mComboProduct: {fileID: 0}
+  mBeamUpEffect: {fileID: 185082, guid: 7ba5e319299a7a540823eb3edb0d9cc9, type: 3}
 --- !u!61 &1056479758494351103
 BoxCollider2D:
   m_ObjectHideFlags: 0
