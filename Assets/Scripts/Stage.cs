@@ -12,32 +12,16 @@ public class Stage : MonoBehaviour
     void Start()
     {
         OriginalScale = transform.localScale;
-    }
-
-    private void OnEnable()
-    {
-        UpdateStageInfo();
+        mStageInfo = StageInfo.Load(Number);
+        if (mStageInfo == null)
+            gameObject.SetActive(false);
+        else
+            UpdateStageInfo();
     }
 
     #region Properties
     public int Number { get { return int.Parse(name.Replace("Level", "")); } }
     public bool Locked { get { return transform.Find("Lock").gameObject.activeSelf; } }
-    public Stage NextStage
-    {
-        get
-        {
-            Transform next = transform.parent.Find("Level" + (Number + 1));
-            return next == null ? null : next.GetComponent<Stage>();
-        }
-    }
-    public Stage PrevStage
-    {
-        get
-        {
-            Transform next = transform.parent.Find("Level" + (Number - 1));
-            return next == null ? null : next.GetComponent<Stage>();
-        }
-    }
     #endregion
 
     #region Mouse/Touch Event
@@ -68,12 +52,23 @@ public class Stage : MonoBehaviour
     }
     #endregion
 
+    public void UpdateStarCount(int starCount)
+    {
+        mStageInfo.StarCount = starCount;
+        transform.Find("Stars/Separated/Star1").gameObject.SetActive(mStageInfo.StarCount >= 1 ? true : false);
+        transform.Find("Stars/Separated/Star2").gameObject.SetActive(mStageInfo.StarCount >= 2 ? true : false);
+        transform.Find("Stars/Separated/Star3").gameObject.SetActive(mStageInfo.StarCount >= 3 ? true : false);
+        StageInfo.Save(mStageInfo);
+    }
+    public void UnLock()
+    {
+        mStageInfo.IsLocked = false;
+        transform.Find("Lock").gameObject.SetActive(mStageInfo.IsLocked);
+        GetComponent<BoxCollider2D>().enabled = !mStageInfo.IsLocked;
+        StageInfo.Save(mStageInfo);
+    }
     private void UpdateStageInfo()
     {
-        mStageInfo = StageInfo.Load(Number);
-        if (mStageInfo == null)
-            return;
-
         transform.Find("Number").GetComponentInChildren<Text>().text = Number.ToString();
         transform.Find("Stars/Separated/Star1").gameObject.SetActive(mStageInfo.StarCount >= 1 ? true : false);
         transform.Find("Stars/Separated/Star2").gameObject.SetActive(mStageInfo.StarCount >= 2 ? true : false);

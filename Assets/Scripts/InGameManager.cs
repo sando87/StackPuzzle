@@ -1,11 +1,21 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class InGameManager : MonoBehaviour
 {
-    public static InGameManager Inst = null;
+    private static InGameManager mInst = null;
+    public static InGameManager Inst
+    {
+        get
+        {
+            if (mInst == null)
+                mInst = GameObject.Find("WorldSpace").transform.Find("GameField").GetComponent<InGameManager>();
+            return mInst;
+        }
+    }
 
     public const int MatchCount = 3;
     public const float SwipeDetectRange = 0.1f;
@@ -17,50 +27,33 @@ public class InGameManager : MonoBehaviour
     private Product mDownProduct = null;
     private Vector3 mDownPosition;
     private StageInfo mStageInfo;
+    private bool mIsRunning;
 
-    public Text UIScore;
-    public Image UIBar;
-    public Text UILimit;
-    public GameObject Star1;
-    public GameObject Star2;
-    public GameObject Star3;
     public GameObject GameField;
 
-    void Awake()
-    {
-        Inst = this;
-        enabled = false;
-    }
-
-    void Start()
-    {
-
-    }
+    public Action<int, int> EventOnChange;
+    public Action<bool> EventOnFinish;
 
     void Update()
     {
-        if(IsRunning())
-            CheckSwipe();
+        if (!mIsRunning)
+            return;
+
+        if (IsFinished())
+            return;
+
+        CheckSwipe();
     }
 
-    public Frame GetFrame(int x, int y)
+    public void StartGame(StageInfo info)
     {
-        return mFrames[x, y];
-    }
+        ResetGame();
 
-    public void Init(StageInfo info)
-    {
+        gameObject.SetActive(true);
+        mIsRunning = true;
         mStageInfo = info;
-
-        UIBar.fillAmount = 0;
-        Star1.SetActive(false);
-        Star2.SetActive(false);
-        Star3.SetActive(false);
-
-        UIScore.text = "0";
-        UILimit.text = info.MoveLimit.ToString();
-        transform.Find("Canvas/Panel/Panel/Target").GetComponent<Text>().text = info.GoalScore.ToString();
-        transform.Find("Canvas/BottomPanel/Panel/Level").GetComponent<Text>().text = info.Num.ToString();
+        CurrentScore = 0;
+        RemainLimit = info.MoveLimit;
 
         mFrames = new Frame[info.RowCount, info.ColumnCount];
         for (int y = 0; y < info.ColumnCount; y++)
@@ -75,46 +68,57 @@ public class InGameManager : MonoBehaviour
             }
         }
     }
+    public void PauseGame()
+    {
+        mIsRunning = false;
+    }
+    public void ResumeGame()
+    {
+        mIsRunning = true;
+    }
+    public void FinishGame(bool success)
+    {
+        ResetGame();
+        EventOnFinish?.Invoke(success);
+        gameObject.SetActive(false);
+    }
+    public void ResetGame()
+    {
+        int cnt = GameField.transform.childCount;
+        for (int i = 0; i < cnt; ++i)
+            Destroy(GameField.transform.GetChild(i).gameObject);
+
+        mFrames = null;
+        mDownProduct = null;
+        mDownPosition = Vector3.zero;
+        mStageInfo = null;
+        EventOnChange = null;
+        mIsRunning = false;
+        CurrentScore = 0;
+        RemainLimit = 0;
+    }
     public int XCount { get { return mStageInfo.RowCount; } }
     public int YCount { get { return mStageInfo.ColumnCount; } }
-    public int Limit
+    public int CurrentScore { get; set; }
+    public int RemainLimit { get; set; }
+
+    public Frame GetFrame(int x, int y)
     {
-        get { return int.Parse(UILimit.text); }
-        set { if(value >= 0) UILimit.text = value.ToString(); }
+        return mFrames[x, y];
     }
-    public int Score
+    public void TakeScore(int score)
     {
-        get { return int.Parse(UIScore.text); }
-        set
-        {
-            UIScore.text = value.ToString();
-            UIBar.fillAmount = (float)value / (float)mStageInfo.GoalScore;
-            Star1.SetActive(UIBar.fillAmount > 0.3f);
-            Star2.SetActive(UIBar.fillAmount > 0.6f);
-            Star3.SetActive(UIBar.fillAmount > 0.9f);
-        }
+        CurrentScore += score;
+        EventOnChange?.Invoke(CurrentScore, RemainLimit);
     }
-    public bool Show
+    void RemoveLimit()
     {
-        get
-        {
-            return transform.Find("Canvas").gameObject.activeSelf
-            && transform.Find("CanvasBack").gameObject.activeSelf
-            && transform.Find("GameField").gameObject.activeSelf
-            && enabled;
-        }
-        set
-        {
-            transform.Find("Canvas").gameObject.SetActive(value);
-            transform.Find("CanvasBack").gameObject.SetActive(value);
-            transform.Find("GameField").gameObject.SetActive(value);
-            enabled = value;
-        }
-        
+        RemainLimit--;
+        EventOnChange?.Invoke(CurrentScore, RemainLimit);
     }
     public void CreateNewProduct(Frame parent)
     {
-        int typeIdx = Random.Range(0, ProductPrefabs.Length);
+        int typeIdx = UnityEngine.Random.Range(0, ProductPrefabs.Length);
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         obj.transform.localPosition = new Vector3(0, 0, -1);
         obj.GetComponent<Product>().SetParentFrame(parent);
@@ -153,7 +157,7 @@ public class InGameManager : MonoBehaviour
 
                     if (target != null && !mDownProduct.IsLocked() && !target.IsLocked())
                     {
-                        Limit--;
+                        RemoveLimit();
                         mDownProduct.StartSwipe(target.GetComponentInParent<Frame>());
                         target.StartSwipe(mDownProduct.GetComponentInParent<Frame>());
                     }
@@ -167,9 +171,9 @@ public class InGameManager : MonoBehaviour
             mDownProduct = null;
         }
     }
-    int GetStarCount()
+    public int GetStarCount()
     {
-        float rate = (float)Score / (float)mStageInfo.GoalScore;
+        float rate = (float)CurrentScore / (float)mStageInfo.GoalScore;
         if (rate < 0.3f)
             return 0;
         else if (rate < 0.6f)
@@ -178,41 +182,30 @@ public class InGameManager : MonoBehaviour
             return 2;
         return 3;
     }
-    bool IsRunning()
-    {
-        if (Score >= mStageInfo.GoalScore)
-        {
-            mStageInfo.StarCount = GetStarCount();
-            StageInfo.Save(mStageInfo);
 
-            StageInfo info = StageInfo.Load(mStageInfo.Num + 1);
-            info.IsLocked = false;
-            StageInfo.Save(info);
-            ResetField();
-            MenuComplete.PopUp(mStageInfo.Num, mStageInfo.StarCount, Score);
+    bool IsFinished()
+    {
+        if (CurrentScore >= mStageInfo.GoalScore)
+        {
+            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
+            currentStage.UpdateStarCount(GetStarCount());
+
+            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
+            if(nextStage != null)
+                nextStage.UnLock();
             
-            Show = false;
+            MenuComplete.PopUp(mStageInfo.Num, GetStarCount(), CurrentScore);
+
+            FinishGame(true);
             return false;
         }
-        else if(Limit <= 0)
+        else if(RemainLimit <= 0)
         {
-            mStageInfo.StarCount = GetStarCount();
-            StageInfo.Save(mStageInfo);
-            ResetField();
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, Score);
-            Show = false;
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, CurrentScore);
+            FinishGame(false);
             return false;
         }
         return true;
-    }
-    void ResetField()
-    {
-        int cnt = GameField.transform.childCount;
-        for(int i = 0; i < cnt; ++i)
-        {
-            Destroy(GameField.transform.GetChild(i).gameObject);
-        }
-        mFrames = null;
     }
 
 }

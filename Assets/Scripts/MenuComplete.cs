@@ -3,22 +3,32 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MenuFailed : MonoBehaviour
+public class MenuComplete : MonoBehaviour
 {
+    private const string UIObjName = "MenuComplete";
     public GameObject StageScreen;
-    public static void PopUp(int level, int target, int score)
+
+    public Image Star1;
+    public Image Star2;
+    public Image Star3;
+    public Text Score;
+    public Text StageLevel;
+
+    public static void PopUp(int level, int starCount, int score)
     {
-        GameObject menuFailed = GameObject.Find("PopUpMenu").transform.Find("MenuFailed").gameObject;
+        GameObject menuComp = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
 
-        MenuFailed menu = menuFailed.GetComponent<MenuFailed>();
-        menu.transform.Find("Image/Score").GetComponent<Text>().text = score.ToString();
-        menu.transform.Find("Image/Level").GetComponent<Text>().text = level.ToString();
-        menu.transform.Find("Image/Goal").GetComponent<Text>().text = target.ToString();
+        MenuComplete menu = menuComp.GetComponent<MenuComplete>();
+        menu.Star1.gameObject.SetActive(starCount >= 1);
+        menu.Star2.gameObject.SetActive(starCount >= 2);
+        menu.Star3.gameObject.SetActive(starCount >= 3);
+        menu.Score.text = score.ToString();
+        menu.StageLevel.text = level.ToString();
 
-        menuFailed.SetActive(true);
+        menuComp.SetActive(true);
     }
 
-    public void OnAgain()
+    public void OnNext()
     {
         gameObject.SetActive(false);
         StageScreen.SetActive(true);

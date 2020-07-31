@@ -15,6 +15,10 @@ public class Product : MonoBehaviour
     public Product mComboProduct;
     public GameObject mBeamUpEffect;
 
+    public SpriteRenderer Renderer;
+    public Sprite[] Images;
+    public int ImageIndex;
+
     public bool IsLocked() { return mLocked; }
 
     // Start is called before the first frame update
@@ -27,6 +31,7 @@ public class Product : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Renderer.sprite = Images[ImageIndex];
     }
 
 
@@ -75,7 +80,7 @@ public class Product : MonoBehaviour
     {
         mLocked = false;
         Destroy(gameObject);
-        InGameManager.Inst.Score += 10;
+        InGameManager.Inst.CurrentScore += 10;
 
         if(mComboProduct == null)
             InGameManager.Inst.CreateNewProduct(mParent);

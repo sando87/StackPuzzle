@@ -5,22 +5,29 @@ using UnityEngine.UI;
 
 public class MenuPlay : MonoBehaviour
 {
+    private const string UIObjName = "MenuPlay";
     private StageInfo mStageInfo;
+
+    public Text StageLevel;
+    public Text TargetScore;
+    public Image Star1;
+    public Image Star2;
+    public Image Star3;
 
     public static void PopUp(StageInfo info)
     {
-        GameObject menuPlay = GameObject.Find("PopUpMenu").transform.Find("MenuPlay").gameObject;
+        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.GetComponent<MenuPlay>().UpdateUIState(info);
         menuPlay.SetActive(true);
     }
     public void UpdateUIState(StageInfo info)
     {
         mStageInfo = info;
-        transform.Find("Image/Level").GetComponent<Text>().text = info.Num.ToString();
-        transform.Find("Image/Star1").gameObject.SetActive(info.StarCount >= 1);
-        transform.Find("Image/Star2").gameObject.SetActive(info.StarCount >= 2);
-        transform.Find("Image/Star3").gameObject.SetActive(info.StarCount >= 3);
-        transform.Find("Image/Score").GetComponent<Text>().text = info.GoalScore.ToString();
+        StageLevel.text = info.Num.ToString();
+        Star1.gameObject.SetActive(info.StarCount >= 1);
+        Star2.gameObject.SetActive(info.StarCount >= 2);
+        Star3.gameObject.SetActive(info.StarCount >= 3);
+        TargetScore.text = info.GoalScore.ToString();
     }
 
     public void OnClose()
@@ -30,8 +37,7 @@ public class MenuPlay : MonoBehaviour
 
     public void OnPlay()
     {
-        InGameManager.Inst.Init(mStageInfo);
-        InGameManager.Inst.Show = true;
+        InGameManager.Inst.StartGame(mStageInfo);
         GameObject.Find("StageScreen").SetActive(false);
         gameObject.SetActive(false);
     }
