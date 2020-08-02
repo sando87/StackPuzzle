@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class MenuFailed : MonoBehaviour
 {
-    private const string UIObjName = "MenuFailed";
-    public GameObject StageScreen;
+    private const string UIObjName = "CanvasPopUp/MenuFailed";
 
     public Text Score;
     public Text TargetScore;
@@ -27,6 +26,7 @@ public class MenuFailed : MonoBehaviour
     public void OnAgain()
     {
         gameObject.SetActive(false);
-        StageScreen.SetActive(true);
+        MenuStages.PopUp();
+        StageManager.Inst.Activate(true);
     }
 }

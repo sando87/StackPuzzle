@@ -12,7 +12,7 @@ public class InGameManager : MonoBehaviour
         get
         {
             if (mInst == null)
-                mInst = GameObject.Find("WorldSpace").transform.Find("GameField").GetComponent<InGameManager>();
+                mInst = GameObject.Find("WorldSpace").transform.Find("GameScreen").GetComponent<InGameManager>();
             return mInst;
         }
     }
@@ -197,15 +197,15 @@ public class InGameManager : MonoBehaviour
             MenuComplete.PopUp(mStageInfo.Num, GetStarCount(), CurrentScore);
 
             FinishGame(true);
-            return false;
+            return true;
         }
         else if(RemainLimit <= 0)
         {
             MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, CurrentScore);
             FinishGame(false);
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
 }

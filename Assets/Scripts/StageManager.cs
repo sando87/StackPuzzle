@@ -11,7 +11,7 @@ public class StageManager : MonoBehaviour
         get
         {
             if (mInst == null)
-                mInst = GameObject.Find("WorldSpace").transform.Find("StageManager").GetComponent<StageManager>();
+                mInst = GameObject.Find("WorldSpace").transform.Find("StageScreen").GetComponent<StageManager>();
             return mInst;
         }
     }
@@ -23,7 +23,7 @@ public class StageManager : MonoBehaviour
 
     public Stage GetStage(int stageNumber)
     {
-        Transform stage = transform.Find("Level" + stageNumber);
+        Transform stage = transform.Find("Levels/Level" + stageNumber);
         return stage == null ? null : stage.GetComponent<Stage>();
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuPlay : MonoBehaviour
 {
-    private const string UIObjName = "MenuPlay";
+    private const string UIObjName = "CanvasPopUp/MenuPlay";
     private StageInfo mStageInfo;
 
     public Text StageLevel;
@@ -38,7 +38,9 @@ public class MenuPlay : MonoBehaviour
     public void OnPlay()
     {
         InGameManager.Inst.StartGame(mStageInfo);
-        GameObject.Find("StageScreen").SetActive(false);
+        MenuInGame.PopUp(mStageInfo);
+        MenuStages.Hide();
+        StageManager.Inst.Activate(false);
         gameObject.SetActive(false);
     }
 }

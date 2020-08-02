@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7992746763997099741}
   - component: {fileID: 7481293086429072559}
-  - component: {fileID: 2048271984817546250}
   - component: {fileID: 7705169335111696105}
   - component: {fileID: 7535692175850484019}
+  - component: {fileID: -7921597651642731465}
   m_Layer: 0
   m_Name: ProductPurple
   m_TagString: Untagged
@@ -84,25 +84,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!95 &2048271984817546250
-Animator:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233177740896482469}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c624a7e6198a19f4697ff53f054df789, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!114 &7705169335111696105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115,10 +96,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1120493df21afd648ab4b2e3009ffbe4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mColor: 3
-  mAnimator: {fileID: 2048271984817546250}
-  mComboProduct: {fileID: 0}
   mBeamUpEffect: {fileID: 178754, guid: f03a2025aee312e42918325d1eae3e2b, type: 3}
+  mColor: 3
+  mAnimation: {fileID: -7921597651642731465}
+  Renderer: {fileID: 7481293086429072559}
+  Images:
+  - {fileID: 21300000, guid: 0841191d84f4c8542bda21b5a3a9f758, type: 3}
+  - {fileID: 21300000, guid: 66d5e99174ee877489ee9ce48f01e0ca, type: 3}
+  - {fileID: 21300000, guid: ded34a81082e7614d8db09f56fded494, type: 3}
+  - {fileID: 21300000, guid: d1037c162d97cf24faafcae67899b2e3, type: 3}
+  - {fileID: 21300000, guid: 917a6a9a8ea93344ab6d276b5533d6b7, type: 3}
+  ImageIndex: 0
 --- !u!61 &7535692175850484019
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -145,3 +133,23 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.28, y: 1.28}
   m_EdgeRadius: 0
+--- !u!111 &-7921597651642731465
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1233177740896482469}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: 1061edffd60df5d4882f48968fb32621, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: 1061edffd60df5d4882f48968fb32621, type: 2}
+  - {fileID: 7400000, guid: 1aa5bca69fbf61e4f83eb1467137b3ed, type: 2}
+  - {fileID: 7400000, guid: 569c286d79d75df4ca963f426570a833, type: 2}
+  - {fileID: 7400000, guid: 5b18fd000acc8ab4599e9ec92de96458, type: 2}
+  - {fileID: 7400000, guid: 26cbb16ce00fd5c438881b22637e19b5, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_CullingType: 0

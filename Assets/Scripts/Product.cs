@@ -10,10 +10,12 @@ public class Product : MonoBehaviour
     private bool mLocked;
     private Frame mParent;
     private Frame mDropTarget;
-    public ProductColor mColor;
-    public Animator mAnimator;
-    public Product mComboProduct;
+    private Product mComboProduct;
+    private AnimationClip mSwipeAnim;
+
     public GameObject mBeamUpEffect;
+    public ProductColor mColor;
+    public Animation mAnimation;
 
     public SpriteRenderer Renderer;
     public Sprite[] Images;
@@ -26,12 +28,7 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         transform.localScale = Vector3.zero;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        Renderer.sprite = Images[ImageIndex];
+        mSwipeAnim = GetAnimation("swap");
     }
 
 
@@ -42,19 +39,17 @@ public class Product : MonoBehaviour
             return;
 
         mLocked = true;
-        mAnimator.SetTrigger("swap");
+        mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
     IEnumerator AnimateSwipe(Frame target)
     {
-        int frameCount = 20;
         Vector3 dest = target.transform.position;
         dest.z = transform.position.z;
-        float distPerFrame = (float)InGameManager.GridSize / ((float)frameCount * Time.deltaTime);
-        while (frameCount > 0)
+        float distPerFrame = (InGameManager.GridSize / mSwipeAnim.length) * Time.deltaTime;
+        while ((transform.position - dest).magnitude >= distPerFrame)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame * Time.deltaTime);
-            frameCount--;
+            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
             yield return null;
         }
         transform.position = dest;
@@ -67,14 +62,27 @@ public class Product : MonoBehaviour
         mLocked = false;
         StartCoroutine(DoMatch());
     }
+
     IEnumerator StartDestroy()
     {
         mLocked = true;
         yield return null;
-        mAnimator.SetTrigger("destroy");
+        mAnimation.Play("destroy");
         mComboProduct = FindComboableProduct();
         if (mComboProduct != null)
-            mComboProduct.StartDrop(mParent);
+            mComboProduct.StartDropAnimate(mParent);
+    }
+    void StartSpriteAnim()
+    {
+        StartCoroutine(AnimateDestroySprite());
+    }
+    IEnumerator AnimateDestroySprite()
+    {
+        while(true) //this Coroutine is stopped when object destroyed.
+        {
+            Renderer.sprite = Images[ImageIndex];
+            yield return null;
+        }
     }
     void EndDestroy()
     {
@@ -82,26 +90,24 @@ public class Product : MonoBehaviour
         Destroy(gameObject);
         InGameManager.Inst.CurrentScore += 10;
 
-        if(mComboProduct == null)
+        if (mComboProduct == null)
             InGameManager.Inst.CreateNewProduct(mParent);
-        
     }
-    public void SetParentFrame(Frame parent)
-    {
-        mParent = parent;
-    }
+
     void EndCreate()
     {
         mLocked = false;
         StartCoroutine(DoMatch());
     }
-    void StartDrop(Frame frame)
+
+    void StartDropAnimate(Frame frame)
     {
         mLocked = true;
-        mAnimator.SetTrigger("drop");
+        //mAnimation.Play("drop");
         mDropTarget = frame;
+        StartCoroutine(AnimateDrop());
     }
-    void MidDrop()
+    void StartDropMove()
     {
         Vector3 midPos = (mParent.transform.position + mDropTarget.transform.position) * 0.5f;
         midPos.z = -2;
@@ -110,6 +116,27 @@ public class Product : MonoBehaviour
         transform.position = mDropTarget.transform.position;
         transform.SetParent(mDropTarget.transform);
         mParent = mDropTarget;
+    }
+    IEnumerator AnimateDrop()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Vector3 dest = mDropTarget.transform.position;
+        dest.z = transform.position.z;
+        float distPerFrame = InGameManager.GridSize * Time.deltaTime;
+        while ((transform.position - dest).magnitude >= distPerFrame)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+            distPerFrame += 0.001f;
+            yield return null;
+        }
+        transform.position = dest;
+
+        InGameManager.Inst.CreateNewProduct(mParent);
+        transform.SetParent(mDropTarget.transform);
+        mParent = mDropTarget;
+        mDropTarget = null;
+        mLocked = false;
+        StartCoroutine(DoMatch());
     }
     void EndDrop()
     {
@@ -120,6 +147,10 @@ public class Product : MonoBehaviour
     #endregion
 
     #region Support Functions
+    public void SetParentFrame(Frame parent)
+    {
+        mParent = parent;
+    }
     void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
         if (mLocked || mColor != color)
@@ -143,6 +174,13 @@ public class Product : MonoBehaviour
         nearProduct = Down();
         if (nearProduct != null)
             nearProduct.SearchMatchedProducts(products, color);
+    }
+    AnimationClip GetAnimation(string name)
+    {
+        foreach (AnimationState c in mAnimation)
+            if (c.name == name)
+                return c.clip;
+        return null;
     }
     IEnumerator DoMatch()
     {

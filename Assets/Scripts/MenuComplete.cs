@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class MenuComplete : MonoBehaviour
 {
-    private const string UIObjName = "MenuComplete";
-    public GameObject StageScreen;
+    private const string UIObjName = "CanvasPopUp/MenuComplete";
 
     public Image Star1;
     public Image Star2;
@@ -31,6 +30,7 @@ public class MenuComplete : MonoBehaviour
     public void OnNext()
     {
         gameObject.SetActive(false);
-        StageScreen.SetActive(true);
+        MenuStages.PopUp();
+        StageManager.Inst.Activate(true);
     }
 }

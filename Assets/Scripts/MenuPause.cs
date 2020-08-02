@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuPause : MonoBehaviour
 {
-    private const string UIObjName = "MenuPause";
+    private const string UIObjName = "CanvasPopUp/MenuPause";
 
     public static void PopUp()
     {
@@ -17,6 +17,9 @@ public class MenuPause : MonoBehaviour
     {
         gameObject.SetActive(false);
         InGameManager.Inst.FinishGame(false);
+        MenuInGame.Hide();
+        MenuStages.PopUp();
+        StageManager.Inst.Activate(true);
     }
     public void OnResume()
     {
