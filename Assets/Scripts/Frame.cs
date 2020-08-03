@@ -7,6 +7,8 @@ public class Frame : MonoBehaviour
 {
     private int mIndexX;
     private int mIndexY;
+    public int IndexX { get { return mIndexX; } }
+    public int IndexY { get { return mIndexY; } }
 
     // Start is called before the first frame update
     void Start()

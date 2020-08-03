@@ -16,7 +16,15 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
-        string fileText = File.ReadAllText(Application.persistentDataPath + "/StageInfo/" + stageNum + ".txt");
+        string fullname = Application.persistentDataPath + "/StageInfo/" + stageNum + ".txt";
+        if(!File.Exists(fullname))
+        {
+            StageInfo defInfo = new StageInfo();
+            defInfo.DefaultSetting(stageNum);
+            Save(defInfo);
+        }
+
+        string fileText = File.ReadAllText(fullname);
         if (fileText == null || fileText.Length == 0)
             return null;
 
@@ -53,5 +61,16 @@ public class StageInfo
             + "ColumnCount," + info.ColumnCount.ToString();
 
         File.WriteAllText(Application.persistentDataPath + "/StageInfo/" + info.Num + ".txt", text);
+    }
+
+    public void DefaultSetting(int level)
+    {
+        Num = level;
+        GoalScore = level * 200 + 500;
+        IsLocked = level == 1 ? false : true;
+        StarCount = 0;
+        MoveLimit = 30;
+        RowCount = 6;
+        ColumnCount = 6;
     }
 }

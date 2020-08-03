@@ -116,12 +116,22 @@ public class InGameManager : MonoBehaviour
         RemainLimit--;
         EventOnChange?.Invoke(CurrentScore, RemainLimit);
     }
-    public void CreateNewProduct(Frame parent)
+    public Frame GetFrame(float worldPosX, float worldPosY)
+    {
+        float offX = worldPosX - GameField.transform.position.x;
+        float offY = worldPosY - GameField.transform.position.y;
+        int idxX = (int)(offX / (float)GridSize);
+        int idxY = (int)(offY / (float)GridSize);
+        return mFrames[idxX, idxY];
+    }
+    public Product CreateNewProduct(Frame parent)
     {
         int typeIdx = UnityEngine.Random.Range(0, ProductPrefabs.Length);
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         obj.transform.localPosition = new Vector3(0, 0, -1);
-        obj.GetComponent<Product>().SetParentFrame(parent);
+        Product newPro = obj.GetComponent<Product>();
+        newPro.SetParentFrame(parent);
+        return newPro;
     }
     void CheckSwipe()
     {

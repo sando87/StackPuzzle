@@ -10,7 +10,7 @@ public class Product : MonoBehaviour
     private bool mLocked;
     private Frame mParent;
     private Frame mDropTarget;
-    private Product mComboProduct;
+    //private Product mComboProduct;
     private AnimationClip mSwipeAnim;
 
     public GameObject mBeamUpEffect;
@@ -68,9 +68,21 @@ public class Product : MonoBehaviour
         mLocked = true;
         yield return null;
         mAnimation.Play("destroy");
-        mComboProduct = FindComboableProduct();
-        if (mComboProduct != null)
-            mComboProduct.StartDropAnimate(mParent);
+        Product dropPro = FindComboableProduct();
+        if (dropPro != null)
+        {
+            int height = (dropPro.mParent.IndexY - mParent.IndexY) * InGameManager.GridSize;
+
+            Frame curFrame = dropPro.mParent;
+            while (curFrame != mParent)
+            {
+                Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
+                pro.StartDropAnimate(curFrame, height);
+                curFrame = curFrame.Down();
+            }
+
+            dropPro.StartDropAnimate(mParent, height);
+        }
     }
     void StartSpriteAnim()
     {
@@ -90,8 +102,8 @@ public class Product : MonoBehaviour
         Destroy(gameObject);
         InGameManager.Inst.CurrentScore += 10;
 
-        if (mComboProduct == null)
-            InGameManager.Inst.CreateNewProduct(mParent);
+        //if (mComboProduct == null)
+        //    InGameManager.Inst.CreateNewProduct(mParent);
     }
 
     void EndCreate()
@@ -100,27 +112,19 @@ public class Product : MonoBehaviour
         StartCoroutine(DoMatch());
     }
 
-    void StartDropAnimate(Frame frame)
+    void StartDropAnimate(Frame parent, float height)
     {
         mLocked = true;
-        //mAnimation.Play("drop");
-        mDropTarget = frame;
+        mParent = parent;
+        transform.SetParent(parent.transform);
+        transform.localPosition = new Vector3(0, height, -1);
         StartCoroutine(AnimateDrop());
-    }
-    void StartDropMove()
-    {
-        Vector3 midPos = (mParent.transform.position + mDropTarget.transform.position) * 0.5f;
-        midPos.z = -2;
-        GameObject.Instantiate(mBeamUpEffect, midPos, Quaternion.identity, transform);
-        InGameManager.Inst.CreateNewProduct(mParent);
-        transform.position = mDropTarget.transform.position;
-        transform.SetParent(mDropTarget.transform);
-        mParent = mDropTarget;
+        //mAnimation.Play("drop");
     }
     IEnumerator AnimateDrop()
     {
         yield return new WaitForSeconds(0.5f);
-        Vector3 dest = mDropTarget.transform.position;
+        Vector3 dest = Vector3.zero;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
         while ((transform.position - dest).magnitude >= distPerFrame)
@@ -131,12 +135,19 @@ public class Product : MonoBehaviour
         }
         transform.position = dest;
 
-        InGameManager.Inst.CreateNewProduct(mParent);
-        transform.SetParent(mDropTarget.transform);
-        mParent = mDropTarget;
-        mDropTarget = null;
+        //InGameManager.Inst.CreateNewProduct(mParent);
         mLocked = false;
         StartCoroutine(DoMatch());
+    }
+    void StartDropMove()
+    {
+        Vector3 midPos = (mParent.transform.position + mDropTarget.transform.position) * 0.5f;
+        midPos.z = -2;
+        GameObject.Instantiate(mBeamUpEffect, midPos, Quaternion.identity, transform);
+        InGameManager.Inst.CreateNewProduct(mParent);
+        transform.position = mDropTarget.transform.position;
+        transform.SetParent(mDropTarget.transform);
+        mParent = mDropTarget;
     }
     void EndDrop()
     {
@@ -208,20 +219,20 @@ public class Product : MonoBehaviour
         if (curPro == null)
             return curPro;
 
-        List<Product> matchList = new List<Product>();
-        Product nearProduct = null;
-        nearProduct = Left();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-        nearProduct = Right();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-        nearProduct = Down();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-
-        if (matchList.Count < InGameManager.MatchCount - 1)
-            return null;
+        //List<Product> matchList = new List<Product>();
+        //Product nearProduct = null;
+        //nearProduct = Left();
+        //if (nearProduct != null)
+        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+        //nearProduct = Right();
+        //if (nearProduct != null)
+        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+        //nearProduct = Down();
+        //if (nearProduct != null)
+        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
+        //
+        //if (matchList.Count < InGameManager.MatchCount - 1)
+        //    return null;
 
         return curPro;
     }
