@@ -19,7 +19,7 @@ public class InGameManager : MonoBehaviour
 
     public const int MatchCount = 3;
     public const float SwipeDetectRange = 0.1f;
-    public const int GridSize = 1;
+    public const float GridSize = 0.8f;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab;
 

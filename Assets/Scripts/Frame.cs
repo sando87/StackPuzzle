@@ -7,6 +7,7 @@ public class Frame : MonoBehaviour
 {
     private int mIndexX;
     private int mIndexY;
+    public SpriteMask SpriteMask;
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
 
@@ -43,6 +44,11 @@ public class Frame : MonoBehaviour
     public Frame Up()
     {
         return InGameManager.Inst.YCount - 1 <= mIndexY ? null : InGameManager.Inst.GetFrame(mIndexX, mIndexY + 1);
+    }
+
+    public void EnableMask(bool enable)
+    {
+        SpriteMask.enabled = enable;
     }
 
 }

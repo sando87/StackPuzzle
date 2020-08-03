@@ -26,8 +26,8 @@ public class Product : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        mLocked = true;
-        transform.localScale = Vector3.zero;
+        mLocked = false;
+        //transform.localScale = Vector3.zero;
         mSwipeAnim = GetAnimation("swap");
     }
 
@@ -67,17 +67,19 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         yield return null;
+        mParent.EnableMask(true);
         mAnimation.Play("destroy");
         Product dropPro = FindComboableProduct();
         if (dropPro != null)
         {
-            int height = (dropPro.mParent.IndexY - mParent.IndexY) * InGameManager.GridSize;
+            float height = (dropPro.mParent.IndexY - mParent.IndexY) * InGameManager.GridSize;
 
             Frame curFrame = dropPro.mParent;
             while (curFrame != mParent)
             {
                 Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
                 pro.StartDropAnimate(curFrame, height);
+                pro.GetComponent<SpriteRenderer>().maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
                 curFrame = curFrame.Down();
             }
 
@@ -109,7 +111,7 @@ public class Product : MonoBehaviour
     void EndCreate()
     {
         mLocked = false;
-        StartCoroutine(DoMatch());
+        //StartCoroutine(DoMatch());
     }
 
     void StartDropAnimate(Frame parent, float height)
@@ -124,7 +126,7 @@ public class Product : MonoBehaviour
     IEnumerator AnimateDrop()
     {
         yield return new WaitForSeconds(0.5f);
-        Vector3 dest = Vector3.zero;
+        Vector3 dest = mParent.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
         while ((transform.position - dest).magnitude >= distPerFrame)
