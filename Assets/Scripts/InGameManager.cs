@@ -128,10 +128,10 @@ public class InGameManager : MonoBehaviour
     {
         int typeIdx = UnityEngine.Random.Range(0, ProductPrefabs.Length);
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
-        obj.transform.localPosition = new Vector3(0, 0, -1);
-        Product newPro = obj.GetComponent<Product>();
-        newPro.SetParentFrame(parent);
-        return newPro;
+        Product product = obj.GetComponent<Product>();
+        product.transform.localPosition = new Vector3(0, 0, -1);
+        product.ParentFrame = parent;
+        return product;
     }
     void CheckSwipe()
     {
