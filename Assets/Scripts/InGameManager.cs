@@ -34,6 +34,9 @@ public class InGameManager : MonoBehaviour
     public Action<int, int> EventOnChange;
     public Action<bool> EventOnFinish;
 
+    public int RowCount { get { return mStageInfo.RowCount; } }
+    public int ColumnCount { get { return mStageInfo.ColumnCount; } }
+
     void Update()
     {
         if (!mIsRunning)

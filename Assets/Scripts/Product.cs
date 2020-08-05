@@ -71,9 +71,57 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
+            CreateNextProducts(matchList);
             foreach (Product pro in matchList)
             {
                 StartCoroutine(pro.StartDestroy());
+            }
+        }
+    }
+    void CreateNextProducts(List<Product> matches)
+    {
+        Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
+        foreach (Product pro in matches)
+        {
+            if(!verties.ContainsKey(pro.ParentFrame.IndexX))
+                verties[pro.ParentFrame.IndexX] = new List<Product>();
+
+            verties[pro.ParentFrame.IndexX].Add(pro);
+        }
+
+        foreach (var line in verties)
+        {
+            line.Value.Sort((lsh, rhs) => lsh.ParentFrame.IndexY.CompareTo(rhs.ParentFrame.IndexY));
+
+            Product top = line.Value[line.Value.Count - 1];
+            Product bottom = line.Value[0];
+            int diffCount = top.ParentFrame.IndexY - bottom.ParentFrame.IndexY + 1;
+            Frame frame = top.ParentFrame.Up();
+            if (frame == null)
+            {
+                frame = top.ParentFrame;
+                while (true)
+                {
+                    Product pro = InGameManager.Inst.CreateNewProduct(frame);
+                    pro.GetComponent<SpriteRenderer>().enabled = false;
+                    pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
+                    
+                    if (frame == bottom.ParentFrame)
+                        break;
+                    else
+                        frame = frame.Down();
+                }
+            }
+            else
+            {
+                while(frame != bottom.ParentFrame)
+                {
+                    Product pro = InGameManager.Inst.CreateNewProduct(frame);
+                    pro.GetComponent<SpriteRenderer>().enabled = false;
+                    pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
+                    frame = frame.Down();
+                }
+                top.Up().StartDropAnimate(bottom.ParentFrame, InGameManager.GridSize * diffCount);
             }
         }
     }
@@ -102,20 +150,6 @@ public class Product : MonoBehaviour
         mLocked = false;
         Destroy(gameObject);
         InGameManager.Inst.CurrentScore += 10;
-
-        Product upProduct = Up();
-        if (upProduct == null)
-        {
-        }
-        else if (upProduct.IsLocked())
-        {
-        }
-        else
-        {
-        }
-
-        Product pro = InGameManager.Inst.CreateNewProduct(ParentFrame);
-        pro.StartDropAnimate(ParentFrame, InGameManager.GridSize * 2);
     }
 
     void StartDropAnimate(Frame parent, float height)
@@ -129,6 +163,27 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateDrop()
     {
+        yield return null;
+        SpriteRenderer render = GetComponent<SpriteRenderer>();
+        bool isComboable = render.enabled;
+
+        Color color = Color.white;
+        Color step = new Color(0.01f, 0.01f, 0.01f, 0);
+        float time = 0;
+        while (time < 1)
+        {
+            if(isComboable)
+            {
+                //render.material.SetColor("_Color", color);
+                render.material.color = color;
+                color -= step;
+            }
+            
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        render.enabled = true;
         Vector3 dest = ParentFrame.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
@@ -143,7 +198,59 @@ public class Product : MonoBehaviour
         mLocked = false;
         ParentFrame.EnableMask(false);
         GetComponent<SpriteRenderer>().maskInteraction = SpriteMaskInteraction.None;
-        StartCoroutine(DoMatch());
+
+        if(isComboable)
+        {
+            StartCoroutine(StartFlashing());
+
+            while (time > 0)
+            {
+                //render.material.SetColor("_Color", color);
+                //render.material.color = color;
+                //color += step;
+
+                time -= Time.deltaTime;
+                yield return null;
+            }
+
+            StartCoroutine(DoMatch());
+        }
+    }
+    IEnumerator StartFlashing()
+    {
+        yield return null;
+        List<Product> matchList = new List<Product>();
+        SearchMatchedProducts(matchList, mColor);
+        if (matchList.Count >= InGameManager.MatchCount)
+        {
+            foreach (Product pro in matchList)
+            {
+                float dist = (pro.transform.position - transform.position).magnitude;
+                float delay_sec = dist / 5.0f; //0 ~ 1.0f ~;
+                float intensity = dist / 5.0f; //0 ~ 1.0f ~;
+                StartCoroutine(pro.FlashProduct(delay_sec, intensity));
+            }
+        }
+        else
+        {
+            StartCoroutine(FlashProduct(0, 0));
+        }
+    }
+    IEnumerator FlashProduct(float delay_sec, float intensity)
+    {
+        yield return new WaitForSeconds(delay_sec);
+
+        SpriteRenderer render = GetComponent<SpriteRenderer>();
+        Color color = new Color(intensity, intensity, intensity, 1);
+        Color step = new Color(0.01f, 0.01f, 0.01f, 0);
+        while (color.r < 0.9f)
+        {
+            //render.material.SetColor("_Color", color);
+            render.material.color = color;
+            color += step;
+            yield return null;
+        }
+        render.material.color = Color.white;
     }
     #endregion
 
