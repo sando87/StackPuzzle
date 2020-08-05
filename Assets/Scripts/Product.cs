@@ -175,7 +175,7 @@ public class Product : MonoBehaviour
             if(isComboable)
             {
                 //render.material.SetColor("_Color", color);
-                render.material.color = color;
+                //render.material.color = color;
                 color -= step;
             }
             
@@ -246,7 +246,7 @@ public class Product : MonoBehaviour
         while (color.r < 0.9f)
         {
             //render.material.SetColor("_Color", color);
-            render.material.color = color;
+            //render.material.color = color;
             color += step;
             yield return null;
         }
