@@ -71,14 +71,15 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
-            CreateNextProducts(matchList);
             foreach (Product pro in matchList)
             {
                 StartCoroutine(pro.StartDestroy());
             }
+            yield return null;
+            ReadyToDropProducts(matchList);
         }
     }
-    void CreateNextProducts(List<Product> matches)
+    void ReadyToDropProducts(List<Product> matches)
     {
         Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
         foreach (Product pro in matches)
@@ -94,35 +95,47 @@ public class Product : MonoBehaviour
             line.Value.Sort((lsh, rhs) => lsh.ParentFrame.IndexY.CompareTo(rhs.ParentFrame.IndexY));
 
             Product top = line.Value[line.Value.Count - 1];
-            Product bottom = line.Value[0];
-            int diffCount = top.ParentFrame.IndexY - bottom.ParentFrame.IndexY + 1;
-            Frame frame = top.ParentFrame.Up();
-            if (frame == null)
+            Product nextDropProduct = top.Up();
+            if (nextDropProduct == null)
             {
-                frame = top.ParentFrame;
-                while (true)
-                {
-                    Product pro = InGameManager.Inst.CreateNewProduct(frame);
-                    pro.GetComponent<SpriteRenderer>().enabled = false;
-                    pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
-                    
-                    if (frame == bottom.ParentFrame)
-                        break;
-                    else
-                        frame = frame.Down();
-                }
+                top.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
             }
+            else if(nextDropProduct.IsLocked())
+                continue;
             else
-            {
-                while(frame != bottom.ParentFrame)
-                {
-                    Product pro = InGameManager.Inst.CreateNewProduct(frame);
-                    pro.GetComponent<SpriteRenderer>().enabled = false;
-                    pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
-                    frame = frame.Down();
-                }
-                top.Up().StartDropAnimate(bottom.ParentFrame, InGameManager.GridSize * diffCount);
-            }
+                nextDropProduct.ReadyToDropAnimate();
+
+
+            //Product top = line.Value[line.Value.Count - 1];
+            //Product bottom = line.Value[0];
+            //int diffCount = top.ParentFrame.IndexY - bottom.ParentFrame.IndexY + 1;
+            //Frame frame = top.ParentFrame.Up();
+            //if (frame == null)
+            //{
+            //    frame = top.ParentFrame;
+            //    while (true)
+            //    {
+            //        Product pro = InGameManager.Inst.CreateNewProduct(frame);
+            //        pro.GetComponent<SpriteRenderer>().enabled = false;
+            //        pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
+            //        
+            //        if (frame == bottom.ParentFrame)
+            //            break;
+            //        else
+            //            frame = frame.Down();
+            //    }
+            //}
+            //else
+            //{
+            //    while(frame != bottom.ParentFrame)
+            //    {
+            //        Product pro = InGameManager.Inst.CreateNewProduct(frame);
+            //        pro.GetComponent<SpriteRenderer>().enabled = false;
+            //        pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
+            //        frame = frame.Down();
+            //    }
+            //    top.Up().StartDropAnimate(bottom.ParentFrame, InGameManager.GridSize * diffCount);
+            //}
         }
     }
 
@@ -152,38 +165,55 @@ public class Product : MonoBehaviour
         InGameManager.Inst.CurrentScore += 10;
     }
 
-    void StartDropAnimate(Frame parent, float height)
+    void ReadyToDropAnimate()
+    {
+        mLocked = true;
+        StartCoroutine(WaitDropAnimate());
+    }
+    IEnumerator WaitDropAnimate()
+    {
+        Renderer.material.color = Color.black;
+        yield return new WaitForSeconds(1.0f);
+        Renderer.material.color = Color.white;
+        mLocked = false;
+
+        List<Frame> emptyFrames = new List<Frame>();
+        emptyFrames.Add(ParentFrame);
+        Frame curFrame = ParentFrame.Down();
+        while (curFrame != null && curFrame.GetProduct() == null)
+        {
+            emptyFrames.Add(curFrame);
+            curFrame = curFrame.Down();
+        }
+
+        if (emptyFrames.Count >= 2)
+        {
+            float height = InGameManager.GridSize * (emptyFrames.Count - 1);
+            for (int i = 0; i < emptyFrames.Count - 1; ++i)
+            {
+                Product pro = InGameManager.Inst.CreateNewProduct(emptyFrames[i]);
+                pro.StartDropAnimate(emptyFrames[i], height, false);
+            }
+            StartDropAnimate(emptyFrames[emptyFrames.Count - 1], height, true);
+        }
+    }
+    void StartDropAnimate(Frame parent, float height, bool isComboable, float delay = 0)
     {
         mLocked = true;
         ParentFrame = parent;
         transform.localPosition = new Vector3(0, height, -1);
-        ParentFrame.EnableMask(true);
+        if(!ParentFrame.IsDummy)
+            ParentFrame.EnableMask(true);
         GetComponent<SpriteRenderer>().maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-        StartCoroutine(AnimateDrop());
+        StartCoroutine(AnimateDrop(isComboable, delay));
     }
-    IEnumerator AnimateDrop()
+    IEnumerator AnimateDrop(bool isComboable, float delay)
     {
-        yield return null;
-        SpriteRenderer render = GetComponent<SpriteRenderer>();
-        bool isComboable = render.enabled;
-
-        Color color = Color.white;
-        Color step = new Color(0.01f, 0.01f, 0.01f, 0);
-        float time = 0;
-        while (time < 1)
-        {
-            if(isComboable)
-            {
-                //render.material.SetColor("_Color", color);
-                //render.material.color = color;
-                color -= step;
-            }
-            
-            time += Time.deltaTime;
+        if(delay > 0)
+            yield return new WaitForSeconds(delay);
+        else
             yield return null;
-        }
 
-        render.enabled = true;
         Vector3 dest = ParentFrame.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
@@ -197,19 +227,20 @@ public class Product : MonoBehaviour
 
         mLocked = false;
         ParentFrame.EnableMask(false);
-        GetComponent<SpriteRenderer>().maskInteraction = SpriteMaskInteraction.None;
+        GetComponent<SpriteRenderer>().maskInteraction = ParentFrame.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
 
         if(isComboable)
         {
             StartCoroutine(StartFlashing());
 
-            while (time > 0)
+            float time = 0;
+            while (time < 0.5f)
             {
                 //render.material.SetColor("_Color", color);
                 //render.material.color = color;
                 //color += step;
 
-                time -= Time.deltaTime;
+                time += Time.deltaTime;
                 yield return null;
             }
 

@@ -11,8 +11,8 @@ public class StageInfo
     public bool IsLocked;
     public int StarCount;
     public int MoveLimit;
-    public int RowCount;
-    public int ColumnCount;
+    public int XCount;
+    public int YCount;
 
     public static StageInfo Load(int stageNum)
     {
@@ -44,8 +44,8 @@ public class StageInfo
                 case "IsLocked": info.IsLocked = bool.Parse(tokens[1]); break;
                 case "StarCount": info.StarCount = int.Parse(tokens[1]); break;
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
-                case "RowCount": info.RowCount = int.Parse(tokens[1]); break;
-                case "ColumnCount": info.ColumnCount = int.Parse(tokens[1]); break;
+                case "XCount": info.XCount = int.Parse(tokens[1]); break;
+                case "YCount": info.YCount = int.Parse(tokens[1]); break;
             }
         }
 
@@ -57,8 +57,8 @@ public class StageInfo
             + "IsLocked," + info.IsLocked.ToString() + "\r\n"
             + "StarCount," + info.StarCount.ToString() + "\r\n"
             + "MoveLimit," + info.MoveLimit.ToString() + "\r\n"
-            + "RowCount," + info.RowCount.ToString() + "\r\n"
-            + "ColumnCount," + info.ColumnCount.ToString();
+            + "XCount," + info.XCount.ToString() + "\r\n"
+            + "YCount," + info.YCount.ToString();
 
         File.WriteAllText(Application.persistentDataPath + "/StageInfo/" + info.Num + ".txt", text);
     }
@@ -70,7 +70,7 @@ public class StageInfo
         IsLocked = level == 1 ? false : true;
         StarCount = 0;
         MoveLimit = 30;
-        RowCount = 6;
-        ColumnCount = 6;
+        XCount = 6;
+        YCount = 6;
     }
 }

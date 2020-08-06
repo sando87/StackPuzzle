@@ -34,8 +34,7 @@ public class InGameManager : MonoBehaviour
     public Action<int, int> EventOnChange;
     public Action<bool> EventOnFinish;
 
-    public int RowCount { get { return mStageInfo.RowCount; } }
-    public int ColumnCount { get { return mStageInfo.ColumnCount; } }
+    
 
     void Update()
     {
@@ -58,16 +57,17 @@ public class InGameManager : MonoBehaviour
         CurrentScore = 0;
         RemainLimit = info.MoveLimit;
 
-        mFrames = new Frame[info.RowCount, info.ColumnCount];
-        for (int y = 0; y < info.ColumnCount; y++)
+        mFrames = new Frame[info.XCount, info.YCount + 1];
+        for (int y = 0; y < info.YCount + 1; y++)
         {
-            for (int x = 0; x < info.RowCount; x++)
+            for (int x = 0; x < info.XCount; x++)
             {
                 GameObject frameObj = GameObject.Instantiate(FramePrefab, GameField.transform, false);
                 frameObj.transform.localPosition = new Vector3(GridSize * x, GridSize * y, 0);
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(x, y, this);
                 CreateNewProduct(mFrames[x, y]);
+                frameObj.GetComponent<SpriteRenderer>().enabled = (y != info.YCount);
             }
         }
     }
@@ -100,10 +100,10 @@ public class InGameManager : MonoBehaviour
         CurrentScore = 0;
         RemainLimit = 0;
     }
-    public int XCount { get { return mStageInfo.RowCount; } }
-    public int YCount { get { return mStageInfo.ColumnCount; } }
     public int CurrentScore { get; set; }
     public int RemainLimit { get; set; }
+    public int XCount { get { return mStageInfo.XCount; } }
+    public int YCount { get { return mStageInfo.YCount; } }
 
     public Frame GetFrame(int x, int y)
     {
@@ -134,6 +134,7 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
+        product.Renderer.maskInteraction = parent.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
         return product;
     }
     void CheckSwipe()
