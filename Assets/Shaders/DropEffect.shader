@@ -7,10 +7,18 @@
     }
     SubShader
     {
-        // No culling or depth
-        Cull Off
+		Tags
+		{
+			"Queue" = "Transparent"
+			"IgnoreProjector" = "True"
+			"RenderType" = "Transparent"
+			"PreviewType" = "Plane"
+			"CanUseSpriteAtlas" = "True"
+		}
+
+		Cull Off
 		Lighting Off
-		ZWrite Off// ZTest Always
+		ZWrite Off
 		Blend SrcAlpha OneMinusSrcAlpha
 
         Pass

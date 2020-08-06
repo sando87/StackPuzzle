@@ -84,58 +84,15 @@ public class Product : MonoBehaviour
         Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
         foreach (Product pro in matches)
         {
-            if(!verties.ContainsKey(pro.ParentFrame.IndexX))
-                verties[pro.ParentFrame.IndexX] = new List<Product>();
-
-            verties[pro.ParentFrame.IndexX].Add(pro);
-        }
-
-        foreach (var line in verties)
-        {
-            line.Value.Sort((lsh, rhs) => lsh.ParentFrame.IndexY.CompareTo(rhs.ParentFrame.IndexY));
-
-            Product top = line.Value[line.Value.Count - 1];
-            Product nextDropProduct = top.Up();
-            if (nextDropProduct == null)
+            Product upPro = pro.Up();
+            if (upPro == null)
             {
-                top.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
+                pro.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
             }
-            else if(nextDropProduct.IsLocked())
+            else if (upPro.IsLocked())
                 continue;
             else
-                nextDropProduct.ReadyToDropAnimate();
-
-
-            //Product top = line.Value[line.Value.Count - 1];
-            //Product bottom = line.Value[0];
-            //int diffCount = top.ParentFrame.IndexY - bottom.ParentFrame.IndexY + 1;
-            //Frame frame = top.ParentFrame.Up();
-            //if (frame == null)
-            //{
-            //    frame = top.ParentFrame;
-            //    while (true)
-            //    {
-            //        Product pro = InGameManager.Inst.CreateNewProduct(frame);
-            //        pro.GetComponent<SpriteRenderer>().enabled = false;
-            //        pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
-            //        
-            //        if (frame == bottom.ParentFrame)
-            //            break;
-            //        else
-            //            frame = frame.Down();
-            //    }
-            //}
-            //else
-            //{
-            //    while(frame != bottom.ParentFrame)
-            //    {
-            //        Product pro = InGameManager.Inst.CreateNewProduct(frame);
-            //        pro.GetComponent<SpriteRenderer>().enabled = false;
-            //        pro.StartDropAnimate(frame, InGameManager.GridSize * diffCount);
-            //        frame = frame.Down();
-            //    }
-            //    top.Up().StartDropAnimate(bottom.ParentFrame, InGameManager.GridSize * diffCount);
-            //}
+                upPro.ReadyToDropAnimate();
         }
     }
 
@@ -172,9 +129,16 @@ public class Product : MonoBehaviour
     }
     IEnumerator WaitDropAnimate()
     {
-        Renderer.material.color = Color.black;
-        yield return new WaitForSeconds(1.0f);
-        Renderer.material.color = Color.white;
+        float duration = 1;
+        float t = 0;
+        while (t < duration)
+        {
+            int bright = 1 - ((int)(t * 4.0f) % 2);
+            Renderer.material.SetColor("_Color", new Color(bright, bright, bright, 0));
+            t += Time.deltaTime;
+            yield return null;
+        }
+        Renderer.material.color = new Color(0, 0, 0, 0);
         mLocked = false;
 
         List<Frame> emptyFrames = new List<Frame>();
@@ -204,7 +168,7 @@ public class Product : MonoBehaviour
         transform.localPosition = new Vector3(0, height, -1);
         if(!ParentFrame.IsDummy)
             ParentFrame.EnableMask(true);
-        GetComponent<SpriteRenderer>().maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
         StartCoroutine(AnimateDrop(isComboable, delay));
     }
     IEnumerator AnimateDrop(bool isComboable, float delay)
@@ -227,22 +191,13 @@ public class Product : MonoBehaviour
 
         mLocked = false;
         ParentFrame.EnableMask(false);
-        GetComponent<SpriteRenderer>().maskInteraction = ParentFrame.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
+        Renderer.maskInteraction = ParentFrame.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
 
         if(isComboable)
         {
             StartCoroutine(StartFlashing());
 
-            float time = 0;
-            while (time < 0.5f)
-            {
-                //render.material.SetColor("_Color", color);
-                //render.material.color = color;
-                //color += step;
-
-                time += Time.deltaTime;
-                yield return null;
-            }
+            //yield return new WaitForSeconds(0.5f);
 
             StartCoroutine(DoMatch());
         }
@@ -257,8 +212,8 @@ public class Product : MonoBehaviour
             foreach (Product pro in matchList)
             {
                 float dist = (pro.transform.position - transform.position).magnitude;
-                float delay_sec = dist / 5.0f; //0 ~ 1.0f ~;
-                float intensity = dist / 5.0f; //0 ~ 1.0f ~;
+                float delay_sec = dist / 10.0f; //0 ~ 1.0f ~;
+                float intensity = 1 - (dist / 5.0f); //1.0f ~ 0 ~;
                 StartCoroutine(pro.FlashProduct(delay_sec, intensity));
             }
         }
@@ -271,17 +226,18 @@ public class Product : MonoBehaviour
     {
         yield return new WaitForSeconds(delay_sec);
 
-        SpriteRenderer render = GetComponent<SpriteRenderer>();
-        Color color = new Color(intensity, intensity, intensity, 1);
-        Color step = new Color(0.01f, 0.01f, 0.01f, 0);
-        while (color.r < 0.9f)
+        float halfTime = 0.12f;
+        float k = -intensity / (halfTime * halfTime);
+        float t = 0;
+        while (t < halfTime * 2)
         {
-            //render.material.SetColor("_Color", color);
-            //render.material.color = color;
-            color += step;
+            float light = k * (t - halfTime) * (t - halfTime) + intensity;
+            light = light < 0 ? 0 : light;
+            Renderer.material.SetColor("_Color", new Color(light, light, light, 0));
+            t += Time.deltaTime;
             yield return null;
         }
-        render.material.color = Color.white;
+        Renderer.material.color = new Color(0, 0, 0, 0);
     }
     #endregion
 
