@@ -75,26 +75,26 @@ public class Product : MonoBehaviour
             {
                 StartCoroutine(pro.StartDestroy());
             }
-            yield return null;
-            ReadyToDropProducts(matchList);
+            //yield return null;
+            //ReadyToDropProducts(matchList);
         }
     }
-    void ReadyToDropProducts(List<Product> matches)
-    {
-        Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
-        foreach (Product pro in matches)
-        {
-            Product upPro = pro.Up();
-            if (upPro == null)
-            {
-                pro.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
-            }
-            else if (upPro.IsLocked())
-                continue;
-            else
-                upPro.ReadyToDropAnimate();
-        }
-    }
+    //void ReadyToDropProducts(List<Product> matches)
+    //{
+    //    Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
+    //    foreach (Product pro in matches)
+    //    {
+    //        Product upPro = pro.Up();
+    //        if (upPro == null)
+    //        {
+    //            pro.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
+    //        }
+    //        else if (upPro.IsLocked())
+    //            continue;
+    //        else
+    //            upPro.ReadyToDropAnimate();
+    //    }
+    //}
 
     IEnumerator StartDestroy()
     {
@@ -122,24 +122,25 @@ public class Product : MonoBehaviour
         InGameManager.Inst.CurrentScore += 10;
     }
 
-    void ReadyToDropAnimate()
+    public void ReadyToDropAnimate()
     {
         mLocked = true;
         StartCoroutine(WaitDropAnimate());
     }
     IEnumerator WaitDropAnimate()
     {
-        float duration = 1;
-        float t = 0;
-        while (t < duration)
-        {
-            int bright = 1 - ((int)(t * 4.0f) % 2);
-            Renderer.material.SetColor("_Color", new Color(bright, bright, bright, 0));
-            t += Time.deltaTime;
-            yield return null;
-        }
-        Renderer.material.color = new Color(0, 0, 0, 0);
-        mLocked = false;
+        yield return null;
+        //float duration = 1;
+        //float t = 0;
+        //while (t < duration)
+        //{
+        //    int bright = 1 - ((int)(t * 4.0f) % 2);
+        //    Renderer.material.SetColor("_Color", new Color(bright, bright, bright, 0));
+        //    t += Time.deltaTime;
+        //    yield return null;
+        //}
+        //Renderer.material.color = new Color(0, 0, 0, 0);
+        //mLocked = false;
 
         List<Frame> emptyFrames = new List<Frame>();
         emptyFrames.Add(ParentFrame);
@@ -152,42 +153,60 @@ public class Product : MonoBehaviour
 
         if (emptyFrames.Count >= 2)
         {
-            float height = InGameManager.GridSize * (emptyFrames.Count - 1);
             for (int i = 0; i < emptyFrames.Count - 1; ++i)
             {
                 Product pro = InGameManager.Inst.CreateNewProduct(emptyFrames[i]);
-                pro.StartDropAnimate(emptyFrames[i], height, false);
+                pro.StartDropAnimate(emptyFrames[i], emptyFrames.Count - 1, false);
             }
-            StartDropAnimate(emptyFrames[emptyFrames.Count - 1], height, true);
+            StartDropAnimate(emptyFrames[emptyFrames.Count - 1], emptyFrames.Count - 1, true);
         }
     }
-    void StartDropAnimate(Frame parent, float height, bool isComboable, float delay = 0)
+    void StartDropAnimate(Frame parent, int emptyCount, bool isComboable)
     {
         mLocked = true;
         ParentFrame = parent;
+        float height = InGameManager.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
         if(!ParentFrame.IsDummy)
             ParentFrame.EnableMask(true);
         Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-        StartCoroutine(AnimateDrop(isComboable, delay));
+        StartCoroutine(AnimateDrop(isComboable, emptyCount));
     }
-    IEnumerator AnimateDrop(bool isComboable, float delay)
+    IEnumerator AnimateDrop(bool isComboable, int emptyCount)
     {
-        if(delay > 0)
-            yield return new WaitForSeconds(delay);
-        else
-            yield return null;
+        //Vector3 dest = ParentFrame.transform.position;
+        //dest.z = transform.position.z;
+        //float distPerFrame = InGameManager.GridSize * Time.deltaTime;
+        //int nn = 0;
+        //float tt = 0;
+        //while ((transform.position - dest).magnitude >= distPerFrame)
+        //{
+        //    transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+        //    distPerFrame += 0.001f;
+        //    nn++;
+        //    tt += Time.deltaTime;
+        //    yield return null;
+        //}
+        //transform.position = dest;
+        //Debug.Log("empty:" + delay + ", frame:" + nn + ", time:" + tt);
 
+        int[] delayTable = { 55, 40, 25, 15, 0 };
         Vector3 dest = ParentFrame.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
-        while ((transform.position - dest).magnitude >= distPerFrame)
+        int dropAnimCnt = 0;
+        while (dropAnimCnt < 90)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
-            distPerFrame += 0.001f;
+            if(dropAnimCnt >= delayTable[emptyCount - 1])
+            {
+                transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+                distPerFrame += 0.001f;
+            }
+            dropAnimCnt++;
             yield return null;
         }
         transform.position = dest;
+
 
         mLocked = false;
         ParentFrame.EnableMask(false);

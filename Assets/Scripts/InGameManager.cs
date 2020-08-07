@@ -28,6 +28,7 @@ public class InGameManager : MonoBehaviour
     private Vector3 mDownPosition;
     private StageInfo mStageInfo;
     private bool mIsRunning;
+    private int mNewProductCycle = 0;
 
     public GameObject GameField;
 
@@ -45,6 +46,8 @@ public class InGameManager : MonoBehaviour
             return;
 
         CheckSwipe();
+
+        CheckDropableProduct();
     }
 
     public void StartGame(StageInfo info)
@@ -183,6 +186,27 @@ public class InGameManager : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             mDownProduct = null;
+        }
+    }
+    void CheckDropableProduct()
+    {
+        mNewProductCycle++;
+        if(mNewProductCycle > 20)
+        {
+            mNewProductCycle = 0;
+            foreach(Frame frame in mFrames)
+            {
+                if (frame.transform.childCount != 1)
+                    continue;
+                if (frame.Down() == null)
+                    continue;
+                if (frame.Down().transform.childCount != 0)
+                    continue;
+
+                Product pro = frame.GetProduct();
+                if (!pro.IsLocked())
+                    pro.ReadyToDropAnimate();
+            }
         }
     }
     public int GetStarCount()
