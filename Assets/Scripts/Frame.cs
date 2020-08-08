@@ -7,10 +7,11 @@ public class Frame : MonoBehaviour
 {
     private int mIndexX;
     private int mIndexY;
-    public SpriteMask SpriteMask;
+    
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
     public bool IsDummy { get { return mIndexY == InGameManager.Inst.YCount; } }
+    public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }
 
     // Start is called before the first frame update
     void Start()
@@ -24,7 +25,7 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(int idxX, int idxY, InGameManager pm)
+    public void Initialize(int idxX, int idxY)
     {
         mIndexX = idxX;
         mIndexY = idxY;
@@ -49,15 +50,6 @@ public class Frame : MonoBehaviour
     public Frame UpDummy()
     {
         return InGameManager.Inst.GetFrame(mIndexX, InGameManager.Inst.YCount);
-    }
-
-    public void EnableMask(bool enable)
-    {
-        SpriteMask.enabled = enable;
-    }
-    public Product GetProduct()
-    {
-        return GetComponentInChildren<Product>();
     }
 
 }

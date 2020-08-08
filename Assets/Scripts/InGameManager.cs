@@ -21,7 +21,8 @@ public class InGameManager : MonoBehaviour
     public const float SwipeDetectRange = 0.1f;
     public const float GridSize = 0.8f;
     public GameObject[] ProductPrefabs;
-    public GameObject FramePrefab;
+    public GameObject FramePrefab1;
+    public GameObject FramePrefab2;
 
     private Frame[,] mFrames = null;
     private Product mDownProduct = null;
@@ -33,6 +34,7 @@ public class InGameManager : MonoBehaviour
     private int mRemainLimit = 0;
 
     public GameObject GameField;
+    public GameObject FieldMask;
 
     public Action<int, int> EventOnChange;
     public Action<bool> EventOnFinish;
@@ -62,18 +64,26 @@ public class InGameManager : MonoBehaviour
         mCurrentScore = 0;
         mRemainLimit = info.MoveLimit;
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
+        FieldMask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
 
+        Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
+        localBasePos.x += GridSize * 0.5f;
+        localBasePos.y += GridSize * 0.5f;
+        Vector3 localFramePos = new Vector3(0, 0, 0);
         mFrames = new Frame[info.XCount, info.YCount + 1];
         for (int y = 0; y < info.YCount + 1; y++)
         {
             for (int x = 0; x < info.XCount; x++)
             {
-                GameObject frameObj = GameObject.Instantiate(FramePrefab, GameField.transform, false);
-                frameObj.transform.localPosition = new Vector3(GridSize * x, GridSize * y, 0);
+                GameObject frameObj = GameObject.Instantiate((x+y)%2 == 0 ? FramePrefab1 : FramePrefab2, GameField.transform, false);
+                localFramePos.x = GridSize * x;
+                localFramePos.y = GridSize * y;
+                frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y, this);
+                mFrames[x, y].Initialize(x, y);
                 CreateNewProduct(mFrames[x, y]);
-                frameObj.GetComponent<SpriteRenderer>().enabled = (y != info.YCount);
+                if (y == info.YCount)
+                    frameObj.GetComponent<SpriteRenderer>().enabled = false;
             }
         }
     }
@@ -139,7 +149,6 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
-        product.Renderer.maskInteraction = parent.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
         return product;
     }
     void CheckSwipe()
@@ -196,18 +205,19 @@ public class InGameManager : MonoBehaviour
         if(mNewProductCycle > 60)
         {
             mNewProductCycle = 0;
-            foreach(Frame frame in mFrames)
+            foreach (Frame frame in mFrames)
             {
-                if (frame.transform.childCount != 1)
+                if (frame.ChildProduct == null)
                     continue;
                 if (frame.Down() == null)
                     continue;
-                if (frame.Down().transform.childCount != 0)
+                if (frame.Down().ChildProduct != null)
                     continue;
-
-                Product pro = frame.GetProduct();
+            
+                Product pro = frame.ChildProduct;
                 if (!pro.IsLocked())
-                    pro.ReadyToDropAnimate();
+                    pro.StartToDrop();
+                    
             }
         }
     }

@@ -23,8 +23,6 @@ public class Product : MonoBehaviour
     {
         get
         {
-            if (mParentFrame == null)
-                mParentFrame = transform.parent.GetComponent<Frame>();
             return mParentFrame;
         }
         set
@@ -85,7 +83,6 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         yield return null;
-        ParentFrame.EnableMask(true);
         mAnimation.Play("destroy");
     }
     void StartSpriteAnim()
@@ -106,32 +103,73 @@ public class Product : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void ReadyToDropAnimate()
+    public void StartToDrop()
     {
-        mLocked = true;
-        StartCoroutine(WaitDropAnimate());
-    }
-    IEnumerator WaitDropAnimate()
-    {
-        yield return null;
-
-        List<Frame> emptyFrames = new List<Frame>();
-        emptyFrames.Add(ParentFrame);
-        Frame curFrame = ParentFrame.Down();
-        while (curFrame != null && curFrame.GetProduct() == null)
+        List<Frame> empties = GetEmptyDownFrames();
+        List<Frame> idles = GetIdleUpFrames();
+        if (idles[0].IsDummy)
         {
-            emptyFrames.Add(curFrame);
-            curFrame = curFrame.Down();
-        }
-
-        if (emptyFrames.Count >= 2)
-        {
-            for (int i = 0; i < emptyFrames.Count - 1; ++i)
+            Frame curFrame = empties[empties.Count - 1];
+            int idx = 0;
+            while (true)
             {
-                Product pro = InGameManager.Inst.CreateNewProduct(emptyFrames[i]);
-                pro.StartDropAnimate(emptyFrames[i], emptyFrames.Count - 1, false);
+                if (idx < idles.Count)
+                {
+                    Product pro = idles[idx].ChildProduct;
+                    pro.StartDropAnimate(curFrame, empties.Count, idx == 0);
+                }
+                else
+                {
+                    Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
+                    pro.StartDropAnimate(curFrame, empties.Count, false);
+                }
+                idx++;
+
+                if (curFrame.IsDummy)
+                    break;
+                else if(curFrame.Up() == null)
+                    curFrame = curFrame.UpDummy();
+                else
+                    curFrame = curFrame.Up();
             }
-            StartDropAnimate(emptyFrames[emptyFrames.Count - 1], emptyFrames.Count - 1, true);
+
+        }
+        else if (idles[idles.Count - 1].Up() == null)
+        {
+            idles.Add(idles[idles.Count - 1].UpDummy());
+            Frame curFrame = empties[empties.Count - 1];
+            int idx = 0;
+            while(true)
+            {
+                if (idx < idles.Count)
+                {
+                    Product pro = idles[idx].ChildProduct;
+                    pro.StartDropAnimate(curFrame, empties.Count, idx == 0);
+                }
+                else
+                {
+                    Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
+                    pro.StartDropAnimate(curFrame, empties.Count, false);
+                }
+                idx++;
+
+                if (curFrame.IsDummy)
+                    break;
+                else if (curFrame.Up() == null)
+                    curFrame = curFrame.UpDummy();
+                else
+                    curFrame = curFrame.Up();
+            }
+        }
+        else
+        {
+            Frame curFrame = empties[empties.Count - 1];
+            for (int i = 0; i < idles.Count; ++i)
+            {
+                Product pro = idles[i].ChildProduct;
+                pro.StartDropAnimate(curFrame, empties.Count, i == 0);
+                curFrame = curFrame.Up();
+            }
         }
     }
     void StartDropAnimate(Frame parent, int emptyCount, bool isComboable)
@@ -140,9 +178,6 @@ public class Product : MonoBehaviour
         ParentFrame = parent;
         float height = InGameManager.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
-        if(!ParentFrame.IsDummy)
-            ParentFrame.EnableMask(true);
-        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
         StartCoroutine(AnimateDrop(isComboable, emptyCount));
     }
     IEnumerator AnimateDrop(bool isComboable, int emptyCount)
@@ -168,12 +203,11 @@ public class Product : MonoBehaviour
 
 
         mLocked = false;
-        ParentFrame.EnableMask(false);
-        Renderer.maskInteraction = ParentFrame.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
 
         if(isComboable)
             StartCoroutine(DoMatch());
     }
+
     IEnumerator StartFlashing(List<Product> matchedPros)
     {
         yield return null;
@@ -229,43 +263,6 @@ public class Product : MonoBehaviour
         if (nearProduct != null)
             nearProduct.SearchMatchedProducts(products, color);
     }
-    AnimationClip GetAnimation(string name)
-    {
-        foreach (AnimationState c in mAnimation)
-            if (c.name == name)
-                return c.clip;
-        return null;
-    }
-    Product FindComboableProduct()
-    {
-        Product downPro = Down();
-        if (downPro != null && downPro.IsLocked())
-            return null;
-
-        Product curPro = Up();
-        while (curPro != null && curPro.IsLocked())
-            curPro = curPro.Up();
-
-        if (curPro == null)
-            return curPro;
-
-        //List<Product> matchList = new List<Product>();
-        //Product nearProduct = null;
-        //nearProduct = Left();
-        //if (nearProduct != null)
-        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-        //nearProduct = Right();
-        //if (nearProduct != null)
-        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-        //nearProduct = Down();
-        //if (nearProduct != null)
-        //    nearProduct.SearchMatchedProducts(matchList, curPro.mColor);
-        //
-        //if (matchList.Count < InGameManager.MatchCount - 1)
-        //    return null;
-
-        return curPro;
-    }
     public Product Left()
     {
         Frame nearFrame = ParentFrame.Left();
@@ -313,6 +310,29 @@ public class Product : MonoBehaviour
             return null;
 
         return pro;
+    }
+    List<Frame> GetEmptyDownFrames()
+    {
+        List<Frame> emptyFrames = new List<Frame>();
+        Frame curFrame = ParentFrame.Down();
+        while (curFrame != null && curFrame.ChildProduct == null)
+        {
+            emptyFrames.Add(curFrame);
+            curFrame = curFrame.Down();
+        }
+        return emptyFrames;
+    }
+    List<Frame> GetIdleUpFrames()
+    {
+        List<Frame> idleFrames = new List<Frame>();
+        idleFrames.Add(ParentFrame);
+        Frame curFrame = ParentFrame.Up();
+        while (curFrame != null && curFrame.ChildProduct != null && !curFrame.ChildProduct.IsLocked())
+        {
+            idleFrames.Add(curFrame);
+            curFrame = curFrame.Up();
+        }
+        return idleFrames;
     }
     #endregion
 }
