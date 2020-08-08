@@ -31,6 +31,7 @@ public class MenuComplete : MonoBehaviour
     public void OnNext()
     {
         gameObject.SetActive(false);
+        MenuInGame.Hide();
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);

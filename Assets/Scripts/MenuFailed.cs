@@ -27,6 +27,7 @@ public class MenuFailed : MonoBehaviour
     public void OnAgain()
     {
         gameObject.SetActive(false);
+        MenuInGame.Hide();
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);

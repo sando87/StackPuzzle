@@ -346,9 +346,9 @@ Animation:
   m_GameObject: {fileID: 23477386}
   m_Enabled: 1
   serializedVersion: 3
-  m_Animation: {fileID: 7400000, guid: 3f3e123f0f49c7f4796ea1dcafd0638d, type: 2}
+  m_Animation: {fileID: 7400000, guid: 71d56ff663a61554a8cd1cc95cc7a91b, type: 2}
   m_Animations:
-  - {fileID: 7400000, guid: 3f3e123f0f49c7f4796ea1dcafd0638d, type: 2}
+  - {fileID: 7400000, guid: 71d56ff663a61554a8cd1cc95cc7a91b, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
@@ -664,9 +664,9 @@ Animation:
   m_GameObject: {fileID: 81873887}
   m_Enabled: 1
   serializedVersion: 3
-  m_Animation: {fileID: 7400000, guid: 3f3e123f0f49c7f4796ea1dcafd0638d, type: 2}
+  m_Animation: {fileID: 7400000, guid: 71d56ff663a61554a8cd1cc95cc7a91b, type: 2}
   m_Animations:
-  - {fileID: 7400000, guid: 3f3e123f0f49c7f4796ea1dcafd0638d, type: 2}
+  - {fileID: 7400000, guid: 71d56ff663a61554a8cd1cc95cc7a91b, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
@@ -1483,7 +1483,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1537739776}
         m_MethodName: OnNext
         m_Mode: 1
         m_Arguments:
@@ -7484,7 +7484,6 @@ GameObject:
   - component: {fileID: 1485123286}
   - component: {fileID: 1485123290}
   - component: {fileID: 1485123289}
-  - component: {fileID: 1485123288}
   - component: {fileID: 1485123287}
   m_Layer: 5
   m_Name: Leadboard
@@ -7528,19 +7527,6 @@ Animation:
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
   m_CullingType: 0
---- !u!114 &1485123288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1485123285}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 496c2613b88ebfe46a163b65c615e3c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerIconPrefab: {fileID: 168812, guid: eef40190474c9407680a964063aeedb4, type: 3}
 --- !u!114 &1485123289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8542,7 +8528,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1911521738}
         m_MethodName: OnAgain
         m_Mode: 1
         m_Arguments:

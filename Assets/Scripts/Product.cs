@@ -71,6 +71,7 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
+            InGameManager.Inst.AddScore(10 * matchList.Count);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
             foreach (Product pro in matchList)
             {
@@ -103,7 +104,6 @@ public class Product : MonoBehaviour
     {
         mLocked = false;
         Destroy(gameObject);
-        InGameManager.Inst.CurrentScore += 10;
     }
 
     public void ReadyToDropAnimate()

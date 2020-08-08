@@ -16,11 +16,6 @@ public class MenuInGame : MonoBehaviour
     public Image BarStar2;
     public Image BarStar3;
 
-    private void Start()
-    {
-        InGameManager.Inst.EventOnChange = UpdatePanel;
-    }
-
     public static void PopUp(StageInfo info)
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
@@ -55,6 +50,8 @@ public class MenuInGame : MonoBehaviour
         Limit.text = info.MoveLimit.ToString();
         TargetScore.text = info.GoalScore.ToString();
         StageLevel.text = info.Num.ToString();
+
+        InGameManager.Inst.EventOnChange = UpdatePanel;
     }
 
     public void OnPause()

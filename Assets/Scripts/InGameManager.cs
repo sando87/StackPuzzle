@@ -29,6 +29,8 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo;
     private bool mIsRunning;
     private int mNewProductCycle = 0;
+    private int mCurrentScore = 0;
+    private int mRemainLimit = 0;
 
     public GameObject GameField;
 
@@ -57,8 +59,8 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mIsRunning = true;
         mStageInfo = info;
-        CurrentScore = 0;
-        RemainLimit = info.MoveLimit;
+        mCurrentScore = 0;
+        mRemainLimit = info.MoveLimit;
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
         mFrames = new Frame[info.XCount, info.YCount + 1];
@@ -99,13 +101,11 @@ public class InGameManager : MonoBehaviour
         mDownProduct = null;
         mDownPosition = Vector3.zero;
         mStageInfo = null;
-        EventOnChange = null;
+        //EventOnChange = null;
         mIsRunning = false;
-        CurrentScore = 0;
-        RemainLimit = 0;
+        mCurrentScore = 0;
+        mRemainLimit = 0;
     }
-    public int CurrentScore { get; set; }
-    public int RemainLimit { get; set; }
     public int XCount { get { return mStageInfo.XCount; } }
     public int YCount { get { return mStageInfo.YCount; } }
 
@@ -113,15 +113,15 @@ public class InGameManager : MonoBehaviour
     {
         return mFrames[x, y];
     }
-    public void TakeScore(int score)
+    public void AddScore(int score)
     {
-        CurrentScore += score;
-        EventOnChange?.Invoke(CurrentScore, RemainLimit);
+        mCurrentScore += score;
+        EventOnChange?.Invoke(mCurrentScore, mRemainLimit);
     }
     void RemoveLimit()
     {
-        RemainLimit--;
-        EventOnChange?.Invoke(CurrentScore, RemainLimit);
+        mRemainLimit--;
+        EventOnChange?.Invoke(mCurrentScore, mRemainLimit);
     }
     public Frame GetFrame(float worldPosX, float worldPosY)
     {
@@ -213,7 +213,7 @@ public class InGameManager : MonoBehaviour
     }
     public int GetStarCount()
     {
-        float rate = (float)CurrentScore / (float)mStageInfo.GoalScore;
+        float rate = (float)mCurrentScore / (float)mStageInfo.GoalScore;
         if (rate < 0.3f)
             return 0;
         else if (rate < 0.6f)
@@ -225,7 +225,7 @@ public class InGameManager : MonoBehaviour
 
     bool IsFinished()
     {
-        if (CurrentScore >= mStageInfo.GoalScore)
+        if (mCurrentScore >= mStageInfo.GoalScore)
         {
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(GetStarCount());
@@ -233,15 +233,18 @@ public class InGameManager : MonoBehaviour
             Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
             if(nextStage != null)
                 nextStage.UnLock();
-            
-            MenuComplete.PopUp(mStageInfo.Num, GetStarCount(), CurrentScore);
 
+            SoundPlayer.Inst.Player.Stop();
+            MenuComplete.PopUp(mStageInfo.Num, GetStarCount(), mCurrentScore);
+            
             FinishGame(true);
             return true;
         }
-        else if(RemainLimit <= 0)
+        else if(mRemainLimit <= 0)
         {
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, CurrentScore);
+            SoundPlayer.Inst.Player.Stop();
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
+            
             FinishGame(false);
             return true;
         }
