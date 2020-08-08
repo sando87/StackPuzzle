@@ -21,6 +21,7 @@ public class MenuFailed : MonoBehaviour
         menu.TargetScore.text = target.ToString();
 
         menuFailed.SetActive(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
     }
 
     public void OnAgain()
@@ -28,5 +29,6 @@ public class MenuFailed : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

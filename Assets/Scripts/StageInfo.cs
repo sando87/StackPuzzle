@@ -13,6 +13,7 @@ public class StageInfo
     public int MoveLimit;
     public int XCount;
     public int YCount;
+    public int ColorCount;
 
     public static StageInfo Load(int stageNum)
     {
@@ -46,6 +47,7 @@ public class StageInfo
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); break;
+                case "ColorCount": info.ColorCount = int.Parse(tokens[1]); break;
             }
         }
 
@@ -58,7 +60,8 @@ public class StageInfo
             + "StarCount," + info.StarCount.ToString() + "\r\n"
             + "MoveLimit," + info.MoveLimit.ToString() + "\r\n"
             + "XCount," + info.XCount.ToString() + "\r\n"
-            + "YCount," + info.YCount.ToString();
+            + "YCount," + info.YCount.ToString() + "\r\n"
+            + "ColorCount," + info.ColorCount.ToString() + "\r\n";
 
         File.WriteAllText(Application.persistentDataPath + "/StageInfo/" + info.Num + ".txt", text);
     }
@@ -72,5 +75,6 @@ public class StageInfo
         MoveLimit = 30;
         XCount = 6;
         YCount = 6;
+        ColorCount = 4;
     }
 }

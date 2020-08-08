@@ -71,30 +71,14 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
             foreach (Product pro in matchList)
             {
                 StartCoroutine(pro.StartDestroy());
             }
-            //yield return null;
-            //ReadyToDropProducts(matchList);
+            StartCoroutine(StartFlashing(matchList));
         }
     }
-    //void ReadyToDropProducts(List<Product> matches)
-    //{
-    //    Dictionary<int, List<Product>> verties = new Dictionary<int, List<Product>>();
-    //    foreach (Product pro in matches)
-    //    {
-    //        Product upPro = pro.Up();
-    //        if (upPro == null)
-    //        {
-    //            pro.ParentFrame.UpDummy().GetProduct().ReadyToDropAnimate();
-    //        }
-    //        else if (upPro.IsLocked())
-    //            continue;
-    //        else
-    //            upPro.ReadyToDropAnimate();
-    //    }
-    //}
 
     IEnumerator StartDestroy()
     {
@@ -130,17 +114,6 @@ public class Product : MonoBehaviour
     IEnumerator WaitDropAnimate()
     {
         yield return null;
-        //float duration = 1;
-        //float t = 0;
-        //while (t < duration)
-        //{
-        //    int bright = 1 - ((int)(t * 4.0f) % 2);
-        //    Renderer.material.SetColor("_Color", new Color(bright, bright, bright, 0));
-        //    t += Time.deltaTime;
-        //    yield return null;
-        //}
-        //Renderer.material.color = new Color(0, 0, 0, 0);
-        //mLocked = false;
 
         List<Frame> emptyFrames = new List<Frame>();
         emptyFrames.Add(ParentFrame);
@@ -174,23 +147,7 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateDrop(bool isComboable, int emptyCount)
     {
-        //Vector3 dest = ParentFrame.transform.position;
-        //dest.z = transform.position.z;
-        //float distPerFrame = InGameManager.GridSize * Time.deltaTime;
-        //int nn = 0;
-        //float tt = 0;
-        //while ((transform.position - dest).magnitude >= distPerFrame)
-        //{
-        //    transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
-        //    distPerFrame += 0.001f;
-        //    nn++;
-        //    tt += Time.deltaTime;
-        //    yield return null;
-        //}
-        //transform.position = dest;
-        //Debug.Log("empty:" + delay + ", frame:" + nn + ", time:" + tt);
-
-        int[] delayTable = { 55, 40, 25, 15, 0 };
+        int[] delayTable = { 55, 40, 25, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         Vector3 dest = ParentFrame.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
@@ -199,7 +156,9 @@ public class Product : MonoBehaviour
         {
             if(dropAnimCnt >= delayTable[emptyCount - 1])
             {
-                transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+                Vector3 nextPos = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+                nextPos.y = nextPos.y < dest.y ? dest.y : nextPos.y;
+                transform.position = nextPos;
                 distPerFrame += 0.001f;
             }
             dropAnimCnt++;
@@ -213,32 +172,17 @@ public class Product : MonoBehaviour
         Renderer.maskInteraction = ParentFrame.IsDummy ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
 
         if(isComboable)
-        {
-            StartCoroutine(StartFlashing());
-
-            //yield return new WaitForSeconds(0.5f);
-
             StartCoroutine(DoMatch());
-        }
     }
-    IEnumerator StartFlashing()
+    IEnumerator StartFlashing(List<Product> matchedPros)
     {
         yield return null;
-        List<Product> matchList = new List<Product>();
-        SearchMatchedProducts(matchList, mColor);
-        if (matchList.Count >= InGameManager.MatchCount)
+        foreach (Product pro in matchedPros)
         {
-            foreach (Product pro in matchList)
-            {
-                float dist = (pro.transform.position - transform.position).magnitude;
-                float delay_sec = dist / 10.0f; //0 ~ 1.0f ~;
-                float intensity = 1 - (dist / 5.0f); //1.0f ~ 0 ~;
-                StartCoroutine(pro.FlashProduct(delay_sec, intensity));
-            }
-        }
-        else
-        {
-            StartCoroutine(FlashProduct(0, 0));
+            float dist = (pro.transform.position - transform.position).magnitude;
+            float delay_sec = dist / 10.0f; //0 ~ 1.0f ~;
+            float intensity = 1 - (dist / 5.0f); //1.0f ~ 0 ~;
+            StartCoroutine(pro.FlashProduct(delay_sec, intensity));
         }
     }
     IEnumerator FlashProduct(float delay_sec, float intensity)

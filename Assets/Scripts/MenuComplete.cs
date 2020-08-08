@@ -25,6 +25,7 @@ public class MenuComplete : MonoBehaviour
         menu.StageLevel.text = level.ToString();
 
         menuComp.SetActive(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
     }
 
     public void OnNext()
@@ -32,5 +33,6 @@ public class MenuComplete : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

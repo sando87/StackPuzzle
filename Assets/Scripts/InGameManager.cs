@@ -59,6 +59,7 @@ public class InGameManager : MonoBehaviour
         mStageInfo = info;
         CurrentScore = 0;
         RemainLimit = info.MoveLimit;
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
         mFrames = new Frame[info.XCount, info.YCount + 1];
         for (int y = 0; y < info.YCount + 1; y++)
@@ -132,7 +133,8 @@ public class InGameManager : MonoBehaviour
     }
     public Product CreateNewProduct(Frame parent)
     {
-        int typeIdx = UnityEngine.Random.Range(0, ProductPrefabs.Length);
+        int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
+        int typeIdx = UnityEngine.Random.Range(0, colorCount);
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
@@ -191,7 +193,7 @@ public class InGameManager : MonoBehaviour
     void CheckDropableProduct()
     {
         mNewProductCycle++;
-        if(mNewProductCycle > 20)
+        if(mNewProductCycle > 60)
         {
             mNewProductCycle = 0;
             foreach(Frame frame in mFrames)
