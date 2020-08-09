@@ -15,6 +15,8 @@ public class MenuInGame : MonoBehaviour
     public Image BarStar1;
     public Image BarStar2;
     public Image BarStar3;
+    public Text Combo;
+    public Animation ComboAnim;
 
     public static void PopUp(StageInfo info)
     {
@@ -38,6 +40,7 @@ public class MenuInGame : MonoBehaviour
         BarStar1.gameObject.SetActive(countStar >= 1);
         BarStar2.gameObject.SetActive(countStar >= 2);
         BarStar3.gameObject.SetActive(countStar >= 3);
+        //PlayComboAnimation();
     }
     private void InitUIState(StageInfo info)
     {
@@ -52,6 +55,22 @@ public class MenuInGame : MonoBehaviour
         StageLevel.text = info.Num.ToString();
 
         InGameManager.Inst.EventOnChange = UpdatePanel;
+        ComboAnim = Combo.GetComponent<Animation>();
+        Combo.gameObject.SetActive(false);
+    }
+
+    private void PlayComboAnimation(int combo)
+    {
+        Combo.gameObject.SetActive(true);
+        Combo.text = combo + " Combo";
+        ComboAnim.Play("combo");
+        StopCoroutine("HideComboText");
+        StartCoroutine("HideComboText");
+    }
+    IEnumerator HideComboText()
+    {
+        yield return new WaitForSeconds(2.0f);
+        Combo.gameObject.SetActive(false);
     }
 
     public void OnPause()
