@@ -69,7 +69,7 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
-            InGameManager.Inst.AddScore(10 * matchList.Count);
+            InGameManager.Inst.AddScore(1 * matchList.Count, mColor);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
             foreach (Product pro in matchList)
             {

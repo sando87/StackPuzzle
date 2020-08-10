@@ -19,6 +19,7 @@ public class MenuPlay : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.GetComponent<MenuPlay>().UpdateUIState(info);
         menuPlay.SetActive(true);
+        StageManager.Inst.gameObject.SetActive(false);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
     public void UpdateUIState(StageInfo info)
@@ -34,6 +35,7 @@ public class MenuPlay : MonoBehaviour
     public void OnClose()
     {
         gameObject.SetActive(false);
+        StageManager.Inst.gameObject.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 

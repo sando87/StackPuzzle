@@ -20,6 +20,7 @@ public class InGameManager : MonoBehaviour
     public const int MatchCount = 3;
     public const float SwipeDetectRange = 0.1f;
     public const float GridSize = 0.8f;
+    public const float ComboDuration = 2.0f;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -32,26 +33,25 @@ public class InGameManager : MonoBehaviour
     private int mNewProductCycle = 0;
     private int mCurrentScore = 0;
     private int mRemainLimit = 0;
+    private int mCurrentCombo = 0;
 
     public GameObject GameField;
     public GameObject FieldMask;
 
-    public Action<int, int> EventOnChange;
+    public Action<int, int, int, ProductColor> EventOnChange;
     public Action<bool> EventOnFinish;
-
-    
 
     void Update()
     {
         if (!mIsRunning)
             return;
 
-        if (IsFinished())
-            return;
-
-        CheckSwipe();
+        if(IsSwapable())
+            CheckSwipe();
 
         CheckDropableProduct();
+
+        CheckFinishGame();
     }
 
     public void StartGame(StageInfo info)
@@ -86,6 +86,12 @@ public class InGameManager : MonoBehaviour
                     frameObj.GetComponent<SpriteRenderer>().enabled = false;
             }
         }
+
+    }
+    public void ClearCombo(int scorePerCombo)
+    {
+        mCurrentScore += (mCurrentCombo * scorePerCombo);
+        mCurrentCombo = 0;
     }
     public void PauseGame()
     {
@@ -115,6 +121,7 @@ public class InGameManager : MonoBehaviour
         mIsRunning = false;
         mCurrentScore = 0;
         mRemainLimit = 0;
+        mCurrentCombo = 0;
     }
     public int XCount { get { return mStageInfo.XCount; } }
     public int YCount { get { return mStageInfo.YCount; } }
@@ -123,15 +130,16 @@ public class InGameManager : MonoBehaviour
     {
         return mFrames[x, y];
     }
-    public void AddScore(int score)
+    public void AddScore(int score, ProductColor color)
     {
-        mCurrentScore += score;
-        EventOnChange?.Invoke(mCurrentScore, mRemainLimit);
+        mCurrentCombo++;
+        mCurrentScore += (score * mCurrentCombo);
+        EventOnChange?.Invoke(0, mCurrentScore, mCurrentCombo, color);
     }
     void RemoveLimit()
     {
         mRemainLimit--;
-        EventOnChange?.Invoke(mCurrentScore, mRemainLimit);
+        EventOnChange?.Invoke(mRemainLimit, 0, 0, ProductColor.Blue);
     }
     public Frame GetFrame(float worldPosX, float worldPosY)
     {
@@ -233,8 +241,22 @@ public class InGameManager : MonoBehaviour
         return 3;
     }
 
-    bool IsFinished()
+    bool IsSwapable()
     {
+        if (mCurrentScore >= mStageInfo.GoalScore)
+            return false;
+
+        if (mRemainLimit <= 0)
+            return false;
+
+        return true;
+    }
+
+    void CheckFinishGame()
+    {
+        if (mCurrentCombo > 0) //wait for combo
+            return;
+
         if (mCurrentScore >= mStageInfo.GoalScore)
         {
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
@@ -248,17 +270,18 @@ public class InGameManager : MonoBehaviour
             MenuComplete.PopUp(mStageInfo.Num, GetStarCount(), mCurrentScore);
             
             FinishGame(true);
-            return true;
         }
         else if(mRemainLimit <= 0)
         {
-            SoundPlayer.Inst.Player.Stop();
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
-            
-            FinishGame(false);
-            return true;
+            mRemainLimit--;
+            if(mRemainLimit < -200)
+            {
+                SoundPlayer.Inst.Player.Stop();
+                MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
+
+                FinishGame(false);
+            }
         }
-        return false;
     }
 
 }
