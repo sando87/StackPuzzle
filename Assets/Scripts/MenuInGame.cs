@@ -15,8 +15,8 @@ public class MenuInGame : MonoBehaviour
     public Image BarStar1;
     public Image BarStar2;
     public Image BarStar3;
-    public Text Combo;
-    public Animation ComboAnim;
+    public GameObject ParentPanel;
+    public GameObject ComboText;
 
     public static void PopUp(StageInfo info)
     {
@@ -29,12 +29,12 @@ public class MenuInGame : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
     }
-    private void UpdatePanel(int remainLimit, int currentScore, int combo, ProductColor color)
+    private void UpdatePanel(int remainLimit, int totalScore, Product product, int matchCount)
     {
-        if (currentScore > 0)
+        if (totalScore > 0)
         {
-            UpdateScore(currentScore);
-            PlayComboAnimation(combo, color);
+            UpdateScore(totalScore);
+            PlayComboAnimation(product, matchCount);
         }
         else
         {
@@ -55,8 +55,6 @@ public class MenuInGame : MonoBehaviour
         StageLevel.text = info.Num.ToString();
 
         InGameManager.Inst.EventOnChange = UpdatePanel;
-        ComboAnim = Combo.GetComponent<Animation>();
-        Combo.gameObject.SetActive(false);
     }
 
     private void UpdateScore(int totalScore)
@@ -70,10 +68,10 @@ public class MenuInGame : MonoBehaviour
         BarStar2.gameObject.SetActive(countStar >= 2);
         BarStar3.gameObject.SetActive(countStar >= 3);
     }
-    private void PlayComboAnimation(int combo, ProductColor color)
+    private void PlayComboAnimation(Product product, int matchCount)
     {
         Color comboColor = Color.white;
-        switch(color)
+        switch(product.mColor)
         {
             case ProductColor.Blue: comboColor = Color.cyan; break;
             case ProductColor.Green: comboColor = Color.green; break;
@@ -83,22 +81,27 @@ public class MenuInGame : MonoBehaviour
             case ProductColor.Yellow: comboColor = Color.yellow; break;
             default: comboColor = Color.white; break;
         }
-        Combo.color = comboColor;
-        Combo.gameObject.SetActive(true);
-        Combo.text = combo + " Combo";
-        ComboAnim.Play("combo");
-        StopCoroutine("ClearCombo");
-        StartCoroutine("ClearCombo");
+        int scoreUnit = InGameManager.scorePerProduct * matchCount;
+        GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        Text combo = comboTextObj.GetComponent<Text>();
+        //combo.color = comboColor;
+        combo.text = scoreUnit + "x" + product.Combo;
+        StartCoroutine(ComboEffect(comboTextObj));
     }
-    IEnumerator ClearCombo()
+    IEnumerator ComboEffect(GameObject obj)
     {
-        yield return new WaitForSeconds(InGameManager.ComboDuration);
-        Combo.gameObject.SetActive(false);
-        int curScore = int.Parse(CurrentScore.text);
-        int curCombo = int.Parse(Combo.text.Replace("Combo", " ").Trim());
-        curScore += (curCombo * 1);
-        UpdateScore(curScore);
-        InGameManager.Inst.ClearCombo(1);
+        float time = 0;
+        while(time < 0.7)
+        {
+            float x = (time * 10) + 1;
+            float y = (1 / x) * Time.deltaTime;
+            Vector3 pos = obj.transform.position;
+            pos.y += y;
+            obj.transform.position = pos;
+            time += Time.deltaTime;
+            yield return null;
+        }
+        Destroy(obj);
     }
 
     public void OnPause()

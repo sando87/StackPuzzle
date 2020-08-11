@@ -18,6 +18,7 @@ public class Product : MonoBehaviour
     public Sprite[] Images;
     public int ImageIndex;
 
+    public int Combo { get; set; }
     public bool IsLocked() { return mLocked; }
     public Frame ParentFrame
     {
@@ -40,6 +41,7 @@ public class Product : MonoBehaviour
             return;
 
         mLocked = true;
+        Combo = 0;
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
@@ -69,10 +71,12 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
-            InGameManager.Inst.AddScore(1 * matchList.Count, mColor);
+            Combo++;
+            InGameManager.Inst.AddScore(this, matchList.Count);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
             foreach (Product pro in matchList)
             {
+                pro.Combo = Combo;
                 StartCoroutine(pro.StartDestroy());
             }
             StartCoroutine(StartFlashing(matchList));
@@ -84,6 +88,7 @@ public class Product : MonoBehaviour
         mLocked = true;
         yield return null;
         mAnimation.Play("destroy");
+        KeepComboToUpperProduct();
     }
     void StartSpriteAnim()
     {
@@ -182,25 +187,24 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateDrop(bool isComboable, int emptyCount)
     {
-        int[] delayTable = { 55, 40, 25, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        float[] delayTable = { 0.3f, 0.22f, 0.15f, 0.083f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         Vector3 dest = ParentFrame.transform.position;
         dest.z = transform.position.z;
         float distPerFrame = InGameManager.GridSize * Time.deltaTime;
-        int dropAnimCnt = 0;
-        while (dropAnimCnt < 90)
+        float curAnimCnt = 0;
+        while (curAnimCnt < 0.6f)
         {
-            if(dropAnimCnt >= delayTable[emptyCount - 1])
+            if(curAnimCnt >= delayTable[emptyCount - 1])
             {
                 Vector3 nextPos = Vector3.MoveTowards(transform.position, dest, distPerFrame);
                 nextPos.y = nextPos.y < dest.y ? dest.y : nextPos.y;
                 transform.position = nextPos;
                 distPerFrame += 0.001f;
             }
-            dropAnimCnt++;
+            curAnimCnt += Time.deltaTime;
             yield return null;
         }
         transform.position = dest;
-
 
         mLocked = false;
 
@@ -311,6 +315,10 @@ public class Product : MonoBehaviour
 
         return pro;
     }
+    public bool IsTop()
+    {
+        return ParentFrame.IndexY == InGameManager.Inst.YCount - 1;
+    }
     List<Frame> GetEmptyDownFrames()
     {
         List<Frame> emptyFrames = new List<Frame>();
@@ -333,6 +341,21 @@ public class Product : MonoBehaviour
             curFrame = curFrame.Up();
         }
         return idleFrames;
+    }
+    void KeepComboToUpperProduct()
+    {
+        if (IsTop())
+        {
+            ParentFrame.UpDummy().ChildProduct.Combo = Combo;
+            return;
+        }
+        Product upProduct = Up();
+        if (upProduct == null)
+            return;
+        if (upProduct.IsLocked())
+            return;
+
+        upProduct.Combo = Combo;
     }
     #endregion
 }

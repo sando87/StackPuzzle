@@ -18,9 +18,9 @@ public class InGameManager : MonoBehaviour
     }
 
     public const int MatchCount = 3;
+    public const int scorePerProduct = 1;
     public const float SwipeDetectRange = 0.1f;
     public const float GridSize = 0.8f;
-    public const float ComboDuration = 2.0f;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -31,14 +31,14 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo;
     private bool mIsRunning;
     private int mNewProductCycle = 0;
+    private int mStayIdleCount = 0;
     private int mCurrentScore = 0;
     private int mRemainLimit = 0;
-    private int mCurrentCombo = 0;
 
     public GameObject GameField;
     public GameObject FieldMask;
 
-    public Action<int, int, int, ProductColor> EventOnChange;
+    public Action<int, int, Product, int> EventOnChange;
     public Action<bool> EventOnFinish;
 
     void Update()
@@ -88,11 +88,6 @@ public class InGameManager : MonoBehaviour
         }
 
     }
-    public void ClearCombo(int scorePerCombo)
-    {
-        mCurrentScore += (mCurrentCombo * scorePerCombo);
-        mCurrentCombo = 0;
-    }
     public void PauseGame()
     {
         mIsRunning = false;
@@ -121,7 +116,6 @@ public class InGameManager : MonoBehaviour
         mIsRunning = false;
         mCurrentScore = 0;
         mRemainLimit = 0;
-        mCurrentCombo = 0;
     }
     public int XCount { get { return mStageInfo.XCount; } }
     public int YCount { get { return mStageInfo.YCount; } }
@@ -130,16 +124,15 @@ public class InGameManager : MonoBehaviour
     {
         return mFrames[x, y];
     }
-    public void AddScore(int score, ProductColor color)
+    public void AddScore(Product product, int matchedCount)
     {
-        mCurrentCombo++;
-        mCurrentScore += (score * mCurrentCombo);
-        EventOnChange?.Invoke(0, mCurrentScore, mCurrentCombo, color);
+        mCurrentScore += (scorePerProduct * matchedCount * product.Combo);
+        EventOnChange?.Invoke(0, mCurrentScore, product, matchedCount);
     }
     void RemoveLimit()
     {
         mRemainLimit--;
-        EventOnChange?.Invoke(mRemainLimit, 0, 0, ProductColor.Blue);
+        EventOnChange?.Invoke(mRemainLimit, 0, null, 0);
     }
     public Frame GetFrame(float worldPosX, float worldPosY)
     {
@@ -212,6 +205,7 @@ public class InGameManager : MonoBehaviour
         mNewProductCycle++;
         if(mNewProductCycle > 60)
         {
+            mStayIdleCount++;
             mNewProductCycle = 0;
             foreach (Frame frame in mFrames)
             {
@@ -224,8 +218,10 @@ public class InGameManager : MonoBehaviour
             
                 Product pro = frame.ChildProduct;
                 if (!pro.IsLocked())
+                {
+                    mStayIdleCount = 0;
                     pro.StartToDrop();
-                    
+                }
             }
         }
     }
@@ -254,7 +250,7 @@ public class InGameManager : MonoBehaviour
 
     void CheckFinishGame()
     {
-        if (mCurrentCombo > 0) //wait for combo
+        if (mStayIdleCount < 5) //waiting for combo process...
             return;
 
         if (mCurrentScore >= mStageInfo.GoalScore)

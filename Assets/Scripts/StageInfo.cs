@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Android;
 
 public class StageInfo
 {
@@ -17,9 +18,16 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
+#if PLATFORM_ANDROID
+        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+            Permission.RequestUserPermission(Permission.ExternalStorageRead);
+#endif
+
         string fullname = Application.persistentDataPath + "/StageInfo/" + stageNum + ".txt";
         if(!File.Exists(fullname)) //최초 실행시 한번만 수행됨(각 스테이지 정보를 기록한 파일들 Save)
         {
+            CreateStageInfoFolder();
+
             StageInfo defInfo = new StageInfo();
             defInfo.DefaultSetting(stageNum);
             Save(defInfo);
@@ -66,13 +74,21 @@ public class StageInfo
         File.WriteAllText(Application.persistentDataPath + "/StageInfo/" + info.Num + ".txt", text);
     }
 
+    public static void CreateStageInfoFolder()
+    {
+        string sDirPath = Application.persistentDataPath + "\\StageInfo";
+        DirectoryInfo di = new DirectoryInfo(sDirPath);
+        if (di.Exists == false)
+            di.Create();
+    }
+
     public void DefaultSetting(int level)
     {
         //테스트를 위한 임시 스테이지 구성
         if(level == 1)
         {
             Num = level;
-            GoalScore = 1000;
+            GoalScore = 2000;
             IsLocked = false;
             StarCount = 0;
             MoveLimit = 20;
@@ -83,30 +99,30 @@ public class StageInfo
         else if (level == 2)
         {
             Num = level;
-            GoalScore = 1500;
-            IsLocked = true;
+            GoalScore = 2000;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 20;
-            XCount = 6;
-            YCount = 6;
+            XCount = 7;
+            YCount = 7;
             ColorCount = 4;
         }
         else if (level == 3)
         {
             Num = level;
             GoalScore = 2000;
-            IsLocked = true;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 20;
-            XCount = 6;
-            YCount = 6;
+            XCount = 8;
+            YCount = 8;
             ColorCount = 4;
         }
         else if (level == 4)
         {
             Num = level;
-            GoalScore = 1000;
-            IsLocked = true;
+            GoalScore = 2000;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 6;
@@ -116,8 +132,8 @@ public class StageInfo
         else if (level == 5)
         {
             Num = level;
-            GoalScore = 1500;
-            IsLocked = true;
+            GoalScore = 2000;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 7;
@@ -127,41 +143,41 @@ public class StageInfo
         else if (level == 6)
         {
             Num = level;
-            GoalScore = 15000;
-            IsLocked = true;
-            StarCount = 0;
-            MoveLimit = 1;
-            XCount = 8;
-            YCount = 8;
-            ColorCount = 3;
-        }
-        else if (level == 7)
-        {
-            Num = level;
-            GoalScore = 1000;
-            IsLocked = true;
+            GoalScore = 2000;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 8;
             YCount = 8;
             ColorCount = 5;
         }
+        else if (level == 7)
+        {
+            Num = level;
+            GoalScore = 2000;
+            IsLocked = false;
+            StarCount = 0;
+            MoveLimit = 30;
+            XCount = 6;
+            YCount = 6;
+            ColorCount = 6;
+        }
         else if (level == 8)
         {
             Num = level;
-            GoalScore = 500;
-            IsLocked = true;
+            GoalScore = 2000;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 30;
-            XCount = 8;
-            YCount = 8;
+            XCount = 7;
+            YCount = 7;
             ColorCount = 6;
         }
         else if (level == 9)
         {
             Num = level;
             GoalScore = 2000;
-            IsLocked = true;
+            IsLocked = false;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 8;
@@ -171,13 +187,24 @@ public class StageInfo
         else if (level == 10)
         {
             Num = level;
-            GoalScore = 3500;
-            IsLocked = true;
+            GoalScore = 23500;
+            IsLocked = false;
             StarCount = 0;
-            MoveLimit = 30;
+            MoveLimit = 1;
             XCount = 8;
             YCount = 8;
-            ColorCount = 6;
+            ColorCount = 3;
+        }
+        else if (level == 11)
+        {
+            Num = level;
+            GoalScore = 23500;
+            IsLocked = false;
+            StarCount = 0;
+            MoveLimit = 1;
+            XCount = 8;
+            YCount = 8;
+            ColorCount = 4;
         }
     }
 }
