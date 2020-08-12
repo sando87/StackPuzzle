@@ -49,10 +49,9 @@ public class Product : MonoBehaviour
     {
         Vector3 dest = target.transform.position;
         dest.z = transform.position.z;
-        float distPerFrame = (InGameManager.GridSize * 3) * Time.deltaTime;
-        while ((transform.position - dest).magnitude >= distPerFrame)
+        while ((transform.position - dest).magnitude >= 0.02f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, distPerFrame);
+            transform.position = Vector3.MoveTowards(transform.position, dest, InGameManager.GridSize * 3 * Time.deltaTime);
             yield return null;
         }
         transform.position = dest;
@@ -183,32 +182,37 @@ public class Product : MonoBehaviour
         ParentFrame = parent;
         float height = InGameManager.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
-        StartCoroutine(AnimateDrop(isComboable, emptyCount));
+        StartCoroutine(AnimateDrop(isComboable));
     }
-    IEnumerator AnimateDrop(bool isComboable, int emptyCount)
+    IEnumerator AnimateDrop(bool isComboable)
     {
-        float[] delayTable = { 0.3f, 0.22f, 0.15f, 0.083f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        Vector3 dest = ParentFrame.transform.position;
-        dest.z = transform.position.z;
-        float distPerFrame = InGameManager.GridSize * Time.deltaTime;
-        float curAnimCnt = 0;
-        while (curAnimCnt < 0.6f)
+        //블럭이 떨어져야 하는 높이에 따라 다르게 delay를 줘서 떨어져야 한다.
+        //채공시간은 0.6초, 착지순간은 모두 동일하게 수학적으로 계산한다.
+        float totalTime = 0.6f;
+        float totalHeight = InGameManager.GridSize * 8; //totalTime 동안 떨어지는 블럭 높이(즉 속도조절값)
+        float a = totalHeight / (totalTime * totalTime);
+        float delay = totalTime - Mathf.Sqrt(transform.localPosition.y / a);
+
+        Vector3 startPos = transform.position;
+        Vector3 endPos = ParentFrame.transform.position;
+        endPos.z = startPos.z;
+        float time = 0;
+        while (time < totalTime)
         {
-            if(curAnimCnt >= delayTable[emptyCount - 1])
-            {
-                Vector3 nextPos = Vector3.MoveTowards(transform.position, dest, distPerFrame);
-                nextPos.y = nextPos.y < dest.y ? dest.y : nextPos.y;
-                transform.position = nextPos;
-                distPerFrame += 0.001f;
-            }
-            curAnimCnt += Time.deltaTime;
+            float x = time - delay;
+            x = x < 0 ? 0 : x;
+            float y = a * x * x;
+            Vector3 curPos = startPos;
+            curPos.y -= y;
+            transform.position = curPos;
+            time += Time.deltaTime;
             yield return null;
         }
-        transform.position = dest;
+        transform.position = endPos;
 
         mLocked = false;
 
-        if(isComboable)
+        if (isComboable)
             StartCoroutine(DoMatch());
     }
 

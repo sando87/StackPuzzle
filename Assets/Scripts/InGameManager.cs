@@ -30,8 +30,6 @@ public class InGameManager : MonoBehaviour
     private Vector3 mDownPosition;
     private StageInfo mStageInfo;
     private bool mIsRunning;
-    private int mNewProductCycle = 0;
-    private int mStayIdleCount = 0;
     private int mCurrentScore = 0;
     private int mRemainLimit = 0;
 
@@ -41,6 +39,16 @@ public class InGameManager : MonoBehaviour
     public Action<int, int, Product, int> EventOnChange;
     public Action<bool> EventOnFinish;
 
+    private void OnEnable()
+    {
+        StopCoroutine("CheckDropableProduct");
+        StartCoroutine("CheckDropableProduct");
+    }
+    private void OnDisable()
+    {
+        StopCoroutine("CheckDropableProduct");
+    }
+
     void Update()
     {
         if (!mIsRunning)
@@ -48,10 +56,6 @@ public class InGameManager : MonoBehaviour
 
         if(IsSwapable())
             CheckSwipe();
-
-        CheckDropableProduct();
-
-        CheckFinishGame();
     }
 
     public void StartGame(StageInfo info)
@@ -200,13 +204,15 @@ public class InGameManager : MonoBehaviour
             mDownProduct = null;
         }
     }
-    void CheckDropableProduct()
+
+    IEnumerator CheckDropableProduct()
     {
-        mNewProductCycle++;
-        if(mNewProductCycle > 60)
+        float time = 0;
+        while(true)
         {
-            mStayIdleCount++;
-            mNewProductCycle = 0;
+            yield return new WaitForSeconds(0.25f);
+            time += 0.25f;
+
             foreach (Frame frame in mFrames)
             {
                 if (frame.ChildProduct == null)
@@ -219,11 +225,17 @@ public class InGameManager : MonoBehaviour
                 Product pro = frame.ChildProduct;
                 if (!pro.IsLocked())
                 {
-                    mStayIdleCount = 0;
+                    time = 0;
                     pro.StartToDrop();
                 }
             }
+
+            if (!IsSwapable() && time > 1)
+                break;
         }
+
+        FinishGame();
+
     }
     public int GetStarCount()
     {
@@ -248,11 +260,8 @@ public class InGameManager : MonoBehaviour
         return true;
     }
 
-    void CheckFinishGame()
+    void FinishGame()
     {
-        if (mStayIdleCount < 5) //waiting for combo process...
-            return;
-
         if (mCurrentScore >= mStageInfo.GoalScore)
         {
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);

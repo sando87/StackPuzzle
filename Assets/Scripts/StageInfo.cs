@@ -76,7 +76,7 @@ public class StageInfo
 
     public static void CreateStageInfoFolder()
     {
-        string sDirPath = Application.persistentDataPath + "\\StageInfo";
+        string sDirPath = Application.persistentDataPath + "/StageInfo";
         DirectoryInfo di = new DirectoryInfo(sDirPath);
         if (di.Exists == false)
             di.Create();
