@@ -207,30 +207,26 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckDropableProduct()
     {
-        float time = 0;
         while(true)
         {
             yield return new WaitForSeconds(0.25f);
-            time += 0.25f;
 
+            int idleCount = 0;
             foreach (Frame frame in mFrames)
             {
                 if (frame.ChildProduct == null)
-                    continue;
-                if (frame.Down() == null)
-                    continue;
-                if (frame.Down().ChildProduct != null)
                     continue;
             
                 Product pro = frame.ChildProduct;
                 if (!pro.IsLocked())
                 {
-                    time = 0;
-                    pro.StartToDrop();
+                    idleCount++;
+                    if (frame.Down() != null && frame.Down().ChildProduct == null)
+                        pro.StartToDrop();
                 }
             }
 
-            if (!IsSwapable() && time > 1)
+            if (!IsSwapable() && idleCount == mFrames.Length)
                 break;
         }
 
@@ -278,14 +274,10 @@ public class InGameManager : MonoBehaviour
         }
         else if(mRemainLimit <= 0)
         {
-            mRemainLimit--;
-            if(mRemainLimit < -200)
-            {
-                SoundPlayer.Inst.Player.Stop();
-                MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
+            SoundPlayer.Inst.Player.Stop();
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
 
-                FinishGame(false);
-            }
+            FinishGame(false);
         }
     }
 
