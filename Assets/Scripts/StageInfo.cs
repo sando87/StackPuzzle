@@ -88,7 +88,7 @@ public class StageInfo
         if(level == 1)
         {
             Num = level;
-            GoalScore = 2000;
+            GoalScore = 500;
             IsLocked = false;
             StarCount = 0;
             MoveLimit = 20;
@@ -99,8 +99,8 @@ public class StageInfo
         else if (level == 2)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 800;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 20;
             XCount = 7;
@@ -111,40 +111,40 @@ public class StageInfo
         {
             Num = level;
             GoalScore = 2000;
-            IsLocked = false;
+            IsLocked = true;
             StarCount = 0;
-            MoveLimit = 20;
+            MoveLimit = 1;
             XCount = 8;
             YCount = 8;
-            ColorCount = 4;
+            ColorCount = 3;
         }
         else if (level == 4)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 500;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
-            XCount = 6;
-            YCount = 6;
+            XCount = 8;
+            YCount = 8;
             ColorCount = 5;
         }
         else if (level == 5)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 800;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
-            XCount = 7;
-            YCount = 7;
+            XCount = 8;
+            YCount = 8;
             ColorCount = 5;
         }
         else if (level == 6)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 1500;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 8;
@@ -154,30 +154,30 @@ public class StageInfo
         else if (level == 7)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 500;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
-            XCount = 6;
-            YCount = 6;
+            XCount = 8;
+            YCount = 8;
             ColorCount = 6;
         }
         else if (level == 8)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 700;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
-            XCount = 7;
-            YCount = 7;
+            XCount = 8;
+            YCount = 8;
             ColorCount = 6;
         }
         else if (level == 9)
         {
             Num = level;
-            GoalScore = 2000;
-            IsLocked = false;
+            GoalScore = 1000;
+            IsLocked = true;
             StarCount = 0;
             MoveLimit = 30;
             XCount = 8;
@@ -187,21 +187,10 @@ public class StageInfo
         else if (level == 10)
         {
             Num = level;
-            GoalScore = 23500;
-            IsLocked = false;
+            GoalScore = 1500;
+            IsLocked = true;
             StarCount = 0;
-            MoveLimit = 1;
-            XCount = 8;
-            YCount = 8;
-            ColorCount = 3;
-        }
-        else if (level == 11)
-        {
-            Num = level;
-            GoalScore = 23500;
-            IsLocked = false;
-            StarCount = 0;
-            MoveLimit = 1;
+            MoveLimit = 5;
             XCount = 8;
             YCount = 8;
             ColorCount = 4;
