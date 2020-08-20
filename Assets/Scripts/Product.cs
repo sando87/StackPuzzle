@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProductColor { Blue, Green, Orange, Purple, Red, Yellow };
+public enum ProductColor { None, Blue, Green, Orange, Purple, Red, Yellow };
+public enum ProductSkill { Nothing, MatchOneMore, BreakSameColor, KeepCombo, ReduceColor };
 
 public class Product : MonoBehaviour
 {
@@ -12,10 +13,15 @@ public class Product : MonoBehaviour
 
     public GameObject mBeamUpEffect;
     public ProductColor mColor;
+    public ProductSkill mSkill;
     public Animation mAnimation;
 
     public SpriteRenderer Renderer;
     public Sprite[] Images;
+    public Sprite ImgOneMore;
+    public Sprite ImgSameColor;
+    public Sprite ImgKeepCombo;
+    public Sprite ImgReduceColor;
     public int ImageIndex;
 
     public int Combo { get; set; }
@@ -61,7 +67,9 @@ public class Product : MonoBehaviour
     {
         ParentFrame = target;
         mLocked = false;
-        StartCoroutine(DoMatch());
+
+        if(InGameManager.Inst.MatchLock == false)
+            StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
     {
@@ -70,14 +78,57 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
+            MakeProductEffect(matchList.Count);
+
             Combo++;
-            InGameManager.Inst.AddScore(this, matchList.Count);
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+            Product SameColorSkillProduct = null;
+            Product ReduceColorSkillProduct = null;
             foreach (Product pro in matchList)
             {
-                pro.Combo = Combo;
-                StartCoroutine(pro.StartDestroy());
+                if (pro.mSkill == ProductSkill.MatchOneMore)
+                    Combo++;
+                else if (pro.mSkill == ProductSkill.BreakSameColor)
+                    SameColorSkillProduct = pro;
+                else if (pro.mSkill == ProductSkill.ReduceColor)
+                    ReduceColorSkillProduct = pro;
             }
+
+            if (ReduceColorSkillProduct != null)
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+                Product[] pros = InGameManager.Inst.GetSameProducts(ReduceColorSkillProduct.mColor);
+                foreach (Product pro in pros)
+                {
+                    if (pro.IsLocked())
+                        continue;
+
+                    pro.Combo = ReduceColorSkillProduct.Combo;
+                    StartCoroutine(pro.StartDestroy());
+                }
+            }
+            else if (SameColorSkillProduct != null)
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+                Product[] pros = InGameManager.Inst.GetSameProducts(SameColorSkillProduct.mColor);
+                foreach (Product pro in pros)
+                {
+                    if (pro.IsLocked())
+                        continue;
+
+                    pro.Combo = SameColorSkillProduct.Combo;
+                    StartCoroutine(pro.StartDestroy());
+                }
+            }
+            else
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+                foreach (Product pro in matchList)
+                {
+                    pro.Combo = Combo;
+                    StartCoroutine(pro.StartDestroy());
+                }
+            }
+            
             StartCoroutine(StartFlashing(matchList));
         }
     }
@@ -86,6 +137,9 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         yield return null;
+        if (mSkill == ProductSkill.KeepCombo)
+            InGameManager.Inst.KeepCombo(Combo);
+        InGameManager.Inst.AddScore(this);
         mAnimation.Play("destroy");
         KeepComboToUpperProduct();
     }
@@ -323,6 +377,12 @@ public class Product : MonoBehaviour
     {
         return ParentFrame.IndexY == InGameManager.Inst.YCount - 1;
     }
+    public Product DummyProduct()
+    {
+        int idxX = ParentFrame.IndexX;
+        int idxY = InGameManager.Inst.YCount;
+        return InGameManager.Inst.GetFrame(idxX, idxY).ChildProduct;
+    }
     List<Frame> GetEmptyDownFrames()
     {
         List<Frame> emptyFrames = new List<Frame>();
@@ -360,6 +420,36 @@ public class Product : MonoBehaviour
             return;
 
         upProduct.Combo = Combo;
+    }
+    void MakeProductEffect(int matchCount)
+    {
+        if (matchCount <= InGameManager.MatchCount)
+            return;
+
+        ProductSkill skill = ProductSkill.Nothing;
+        Sprite image = null;
+        switch(matchCount)
+        {
+            case 4:
+                skill = ProductSkill.MatchOneMore;
+                image = ImgOneMore;
+                break;
+            case 5:
+                skill = ProductSkill.BreakSameColor;
+                image = ImgSameColor;
+                break;
+            case 6:
+                skill = ProductSkill.KeepCombo;
+                image = ImgKeepCombo;
+                break;
+            default:
+                skill = ProductSkill.ReduceColor;
+                image = ImgReduceColor;
+                break;
+        }
+        Product dummy = DummyProduct();
+        dummy.mSkill = skill;
+        dummy.GetComponent<SpriteRenderer>().sprite = image;
     }
     #endregion
 }

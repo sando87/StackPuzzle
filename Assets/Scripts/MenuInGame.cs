@@ -29,12 +29,12 @@ public class MenuInGame : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
     }
-    private void UpdatePanel(int remainLimit, int totalScore, Product product, int matchCount)
+    private void UpdatePanel(int remainLimit, int totalScore, Product product)
     {
         if (totalScore > 0)
         {
             UpdateScore(totalScore);
-            PlayComboAnimation(product, matchCount);
+            PlayComboAnimation(product);
         }
         else
         {
@@ -68,24 +68,11 @@ public class MenuInGame : MonoBehaviour
         BarStar2.gameObject.SetActive(countStar >= 2);
         BarStar3.gameObject.SetActive(countStar >= 3);
     }
-    private void PlayComboAnimation(Product product, int matchCount)
+    private void PlayComboAnimation(Product product)
     {
-        Color comboColor = Color.white;
-        switch(product.mColor)
-        {
-            case ProductColor.Blue: comboColor = Color.cyan; break;
-            case ProductColor.Green: comboColor = Color.green; break;
-            case ProductColor.Orange: comboColor = new Color(1.0f, 0.5f, 0); break;
-            case ProductColor.Purple: comboColor = Color.magenta; break;
-            case ProductColor.Red: comboColor = Color.red; break;
-            case ProductColor.Yellow: comboColor = Color.yellow; break;
-            default: comboColor = Color.white; break;
-        }
-        int scoreUnit = InGameManager.scorePerProduct * matchCount;
         GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
         Text combo = comboTextObj.GetComponent<Text>();
-        //combo.color = comboColor;
-        combo.text = scoreUnit + "x" + product.Combo;
+        combo.text = product.Combo.ToString();
         StartCoroutine(ComboEffect(comboTextObj));
     }
     IEnumerator ComboEffect(GameObject obj)
@@ -107,5 +94,9 @@ public class MenuInGame : MonoBehaviour
     public void OnPause()
     {
         MenuPause.PopUp();
+    }
+    public void OnLockMatch()
+    {
+        InGameManager.Inst.MatchLock = !InGameManager.Inst.MatchLock;
     }
 }

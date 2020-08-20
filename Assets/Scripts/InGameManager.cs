@@ -32,11 +32,14 @@ public class InGameManager : MonoBehaviour
     private bool mIsRunning;
     private int mCurrentScore = 0;
     private int mRemainLimit = 0;
+    private int mKeepCombo = 0;
+    private ProductColor mSkipColor = ProductColor.None;
 
+    public bool MatchLock { get; set; }
     public GameObject GameField;
     public GameObject FieldMask;
 
-    public Action<int, int, Product, int> EventOnChange;
+    public Action<int, int, Product> EventOnChange;
     public Action<bool> EventOnFinish;
 
     private void OnEnable()
@@ -128,15 +131,37 @@ public class InGameManager : MonoBehaviour
     {
         return mFrames[x, y];
     }
-    public void AddScore(Product product, int matchedCount)
+    public void AddScore(Product product)
     {
-        mCurrentScore += (scorePerProduct * matchedCount * product.Combo);
-        EventOnChange?.Invoke(0, mCurrentScore, product, matchedCount);
+        mCurrentScore += (scorePerProduct * product.Combo);
+        EventOnChange?.Invoke(0, mCurrentScore, product);
+    }
+    public void KeepCombo(int combo)
+    {
+        if (combo > mKeepCombo)
+            mKeepCombo = combo;
+    }
+    public void SetSkipProduct(ProductColor color, int returnCount)
+    {
+        if (mSkipColor != ProductColor.None)
+            return;
+
+        mSkipColor = color;
+        StartCoroutine(ReturnToStopSkipping(returnCount));
+    }
+    IEnumerator ReturnToStopSkipping(int count)
+    {
+        int returnCount = mRemainLimit - count;
+        if (returnCount < 0) returnCount = 0;
+        while (returnCount < mRemainLimit)
+            yield return null;
+
+        mSkipColor = ProductColor.None;
     }
     void RemoveLimit()
     {
         mRemainLimit--;
-        EventOnChange?.Invoke(mRemainLimit, 0, null, 0);
+        EventOnChange?.Invoke(mRemainLimit, 0, null);
     }
     public Frame GetFrame(float worldPosX, float worldPosY)
     {
@@ -150,6 +175,11 @@ public class InGameManager : MonoBehaviour
     {
         int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
         int typeIdx = UnityEngine.Random.Range(0, colorCount);
+        if (mSkipColor != ProductColor.None && ProductPrefabs[typeIdx].GetComponent<Product>().mColor == mSkipColor)
+        {
+            int nextIdx = UnityEngine.Random.Range(1, colorCount);
+            typeIdx = (typeIdx + nextIdx) % colorCount;
+        }
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
@@ -279,6 +309,20 @@ public class InGameManager : MonoBehaviour
 
             FinishGame(false);
         }
+    }
+
+    public Product[] GetSameProducts(ProductColor color)
+    {
+        List<Product> pros = new List<Product>();
+        foreach(Frame frame in mFrames)
+        {
+            if (frame.IsDummy)
+                continue;
+            Product pro = frame.ChildProduct;
+            if (pro != null && pro.mColor == color)
+                pros.Add(pro);
+        }
+        return pros.ToArray();
     }
 
 }
