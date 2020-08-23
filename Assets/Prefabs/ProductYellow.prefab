@@ -97,7 +97,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mBeamUpEffect: {fileID: 185082, guid: 7ba5e319299a7a540823eb3edb0d9cc9, type: 3}
-  mColor: 5
+  mColor: 6
+  mSkill: 0
   mAnimation: {fileID: -8201806052002896490}
   Renderer: {fileID: 4472958291725267997}
   Images:
@@ -106,6 +107,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: d318d644557112241bcca292cdcbb8c3, type: 3}
   - {fileID: 21300000, guid: 90c5b5071f9b90c46963ca6f0d770214, type: 3}
   - {fileID: 21300000, guid: d666b95e3b256104eb4f52870b0f6430, type: 3}
+  ImgOneMore: {fileID: 21300000, guid: 96a9a1afee3999849b1b2a8bfc6ca430, type: 3}
+  ImgSameColor: {fileID: 21300000, guid: 421a07ffb0571d245a425229f893c58b, type: 3}
+  ImgKeepCombo: {fileID: 21300000, guid: faf3328496bf1d646a59c8efd33135b3, type: 3}
+  ImgReduceColor: {fileID: 21300000, guid: ae090ef61c450ac48a336f7dfb6dd14c, type: 3}
   ImageIndex: 0
 --- !u!61 &1056479758494351103
 BoxCollider2D:

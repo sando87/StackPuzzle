@@ -123,6 +123,9 @@ public class InGameManager : MonoBehaviour
         mIsRunning = false;
         mCurrentScore = 0;
         mRemainLimit = 0;
+        mKeepCombo = 0;
+        mSkipColor = ProductColor.None;
+        MatchLock = false;
     }
     public int XCount { get { return mStageInfo.XCount; } }
     public int YCount { get { return mStageInfo.YCount; } }
@@ -140,6 +143,10 @@ public class InGameManager : MonoBehaviour
     {
         if (combo > mKeepCombo)
             mKeepCombo = combo;
+    }
+    public bool IsSkippingColor()
+    {
+        return mSkipColor != ProductColor.None;
     }
     public void SetSkipProduct(ProductColor color, int returnCount)
     {
@@ -221,8 +228,9 @@ public class InGameManager : MonoBehaviour
                     if (target != null && !mDownProduct.IsLocked() && !target.IsLocked())
                     {
                         RemoveLimit();
-                        mDownProduct.StartSwipe(target.GetComponentInParent<Frame>());
-                        target.StartSwipe(mDownProduct.GetComponentInParent<Frame>());
+                        mDownProduct.StartSwipe(target.GetComponentInParent<Frame>(), mKeepCombo);
+                        target.StartSwipe(mDownProduct.GetComponentInParent<Frame>(), mKeepCombo);
+                        mKeepCombo = 0;
                     }
 
                     mDownProduct = null;
@@ -316,8 +324,6 @@ public class InGameManager : MonoBehaviour
         List<Product> pros = new List<Product>();
         foreach(Frame frame in mFrames)
         {
-            if (frame.IsDummy)
-                continue;
             Product pro = frame.ChildProduct;
             if (pro != null && pro.mColor == color)
                 pros.Add(pro);

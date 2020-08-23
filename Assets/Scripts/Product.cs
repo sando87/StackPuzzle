@@ -41,13 +41,13 @@ public class Product : MonoBehaviour
 
 
     #region MatchCycle
-    public void StartSwipe(Frame target)
+    public void StartSwipe(Frame target, int keepCombo)
     {
         if (mLocked)
             return;
 
         mLocked = true;
-        Combo = 0;
+        Combo = keepCombo;
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
@@ -78,7 +78,8 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
         {
-            MakeProductEffect(matchList.Count);
+            Product dummyProduct = DummyProduct();
+            dummyProduct.MakeProductEffect(matchList.Count);
 
             Combo++;
             Product SameColorSkillProduct = null;
@@ -96,14 +97,23 @@ public class Product : MonoBehaviour
             if (ReduceColorSkillProduct != null)
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+                InGameManager.Inst.SetSkipProduct(mColor, 5);
                 Product[] pros = InGameManager.Inst.GetSameProducts(ReduceColorSkillProduct.mColor);
                 foreach (Product pro in pros)
                 {
                     if (pro.IsLocked())
                         continue;
 
-                    pro.Combo = ReduceColorSkillProduct.Combo;
-                    StartCoroutine(pro.StartDestroy());
+                    if (pro.ParentFrame.IsDummy)
+                    {
+                        InGameManager.Inst.CreateNewProduct(pro.ParentFrame);
+                        Destroy(pro);
+                    }
+                    else
+                    {
+                        pro.Combo = Combo;
+                        StartCoroutine(pro.StartDestroy());
+                    }
                 }
             }
             else if (SameColorSkillProduct != null)
@@ -112,10 +122,12 @@ public class Product : MonoBehaviour
                 Product[] pros = InGameManager.Inst.GetSameProducts(SameColorSkillProduct.mColor);
                 foreach (Product pro in pros)
                 {
+                    if (pro.ParentFrame.IsDummy)
+                        continue;
                     if (pro.IsLocked())
                         continue;
 
-                    pro.Combo = SameColorSkillProduct.Combo;
+                    pro.Combo = Combo;
                     StartCoroutine(pro.StartDestroy());
                 }
             }
@@ -426,30 +438,28 @@ public class Product : MonoBehaviour
         if (matchCount <= InGameManager.MatchCount)
             return;
 
-        ProductSkill skill = ProductSkill.Nothing;
-        Sprite image = null;
         switch(matchCount)
         {
             case 4:
-                skill = ProductSkill.MatchOneMore;
-                image = ImgOneMore;
+                mSkill = ProductSkill.MatchOneMore;
+                GetComponent<SpriteRenderer>().sprite = ImgOneMore;
                 break;
             case 5:
-                skill = ProductSkill.BreakSameColor;
-                image = ImgSameColor;
+                mSkill = ProductSkill.BreakSameColor;
+                GetComponent<SpriteRenderer>().sprite = ImgSameColor;
                 break;
             case 6:
-                skill = ProductSkill.KeepCombo;
-                image = ImgKeepCombo;
+                mSkill = ProductSkill.KeepCombo;
+                GetComponent<SpriteRenderer>().sprite = ImgKeepCombo;
                 break;
             default:
-                skill = ProductSkill.ReduceColor;
-                image = ImgReduceColor;
+                if(InGameManager.Inst.IsSkippingColor() == false)
+                {
+                    mSkill = ProductSkill.ReduceColor;
+                    GetComponent<SpriteRenderer>().sprite = ImgReduceColor;
+                }
                 break;
         }
-        Product dummy = DummyProduct();
-        dummy.mSkill = skill;
-        dummy.GetComponent<SpriteRenderer>().sprite = image;
     }
     #endregion
 }
