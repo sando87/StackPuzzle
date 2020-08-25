@@ -87,8 +87,9 @@ public class InGameManager : MonoBehaviour
                 localFramePos.y = GridSize * y;
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y);
-                CreateNewProduct(mFrames[x, y]);
+                mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount);
+                Product pro = CreateNewProduct(mFrames[x, y]);
+                pro.WrapChocoBlock(!info.GetCell(x, y).ProductMovable);
                 if (y == info.YCount)
                     frameObj.GetComponent<SpriteRenderer>().enabled = false;
             }
@@ -225,7 +226,7 @@ public class InGameManager : MonoBehaviour
                     if (_currentSwipe.x > 0 && _currentSwipe.y > -0.5f && _currentSwipe.y < 0.5f)
                         target = mDownProduct.Right();
 
-                    if (target != null && !mDownProduct.IsLocked() && !target.IsLocked())
+                    if (target != null && !mDownProduct.IsLocked() && !target.IsLocked() && !mDownProduct.IsChocoBlock() && !target.IsChocoBlock())
                     {
                         RemoveLimit();
                         mDownProduct.StartSwipe(target.GetComponentInParent<Frame>(), mKeepCombo);

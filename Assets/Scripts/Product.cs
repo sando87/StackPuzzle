@@ -12,6 +12,7 @@ public class Product : MonoBehaviour
     private Frame mParentFrame = null;
 
     public GameObject mBeamUpEffect;
+    public GameObject ChocoBlock;
     public ProductColor mColor;
     public ProductSkill mSkill;
     public Animation mAnimation;
@@ -103,6 +104,8 @@ public class Product : MonoBehaviour
                 {
                     if (pro.IsLocked())
                         continue;
+                    if (pro.IsChocoBlock())
+                        continue;
 
                     if (pro.ParentFrame.IsDummy)
                     {
@@ -125,6 +128,8 @@ public class Product : MonoBehaviour
                     if (pro.ParentFrame.IsDummy)
                         continue;
                     if (pro.IsLocked())
+                        continue;
+                    if (pro.IsChocoBlock())
                         continue;
 
                     pro.Combo = Combo;
@@ -154,6 +159,8 @@ public class Product : MonoBehaviour
         InGameManager.Inst.AddScore(this);
         mAnimation.Play("destroy");
         KeepComboToUpperProduct();
+        UnWrapChocoBlocksAroundMe();
+        ParentFrame.BreakCover(Combo);
     }
     void StartSpriteAnim()
     {
@@ -315,7 +322,7 @@ public class Product : MonoBehaviour
     #region Support Functions
     void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (mLocked || mColor != color)
+        if (mLocked || mColor != color || IsChocoBlock())
             return;
 
         if (products.Contains(this))
@@ -460,6 +467,29 @@ public class Product : MonoBehaviour
                 }
                 break;
         }
+    }
+    public void WrapChocoBlock(bool wrap)
+    {
+        ChocoBlock.SetActive(wrap);
+    }
+    public bool IsChocoBlock()
+    {
+        return ChocoBlock.activeSelf;
+    }
+    public void UnWrapChocoBlocksAroundMe()
+    {
+        Product target = Up();
+        if (target != null)
+            target.WrapChocoBlock(false);
+        target = Down();
+        if (target != null)
+            target.WrapChocoBlock(false);
+        target = Right();
+        if (target != null)
+            target.WrapChocoBlock(false);
+        target = Left();
+        if (target != null)
+            target.WrapChocoBlock(false);
     }
     #endregion
 }
