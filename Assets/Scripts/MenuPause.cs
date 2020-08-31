@@ -7,6 +7,8 @@ public class MenuPause : MonoBehaviour
 {
     private const string UIObjName = "CanvasPopUp/MenuPause";
 
+    public GameObject GameField;
+
     public static void PopUp()
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
@@ -16,7 +18,7 @@ public class MenuPause : MonoBehaviour
     public void OnQuit()
     {
         gameObject.SetActive(false);
-        InGameManager.Inst.FinishGame(false);
+        GameField.GetComponent<InGameManager>().FinishGame(false);
         MenuInGame.Hide();
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
@@ -24,6 +26,6 @@ public class MenuPause : MonoBehaviour
     public void OnResume()
     {
         gameObject.SetActive(false);
-        InGameManager.Inst.ResumeGame();
+        GameField.GetComponent<InGameManager>().ResumeGame();
     }
 }

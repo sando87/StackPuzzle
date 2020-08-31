@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class MenuInGame : MonoBehaviour
 {
     private const string UIObjName = "MenuInGame";
-    
+    private StageInfo mStageInfo;
+
     public Text CurrentScore;
     public Text TargetScore;
     public Text Limit;
@@ -17,6 +18,7 @@ public class MenuInGame : MonoBehaviour
     public Image BarStar3;
     public GameObject ParentPanel;
     public GameObject ComboText;
+    public GameObject GameField;
 
     public static void PopUp(StageInfo info)
     {
@@ -44,6 +46,7 @@ public class MenuInGame : MonoBehaviour
     }
     private void InitUIState(StageInfo info)
     {
+        mStageInfo = info;
         ScoreBar.fillAmount = 0;
         BarStar1.gameObject.SetActive(false);
         BarStar2.gameObject.SetActive(false);
@@ -54,19 +57,19 @@ public class MenuInGame : MonoBehaviour
         TargetScore.text = info.GoalScore.ToString();
         StageLevel.text = info.Num.ToString();
 
-        InGameManager.Inst.EventOnChange = UpdatePanel;
+        GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
     }
 
     private void UpdateScore(int totalScore)
     {
-        int countStar = InGameManager.Inst.GetStarCount();
+        int starCount = InGameManager.GetStarCount(totalScore, mStageInfo.GoalScore);
         int targetScore = int.Parse(TargetScore.text);
         float rateTarget = (float)totalScore / (float)targetScore;
         CurrentScore.text = totalScore.ToString();
         ScoreBar.fillAmount = rateTarget;
-        BarStar1.gameObject.SetActive(countStar >= 1);
-        BarStar2.gameObject.SetActive(countStar >= 2);
-        BarStar3.gameObject.SetActive(countStar >= 3);
+        BarStar1.gameObject.SetActive(starCount >= 1);
+        BarStar2.gameObject.SetActive(starCount >= 2);
+        BarStar3.gameObject.SetActive(starCount >= 3);
     }
     private void PlayComboAnimation(Product product)
     {
@@ -97,6 +100,7 @@ public class MenuInGame : MonoBehaviour
     }
     public void OnLockMatch()
     {
-        InGameManager.Inst.MatchLock = !InGameManager.Inst.MatchLock;
+        InGameManager mgr = GameField.GetComponent<InGameManager>();
+        mgr.MatchLock = !mgr.MatchLock;
     }
 }

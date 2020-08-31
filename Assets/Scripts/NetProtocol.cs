@@ -9,7 +9,8 @@ using UnityEngine;
 
 public enum NetCMD
 {
-    Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores
+    Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
+    InitField, NextProducts, AttackSwipe
 }
 public class NetProtocol
 {
@@ -31,6 +32,9 @@ public class NetProtocol
             case NetCMD.RenewScore:     responseMsg.body = ProcRenewScore(requestMsg.body as UserInfo); break;
             case NetCMD.GetScores:      responseMsg.body = ProcGetUsers(); break;
             case NetCMD.AddLog:         responseMsg.body = ProcAddLog(requestMsg.body as LogInfo); break;
+            case NetCMD.InitField:      responseMsg.body = ProcInitField(requestMsg.body as InitFieldInfo); break;
+            case NetCMD.NextProducts:   responseMsg.body = ProcNextProduct(requestMsg.body as NextProducts); break;
+            case NetCMD.AttackSwipe:    responseMsg.body = ProcAttackSwipe(requestMsg.body as SwipeInfo); break;
             default:                    responseMsg.body = "Undefied Command"; break;
         }
         return Serialize(responseMsg);
@@ -71,6 +75,18 @@ public class NetProtocol
     static string ProcAddLog(LogInfo requestBody)
     {
         DBManager.Inst().AddLog(requestBody);
+        return "OK";
+    }
+    static InitFieldInfo ProcInitField(InitFieldInfo requestBody)
+    {
+        return requestBody;
+    }
+    static NextProducts ProcNextProduct(NextProducts requestBody)
+    {
+        return requestBody;
+    }
+    static string ProcAttackSwipe(SwipeInfo requestBody)
+    {
         return "OK";
     }
 
@@ -137,3 +153,28 @@ public class LogInfo
     public String message;
 }
 
+[Serializable]
+public class InitFieldInfo
+{
+    public int userPk;
+    public int xCount;
+    public int yCount;
+    public ProductColor[] products;
+}
+
+[Serializable]
+public class NextProducts
+{
+    public int userPk;
+    public int requestCount;
+    public ProductColor[] products;
+}
+
+[Serializable]
+public class SwipeInfo
+{
+    public int userPk;
+    public int idxX;
+    public int idxY;
+    public SwipeDirection dir;
+}

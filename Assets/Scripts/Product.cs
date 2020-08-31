@@ -39,6 +39,7 @@ public class Product : MonoBehaviour
             mParentFrame = value;
         }
     }
+    public InGameManager GameField { get { return ParentFrame.GameField; } }
 
 
     #region MatchCycle
@@ -69,7 +70,7 @@ public class Product : MonoBehaviour
         ParentFrame = target;
         mLocked = false;
 
-        if(InGameManager.Inst.MatchLock == false)
+        if(GameField.MatchLock == false)
             StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
@@ -98,8 +99,8 @@ public class Product : MonoBehaviour
             if (ReduceColorSkillProduct != null)
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-                InGameManager.Inst.SetSkipProduct(mColor, 5);
-                Product[] pros = InGameManager.Inst.GetSameProducts(ReduceColorSkillProduct.mColor);
+                GameField.SetSkipProduct(mColor, 5);
+                Product[] pros = GameField.GetSameProducts(ReduceColorSkillProduct.mColor);
                 foreach (Product pro in pros)
                 {
                     if (pro.IsLocked())
@@ -109,7 +110,7 @@ public class Product : MonoBehaviour
 
                     if (pro.ParentFrame.IsDummy)
                     {
-                        InGameManager.Inst.CreateNewProduct(pro.ParentFrame);
+                        GameField.CreateNewProduct(pro.ParentFrame);
                         Destroy(pro);
                     }
                     else
@@ -122,7 +123,7 @@ public class Product : MonoBehaviour
             else if (SameColorSkillProduct != null)
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-                Product[] pros = InGameManager.Inst.GetSameProducts(SameColorSkillProduct.mColor);
+                Product[] pros = GameField.GetSameProducts(SameColorSkillProduct.mColor);
                 foreach (Product pro in pros)
                 {
                     if (pro.ParentFrame.IsDummy)
@@ -155,8 +156,8 @@ public class Product : MonoBehaviour
         mLocked = true;
         yield return null;
         if (mSkill == ProductSkill.KeepCombo)
-            InGameManager.Inst.KeepCombo(Combo);
-        InGameManager.Inst.AddScore(this);
+            GameField.KeepCombo(Combo);
+        GameField.AddScore(this);
         mAnimation.Play("destroy");
         KeepComboToUpperProduct();
         UnWrapChocoBlocksAroundMe();
@@ -197,7 +198,7 @@ public class Product : MonoBehaviour
                 }
                 else
                 {
-                    Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
+                    Product pro = GameField.CreateNewProduct(curFrame);
                     pro.StartDropAnimate(curFrame, empties.Count, false);
                 }
                 idx++;
@@ -225,7 +226,7 @@ public class Product : MonoBehaviour
                 }
                 else
                 {
-                    Product pro = InGameManager.Inst.CreateNewProduct(curFrame);
+                    Product pro = GameField.CreateNewProduct(curFrame);
                     pro.StartDropAnimate(curFrame, empties.Count, false);
                 }
                 idx++;
@@ -394,13 +395,13 @@ public class Product : MonoBehaviour
     }
     public bool IsTop()
     {
-        return ParentFrame.IndexY == InGameManager.Inst.YCount - 1;
+        return ParentFrame.IndexY == GameField.YCount - 1;
     }
     public Product DummyProduct()
     {
         int idxX = ParentFrame.IndexX;
-        int idxY = InGameManager.Inst.YCount;
-        return InGameManager.Inst.GetFrame(idxX, idxY).ChildProduct;
+        int idxY = GameField.YCount;
+        return GameField.GetFrame(idxX, idxY).ChildProduct;
     }
     List<Frame> GetEmptyDownFrames()
     {
@@ -460,7 +461,7 @@ public class Product : MonoBehaviour
                 GetComponent<SpriteRenderer>().sprite = ImgKeepCombo;
                 break;
             default:
-                if(InGameManager.Inst.IsSkippingColor() == false)
+                if(GameField.IsSkippingColor() == false)
                 {
                     mSkill = ProductSkill.ReduceColor;
                     GetComponent<SpriteRenderer>().sprite = ImgReduceColor;

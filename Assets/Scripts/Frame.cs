@@ -8,12 +8,14 @@ public class Frame : MonoBehaviour
     private int mIndexX;
     private int mIndexY;
     private int mCoverCount;
+    private InGameManager mGameField;
 
     public Sprite[] Covers;
 
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
-    public bool IsDummy { get { return mIndexY == InGameManager.Inst.YCount; } }
+    public InGameManager GameField { get { return mGameField; } }
+    public bool IsDummy { get { return mIndexY == GameField.YCount; } }
     public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }
     public SpriteRenderer CoverRenderer;
 
@@ -28,8 +30,9 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(int idxX, int idxY, int coverCount)
+    public void Initialize(int idxX, int idxY, int coverCount, InGameManager field)
     {
+        mGameField = field;
         mIndexX = idxX;
         mIndexY = idxY;
 
@@ -53,23 +56,23 @@ public class Frame : MonoBehaviour
 
     public Frame Left()
     {
-        return mIndexX <= 0 ? null : InGameManager.Inst.GetFrame(mIndexX - 1, mIndexY);
+        return mIndexX <= 0 ? null : GameField.GetFrame(mIndexX - 1, mIndexY);
     }
     public Frame Right()
     {
-        return InGameManager.Inst.XCount - 1 <= mIndexX ? null : InGameManager.Inst.GetFrame(mIndexX + 1, mIndexY);
+        return GameField.XCount - 1 <= mIndexX ? null : GameField.GetFrame(mIndexX + 1, mIndexY);
     }
     public Frame Down()
     {
-        return mIndexY <= 0 ? null : InGameManager.Inst.GetFrame(mIndexX, mIndexY - 1);
+        return mIndexY <= 0 ? null : GameField.GetFrame(mIndexX, mIndexY - 1);
     }
     public Frame Up()
     {
-        return InGameManager.Inst.YCount - 1 <= mIndexY ? null : InGameManager.Inst.GetFrame(mIndexX, mIndexY + 1);
+        return GameField.YCount - 1 <= mIndexY ? null : GameField.GetFrame(mIndexX, mIndexY + 1);
     }
     public Frame UpDummy()
     {
-        return InGameManager.Inst.GetFrame(mIndexX, InGameManager.Inst.YCount);
+        return GameField.GetFrame(mIndexX, GameField.YCount);
     }
 
 }

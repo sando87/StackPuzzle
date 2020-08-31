@@ -4,40 +4,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InGameManager : MonoBehaviour
+public class BattleFieldManager : MonoBehaviour
 {
     public const int MatchCount = 3;
-    public const int scorePerProduct = 1;
+    public const int attackScore = 5;
     public const float GridSize = 0.8f;
 
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
     public GameObject MaskPrefab;
+    public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
-    private StageInfo mStageInfo = null;
 
-    private bool mIsPaused;
-    private int mCurrentScore = 0;
-    private int mRemainLimit = 0;
     private int mKeepCombo = 0;
-    private ProductColor mSkipColor = ProductColor.None;
 
     public bool MatchLock { get; set; }
 
     public Action<int, int, Product> EventOnChange;
     public Action<bool> EventOnFinish;
-
-    //private void OnEnable()
-    //{
-    //    StopCoroutine("CheckDropableProduct");
-    //    StartCoroutine("CheckDropableProduct");
-    //}
-    //private void OnDisable()
-    //{
-    //    StopCoroutine("CheckDropableProduct");
-    //}
 
     private void Update()
     {
@@ -77,6 +63,7 @@ public class InGameManager : MonoBehaviour
 
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
+            //AttckSwipe(idxX, idxY, matchable);
             RemoveLimit();
             targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
@@ -88,11 +75,14 @@ public class InGameManager : MonoBehaviour
     {
         ResetGame();
 
+        InitFieldInfo fieldInfo = new InitFieldInfo();
+
+        NetClientApp.GetInstance().Request(NetCMD.InitField, fieldInfo, (object response) =>
+        {
+            InitFieldInfo _info = response as InitFieldInfo;
+        });
+
         gameObject.SetActive(true);
-        mIsPaused = false;
-        mStageInfo = info;
-        mCurrentScore = 0;
-        mRemainLimit = info.MoveLimit;
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
         GameObject mask = Instantiate(MaskPrefab, transform);
@@ -144,12 +134,7 @@ public class InGameManager : MonoBehaviour
             Destroy(transform.GetChild(i).gameObject);
 
         mFrames = null;
-        mStageInfo = null;
-        mIsPaused = false;
-        mCurrentScore = 0;
-        mRemainLimit = 0;
         mKeepCombo = 0;
-        mSkipColor = ProductColor.None;
         MatchLock = false;
     }
     public int XCount { get { return mStageInfo.XCount; } }
