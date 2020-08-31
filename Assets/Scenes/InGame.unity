@@ -5636,7 +5636,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9c9f397b7489584a882302a477787a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StageMode: 1
   ProductPrefabs:
   - {fileID: 2357426245562659068, guid: ee150ebc3c5bfd543a33107f2835dcb8, type: 3}
   - {fileID: 6693433209463344371, guid: 981c08d96551f2d4b9a0063bff449270, type: 3}

@@ -85,9 +85,9 @@ public class NetProtocol
     {
         return requestBody;
     }
-    static string ProcAttackSwipe(SwipeInfo requestBody)
+    static SwipeInfo ProcAttackSwipe(SwipeInfo requestBody)
     {
-        return "OK";
+        return requestBody;
     }
 
     static public byte[] Serialize(object source)
@@ -157,9 +157,9 @@ public class LogInfo
 public class InitFieldInfo
 {
     public int userPk;
-    public int xCount;
-    public int yCount;
-    public ProductColor[] products;
+    public int XCount;
+    public int YCount;
+    public ProductColor[,] products;
 }
 
 [Serializable]
@@ -176,5 +176,6 @@ public class SwipeInfo
     public int userPk;
     public int idxX;
     public int idxY;
+    public bool matchable;
     public SwipeDirection dir;
 }

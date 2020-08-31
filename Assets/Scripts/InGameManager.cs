@@ -50,9 +50,10 @@ public class InGameManager : MonoBehaviour
             Product pro = frame.ChildProduct;
             if (!pro.IsLocked())
             {
-                idleCount++;
                 if (frame.Down() != null && frame.Down().ChildProduct == null)
                     pro.StartToDrop();
+                else
+                    idleCount++;
             }
         }
 
@@ -78,8 +79,8 @@ public class InGameManager : MonoBehaviour
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
             RemoveLimit();
-            targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
-            targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
+            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
+            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
             mKeepCombo = 0;
         }
     }
@@ -88,7 +89,7 @@ public class InGameManager : MonoBehaviour
     {
         ResetGame();
 
-        gameObject.SetActive(true);
+        transform.parent.gameObject.SetActive(true);
         mIsPaused = false;
         mStageInfo = info;
         mCurrentScore = 0;
@@ -135,7 +136,7 @@ public class InGameManager : MonoBehaviour
     {
         ResetGame();
         EventOnFinish?.Invoke(success);
-        gameObject.SetActive(false);
+        transform.parent.gameObject.SetActive(false);
     }
     public void ResetGame()
     {

@@ -17,7 +17,7 @@ public class BattleFieldManager : MonoBehaviour
     public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
-
+    private int mThisUserPK = 1;
     private int mKeepCombo = 0;
 
     public bool MatchLock { get; set; }
@@ -42,15 +42,12 @@ public class BattleFieldManager : MonoBehaviour
             }
         }
 
-        if (!IsSwapable() && idleCount == mFrames.Length)
+        if (idleCount == mFrames.Length)
             FinishGame();
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
-        if (!IsSwapable())
-            return;
-
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch(dir)
@@ -63,63 +60,88 @@ public class BattleFieldManager : MonoBehaviour
 
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
-            //AttckSwipe(idxX, idxY, matchable);
-            RemoveLimit();
+            AttackSwipe(product.ParentFrame.IndexX, product.ParentFrame.IndexY);
             targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             mKeepCombo = 0;
         }
     }
 
-    public void StartGame(StageInfo info)
+    private void AttackSwipe(int idxX, int idxY)
+    {
+        SwipeInfo info = new SwipeInfo();
+        info.idxX = idxX;
+        info.idxY = idxY;
+        info.matchable = !MatchLock;
+        info.userPk = mThisUserPK;
+        NetClientApp.GetInstance().Request(NetCMD.AttackSwipe, info, null);
+    }
+
+    public void StartGame(int userPK)
     {
         ResetGame();
 
-        InitFieldInfo fieldInfo = new InitFieldInfo();
-
-        NetClientApp.GetInstance().Request(NetCMD.InitField, fieldInfo, (object response) =>
+        mThisUserPK = userPK;
+        InitFieldInfo info = new InitFieldInfo();
+        info.XCount = 8;
+        info.YCount = 8;
+        info.userPk = userPK;
+        NetClientApp.GetInstance().Request(NetCMD.InitField, info, (object response) =>
         {
-            InitFieldInfo _info = response as InitFieldInfo;
-        });
+            InitFieldInfo res = response as InitFieldInfo;
 
-        gameObject.SetActive(true);
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
+            gameObject.SetActive(true);
+            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
-        GameObject mask = Instantiate(MaskPrefab, transform);
-        mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
+            GameObject mask = Instantiate(MaskPrefab, transform);
+            mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
 
-        GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+            RegisterSwipeEvent();
 
-        Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
-        localBasePos.x += GridSize * 0.5f;
-        localBasePos.y += GridSize * 0.5f;
-        Vector3 localFramePos = new Vector3(0, 0, 0);
-        mFrames = new Frame[info.XCount, info.YCount + 1];
-        for (int y = 0; y < info.YCount + 1; y++)
-        {
-            for (int x = 0; x < info.XCount; x++)
+            Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
+            localBasePos.x += GridSize * 0.5f;
+            localBasePos.y += GridSize * 0.5f;
+            Vector3 localFramePos = new Vector3(0, 0, 0);
+            mFrames = new Frame[info.XCount, info.YCount + 1];
+            for (int y = 0; y < info.YCount + 1; y++)
             {
-                GameObject frameObj = GameObject.Instantiate((x+y)%2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
-                localFramePos.x = GridSize * x;
-                localFramePos.y = GridSize * y;
-                frameObj.transform.localPosition = localBasePos + localFramePos;
-                mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount, this);
-                Product pro = CreateNewProduct(mFrames[x, y]);
-                pro.WrapChocoBlock(!info.GetCell(x, y).ProductMovable);
-                if (y == info.YCount)
-                    frameObj.GetComponent<SpriteRenderer>().enabled = false;
+                for (int x = 0; x < info.XCount; x++)
+                {
+                    GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
+                    localFramePos.x = GridSize * x;
+                    localFramePos.y = GridSize * y;
+                    frameObj.transform.localPosition = localBasePos + localFramePos;
+                    mFrames[x, y] = frameObj.GetComponent<Frame>();
+                    mFrames[x, y].Initialize(x, y, 0, null);
+                    CreateNewProduct(mFrames[x, y], res.products[x, y]);
+                    if (y == info.YCount)
+                        frameObj.GetComponent<SpriteRenderer>().enabled = false;
+                }
             }
-        }
 
+        });
     }
-    public void PauseGame()
+
+    private void RegisterSwipeEvent()
     {
-        mIsPaused = true;
-    }
-    public void ResumeGame()
-    {
-        mIsPaused = false;
+        if (IsPlayerField())
+        {
+            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+        }
+        else
+        {
+            GetComponent<SwipeDetector>().enabled = false;
+            NetClientApp.GetInstance().WaitResponse(NetCMD.AttackSwipe, (object response) =>
+            {
+                SwipeInfo res = response as SwipeInfo;
+                if (res.userPk == mThisUserPK)
+                    return;
+
+                MatchLock = res.matchable;
+                Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
+                OnSwipe(pro.gameObject, res.dir);
+            });
+        }
     }
     public void FinishGame(bool success)
     {
@@ -137,48 +159,15 @@ public class BattleFieldManager : MonoBehaviour
         mKeepCombo = 0;
         MatchLock = false;
     }
-    public int XCount { get { return mStageInfo.XCount; } }
-    public int YCount { get { return mStageInfo.YCount; } }
 
     public Frame GetFrame(int x, int y)
     {
         return mFrames[x, y];
     }
-    public void AddScore(Product product)
-    {
-        mCurrentScore += (scorePerProduct * product.Combo);
-        EventOnChange?.Invoke(0, mCurrentScore, product);
-    }
     public void KeepCombo(int combo)
     {
         if (combo > mKeepCombo)
             mKeepCombo = combo;
-    }
-    public bool IsSkippingColor()
-    {
-        return mSkipColor != ProductColor.None;
-    }
-    public void SetSkipProduct(ProductColor color, int returnCount)
-    {
-        if (mSkipColor != ProductColor.None)
-            return;
-
-        mSkipColor = color;
-        StartCoroutine(ReturnToStopSkipping(returnCount));
-    }
-    IEnumerator ReturnToStopSkipping(int count)
-    {
-        int returnCount = mRemainLimit - count;
-        if (returnCount < 0) returnCount = 0;
-        while (returnCount < mRemainLimit)
-            yield return null;
-
-        mSkipColor = ProductColor.None;
-    }
-    void RemoveLimit()
-    {
-        mRemainLimit--;
-        EventOnChange?.Invoke(mRemainLimit, 0, null);
     }
     public Frame GetFrame(float worldPosX, float worldPosY)
     {
@@ -188,20 +177,21 @@ public class BattleFieldManager : MonoBehaviour
         int idxY = (int)(offY / (float)GridSize);
         return mFrames[idxX, idxY];
     }
-    public Product CreateNewProduct(Frame parent)
+    public Product CreateNewProduct(Frame parent, ProductColor color)
     {
-        int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
-        int typeIdx = UnityEngine.Random.Range(0, colorCount);
-        if (mSkipColor != ProductColor.None && ProductPrefabs[typeIdx].GetComponent<Product>().mColor == mSkipColor)
-        {
-            int nextIdx = UnityEngine.Random.Range(1, colorCount);
-            typeIdx = (typeIdx + nextIdx) % colorCount;
-        }
+        int typeIdx = (int)color;
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
+        if(!IsPlayerField())
+            obj.GetComponent<BoxCollider2D>().enabled = false;
         return product;
+    }
+    public bool IsPlayerField()
+    {
+        //return SettingUserPK != mThisUserPK;
+        return true;
     }
 
     IEnumerator CheckDropableProduct()
@@ -225,7 +215,7 @@ public class BattleFieldManager : MonoBehaviour
                 }
             }
 
-            if (!IsSwapable() && idleCount == mFrames.Length)
+            if (idleCount == mFrames.Length)
                 break;
         }
 
@@ -237,44 +227,31 @@ public class BattleFieldManager : MonoBehaviour
         return score / target;
     }
 
-    bool IsSwapable()
-    {
-        if (mIsPaused)
-            return false;
-
-        if (mCurrentScore >= mStageInfo.GoalScore)
-            return false;
-
-        if (mRemainLimit <= 0)
-            return false;
-
-        return true;
-    }
 
     void FinishGame()
     {
-        if (mCurrentScore >= mStageInfo.GoalScore)
-        {
-            int starCount = GetStarCount(mCurrentScore, mStageInfo.GoalScore);
-            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
-            currentStage.UpdateStarCount(starCount);
-
-            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
-            if(nextStage != null)
-                nextStage.UnLock();
-
-            SoundPlayer.Inst.Player.Stop();
-            MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore);
-            
-            FinishGame(true);
-        }
-        else if(mRemainLimit <= 0)
-        {
-            SoundPlayer.Inst.Player.Stop();
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
-
-            FinishGame(false);
-        }
+        //if (mCurrentScore >= mStageInfo.GoalScore)
+        //{
+        //    int starCount = GetStarCount(mCurrentScore, mStageInfo.GoalScore);
+        //    Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
+        //    currentStage.UpdateStarCount(starCount);
+        //
+        //    Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
+        //    if(nextStage != null)
+        //        nextStage.UnLock();
+        //
+        //    SoundPlayer.Inst.Player.Stop();
+        //    MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore);
+        //    
+        //    FinishGame(true);
+        //}
+        //else if(mRemainLimit <= 0)
+        //{
+        //    SoundPlayer.Inst.Player.Stop();
+        //    MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
+        //
+        //    FinishGame(false);
+        //}
     }
 
     public Product[] GetSameProducts(ProductColor color)

@@ -19,6 +19,7 @@ public class NetClientApp : MonoBehaviour
     TcpClient mSession = null;
     NetworkStream mStream = null;
     Dictionary<NetCMD, _FuncRecv> mHandlerTable = new Dictionary<NetCMD, _FuncRecv>();
+    Dictionary<NetCMD, _FuncRecv> mHandlerTableKeep = new Dictionary<NetCMD, _FuncRecv>();
     public delegate void _FuncRecv(object response);
 
     // Start is called before the first frame update
@@ -63,6 +64,18 @@ public class NetClientApp : MonoBehaviour
             mStream.Write(data, 0, data.Length);
 
             mHandlerTable[cmd] = response;
+        }
+        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
+        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
+    }
+    public void WaitResponse(NetCMD cmd, _FuncRecv response)
+    {
+        if (mSession == null)
+            return;
+
+        try
+        {
+            mHandlerTableKeep[cmd] = response;
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
@@ -121,7 +134,11 @@ public class NetClientApp : MonoBehaviour
                     mHandlerTable[recvMsg.Cmd]?.Invoke(recvMsg.body);
                     mHandlerTable.Remove(recvMsg.Cmd);
                 }
-                    
+
+                if (mHandlerTableKeep.ContainsKey(recvMsg.Cmd))
+                {
+                    mHandlerTableKeep[recvMsg.Cmd]?.Invoke(recvMsg.body);
+                }
             }
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
