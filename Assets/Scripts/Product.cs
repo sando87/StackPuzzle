@@ -306,6 +306,18 @@ public class Product : MonoBehaviour
                 break;
         }
     }
+    public void ChangeSkilledProduct(ProductSkill skill)
+    {
+        mSkill = skill;
+        switch (skill)
+        {
+            case ProductSkill.MatchOneMore:     GetComponent<SpriteRenderer>().sprite = ImgOneMore; break;
+            case ProductSkill.KeepCombo:        GetComponent<SpriteRenderer>().sprite = ImgKeepCombo; break;
+            case ProductSkill.BreakSameColor:   GetComponent<SpriteRenderer>().sprite = ImgSameColor; break;
+            case ProductSkill.ReduceColor:      GetComponent<SpriteRenderer>().sprite = ImgReduceColor; break;
+            default: break;
+        }
+    }
     public void WrapChocoBlock(bool wrap)
     {
         ChocoBlock.SetActive(wrap);

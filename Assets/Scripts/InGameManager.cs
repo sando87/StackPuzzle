@@ -28,51 +28,52 @@ public class InGameManager : MonoBehaviour
     public bool MatchLock { get; set; }
 
     public Action<int, int, Product> EventOnChange;
-    public Action<bool> EventOnFinish;
 
-    private void Start()
+    private IEnumerator CreateNextProducts()
     {
-        StartCoroutine(CheckFinish());
-    }
-
-    private void Update()
-    {
-        CreateNextProducts();
-    }
-
-    private void CreateNextProducts()
-    {
-        foreach (var vert in mDestroyes)
+        while(true)
         {
-            int idxX = vert.Key;
-            List<Frame> vertFrames = vert.Value;
-            vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
+            yield return new WaitForSeconds(0.1f);
 
-            Frame curFrame = vertFrames[0];
-            Frame validFrame = curFrame;
-            int emptyCount = 0;
-            while (curFrame != null)
+            foreach (var vert in mDestroyes)
             {
-                Product pro = NextUpProductFrom(validFrame);
-                if (pro == null)
-                {
-                    validFrame = null;
-                    if (emptyCount == 0)
-                        emptyCount = YCount - curFrame.IndexY;
-                    pro = CreateNewProduct(curFrame);
-                    pro.StartDropAnimate(curFrame, emptyCount, curFrame == vertFrames[0]);
-                }
-                else
-                {
-                    validFrame = pro.ParentFrame;
-                    pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == vertFrames[0]);
-                }
-                
-                curFrame = curFrame.Up();
-            }
-        }
+                int idxX = vert.Key;
+                List<Frame> vertFrames = vert.Value;
+                vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
 
-        mDestroyes.Clear();
+                Queue<ProductSkill> nextSkills = new Queue<ProductSkill>();
+
+                Frame curFrame = vertFrames[0];
+                Frame validFrame = curFrame;
+                int emptyCount = 0;
+                while (curFrame != null)
+                {
+                    Product pro = NextUpProductFrom(validFrame);
+                    if (pro == null)
+                    {
+                        validFrame = null;
+                        if (emptyCount == 0)
+                            emptyCount = YCount - curFrame.IndexY;
+                        pro = CreateNewProduct(curFrame, nextSkills.Count > 0 ? nextSkills.Dequeue() : ProductSkill.Nothing);
+                        pro.StartDropAnimate(curFrame, emptyCount, curFrame == vertFrames[0]);
+                    }
+                    else
+                    {
+                        validFrame = pro.ParentFrame;
+                        pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == vertFrames[0]);
+                        if(curFrame.SkillBackupSpace != ProductSkill.Nothing)
+                        {
+                            nextSkills.Enqueue(curFrame.SkillBackupSpace);
+                            curFrame.SkillBackupSpace = ProductSkill.Nothing;
+                        }
+                    }
+
+                    curFrame = curFrame.Up();
+                }
+            }
+
+            mDestroyes.Clear();
+        }
     }
 
     private Product NextUpProductFrom(Frame frame)
@@ -83,7 +84,7 @@ public class InGameManager : MonoBehaviour
             if (curFrame.ChildProduct != null)
                 return curFrame.ChildProduct;
 
-            curFrame = frame.Up();
+            curFrame = curFrame.Up();
         }
         return null;
     }
@@ -167,9 +168,10 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
+        int currentCombo = mainProduct.Combo;
         foreach (Product pro in destroies)
         {
-            pro.Combo = mainProduct.Combo + 1;
+            pro.Combo = currentCombo + 1;
             pro.StartDestroy();
             AddScore(pro);
         }
@@ -192,6 +194,9 @@ public class InGameManager : MonoBehaviour
         mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
 
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+
+        StartCoroutine(CheckFinish());
+        StartCoroutine(CreateNextProducts());
 
         Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
@@ -226,7 +231,6 @@ public class InGameManager : MonoBehaviour
     public void FinishGame(bool success)
     {
         ResetGame();
-        EventOnFinish?.Invoke(success);
         transform.parent.gameObject.SetActive(false);
     }
     public void ResetGame()
@@ -249,7 +253,7 @@ public class InGameManager : MonoBehaviour
 
     public Frame GetFrame(int x, int y)
     {
-        if (x < 0 || x >= XCount || y < 0 || y > YCount)
+        if (x < 0 || x >= XCount || y < 0 || y >= YCount)
             return null;
         return mFrames[x, y];
     }
@@ -280,7 +284,7 @@ public class InGameManager : MonoBehaviour
         mRemainLimit--;
         EventOnChange?.Invoke(mRemainLimit, 0, null);
     }
-    public Product CreateNewProduct(Frame parent)
+    public Product CreateNewProduct(Frame parent, ProductSkill skill = ProductSkill.Nothing)
     {
         int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
         int typeIdx = UnityEngine.Random.Range(0, colorCount);
@@ -293,6 +297,9 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
+        product.EventMatched = OnMatch;
+        product.EventDestroyed = OnDestroyProduct;
+        product.ChangeSkilledProduct(skill);
         return product;
     }
 
@@ -329,7 +336,6 @@ public class InGameManager : MonoBehaviour
                 yield return null;
             }
         }
-
         FinishGame();
     }
 
