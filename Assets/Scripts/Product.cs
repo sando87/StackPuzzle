@@ -39,8 +39,9 @@ public class Product : MonoBehaviour
             mParentFrame = value;
         }
     }
-    public InGameManager GameField { get { return ParentFrame.GameField; } }
 
+    public Action<List<Product>> EventMatched;
+    public Action<Product> EventDestroyed;
 
     #region MatchCycle
     public void StartSwipe(Frame target, int keepCombo)
@@ -69,9 +70,7 @@ public class Product : MonoBehaviour
     {
         ParentFrame = target;
         mLocked = false;
-
-        if(GameField.MatchLock == false)
-            StartCoroutine(DoMatch());
+        StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
     {
@@ -79,88 +78,15 @@ public class Product : MonoBehaviour
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
         if (matchList.Count >= InGameManager.MatchCount)
-        {
-            Product dummyProduct = DummyProduct();
-            dummyProduct.MakeProductEffect(matchList.Count);
-
-            Combo++;
-            Product SameColorSkillProduct = null;
-            Product ReduceColorSkillProduct = null;
-            foreach (Product pro in matchList)
-            {
-                if (pro.mSkill == ProductSkill.MatchOneMore)
-                    Combo++;
-                else if (pro.mSkill == ProductSkill.BreakSameColor)
-                    SameColorSkillProduct = pro;
-                else if (pro.mSkill == ProductSkill.ReduceColor)
-                    ReduceColorSkillProduct = pro;
-            }
-
-            if (ReduceColorSkillProduct != null)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-                GameField.SetSkipProduct(mColor, 5);
-                Product[] pros = GameField.GetSameProducts(ReduceColorSkillProduct.mColor);
-                foreach (Product pro in pros)
-                {
-                    if (pro.IsLocked())
-                        continue;
-                    if (pro.IsChocoBlock())
-                        continue;
-
-                    if (pro.ParentFrame.IsDummy)
-                    {
-                        GameField.CreateNewProduct(pro.ParentFrame);
-                        Destroy(pro);
-                    }
-                    else
-                    {
-                        pro.Combo = Combo;
-                        StartCoroutine(pro.StartDestroy());
-                    }
-                }
-            }
-            else if (SameColorSkillProduct != null)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-                Product[] pros = GameField.GetSameProducts(SameColorSkillProduct.mColor);
-                foreach (Product pro in pros)
-                {
-                    if (pro.ParentFrame.IsDummy)
-                        continue;
-                    if (pro.IsLocked())
-                        continue;
-                    if (pro.IsChocoBlock())
-                        continue;
-
-                    pro.Combo = Combo;
-                    StartCoroutine(pro.StartDestroy());
-                }
-            }
-            else
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-                foreach (Product pro in matchList)
-                {
-                    pro.Combo = Combo;
-                    StartCoroutine(pro.StartDestroy());
-                }
-            }
-            
-            StartCoroutine(StartFlashing(matchList));
-        }
+            EventMatched?.Invoke(matchList);
     }
 
-    IEnumerator StartDestroy()
+    public void StartDestroy()
     {
         mLocked = true;
-        yield return null;
-        if (mSkill == ProductSkill.KeepCombo)
-            GameField.KeepCombo(Combo);
-        GameField.AddScore(this);
         mAnimation.Play("destroy");
-        KeepComboToUpperProduct();
         UnWrapChocoBlocksAroundMe();
+        ParentFrame.ComboBackupSpace = Combo;
         ParentFrame.BreakCover(Combo);
     }
     void StartSpriteAnim()
@@ -178,79 +104,11 @@ public class Product : MonoBehaviour
     void EndDestroy()
     {
         mLocked = false;
+        EventDestroyed?.Invoke(this);
         Destroy(gameObject);
     }
 
-    public void StartToDrop()
-    {
-        List<Frame> empties = GetEmptyDownFrames();
-        List<Frame> idles = GetIdleUpFrames();
-        if (idles[0].IsDummy)
-        {
-            Frame curFrame = empties[empties.Count - 1];
-            int idx = 0;
-            while (true)
-            {
-                if (idx < idles.Count)
-                {
-                    Product pro = idles[idx].ChildProduct;
-                    pro.StartDropAnimate(curFrame, empties.Count, idx == 0);
-                }
-                else
-                {
-                    Product pro = GameField.CreateNewProduct(curFrame);
-                    pro.StartDropAnimate(curFrame, empties.Count, false);
-                }
-                idx++;
-
-                if (curFrame.IsDummy)
-                    break;
-                else if(curFrame.Up() == null)
-                    curFrame = curFrame.UpDummy();
-                else
-                    curFrame = curFrame.Up();
-            }
-
-        }
-        else if (idles[idles.Count - 1].Up() == null)
-        {
-            idles.Add(idles[idles.Count - 1].UpDummy());
-            Frame curFrame = empties[empties.Count - 1];
-            int idx = 0;
-            while(true)
-            {
-                if (idx < idles.Count)
-                {
-                    Product pro = idles[idx].ChildProduct;
-                    pro.StartDropAnimate(curFrame, empties.Count, idx == 0);
-                }
-                else
-                {
-                    Product pro = GameField.CreateNewProduct(curFrame);
-                    pro.StartDropAnimate(curFrame, empties.Count, false);
-                }
-                idx++;
-
-                if (curFrame.IsDummy)
-                    break;
-                else if (curFrame.Up() == null)
-                    curFrame = curFrame.UpDummy();
-                else
-                    curFrame = curFrame.Up();
-            }
-        }
-        else
-        {
-            Frame curFrame = empties[empties.Count - 1];
-            for (int i = 0; i < idles.Count; ++i)
-            {
-                Product pro = idles[i].ChildProduct;
-                pro.StartDropAnimate(curFrame, empties.Count, i == 0);
-                curFrame = curFrame.Up();
-            }
-        }
-    }
-    void StartDropAnimate(Frame parent, int emptyCount, bool isComboable)
+    public void StartDropAnimate(Frame parent, int emptyCount, bool isComboable)
     {
         mLocked = true;
         ParentFrame = parent;
@@ -287,9 +145,17 @@ public class Product : MonoBehaviour
         mLocked = false;
 
         if (isComboable)
+        {
+            Combo = ParentFrame.ComboBackupSpace;
             StartCoroutine(DoMatch());
+        }
+            
     }
 
+    public void StartFlash(List<Product> matchedPros)
+    {
+        StartCoroutine(StartFlashing(matchedPros));
+    }
     IEnumerator StartFlashing(List<Product> matchedPros)
     {
         yield return null;
@@ -393,16 +259,6 @@ public class Product : MonoBehaviour
 
         return pro;
     }
-    public bool IsTop()
-    {
-        return ParentFrame.IndexY == GameField.YCount - 1;
-    }
-    public Product DummyProduct()
-    {
-        int idxX = ParentFrame.IndexX;
-        int idxY = GameField.YCount;
-        return GameField.GetFrame(idxX, idxY).ChildProduct;
-    }
     List<Frame> GetEmptyDownFrames()
     {
         List<Frame> emptyFrames = new List<Frame>();
@@ -426,22 +282,7 @@ public class Product : MonoBehaviour
         }
         return idleFrames;
     }
-    void KeepComboToUpperProduct()
-    {
-        if (IsTop())
-        {
-            ParentFrame.UpDummy().ChildProduct.Combo = Combo;
-            return;
-        }
-        Product upProduct = Up();
-        if (upProduct == null)
-            return;
-        if (upProduct.IsLocked())
-            return;
-
-        upProduct.Combo = Combo;
-    }
-    void MakeProductEffect(int matchCount)
+    public void BackupSkillToFrame(int matchCount, bool enabledReduceColor)
     {
         if (matchCount <= InGameManager.MatchCount)
             return;
@@ -449,23 +290,19 @@ public class Product : MonoBehaviour
         switch(matchCount)
         {
             case 4:
-                mSkill = ProductSkill.MatchOneMore;
-                GetComponent<SpriteRenderer>().sprite = ImgOneMore;
+                ParentFrame.SkillBackupSpace = ProductSkill.MatchOneMore;
                 break;
             case 5:
-                mSkill = ProductSkill.BreakSameColor;
-                GetComponent<SpriteRenderer>().sprite = ImgSameColor;
+                ParentFrame.SkillBackupSpace = ProductSkill.BreakSameColor;
                 break;
             case 6:
-                mSkill = ProductSkill.KeepCombo;
-                GetComponent<SpriteRenderer>().sprite = ImgKeepCombo;
+                ParentFrame.SkillBackupSpace = ProductSkill.KeepCombo;
+                break;
+            case 7:
+                if (!enabledReduceColor)
+                    ParentFrame.SkillBackupSpace = ProductSkill.ReduceColor;
                 break;
             default:
-                if(GameField.IsSkippingColor() == false)
-                {
-                    mSkill = ProductSkill.ReduceColor;
-                    GetComponent<SpriteRenderer>().sprite = ImgReduceColor;
-                }
                 break;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,16 +9,16 @@ public class Frame : MonoBehaviour
     private int mIndexX;
     private int mIndexY;
     private int mCoverCount;
-    private InGameManager mGameField;
 
     public Sprite[] Covers;
 
+    public ProductSkill SkillBackupSpace { get; set; }
+    public int ComboBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
-    public InGameManager GameField { get { return mGameField; } }
-    public bool IsDummy { get { return mIndexY == GameField.YCount; } }
     public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }
     public SpriteRenderer CoverRenderer;
+    public Func<int, int, Frame> GetFrame;
 
     // Start is called before the first frame update
     void Start()
@@ -30,9 +31,8 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(int idxX, int idxY, int coverCount, InGameManager field)
+    public void Initialize(int idxX, int idxY, int coverCount)
     {
-        mGameField = field;
         mIndexX = idxX;
         mIndexY = idxY;
 
@@ -56,23 +56,19 @@ public class Frame : MonoBehaviour
 
     public Frame Left()
     {
-        return mIndexX <= 0 ? null : GameField.GetFrame(mIndexX - 1, mIndexY);
+        return GetFrame(mIndexX - 1, mIndexY);
     }
     public Frame Right()
     {
-        return GameField.XCount - 1 <= mIndexX ? null : GameField.GetFrame(mIndexX + 1, mIndexY);
+        return GetFrame(mIndexX + 1, mIndexY);
     }
     public Frame Down()
     {
-        return mIndexY <= 0 ? null : GameField.GetFrame(mIndexX, mIndexY - 1);
+        return GetFrame(mIndexX, mIndexY - 1);
     }
     public Frame Up()
     {
-        return GameField.YCount - 1 <= mIndexY ? null : GameField.GetFrame(mIndexX, mIndexY + 1);
-    }
-    public Frame UpDummy()
-    {
-        return GameField.GetFrame(mIndexX, GameField.YCount);
+        return GetFrame(mIndexX, mIndexY + 1);
     }
 
 }

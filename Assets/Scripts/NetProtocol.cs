@@ -40,7 +40,6 @@ public class NetProtocol
         return Serialize(responseMsg);
     }
 
-
     static UserInfo ProcAddUser(UserInfo requestBody)
     {
         int usePk = DBManager.Inst().AddNewUser(requestBody);

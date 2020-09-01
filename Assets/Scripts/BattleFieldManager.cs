@@ -27,23 +27,6 @@ public class BattleFieldManager : MonoBehaviour
 
     private void Update()
     {
-        int idleCount = 0;
-        foreach (Frame frame in mFrames)
-        {
-            if (frame.ChildProduct == null)
-                continue;
-
-            Product pro = frame.ChildProduct;
-            if (!pro.IsLocked())
-            {
-                idleCount++;
-                if (frame.Down() != null && frame.Down().ChildProduct == null)
-                    pro.StartToDrop();
-            }
-        }
-
-        if (idleCount == mFrames.Length)
-            FinishGame();
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -61,8 +44,8 @@ public class BattleFieldManager : MonoBehaviour
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
             AttackSwipe(product.ParentFrame.IndexX, product.ParentFrame.IndexY);
-            targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
-            targetProduct.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
+            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
+            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
             mKeepCombo = 0;
         }
     }
@@ -112,7 +95,7 @@ public class BattleFieldManager : MonoBehaviour
                     localFramePos.y = GridSize * y;
                     frameObj.transform.localPosition = localBasePos + localFramePos;
                     mFrames[x, y] = frameObj.GetComponent<Frame>();
-                    mFrames[x, y].Initialize(x, y, 0, null);
+                    mFrames[x, y].Initialize(x, y, 0);
                     CreateNewProduct(mFrames[x, y], res.products[x, y]);
                     if (y == info.YCount)
                         frameObj.GetComponent<SpriteRenderer>().enabled = false;
@@ -194,34 +177,6 @@ public class BattleFieldManager : MonoBehaviour
         return true;
     }
 
-    IEnumerator CheckDropableProduct()
-    {
-        while(true)
-        {
-            yield return new WaitForSeconds(0.25f);
-
-            int idleCount = 0;
-            foreach (Frame frame in mFrames)
-            {
-                if (frame.ChildProduct == null)
-                    continue;
-            
-                Product pro = frame.ChildProduct;
-                if (!pro.IsLocked())
-                {
-                    idleCount++;
-                    if (frame.Down() != null && frame.Down().ChildProduct == null)
-                        pro.StartToDrop();
-                }
-            }
-
-            if (idleCount == mFrames.Length)
-                break;
-        }
-
-        FinishGame();
-
-    }
     static public int GetStarCount(int score, int target)
     {
         return score / target;

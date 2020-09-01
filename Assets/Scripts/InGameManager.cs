@@ -23,42 +23,77 @@ public class InGameManager : MonoBehaviour
     private int mRemainLimit = 0;
     private int mKeepCombo = 0;
     private ProductColor mSkipColor = ProductColor.None;
+    private Dictionary<int,List<Frame>> mDestroyes = new Dictionary<int, List<Frame>>();
 
     public bool MatchLock { get; set; }
 
     public Action<int, int, Product> EventOnChange;
     public Action<bool> EventOnFinish;
 
-    //private void OnEnable()
-    //{
-    //    StopCoroutine("CheckDropableProduct");
-    //    StartCoroutine("CheckDropableProduct");
-    //}
-    //private void OnDisable()
-    //{
-    //    StopCoroutine("CheckDropableProduct");
-    //}
+    private void Start()
+    {
+        StartCoroutine(CheckFinish());
+    }
 
     private void Update()
     {
-        int idleCount = 0;
-        foreach (Frame frame in mFrames)
-        {
-            if (frame.ChildProduct == null)
-                continue;
+        CreateNextProducts();
+    }
 
-            Product pro = frame.ChildProduct;
-            if (!pro.IsLocked())
+    private void CreateNextProducts()
+    {
+        foreach (var vert in mDestroyes)
+        {
+            int idxX = vert.Key;
+            List<Frame> vertFrames = vert.Value;
+            vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
+
+            Frame curFrame = vertFrames[0];
+            Frame validFrame = curFrame;
+            int emptyCount = 0;
+            while (curFrame != null)
             {
-                if (frame.Down() != null && frame.Down().ChildProduct == null)
-                    pro.StartToDrop();
+                Product pro = NextUpProductFrom(validFrame);
+                if (pro == null)
+                {
+                    validFrame = null;
+                    if (emptyCount == 0)
+                        emptyCount = YCount - curFrame.IndexY;
+                    pro = CreateNewProduct(curFrame);
+                    pro.StartDropAnimate(curFrame, emptyCount, curFrame == vertFrames[0]);
+                }
                 else
-                    idleCount++;
+                {
+                    validFrame = pro.ParentFrame;
+                    pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == vertFrames[0]);
+                }
+                
+                curFrame = curFrame.Up();
             }
         }
 
-        if (!IsSwapable() && idleCount == mFrames.Length)
-            FinishGame();
+        mDestroyes.Clear();
+    }
+
+    private Product NextUpProductFrom(Frame frame)
+    {
+        Frame curFrame = frame;
+        while(curFrame != null)
+        {
+            if (curFrame.ChildProduct != null)
+                return curFrame.ChildProduct;
+
+            curFrame = frame.Up();
+        }
+        return null;
+    }
+
+    public void OnDestroyProduct(Product pro)
+    {
+        int idxX = pro.ParentFrame.IndexX;
+        if (!mDestroyes.ContainsKey(idxX))
+            mDestroyes[idxX] = new List<Frame>();
+        mDestroyes[idxX].Add(pro.ParentFrame);
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -84,6 +119,63 @@ public class InGameManager : MonoBehaviour
             mKeepCombo = 0;
         }
     }
+    private List<Product> ApplySkillEffects(List<Product> matches)
+    {
+        int skillComboCount = 0;
+        bool keepCombo = false;
+        List<Product> allSameColors = new List<Product>();
+        foreach (Product pro in matches)
+        {
+            if (pro.mSkill == ProductSkill.MatchOneMore)
+                skillComboCount++;
+            else if (pro.mSkill == ProductSkill.KeepCombo)
+                keepCombo = true;
+            else if (pro.mSkill == ProductSkill.BreakSameColor && allSameColors.Count == 0)
+            {
+                foreach(Frame frame in mFrames)
+                    if (frame.ChildProduct != null && frame.ChildProduct.mColor == matches[0].mColor)
+                        allSameColors.Add(frame.ChildProduct);
+            }
+            else if (pro.mSkill == ProductSkill.ReduceColor && allSameColors.Count == 0)
+            {
+                SetSkipProduct(matches[0].mColor, 5);
+                foreach (Frame frame in mFrames)
+                    if (frame.ChildProduct != null && frame.ChildProduct.mColor == matches[0].mColor)
+                        allSameColors.Add(frame.ChildProduct);
+            }
+        }
+
+        if (skillComboCount > 0)
+            foreach (Product pro in matches)
+                pro.Combo += skillComboCount;
+
+        if (keepCombo)
+            mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo);
+
+        return allSameColors;
+    }
+    public void OnMatch(List<Product> matches)
+    {
+        if (MatchLock)
+            return;
+
+        Product mainProduct = matches[0];
+        mainProduct.BackupSkillToFrame(matches.Count, mSkipColor != ProductColor.None);
+
+        List<Product> allSameColors = ApplySkillEffects(matches);
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+        List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
+        foreach (Product pro in destroies)
+        {
+            pro.Combo = mainProduct.Combo + 1;
+            pro.StartDestroy();
+            AddScore(pro);
+        }
+
+        mainProduct.StartFlash(matches);
+    }
 
     public void StartGame(StageInfo info)
     {
@@ -105,8 +197,8 @@ public class InGameManager : MonoBehaviour
         localBasePos.x += GridSize * 0.5f;
         localBasePos.y += GridSize * 0.5f;
         Vector3 localFramePos = new Vector3(0, 0, 0);
-        mFrames = new Frame[info.XCount, info.YCount + 1];
-        for (int y = 0; y < info.YCount + 1; y++)
+        mFrames = new Frame[info.XCount, info.YCount];
+        for (int y = 0; y < info.YCount; y++)
         {
             for (int x = 0; x < info.XCount; x++)
             {
@@ -115,11 +207,10 @@ public class InGameManager : MonoBehaviour
                 localFramePos.y = GridSize * y;
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount, this);
+                mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount);
+                mFrames[x, y].GetFrame = GetFrame;
                 Product pro = CreateNewProduct(mFrames[x, y]);
                 pro.WrapChocoBlock(!info.GetCell(x, y).ProductMovable);
-                if (y == info.YCount)
-                    frameObj.GetComponent<SpriteRenderer>().enabled = false;
             }
         }
 
@@ -158,21 +249,14 @@ public class InGameManager : MonoBehaviour
 
     public Frame GetFrame(int x, int y)
     {
+        if (x < 0 || x >= XCount || y < 0 || y > YCount)
+            return null;
         return mFrames[x, y];
     }
     public void AddScore(Product product)
     {
         mCurrentScore += (scorePerProduct * product.Combo);
         EventOnChange?.Invoke(0, mCurrentScore, product);
-    }
-    public void KeepCombo(int combo)
-    {
-        if (combo > mKeepCombo)
-            mKeepCombo = combo;
-    }
-    public bool IsSkippingColor()
-    {
-        return mSkipColor != ProductColor.None;
     }
     public void SetSkipProduct(ProductColor color, int returnCount)
     {
@@ -196,14 +280,6 @@ public class InGameManager : MonoBehaviour
         mRemainLimit--;
         EventOnChange?.Invoke(mRemainLimit, 0, null);
     }
-    public Frame GetFrame(float worldPosX, float worldPosY)
-    {
-        float offX = worldPosX - transform.position.x;
-        float offY = worldPosY - transform.position.y;
-        int idxX = (int)(offX / (float)GridSize);
-        int idxY = (int)(offY / (float)GridSize);
-        return mFrames[idxX, idxY];
-    }
     public Product CreateNewProduct(Frame parent)
     {
         int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
@@ -220,34 +296,6 @@ public class InGameManager : MonoBehaviour
         return product;
     }
 
-    IEnumerator CheckDropableProduct()
-    {
-        while(true)
-        {
-            yield return new WaitForSeconds(0.25f);
-
-            int idleCount = 0;
-            foreach (Frame frame in mFrames)
-            {
-                if (frame.ChildProduct == null)
-                    continue;
-            
-                Product pro = frame.ChildProduct;
-                if (!pro.IsLocked())
-                {
-                    idleCount++;
-                    if (frame.Down() != null && frame.Down().ChildProduct == null)
-                        pro.StartToDrop();
-                }
-            }
-
-            if (!IsSwapable() && idleCount == mFrames.Length)
-                break;
-        }
-
-        FinishGame();
-
-    }
     static public int GetStarCount(int score, int target)
     {
         return score / target;
@@ -265,6 +313,24 @@ public class InGameManager : MonoBehaviour
             return false;
 
         return true;
+    }
+
+
+    IEnumerator CheckFinish()
+    {
+        float time = 0;
+        while (time < 3)
+        {
+            if (IsSwapable())
+                yield return new WaitForSeconds(1);
+            else
+            {
+                time = (mDestroyes.Count > 0) ? 0 : (time + Time.deltaTime);
+                yield return null;
+            }
+        }
+
+        FinishGame();
     }
 
     void FinishGame()
@@ -291,18 +357,6 @@ public class InGameManager : MonoBehaviour
 
             FinishGame(false);
         }
-    }
-
-    public Product[] GetSameProducts(ProductColor color)
-    {
-        List<Product> pros = new List<Product>();
-        foreach(Frame frame in mFrames)
-        {
-            Product pro = frame.ChildProduct;
-            if (pro != null && pro.mColor == color)
-                pros.Add(pro);
-        }
-        return pros.ToArray();
     }
 
 }
