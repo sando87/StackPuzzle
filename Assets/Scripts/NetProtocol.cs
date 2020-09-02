@@ -10,85 +10,45 @@ using UnityEngine;
 public enum NetCMD
 {
     Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
-    InitField, NextProducts, AttackSwipe
+    SearchOpponent, GetInitField, NextProducts, SendSwipe, EndGame
 }
+
+public class ServerSideMatchingUser
+{
+    public bool isMatching = false;
+    public int userPK = 0;
+    public int score = 0;
+    public MySession sessionInfo = null;
+    public ProductColor[,] initField = null;
+    public List<ProductColor> nextColors = new List<ProductColor>();
+    public ProductColor[,] GetInitField(int xCount, int yCount)
+    {
+        if(initField == null)
+        {
+            int colorTypeCount = System.Enum.GetValues(typeof(ProductColor)).Length;
+            initField = new ProductColor[xCount, yCount];
+            for(int y = 0; y < yCount; ++y)
+                for (int x = 0; x < xCount; ++x)
+                    initField[x, y] = (ProductColor)UnityEngine.Random.Range(1, colorTypeCount);
+        }
+
+        return initField;
+    }
+    public ProductColor[] GetNextColors(int offset, int count)
+    {
+        if (nextColors.Count < offset + count)
+        {
+            int colorTypeCount = System.Enum.GetValues(typeof(ProductColor)).Length;
+            int n = offset + count - nextColors.Count;
+            for (int i = 0; i < n; ++i)
+                nextColors.Add((ProductColor)UnityEngine.Random.Range(1, colorTypeCount));
+        }
+        return nextColors.GetRange(offset, count).ToArray();
+    }
+}
+
 public class NetProtocol
 {
-    static public byte[] ProcessPacket(byte[] buf)
-    {
-        Header requestMsg = Deserialize<Header>(buf);
-        if (requestMsg == null)
-            return Serialize(new Header());
-
-        Header responseMsg = new Header();
-        responseMsg.Cmd = requestMsg.Cmd;
-        switch (requestMsg.Cmd)
-        {
-            case NetCMD.Undef:          responseMsg.body = "Undefied Command"; break;
-            case NetCMD.AddUser:        responseMsg.body = ProcAddUser(requestMsg.body as UserInfo); break;
-            case NetCMD.EditUserName:   responseMsg.body = ProcEditUserName(requestMsg.body as UserInfo); break;
-            case NetCMD.GetUser:        responseMsg.body = ProcGetUser(requestMsg.body as UserInfo); break;
-            case NetCMD.DelUser:        responseMsg.body = ProcDelUser(requestMsg.body as UserInfo); break;
-            case NetCMD.RenewScore:     responseMsg.body = ProcRenewScore(requestMsg.body as UserInfo); break;
-            case NetCMD.GetScores:      responseMsg.body = ProcGetUsers(); break;
-            case NetCMD.AddLog:         responseMsg.body = ProcAddLog(requestMsg.body as LogInfo); break;
-            case NetCMD.InitField:      responseMsg.body = ProcInitField(requestMsg.body as InitFieldInfo); break;
-            case NetCMD.NextProducts:   responseMsg.body = ProcNextProduct(requestMsg.body as NextProducts); break;
-            case NetCMD.AttackSwipe:    responseMsg.body = ProcAttackSwipe(requestMsg.body as SwipeInfo); break;
-            default:                    responseMsg.body = "Undefied Command"; break;
-        }
-        return Serialize(responseMsg);
-    }
-
-    static UserInfo ProcAddUser(UserInfo requestBody)
-    {
-        int usePk = DBManager.Inst().AddNewUser(requestBody);
-        requestBody.userPk = usePk;
-        return requestBody;
-    }
-    static string ProcEditUserName(UserInfo requestBody)
-    {
-        DBManager.Inst().EditUserName(requestBody);
-        return "OK";
-    }
-    static string ProcDelUser(UserInfo requestBody)
-    {
-        DBManager.Inst().DeleteUser(requestBody.userPk);
-        return "OK";
-    }
-    static UserInfo ProcGetUser(UserInfo requestBody)
-    {
-        requestBody = DBManager.Inst().GetUser(requestBody.userPk);
-        return requestBody;
-    }
-    static string ProcRenewScore(UserInfo requestBody)
-    {
-        DBManager.Inst().RenewUserScore(requestBody);
-        return "OK";
-    }
-    static UserInfo[] ProcGetUsers()
-    {
-        UserInfo[] users = DBManager.Inst().GetUsers();
-        return users;
-    }
-    static string ProcAddLog(LogInfo requestBody)
-    {
-        DBManager.Inst().AddLog(requestBody);
-        return "OK";
-    }
-    static InitFieldInfo ProcInitField(InitFieldInfo requestBody)
-    {
-        return requestBody;
-    }
-    static NextProducts ProcNextProduct(NextProducts requestBody)
-    {
-        return requestBody;
-    }
-    static SwipeInfo ProcAttackSwipe(SwipeInfo requestBody)
-    {
-        return requestBody;
-    }
-
     static public byte[] Serialize(object source)
     {
         try
@@ -153,6 +113,16 @@ public class LogInfo
 }
 
 [Serializable]
+public class SearchOpponentInfo
+{
+    public int userPk;
+    public int userScore;
+    public int opponentUserPk;
+    public int opponentUserScore;
+    public bool isDone;
+}
+
+[Serializable]
 public class InitFieldInfo
 {
     public int userPk;
@@ -165,16 +135,27 @@ public class InitFieldInfo
 public class NextProducts
 {
     public int userPk;
+    public int offset;
     public int requestCount;
-    public ProductColor[] products;
+    public ProductColor[] nextProducts;
 }
 
 [Serializable]
 public class SwipeInfo
 {
     public int userPk;
+    public int opponentUserPk;
     public int idxX;
     public int idxY;
     public bool matchable;
     public SwipeDirection dir;
+}
+
+[Serializable]
+public class EndGame
+{
+    public int userPk;
+    public bool win;
+    public int maxCombo;
+    public int score;
 }

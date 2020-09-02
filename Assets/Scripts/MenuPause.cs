@@ -26,6 +26,6 @@ public class MenuPause : MonoBehaviour
     public void OnResume()
     {
         gameObject.SetActive(false);
-        GameField.GetComponent<InGameManager>().ResumeGame();
+        GameField.GetComponent<InGameManager>().Pause = false;
     }
 }

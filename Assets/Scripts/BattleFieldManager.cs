@@ -9,6 +9,7 @@ public class BattleFieldManager : MonoBehaviour
     public const int MatchCount = 3;
     public const int attackScore = 5;
     public const float GridSize = 0.8f;
+    public const int NextRequestCount = 500;
 
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
@@ -17,23 +18,74 @@ public class BattleFieldManager : MonoBehaviour
     public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
-    private int mThisUserPK = 1;
+    private Dictionary<int, List<Frame>> mDestroyes = new Dictionary<int, List<Frame>>();
+    private List<ProductColor> mNextColors = new List<ProductColor>();
+    private int mNextPositionIndex = 0;
+    private int mThisUserPK = 0;
     private int mKeepCombo = 0;
+    private int mCountX = 0;
+    private int mCountY = 0;
 
     public bool MatchLock { get; set; }
 
-    public Action<int, int, Product> EventOnChange;
-    public Action<bool> EventOnFinish;
-
-    private void Update()
+    public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
     {
+        ResetGame();
+    
+        mThisUserPK = userPK;
+        mCountX = XCount;
+        mCountY = YCount;
+
+        transform.parent.gameObject.SetActive(true);
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
+    
+        GameObject mask = Instantiate(MaskPrefab, transform);
+        mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
+
+        RegisterSwipeEvent();
+
+        RequestNextColors(NextRequestCount);
+
+        StartCoroutine(CheckFinish());
+        StartCoroutine(CreateNextProducts());
+    
+        Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
+        localBasePos.x += GridSize * 0.5f;
+        localBasePos.y += GridSize * 0.5f;
+        Vector3 localFramePos = new Vector3(0, 0, 0);
+        mFrames = new Frame[XCount, YCount];
+        for (int y = 0; y < YCount; y++)
+        {
+            for (int x = 0; x < XCount; x++)
+            {
+                GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
+                localFramePos.x = GridSize * x;
+                localFramePos.y = GridSize * y;
+                frameObj.transform.localPosition = localBasePos + localFramePos;
+                mFrames[x, y] = frameObj.GetComponent<Frame>();
+                mFrames[x, y].Initialize(x, y, 0);
+                mFrames[x, y].GetFrame = GetFrame;
+                CreateNewProduct(mFrames[x, y], initColors[x,y]);
+            }
+        }
+
+    }
+    public void FinishGame(bool success)
+    {
+        ResetGame();
+        transform.parent.gameObject.SetActive(false);
+
+        EndGame info = new EndGame();
+        info.userPk = mThisUserPK;
+        info.win = success;
+        NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
     }
 
-    public void OnSwipe(GameObject obj, SwipeDirection dir)
+    private void OnSwipe(GameObject obj, SwipeDirection dir)
     {
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
-        switch(dir)
+        switch (dir)
         {
             case SwipeDirection.UP: targetProduct = product.Up(); break;
             case SwipeDirection.DOWN: targetProduct = product.Down(); break;
@@ -43,68 +95,177 @@ public class BattleFieldManager : MonoBehaviour
 
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
-            AttackSwipe(product.ParentFrame.IndexX, product.ParentFrame.IndexY);
+            SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
             mKeepCombo = 0;
         }
     }
+    private void OnMatch(List<Product> matches)
+    {
+        if (MatchLock)
+            return;
 
-    private void AttackSwipe(int idxX, int idxY)
+        Product mainProduct = matches[0];
+        mainProduct.BackupSkillToFrame(matches.Count, true);
+
+        List<Product> allSameColors = ApplySkillEffects(matches);
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+        List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
+        int currentCombo = mainProduct.Combo;
+        foreach (Product pro in destroies)
+        {
+            pro.Combo = currentCombo + 1;
+            pro.StartDestroy();
+            Attack(pro);
+        }
+
+        mainProduct.StartFlash(matches);
+    }
+    private void OnDestroyProduct(Product pro)
+    {
+        int idxX = pro.ParentFrame.IndexX;
+        if (!mDestroyes.ContainsKey(idxX))
+            mDestroyes[idxX] = new List<Frame>();
+        mDestroyes[idxX].Add(pro.ParentFrame);
+    }
+
+    private IEnumerator CreateNextProducts()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(0.1f);
+
+            foreach (var vert in mDestroyes)
+            {
+                int idxX = vert.Key;
+                List<Frame> vertFrames = vert.Value;
+                vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
+
+                Queue<ProductSkill> nextSkills = new Queue<ProductSkill>();
+
+                Frame curFrame = vertFrames[0];
+                Frame validFrame = curFrame;
+                int emptyCount = 0;
+                while (curFrame != null)
+                {
+                    Product pro = NextUpProductFrom(validFrame);
+                    if (pro == null)
+                    {
+                        validFrame = null;
+                        if (emptyCount == 0)
+                            emptyCount = mCountY - curFrame.IndexY;
+                        pro = CreateNewProduct(curFrame, GetNextColor(), nextSkills.Count > 0 ? nextSkills.Dequeue() : ProductSkill.Nothing);
+                        pro.StartDropAnimate(curFrame, emptyCount, curFrame == vertFrames[0]);
+                    }
+                    else
+                    {
+                        validFrame = pro.ParentFrame;
+                        pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == vertFrames[0]);
+                        if (curFrame.SkillBackupSpace != ProductSkill.Nothing)
+                        {
+                            nextSkills.Enqueue(curFrame.SkillBackupSpace);
+                            curFrame.SkillBackupSpace = ProductSkill.Nothing;
+                        }
+                    }
+
+                    curFrame = curFrame.Up();
+                }
+            }
+
+            mDestroyes.Clear();
+        }
+    }
+    private Product CreateNewProduct(Frame parent, ProductColor color,ProductSkill skill = ProductSkill.Nothing)
+    {
+        int typeIdx = (int)color;
+        GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
+        Product product = obj.GetComponent<Product>();
+        product.transform.localPosition = new Vector3(0, 0, -1);
+        product.ParentFrame = parent;
+        product.EventMatched = OnMatch;
+        product.EventDestroyed = OnDestroyProduct;
+        product.ChangeSkilledProduct(skill);
+        if (!IsPlayerField())
+            obj.GetComponent<BoxCollider2D>().enabled = false;
+        return product;
+    }
+    private List<Product> ApplySkillEffects(List<Product> matches)
+    {
+        int skillComboCount = 0;
+        bool keepCombo = false;
+        List<Product> allSameColors = new List<Product>();
+        foreach (Product pro in matches)
+        {
+            if (pro.mSkill == ProductSkill.MatchOneMore)
+                skillComboCount++;
+            else if (pro.mSkill == ProductSkill.KeepCombo)
+                keepCombo = true;
+            else if (pro.mSkill == ProductSkill.BreakSameColor && allSameColors.Count == 0)
+            {
+                foreach (Frame frame in mFrames)
+                    if (frame.ChildProduct != null && frame.ChildProduct.mColor == matches[0].mColor)
+                        allSameColors.Add(frame.ChildProduct);
+            }
+        }
+
+        if (skillComboCount > 0)
+            foreach (Product pro in matches)
+                pro.Combo += skillComboCount;
+
+        if (keepCombo)
+            mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo);
+
+        return allSameColors;
+    }
+    private IEnumerator CheckFinish()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1);
+
+            bool isFinished = true;
+            Dictionary<ProductColor, int> colorCount = new Dictionary<ProductColor, int>();
+            foreach(Frame frame in mFrames)
+            {
+                Product pro = frame.ChildProduct;
+                if (pro == null || pro.IsChocoBlock())
+                    continue;
+
+                if (colorCount.ContainsKey(pro.mColor))
+                    colorCount[pro.mColor] = 1;
+                else
+                    colorCount[pro.mColor] += 1;
+
+                if(colorCount[pro.mColor] >= MatchCount)
+                {
+                    isFinished = false;
+                    break;
+                }
+            }
+
+            if (isFinished)
+                break;
+        }
+
+        if(IsPlayerField())
+            FinishGame(false);
+        else
+            FinishGame(true);
+    }
+
+
+    private void SendSwipeInfo(int idxX, int idxY)
     {
         SwipeInfo info = new SwipeInfo();
         info.idxX = idxX;
         info.idxY = idxY;
         info.matchable = !MatchLock;
         info.userPk = mThisUserPK;
-        NetClientApp.GetInstance().Request(NetCMD.AttackSwipe, info, null);
+        NetClientApp.GetInstance().Request(NetCMD.SendSwipe, info, null);
     }
-
-    public void StartGame(int userPK)
-    {
-        ResetGame();
-
-        mThisUserPK = userPK;
-        InitFieldInfo info = new InitFieldInfo();
-        info.XCount = 8;
-        info.YCount = 8;
-        info.userPk = userPK;
-        NetClientApp.GetInstance().Request(NetCMD.InitField, info, (object response) =>
-        {
-            InitFieldInfo res = response as InitFieldInfo;
-
-            gameObject.SetActive(true);
-            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
-
-            GameObject mask = Instantiate(MaskPrefab, transform);
-            mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
-
-            RegisterSwipeEvent();
-
-            Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
-            localBasePos.x += GridSize * 0.5f;
-            localBasePos.y += GridSize * 0.5f;
-            Vector3 localFramePos = new Vector3(0, 0, 0);
-            mFrames = new Frame[info.XCount, info.YCount + 1];
-            for (int y = 0; y < info.YCount + 1; y++)
-            {
-                for (int x = 0; x < info.XCount; x++)
-                {
-                    GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
-                    localFramePos.x = GridSize * x;
-                    localFramePos.y = GridSize * y;
-                    frameObj.transform.localPosition = localBasePos + localFramePos;
-                    mFrames[x, y] = frameObj.GetComponent<Frame>();
-                    mFrames[x, y].Initialize(x, y, 0);
-                    CreateNewProduct(mFrames[x, y], res.products[x, y]);
-                    if (y == info.YCount)
-                        frameObj.GetComponent<SpriteRenderer>().enabled = false;
-                }
-            }
-
-        });
-    }
-
     private void RegisterSwipeEvent()
     {
         if (IsPlayerField())
@@ -114,7 +275,7 @@ public class BattleFieldManager : MonoBehaviour
         else
         {
             GetComponent<SwipeDetector>().enabled = false;
-            NetClientApp.GetInstance().WaitResponse(NetCMD.AttackSwipe, (object response) =>
+            NetClientApp.GetInstance().WaitResponse(NetCMD.SendSwipe, (object response) =>
             {
                 SwipeInfo res = response as SwipeInfo;
                 if (res.userPk == mThisUserPK)
@@ -126,99 +287,72 @@ public class BattleFieldManager : MonoBehaviour
             });
         }
     }
-    public void FinishGame(bool success)
+    private bool IsPlayerField()
     {
-        ResetGame();
-        EventOnFinish?.Invoke(success);
-        gameObject.SetActive(false);
+        //return SettingUserPK != mThisUserPK;
+        return true;
     }
-    public void ResetGame()
+    private void ResetGame()
     {
         int cnt = transform.childCount;
         for (int i = 0; i < cnt; ++i)
             Destroy(transform.GetChild(i).gameObject);
 
-        mFrames = null;
-        mKeepCombo = 0;
-        MatchLock = false;
-    }
+        mDestroyes.Clear();
+        mNextColors.Clear();
 
-    public Frame GetFrame(int x, int y)
+        mFrames = null;
+        mNextPositionIndex = 0;
+        MatchLock = false;
+        mThisUserPK = 0;
+        mKeepCombo = 0;
+        mCountX = 0;
+        mCountY = 0;
+    }
+    private Product NextUpProductFrom(Frame frame)
     {
+        Frame curFrame = frame;
+        while (curFrame != null)
+        {
+            if (curFrame.ChildProduct != null)
+                return curFrame.ChildProduct;
+
+            curFrame = curFrame.Up();
+        }
+        return null;
+    }
+    private Frame GetFrame(int x, int y)
+    {
+        if (x < 0 || x >= mCountX || y < 0 || y >= mCountY)
+            return null;
         return mFrames[x, y];
     }
-    public void KeepCombo(int combo)
+    private void Attack(Product pro)
     {
-        if (combo > mKeepCombo)
-            mKeepCombo = combo;
+        Debug.Log("Attack!!");
     }
-    public Frame GetFrame(float worldPosX, float worldPosY)
+    private ProductColor GetNextColor()
     {
-        float offX = worldPosX - transform.position.x;
-        float offY = worldPosY - transform.position.y;
-        int idxX = (int)(offX / (float)GridSize);
-        int idxY = (int)(offY / (float)GridSize);
-        return mFrames[idxX, idxY];
-    }
-    public Product CreateNewProduct(Frame parent, ProductColor color)
-    {
-        int typeIdx = (int)color;
-        GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
-        Product product = obj.GetComponent<Product>();
-        product.transform.localPosition = new Vector3(0, 0, -1);
-        product.ParentFrame = parent;
-        if(!IsPlayerField())
-            obj.GetComponent<BoxCollider2D>().enabled = false;
-        return product;
-    }
-    public bool IsPlayerField()
-    {
-        //return SettingUserPK != mThisUserPK;
-        return true;
-    }
+        int remainCount = mNextColors.Count - mNextPositionIndex;
+        if (remainCount < NextRequestCount / 3)
+            RequestNextColors(NextRequestCount);
 
-    static public int GetStarCount(int score, int target)
-    {
-        return score / target;
+        ProductColor next = mNextColors[mNextPositionIndex];
+        mNextPositionIndex++;
+        return next;
     }
-
-
-    void FinishGame()
+    private void RequestNextColors(int count)
     {
-        //if (mCurrentScore >= mStageInfo.GoalScore)
-        //{
-        //    int starCount = GetStarCount(mCurrentScore, mStageInfo.GoalScore);
-        //    Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
-        //    currentStage.UpdateStarCount(starCount);
-        //
-        //    Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
-        //    if(nextStage != null)
-        //        nextStage.UnLock();
-        //
-        //    SoundPlayer.Inst.Player.Stop();
-        //    MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore);
-        //    
-        //    FinishGame(true);
-        //}
-        //else if(mRemainLimit <= 0)
-        //{
-        //    SoundPlayer.Inst.Player.Stop();
-        //    MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalScore, mCurrentScore);
-        //
-        //    FinishGame(false);
-        //}
-    }
-
-    public Product[] GetSameProducts(ProductColor color)
-    {
-        List<Product> pros = new List<Product>();
-        foreach(Frame frame in mFrames)
+        NextProducts info = new NextProducts();
+        info.userPk = mThisUserPK;
+        info.offset = mNextColors.Count;
+        info.requestCount = count;
+        NetClientApp.GetInstance().Request(NetCMD.NextProducts, info, (object response) =>
         {
-            Product pro = frame.ChildProduct;
-            if (pro != null && pro.mColor == color)
-                pros.Add(pro);
-        }
-        return pros.ToArray();
+            NextProducts res = response as NextProducts;
+            mNextColors.AddRange(res.nextProducts);
+        });
     }
 
+    //attack
 }
