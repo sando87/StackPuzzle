@@ -132,7 +132,7 @@ public class NetClientApp : MonoBehaviour
                 if (mHandlerTable.ContainsKey(recvMsg.Cmd))
                 {
                     mHandlerTable[recvMsg.Cmd]?.Invoke(recvMsg.body);
-                    mHandlerTable.Remove(recvMsg.Cmd);
+                    //mHandlerTable.Remove(recvMsg.Cmd);
                 }
 
                 if (mHandlerTableKeep.ContainsKey(recvMsg.Cmd))

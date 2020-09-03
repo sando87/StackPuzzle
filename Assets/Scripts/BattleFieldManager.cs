@@ -289,8 +289,7 @@ public class BattleFieldManager : MonoBehaviour
     }
     private bool IsPlayerField()
     {
-        //return SettingUserPK != mThisUserPK;
-        return true;
+        return UserSetting.UserPK != mThisUserPK;
     }
     private void ResetGame()
     {

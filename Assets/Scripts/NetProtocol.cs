@@ -10,10 +10,10 @@ using UnityEngine;
 public enum NetCMD
 {
     Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
-    SearchOpponent, GetInitField, NextProducts, SendSwipe, EndGame
+    SearchOpponent, StopMatching, GetInitField, NextProducts, SendSwipe, EndGame
 }
 
-public class ServerSideMatchingUser
+public class ServerField
 {
     public bool isMatching = false;
     public int userPK = 0;

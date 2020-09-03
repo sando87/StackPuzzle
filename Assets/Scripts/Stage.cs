@@ -48,7 +48,8 @@ public class Stage : MonoBehaviour
     private void OnMouseUpAsButton()
     {
         transform.localScale = OriginalScale;
-        MenuPlay.PopUp(mStageInfo);
+        //MenuPlay.PopUp(mStageInfo);
+        MenuWaitMatch.PopUp();
     }
     #endregion
 

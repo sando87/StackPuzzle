@@ -1,0 +1,138 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class MenuWaitMatch : MonoBehaviour
+{
+    private const string UIObjName = "CanvasPopUp/MenuWaitMatch";
+    private bool mIsSearching = false;
+
+    public Text State;
+    public GameObject BtnMatch;
+    public GameObject BtnCancle;
+    public GameObject GameFieldMe;
+    public GameObject GameFieldOpp;
+
+    public static void PopUp()
+    {
+        GameObject menuMatch = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        menuMatch.GetComponent<MenuWaitMatch>().ResetMatchUI();
+        menuMatch.SetActive(true);
+        StageManager.Inst.gameObject.SetActive(false);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+    }
+
+    public void OnClose()
+    {
+        mIsSearching = false;
+        gameObject.SetActive(false);
+        StageManager.Inst.gameObject.SetActive(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    public void OnCancle()
+    {
+        mIsSearching = false;
+        StopCoroutine("WaitOpponent");
+        State.text = "Match Ready";
+        BtnCancle.SetActive(false);
+        BtnMatch.SetActive(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.userPk = UserSetting.UserPK;
+        NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
+    }
+
+    public void OnMatch()
+    {
+        mIsSearching = true;
+        BtnCancle.SetActive(true);
+        BtnMatch.SetActive(false);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.userPk = UserSetting.UserPK;
+        info.userScore = UserSetting.UserScore;
+        info.opponentUserPk = -1;
+        info.opponentUserScore = -1;
+        info.isDone = false;
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
+        {
+            SearchOpponentInfo res = _res as SearchOpponentInfo;
+            if(res.isDone && mIsSearching)
+            {
+                if (res.opponentUserPk == -1)
+                    FailMatch();
+                else
+                    SuccessMatch(res.opponentUserPk);
+            }
+            return;
+        });
+
+        StartCoroutine("WaitOpponent");
+    }
+
+    IEnumerator WaitOpponent()
+    {
+        int n = 0;
+        while(true)
+        {
+            switch(n%3)
+            {
+                case 0: State.text = "Matching.."; break;
+                case 1: State.text = "Matching..."; break;
+                case 2: State.text = "Matching...."; break;
+            }
+            n++;
+            yield return new WaitForSeconds(1);
+        }
+    }
+
+    private void SuccessMatch(int oppPk)
+    {
+        mIsSearching = false;
+        StopCoroutine("WaitOpponent");
+        State.text = "Matched Player : " + oppPk;
+
+        InitFieldInfo info = new InitFieldInfo();
+        info.XCount = 8;
+        info.YCount = 8;
+
+        info.userPk = UserSetting.UserPK;
+        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
+        {
+            InitFieldInfo res = _res as InitFieldInfo;
+            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+        });
+
+        info.userPk = oppPk;
+        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
+        {
+            InitFieldInfo res = _res as InitFieldInfo;
+            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+        });
+
+        MenuStages.Hide();
+        StageManager.Inst.Activate(false);
+        gameObject.SetActive(false);
+    }
+    private void FailMatch()
+    {
+        mIsSearching = false;
+        StopCoroutine("WaitOpponent");
+        State.text = "Match Failed";
+        BtnCancle.SetActive(false);
+        BtnMatch.SetActive(true);
+    }
+    private void ResetMatchUI()
+    {
+        mIsSearching = false;
+        BtnCancle.SetActive(false);
+        BtnMatch.SetActive(true);
+        State.text = "Match Ready";
+        StopCoroutine("WaitOpponent");
+
+    }
+}

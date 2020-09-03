@@ -10,7 +10,7 @@ public class NetServerApp : MonoBehaviour
 
     NetServerModule mServer = new NetServerModule();
 
-    static Dictionary<int, ServerSideMatchingUser> mMatchingUsers = new Dictionary<int, ServerSideMatchingUser>();
+    static Dictionary<int, ServerField> mMatchingUsers = new Dictionary<int, ServerField>();
 
     // Open Server
     void Awake()
@@ -45,6 +45,7 @@ public class NetServerApp : MonoBehaviour
         if (requestMsg == null)
             return NetProtocol.Serialize(new Header());
 
+        Debug.Log("recv cmd : " + requestMsg.Cmd);
         Header responseMsg = new Header();
         responseMsg.Cmd = requestMsg.Cmd;
         switch (requestMsg.Cmd)
@@ -58,12 +59,14 @@ public class NetServerApp : MonoBehaviour
             case NetCMD.GetScores:      responseMsg.body = ProcGetUsers(); break;
             case NetCMD.AddLog:         responseMsg.body = ProcAddLog(requestMsg.body as LogInfo); break;
             case NetCMD.SearchOpponent: responseMsg.body = ProcSearchOpponent(requestMsg.body as SearchOpponentInfo, session); break;
+            case NetCMD.StopMatching:   responseMsg.body = ProcStopMatching(requestMsg.body as SearchOpponentInfo); break;
             case NetCMD.GetInitField:   responseMsg.body = ProcGetInitField(requestMsg.body as InitFieldInfo); break;
             case NetCMD.NextProducts:   responseMsg.body = ProcNextProduct(requestMsg.body as NextProducts); break;
             case NetCMD.SendSwipe:      responseMsg.body = ProcSendSwipe(requestMsg.body as SwipeInfo); break;
             case NetCMD.EndGame:        responseMsg.body = ProcEndGame(requestMsg.body as EndGame); break;
             default:                    responseMsg.body = "Undefied Command"; break;
         }
+        Debug.Log("back cmd : " + requestMsg.Cmd);
         return NetProtocol.Serialize(responseMsg);
     }
 
@@ -107,7 +110,7 @@ public class NetServerApp : MonoBehaviour
 
     private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody, MySession session)
     {
-        ServerSideMatchingUser info = new ServerSideMatchingUser();
+        ServerField info = new ServerField();
         info.isMatching = false;
         info.userPK = requestBody.userPk;
         info.score = requestBody.userScore;
@@ -117,26 +120,36 @@ public class NetServerApp : MonoBehaviour
         requestBody.isDone = false;
         return requestBody;
     }
+    private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
+    {
+        mMatchingUsers.Remove(requestBody.userPk);
+        return requestBody;
+    }
     private InitFieldInfo ProcGetInitField(InitFieldInfo requestBody)
     {
-        requestBody.products = mMatchingUsers[requestBody.userPk].GetInitField(requestBody.XCount, requestBody.YCount);
+        if(mMatchingUsers.ContainsKey(requestBody.userPk))
+            requestBody.products = mMatchingUsers[requestBody.userPk].GetInitField(requestBody.XCount, requestBody.YCount);
         return requestBody;
     }
     private NextProducts ProcNextProduct(NextProducts requestBody)
     {
-        requestBody.nextProducts = mMatchingUsers[requestBody.userPk].GetNextColors(requestBody.offset, requestBody.requestCount);
+        if (mMatchingUsers.ContainsKey(requestBody.userPk))
+            requestBody.nextProducts = mMatchingUsers[requestBody.userPk].GetNextColors(requestBody.offset, requestBody.requestCount);
         return requestBody;
     }
     private SwipeInfo ProcSendSwipe(SwipeInfo requestBody)
     {
-        MySession session = mMatchingUsers[requestBody.opponentUserPk].sessionInfo;
+        if (mMatchingUsers.ContainsKey(requestBody.userPk))
+        {
+            MySession session = mMatchingUsers[requestBody.opponentUserPk].sessionInfo;
 
-        Header responseMsg = new Header();
-        responseMsg.Cmd = NetCMD.SendSwipe;
-        responseMsg.body = requestBody;
-        session.data = NetProtocol.Serialize(responseMsg);
+            Header responseMsg = new Header();
+            responseMsg.Cmd = NetCMD.SendSwipe;
+            responseMsg.body = requestBody;
+            session.data = NetProtocol.Serialize(responseMsg);
 
-        mServer.SendData(session);
+            mServer.SendData(session);
+        }
 
         return requestBody;
     }
@@ -148,47 +161,60 @@ public class NetServerApp : MonoBehaviour
 
     private IEnumerator SearchMatching(int userPK)
     {
-        ServerSideMatchingUser user = mMatchingUsers[userPK];
         float time = 0;
-        while (time < 20) //search for 20sec
+        while (true) //search for 20sec
         {
-            if (user.isMatching)
-                break;
-
-            foreach(var target in mMatchingUsers)
+            Debug.Log("trace0 : " + userPK);
+            if (!mMatchingUsers.ContainsKey(userPK))
             {
-                ServerSideMatchingUser opp = target.Value;
-                if (opp == user || opp.isMatching)
+                Debug.Log("trace2 : " + userPK);
+                break;
+            }
+
+            ServerField user = mMatchingUsers[userPK];
+            if (user.isMatching)
+            {
+                Debug.Log("trace1 : " + userPK);
+                break;
+            }
+            if(time > 20)
+            {
+                Debug.Log("trace4 : " + userPK);
+                SendOppoentInfo(user, null);
+                mMatchingUsers.Remove(user.userPK);
+                break;
+            }
+
+            foreach (var target in mMatchingUsers)
+            {
+                ServerField opp = target.Value;
+                if (opp.userPK == user.userPK || opp.isMatching)
                     continue;
 
                 if(Mathf.Abs(opp.score - user.score) < 5)
                 {
+                    Debug.Log("trace3 : " + userPK);
                     user.isMatching = true;
                     opp.isMatching = true;
-                    SendOppoentInfo(user.userPK, opp.userPK);
-                    SendOppoentInfo(opp.userPK, user.userPK);
+                    SendOppoentInfo(user, opp);
+                    SendOppoentInfo(opp, user);
                     break;
                 }
             }
             yield return new WaitForSeconds(1);
-            time += Time.deltaTime;
-        }
-
-        if (!user.isMatching)
-        {
-            SendOppoentInfo(user.userPK, -1);
-            mMatchingUsers.Remove(user.userPK);
+            time += 1;
         }
     }
-    private void SendOppoentInfo(int userPK, int opponentPK)
+    private void SendOppoentInfo(ServerField user, ServerField opponent)
     {
-        MySession session = mMatchingUsers[userPK].sessionInfo;
+        Debug.Log("trace5 : " + user.userPK + "," + opponent.userPK);
+        MySession session = user.sessionInfo;
 
         SearchOpponentInfo body = new SearchOpponentInfo();
-        body.userPk = userPK;
-        body.userPk = mMatchingUsers[userPK].score;
-        body.opponentUserPk = opponentPK;
-        body.opponentUserScore = opponentPK > 0 ? mMatchingUsers[opponentPK].score : 0;
+        body.userPk = user.userPK;
+        body.userPk = user.score;
+        body.opponentUserPk = opponent == null ? -1 : opponent.userPK;
+        body.opponentUserScore = opponent == null ?  0 : opponent.score;
         body.isDone = true;
 
         Header responseMsg = new Header();
