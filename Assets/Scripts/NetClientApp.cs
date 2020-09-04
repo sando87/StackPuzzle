@@ -60,11 +60,12 @@ public class NetClientApp : MonoBehaviour
             head.Cmd = cmd;
             head.RequestID = mRequestID++;
             head.body = body;
-            byte[] data = NetProtocol.Serialize(head);
+            byte[] data = NetProtocol.ToArray(head);
 
             mStream.Write(data, 0, data.Length);
 
-            mHandlerTable[head.RequestID] = response;
+            if(response != null)
+                mHandlerTable[head.RequestID] = response;
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
@@ -111,18 +112,47 @@ public class NetClientApp : MonoBehaviour
                     DisConnect();
                     return;
                 }
-
-                Header recvMsg = NetProtocol.Deserialize<Header>(recvBuf);
-                if (recvMsg == null || recvMsg.Magic != 0x12345678)
-                    return;
-
-                if (mHandlerTable.ContainsKey(recvMsg.RequestID))
+                else if (nbytes < NetProtocol.HeadSize())
                 {
-                    mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
-                    mHandlerTable.Remove(recvMsg.RequestID);
+                    Debug.Log("too small size");
+                    return;
                 }
 
-                EventResponse?.Invoke(recvMsg);
+                int offset = 0;
+                List<byte[]> messages = new List<byte[]>();
+                while(true)
+                {
+                    int length = NetProtocol.Length(recvBuf, offset);
+                    if (length <= 0)
+                        break;
+
+                    if(offset + length <= nbytes)
+                    {
+                        byte[] buf = new byte[length];
+                        Array.Copy(recvBuf, offset, buf, 0, length);
+                        messages.Add(buf);
+                        offset += length;
+                    }
+
+                    if (nbytes - offset < NetProtocol.HeadSize())
+                        break;
+                }
+
+                foreach (byte[] msg in messages)
+                {
+                    Header recvMsg = NetProtocol.ToMessage(msg);
+                    if (recvMsg == null || recvMsg.Magic != 0x12345678)
+                        continue;
+
+                    Debug.Log("HandleResponse: " + recvMsg.RequestID + "," + msg.Length);
+                    if (mHandlerTable.ContainsKey(recvMsg.RequestID))
+                    {
+                        mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
+                        mHandlerTable.Remove(recvMsg.RequestID);
+                    }
+
+                    EventResponse?.Invoke(recvMsg);
+                }
             }
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }

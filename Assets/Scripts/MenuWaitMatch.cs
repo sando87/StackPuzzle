@@ -25,6 +25,13 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnClose()
     {
+        if(mIsSearching)
+        {
+            SearchOpponentInfo info = new SearchOpponentInfo();
+            info.userPk = UserSetting.UserPK;
+            NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
+        }
+
         mIsSearching = false;
         gameObject.SetActive(false);
         StageManager.Inst.gameObject.SetActive(true);

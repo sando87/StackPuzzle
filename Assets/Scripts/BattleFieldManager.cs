@@ -188,7 +188,7 @@ public class BattleFieldManager : MonoBehaviour
     }
     private Product CreateNewProduct(Frame parent, ProductColor color,ProductSkill skill = ProductSkill.Nothing)
     {
-        int typeIdx = (int)color;
+        int typeIdx = (int)color - 1;
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
@@ -243,9 +243,9 @@ public class BattleFieldManager : MonoBehaviour
                     continue;
 
                 if (colorCount.ContainsKey(pro.mColor))
-                    colorCount[pro.mColor] = 1;
-                else
                     colorCount[pro.mColor] += 1;
+                else
+                    colorCount[pro.mColor] = 1;
 
                 if(colorCount[pro.mColor] >= MatchCount)
                 {
@@ -298,7 +298,7 @@ public class BattleFieldManager : MonoBehaviour
     }
     private bool IsPlayerField()
     {
-        return UserSetting.UserPK != mThisUserPK;
+        return UserSetting.UserPK == mThisUserPK;
     }
     private void ResetGame()
     {

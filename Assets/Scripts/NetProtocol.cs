@@ -50,7 +50,54 @@ public class ServerField
 
 public class NetProtocol
 {
-    static public byte[] Serialize(object source)
+    static public int HeadSize()
+    {
+        return 20;
+    }
+    static public int Length(byte[] msg, int offset = 0)
+    {
+        return BitConverter.ToInt32(msg, offset + 16);
+    }
+    static public byte[] ToArray(Header msg)
+    {
+        List<byte> buf = new List<byte>();
+        try
+        {
+            byte[] body = Serialize(msg.body);
+            msg.Length = HeadSize() + body.Length;
+
+            buf.AddRange(BitConverter.GetBytes(msg.Magic));
+            buf.AddRange(BitConverter.GetBytes((UInt32)msg.Cmd));
+            buf.AddRange(BitConverter.GetBytes(msg.RequestID));
+            buf.AddRange(BitConverter.GetBytes(msg.Length));
+            buf.AddRange(body);
+        }
+        catch(Exception ex)
+        {
+            Debug.Log(ex.Message);
+            return null;
+        }
+        return buf.ToArray();
+    }
+    static public Header ToMessage(byte[] buf)
+    {
+        Header msg = new Header();
+        try
+        {
+            msg.Magic = BitConverter.ToUInt32(buf, 0);
+            msg.Cmd = (NetCMD)BitConverter.ToUInt32(buf, 4);
+            msg.RequestID = BitConverter.ToInt64(buf, 8);
+            msg.Length = BitConverter.ToInt32(buf, 16);
+            msg.body = Deserialize<object>(buf, 20);
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex.Message);
+            return null;
+        }
+        return msg;
+    }
+    static private byte[] Serialize(object source)
     {
         try
         {
@@ -67,14 +114,14 @@ public class NetProtocol
         }
         return null;
     }
-    static public T Deserialize<T>(byte[] byteArray) where T : class
+    static private T Deserialize<T>(byte[] byteArray, int off = 0) where T : class
     {
         try
         {
             using (var memStream = new MemoryStream())
             {
                 var binForm = new BinaryFormatter();
-                memStream.Write(byteArray, 0, byteArray.Length);
+                memStream.Write(byteArray, off, byteArray.Length - off);
                 memStream.Seek(0, SeekOrigin.Begin);
                 var obj = (T)binForm.Deserialize(memStream);
                 return obj;
@@ -93,7 +140,8 @@ public class Header
 {
     public UInt32 Magic = 0x12345678;
     public NetCMD Cmd = NetCMD.Undef;
-    public Int64 RequestID = 0;
+    public Int64 RequestID = -1;
+    public int Length = 0;
     public object body = null;
 }
 

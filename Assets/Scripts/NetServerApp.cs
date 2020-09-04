@@ -46,9 +46,9 @@ public class NetServerApp : MonoBehaviour
 
     private byte[] ProcessPacket(MySession session)
     {
-        Header requestMsg = NetProtocol.Deserialize<Header>(session.data);
+        Header requestMsg = NetProtocol.ToMessage(session.data);
         if (requestMsg == null)
-            return NetProtocol.Serialize(new Header());
+            return NetProtocol.ToArray(new Header());
 
         Debug.Log("recv cmd : " + requestMsg.Cmd);
         mRequestMsg = requestMsg;
@@ -76,11 +76,13 @@ public class NetServerApp : MonoBehaviour
         if (body == null)
             return null;
 
+        string ipaddr = ((System.Net.IPEndPoint)session.client.Client.RemoteEndPoint).Address.ToString();
+        Debug.Log("back cmd : " + ipaddr + "," + requestMsg.Cmd + "," + requestMsg.RequestID);
         Header responseMsg = new Header();
         responseMsg.Cmd = requestMsg.Cmd;
         responseMsg.RequestID = requestMsg.RequestID;
         responseMsg.body = body;
-        return NetProtocol.Serialize(responseMsg);
+        return NetProtocol.ToArray(responseMsg);
     }
 
 
@@ -131,7 +133,6 @@ public class NetServerApp : MonoBehaviour
         info.requestMsg = mRequestMsg;
         mMatchingUsers[requestBody.userPk] = info;
         StartCoroutine(SearchMatching(requestBody.userPk));
-        requestBody.isDone = false;
         return null;
     }
     private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
@@ -161,7 +162,7 @@ public class NetServerApp : MonoBehaviour
             responseMsg.Cmd = NetCMD.SendSwipe;
             responseMsg.RequestID = -1;
             responseMsg.body = requestBody;
-            session.data = NetProtocol.Serialize(responseMsg);
+            session.data = NetProtocol.ToArray(responseMsg);
 
             mServer.SendData(session);
         }
@@ -222,7 +223,6 @@ public class NetServerApp : MonoBehaviour
     }
     private void SendOppoentInfo(ServerField user, ServerField opponent)
     {
-        Debug.Log("trace5 : " + user.userPK + "," + opponent.userPK);
         MySession session = user.sessionInfo;
 
         SearchOpponentInfo body = new SearchOpponentInfo();
@@ -237,7 +237,7 @@ public class NetServerApp : MonoBehaviour
         responseMsg.RequestID = user.requestMsg.RequestID;
         responseMsg.body = body;
 
-        session.data = NetProtocol.Serialize(responseMsg);
+        session.data = NetProtocol.ToArray(responseMsg);
 
         mServer.SendData(session);
     }
