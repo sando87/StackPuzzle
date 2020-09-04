@@ -27,8 +27,9 @@ public class BattleFieldManager : MonoBehaviour
     private int mCountY = 0;
 
     public bool MatchLock { get; set; }
+    public int UserPK { get { return mThisUserPK; } }
 
-    public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
+    public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors, int offHeight)
     {
         ResetGame();
     
@@ -42,7 +43,11 @@ public class BattleFieldManager : MonoBehaviour
         GameObject mask = Instantiate(MaskPrefab, transform);
         mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
 
-        RegisterSwipeEvent();
+        NetClientApp.GetInstance().EventResponse += ResponseHandler;
+
+        SwipeDetector sd = GetComponent<SwipeDetector>();
+        if(sd != null)
+            sd.EventSwipe = OnSwipe;
 
         RequestNextColors(NextRequestCount);
 
@@ -52,6 +57,7 @@ public class BattleFieldManager : MonoBehaviour
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
         localBasePos.y += GridSize * 0.5f;
+        localBasePos.y += offHeight;
         Vector3 localFramePos = new Vector3(0, 0, 0);
         mFrames = new Frame[XCount, YCount];
         for (int y = 0; y < YCount; y++)
@@ -74,6 +80,8 @@ public class BattleFieldManager : MonoBehaviour
     {
         ResetGame();
         transform.parent.gameObject.SetActive(false);
+
+        NetClientApp.GetInstance().EventResponse -= ResponseHandler;
 
         EndGame info = new EndGame();
         info.userPk = mThisUserPK;
@@ -263,28 +271,29 @@ public class BattleFieldManager : MonoBehaviour
         info.idxX = idxX;
         info.idxY = idxY;
         info.matchable = !MatchLock;
-        info.userPk = mThisUserPK;
+        info.fromUserPk = mThisUserPK;
+        info.toUserPk = Opponent.UserPK;
         NetClientApp.GetInstance().Request(NetCMD.SendSwipe, info, null);
     }
-    private void RegisterSwipeEvent()
+    private void ResponseHandler(Header responseMsg)
     {
-        if (IsPlayerField())
-        {
-            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
-        }
-        else
-        {
-            GetComponent<SwipeDetector>().enabled = false;
-            NetClientApp.GetInstance().WaitResponse(NetCMD.SendSwipe, (object response) =>
-            {
-                SwipeInfo res = response as SwipeInfo;
-                if (res.userPk == mThisUserPK)
-                    return;
+        if (!gameObject.activeSelf)
+            return;
 
+        if(responseMsg.Cmd == NetCMD.SendSwipe)
+        {
+            SwipeInfo res = responseMsg.body as SwipeInfo;
+            if (res.toUserPk == mThisUserPK)
+            {
                 MatchLock = res.matchable;
                 Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
                 OnSwipe(pro.gameObject, res.dir);
-            });
+            }
+        }
+        else if(responseMsg.Cmd == NetCMD.NextProducts)
+        {
+            NextProducts res = responseMsg.body as NextProducts;
+            mNextColors.AddRange(res.nextProducts);
         }
     }
     private bool IsPlayerField()
@@ -346,11 +355,7 @@ public class BattleFieldManager : MonoBehaviour
         info.userPk = mThisUserPK;
         info.offset = mNextColors.Count;
         info.requestCount = count;
-        NetClientApp.GetInstance().Request(NetCMD.NextProducts, info, (object response) =>
-        {
-            NextProducts res = response as NextProducts;
-            mNextColors.AddRange(res.nextProducts);
-        });
+        NetClientApp.GetInstance().Request(NetCMD.NextProducts, info, null);
     }
 
     //attack

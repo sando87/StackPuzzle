@@ -104,14 +104,14 @@ public class MenuWaitMatch : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products, -5);
         });
 
         info.userPk = oppPk;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products, 5);
         });
 
         MenuStages.Hide();

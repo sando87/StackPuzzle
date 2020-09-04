@@ -19,6 +19,7 @@ public class ServerField
     public int userPK = 0;
     public int score = 0;
     public MySession sessionInfo = null;
+    public Header requestMsg = null;
     public ProductColor[,] initField = null;
     public List<ProductColor> nextColors = new List<ProductColor>();
     public ProductColor[,] GetInitField(int xCount, int yCount)
@@ -92,6 +93,7 @@ public class Header
 {
     public UInt32 Magic = 0x12345678;
     public NetCMD Cmd = NetCMD.Undef;
+    public Int64 RequestID = 0;
     public object body = null;
 }
 
@@ -143,8 +145,8 @@ public class NextProducts
 [Serializable]
 public class SwipeInfo
 {
-    public int userPk;
-    public int opponentUserPk;
+    public int fromUserPk;
+    public int toUserPk;
     public int idxX;
     public int idxY;
     public bool matchable;

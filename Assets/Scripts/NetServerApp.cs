@@ -11,6 +11,8 @@ public class NetServerApp : MonoBehaviour
     NetServerModule mServer = new NetServerModule();
 
     static Dictionary<int, ServerField> mMatchingUsers = new Dictionary<int, ServerField>();
+    static Header mRequestMsg = null;
+    static MySession mSession = null;
 
     // Open Server
     void Awake()
@@ -34,8 +36,11 @@ public class NetServerApp : MonoBehaviour
         foreach (MySession info in infos)
         {
             byte[] retData = ProcessPacket(info);
-            info.data = retData;
-            mServer.SendData(info);
+            if(retData != null)
+            {
+                info.data = retData;
+                mServer.SendData(info);
+            }
         }
     }
 
@@ -46,27 +51,35 @@ public class NetServerApp : MonoBehaviour
             return NetProtocol.Serialize(new Header());
 
         Debug.Log("recv cmd : " + requestMsg.Cmd);
-        Header responseMsg = new Header();
-        responseMsg.Cmd = requestMsg.Cmd;
+        mRequestMsg = requestMsg;
+        mSession = session;
+        object body = null;
         switch (requestMsg.Cmd)
         {
-            case NetCMD.Undef:          responseMsg.body = "Undefied Command"; break;
-            case NetCMD.AddUser:        responseMsg.body = ProcAddUser(requestMsg.body as UserInfo); break;
-            case NetCMD.EditUserName:   responseMsg.body = ProcEditUserName(requestMsg.body as UserInfo); break;
-            case NetCMD.GetUser:        responseMsg.body = ProcGetUser(requestMsg.body as UserInfo); break;
-            case NetCMD.DelUser:        responseMsg.body = ProcDelUser(requestMsg.body as UserInfo); break;
-            case NetCMD.RenewScore:     responseMsg.body = ProcRenewScore(requestMsg.body as UserInfo); break;
-            case NetCMD.GetScores:      responseMsg.body = ProcGetUsers(); break;
-            case NetCMD.AddLog:         responseMsg.body = ProcAddLog(requestMsg.body as LogInfo); break;
-            case NetCMD.SearchOpponent: responseMsg.body = ProcSearchOpponent(requestMsg.body as SearchOpponentInfo, session); break;
-            case NetCMD.StopMatching:   responseMsg.body = ProcStopMatching(requestMsg.body as SearchOpponentInfo); break;
-            case NetCMD.GetInitField:   responseMsg.body = ProcGetInitField(requestMsg.body as InitFieldInfo); break;
-            case NetCMD.NextProducts:   responseMsg.body = ProcNextProduct(requestMsg.body as NextProducts); break;
-            case NetCMD.SendSwipe:      responseMsg.body = ProcSendSwipe(requestMsg.body as SwipeInfo); break;
-            case NetCMD.EndGame:        responseMsg.body = ProcEndGame(requestMsg.body as EndGame); break;
-            default:                    responseMsg.body = "Undefied Command"; break;
+            case NetCMD.Undef:          body = "Undefied Command"; break;
+            case NetCMD.AddUser:        body = ProcAddUser(requestMsg.body as UserInfo); break;
+            case NetCMD.EditUserName:   body = ProcEditUserName(requestMsg.body as UserInfo); break;
+            case NetCMD.GetUser:        body = ProcGetUser(requestMsg.body as UserInfo); break;
+            case NetCMD.DelUser:        body = ProcDelUser(requestMsg.body as UserInfo); break;
+            case NetCMD.RenewScore:     body = ProcRenewScore(requestMsg.body as UserInfo); break;
+            case NetCMD.GetScores:      body = ProcGetUsers(); break;
+            case NetCMD.AddLog:         body = ProcAddLog(requestMsg.body as LogInfo); break;
+            case NetCMD.SearchOpponent: body = ProcSearchOpponent(requestMsg.body as SearchOpponentInfo); break;
+            case NetCMD.StopMatching:   body = ProcStopMatching(requestMsg.body as SearchOpponentInfo); break;
+            case NetCMD.GetInitField:   body = ProcGetInitField(requestMsg.body as InitFieldInfo); break;
+            case NetCMD.NextProducts:   body = ProcNextProduct(requestMsg.body as NextProducts); break;
+            case NetCMD.SendSwipe:      body = ProcSendSwipe(requestMsg.body as SwipeInfo); break;
+            case NetCMD.EndGame:        body = ProcEndGame(requestMsg.body as EndGame); break;
+            default:                    body = "Undefied Command"; break;
         }
-        Debug.Log("back cmd : " + requestMsg.Cmd);
+
+        if (body == null)
+            return null;
+
+        Header responseMsg = new Header();
+        responseMsg.Cmd = requestMsg.Cmd;
+        responseMsg.RequestID = requestMsg.RequestID;
+        responseMsg.body = body;
         return NetProtocol.Serialize(responseMsg);
     }
 
@@ -108,17 +121,18 @@ public class NetServerApp : MonoBehaviour
         return "OK";
     }
 
-    private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody, MySession session)
+    private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody)
     {
         ServerField info = new ServerField();
         info.isMatching = false;
         info.userPK = requestBody.userPk;
         info.score = requestBody.userScore;
-        info.sessionInfo = session;
+        info.sessionInfo = mSession;
+        info.requestMsg = mRequestMsg;
         mMatchingUsers[requestBody.userPk] = info;
         StartCoroutine(SearchMatching(requestBody.userPk));
         requestBody.isDone = false;
-        return requestBody;
+        return null;
     }
     private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
     {
@@ -139,12 +153,13 @@ public class NetServerApp : MonoBehaviour
     }
     private SwipeInfo ProcSendSwipe(SwipeInfo requestBody)
     {
-        if (mMatchingUsers.ContainsKey(requestBody.userPk))
+        if (mMatchingUsers.ContainsKey(requestBody.fromUserPk))
         {
-            MySession session = mMatchingUsers[requestBody.opponentUserPk].sessionInfo;
+            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SendSwipe;
+            responseMsg.RequestID = -1;
             responseMsg.body = requestBody;
             session.data = NetProtocol.Serialize(responseMsg);
 
@@ -167,19 +182,19 @@ public class NetServerApp : MonoBehaviour
             Debug.Log("trace0 : " + userPK);
             if (!mMatchingUsers.ContainsKey(userPK))
             {
-                Debug.Log("trace2 : " + userPK);
+                Debug.Log("trace1 : " + userPK);
                 break;
             }
 
             ServerField user = mMatchingUsers[userPK];
             if (user.isMatching)
             {
-                Debug.Log("trace1 : " + userPK);
+                Debug.Log("trace2 : " + userPK);
                 break;
             }
             if(time > 20)
             {
-                Debug.Log("trace4 : " + userPK);
+                Debug.Log("trace3 : " + userPK);
                 SendOppoentInfo(user, null);
                 mMatchingUsers.Remove(user.userPK);
                 break;
@@ -193,7 +208,7 @@ public class NetServerApp : MonoBehaviour
 
                 if(Mathf.Abs(opp.score - user.score) < 5)
                 {
-                    Debug.Log("trace3 : " + userPK);
+                    Debug.Log("trace4 : " + userPK);
                     user.isMatching = true;
                     opp.isMatching = true;
                     SendOppoentInfo(user, opp);
@@ -219,6 +234,7 @@ public class NetServerApp : MonoBehaviour
 
         Header responseMsg = new Header();
         responseMsg.Cmd = NetCMD.SearchOpponent;
+        responseMsg.RequestID = user.requestMsg.RequestID;
         responseMsg.body = body;
 
         session.data = NetProtocol.Serialize(responseMsg);

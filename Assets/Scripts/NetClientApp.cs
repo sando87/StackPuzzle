@@ -18,9 +18,9 @@ public class NetClientApp : MonoBehaviour
 
     TcpClient mSession = null;
     NetworkStream mStream = null;
-    Dictionary<NetCMD, _FuncRecv> mHandlerTable = new Dictionary<NetCMD, _FuncRecv>();
-    Dictionary<NetCMD, _FuncRecv> mHandlerTableKeep = new Dictionary<NetCMD, _FuncRecv>();
-    public delegate void _FuncRecv(object response);
+    private Int64 mRequestID = 0;
+    Dictionary<Int64, Action<object>> mHandlerTable = new Dictionary<Int64, Action<object>>();
+    public Action<Header> EventResponse;
 
     // Start is called before the first frame update
     void Start()
@@ -49,7 +49,7 @@ public class NetClientApp : MonoBehaviour
     {
         return GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
     }
-    public void Request(NetCMD cmd, object body, _FuncRecv response)
+    public void Request(NetCMD cmd, object body, Action<object> response)
     {
         if (mSession == null)
             return;
@@ -58,30 +58,17 @@ public class NetClientApp : MonoBehaviour
         {
             Header head = new Header();
             head.Cmd = cmd;
+            head.RequestID = mRequestID++;
             head.body = body;
             byte[] data = NetProtocol.Serialize(head);
 
             mStream.Write(data, 0, data.Length);
 
-            mHandlerTable[cmd] = response;
+            mHandlerTable[head.RequestID] = response;
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
     }
-    public void WaitResponse(NetCMD cmd, _FuncRecv response)
-    {
-        if (mSession == null)
-            return;
-
-        try
-        {
-            mHandlerTableKeep[cmd] = response;
-        }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
-    }
-
-
 
 
     private void Connect(string ipAddr, int port)
@@ -129,16 +116,13 @@ public class NetClientApp : MonoBehaviour
                 if (recvMsg == null || recvMsg.Magic != 0x12345678)
                     return;
 
-                if (mHandlerTable.ContainsKey(recvMsg.Cmd))
+                if (mHandlerTable.ContainsKey(recvMsg.RequestID))
                 {
-                    mHandlerTable[recvMsg.Cmd]?.Invoke(recvMsg.body);
-                    //mHandlerTable.Remove(recvMsg.Cmd);
+                    mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
+                    mHandlerTable.Remove(recvMsg.RequestID);
                 }
 
-                if (mHandlerTableKeep.ContainsKey(recvMsg.Cmd))
-                {
-                    mHandlerTableKeep[recvMsg.Cmd]?.Invoke(recvMsg.body);
-                }
+                EventResponse?.Invoke(recvMsg);
             }
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
