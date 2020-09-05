@@ -6,10 +6,6 @@ using UnityEngine.UI;
 
 public class InGameManager : MonoBehaviour
 {
-    public const int MatchCount = 3;
-    public const int scorePerProduct = 1;
-    public const float GridSize = 0.8f;
-
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -47,9 +43,10 @@ public class InGameManager : MonoBehaviour
         StartCoroutine(CheckFinish());
         StartCoroutine(CreateNextProducts());
 
-        Vector3 localBasePos = new Vector3(-GridSize * info.XCount * 0.5f, -GridSize * info.YCount * 0.5f, 0);
-        localBasePos.x += GridSize * 0.5f;
-        localBasePos.y += GridSize * 0.5f;
+        float gridSize = UserSetting.GridSize;
+        Vector3 localBasePos = new Vector3(-gridSize * info.XCount * 0.5f, -gridSize * info.YCount * 0.5f, 0);
+        localBasePos.x += gridSize * 0.5f;
+        localBasePos.y += gridSize * 0.5f;
         Vector3 localFramePos = new Vector3(0, 0, 0);
         mFrames = new Frame[info.XCount, info.YCount];
         for (int y = 0; y < info.YCount; y++)
@@ -57,8 +54,8 @@ public class InGameManager : MonoBehaviour
             for (int x = 0; x < info.XCount; x++)
             {
                 GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
-                localFramePos.x = GridSize * x;
-                localFramePos.y = GridSize * y;
+                localFramePos.x = gridSize * x;
+                localFramePos.y = gridSize * y;
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount);
@@ -303,7 +300,7 @@ public class InGameManager : MonoBehaviour
     }
     private void AddScore(Product product)
     {
-        mCurrentScore += (scorePerProduct * product.Combo);
+        mCurrentScore += (UserSetting.scorePerProduct * product.Combo);
         EventOnChange?.Invoke(0, mCurrentScore, product);
     }
     private void SetSkipProduct(ProductColor color, int returnCount)

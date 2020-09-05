@@ -104,21 +104,21 @@ public class MenuWaitMatch : MonoBehaviour
         State.text = "Matched Player : " + oppPk;
 
         InitFieldInfo info = new InitFieldInfo();
-        info.XCount = 8;
-        info.YCount = 8;
+        info.XCount = 7;
+        info.YCount = 7;
 
         info.userPk = UserSetting.UserPK;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products, -5);
+            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
         });
 
         info.userPk = oppPk;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products, 5);
+            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
         });
 
         MenuStages.Hide();

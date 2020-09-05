@@ -60,7 +60,7 @@ public class Product : MonoBehaviour
         dest.z = transform.position.z;
         while ((transform.position - dest).magnitude >= 0.02f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, InGameManager.GridSize * 3 * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, dest, UserSetting.GridSize * 3 * Time.deltaTime);
             yield return null;
         }
         transform.position = dest;
@@ -77,7 +77,7 @@ public class Product : MonoBehaviour
         yield return null;
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
-        if (matchList.Count >= InGameManager.MatchCount)
+        if (matchList.Count >= UserSetting.MatchCount)
             EventMatched?.Invoke(matchList);
     }
 
@@ -112,7 +112,7 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         ParentFrame = parent;
-        float height = InGameManager.GridSize * emptyCount;
+        float height = UserSetting.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
         StartCoroutine(AnimateDrop(isComboable));
     }
@@ -121,7 +121,7 @@ public class Product : MonoBehaviour
         //블럭이 떨어져야 하는 높이에 따라 다르게 delay를 줘서 떨어져야 한다.
         //채공시간은 0.6초, 착지순간은 모두 동일하게 수학적으로 계산한다.
         float totalTime = 0.6f;
-        float totalHeight = InGameManager.GridSize * 8; //totalTime 동안 떨어지는 블럭 높이(즉 속도조절값)
+        float totalHeight = UserSetting.GridSize * 8; //totalTime 동안 떨어지는 블럭 높이(즉 속도조절값)
         float a = totalHeight / (totalTime * totalTime);
         float delay = totalTime - Mathf.Sqrt(transform.localPosition.y / a);
 
@@ -284,7 +284,7 @@ public class Product : MonoBehaviour
     }
     public void BackupSkillToFrame(int matchCount, bool enabledReduceColor)
     {
-        if (matchCount <= InGameManager.MatchCount)
+        if (matchCount <= UserSetting.MatchCount)
             return;
 
         switch(matchCount)

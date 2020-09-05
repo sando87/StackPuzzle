@@ -14,7 +14,7 @@ public class NetClientApp : MonoBehaviour
     public int ServerPort = 9435;
 
     const string GameObjectName = "NetClientObject";
-    const int recvBufSize = 1024 * 8;
+    const int recvBufSize = 1024 * 64;
 
     TcpClient mSession = null;
     NetworkStream mStream = null;
@@ -131,9 +131,9 @@ public class NetClientApp : MonoBehaviour
                         byte[] buf = new byte[length];
                         Array.Copy(recvBuf, offset, buf, 0, length);
                         messages.Add(buf);
-                        offset += length;
                     }
 
+                    offset += length;
                     if (nbytes - offset < NetProtocol.HeadSize())
                         break;
                 }
