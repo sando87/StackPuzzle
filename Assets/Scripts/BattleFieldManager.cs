@@ -77,7 +77,7 @@ public class BattleFieldManager : MonoBehaviour
         }
 
         GameObject ap = Instantiate(AttackPointPrefab, transform);
-        ap.transform.position = localBasePos + new Vector3(0, GridSize * YCount, 0);
+        ap.transform.localPosition = localBasePos + new Vector3(0, GridSize * YCount, 0);
         AttackPoints = ap.GetComponent<AttackPoints>();
     }
     public void FinishGame(bool success)

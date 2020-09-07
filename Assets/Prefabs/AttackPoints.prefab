@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3150427325607876282
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7768005388832270784}
+  - component: {fileID: 8789589151831851520}
+  m_Layer: 0
+  m_Name: AttackPoints
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7768005388832270784
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3150427325607876282}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8789589151831851520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3150427325607876282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 983484598d1191a45ba87db23b9d9595, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BaseSprite: {fileID: 5081829746968103039, guid: f7051f857a854084091d9873b5be7663,
+    type: 3}
+  Images:
+  - {fileID: 21300000, guid: b82e3ea1890a56c47be17269dad8e0f5, type: 3}
+  - {fileID: 21300000, guid: 6a257569811c10b4c852029a3f40ed01, type: 3}
+  - {fileID: 21300000, guid: ec1cdaa0685fd284080f2889e539a1d6, type: 3}
+  - {fileID: 21300000, guid: 98e917296d358664a8dbbaecf99a09bd, type: 3}

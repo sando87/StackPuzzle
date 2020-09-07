@@ -9,7 +9,8 @@ public class AttackPoints : MonoBehaviour
     private bool mIsReady = false;
     private List<GameObject> mChilds = new List<GameObject>();
 
-    public GameObject[] Images = new GameObject[4];
+    public GameObject BaseSprite;
+    public Sprite[] Images = new Sprite[4];
 
     public bool IsEmpty { get { return mChilds.Count == 0; } }
     public bool IsReady { get { return mIsReady; } }
@@ -61,11 +62,11 @@ public class AttackPoints : MonoBehaviour
             for(int i = 0; i < mChilds.Count; ++i)
             {
                 GameObject child = mChilds[i];
-                float speed = mGridSize * i;
-                child.transform.position = Vector3.MoveTowards(child.transform.position, Vector3.zero, speed * Time.deltaTime);
+                float speed = mGridSize * i * 5;
+                child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, Vector3.zero, speed * Time.deltaTime);
             }
 
-            if (mChilds[mChilds.Count - 1].transform.position.x <= 0.02f)
+            if (mChilds[mChilds.Count - 1].transform.localPosition.x <= 0.02f)
                 break;
 
             yield return null;
@@ -87,13 +88,29 @@ public class AttackPoints : MonoBehaviour
         int cntD = mAttackPoint % 5;
 
         for (int i = 0; i < cntA; ++i)
-            mChilds.Add(Instantiate(Images[0]));
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[3];
+            mChilds.Add(obj);
+        }
         for (int i = 0; i < cntB; ++i)
-            mChilds.Add(Instantiate(Images[1]));
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[2];
+            mChilds.Add(obj);
+        }
         for (int i = 0; i < cntC; ++i)
-            mChilds.Add(Instantiate(Images[2]));
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[1];
+            mChilds.Add(obj);
+        }
         for (int i = 0; i < cntD; ++i)
-            mChilds.Add(Instantiate(Images[3]));
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[0];
+            mChilds.Add(obj);
+        }
 
         StartCoroutine("AnimateUnFold");
     }
@@ -101,14 +118,14 @@ public class AttackPoints : MonoBehaviour
     IEnumerator AnimateUnFold()
     {
         float time = 0;
-        while (time < 1)
+        while (time < 0.2f)
         {
             for (int i = 0; i < mChilds.Count; ++i)
             {
                 GameObject child = mChilds[i];
-                float speed = mGridSize * i;
+                float speed = mGridSize * i * 5;
                 Vector3 dest = new Vector3(mGridSize * i, 0, 0);
-                child.transform.position = Vector3.MoveTowards(child.transform.position, dest, speed * Time.deltaTime);
+                child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, dest, speed * Time.deltaTime);
             }
             time += Time.deltaTime;
             yield return null;

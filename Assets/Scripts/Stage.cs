@@ -44,7 +44,6 @@ public class Stage : MonoBehaviour
     {
         transform.localScale = OriginalScale;
     }
-
     private void OnMouseUpAsButton()
     {
         transform.localScale = OriginalScale;

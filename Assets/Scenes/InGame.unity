@@ -4186,6 +4186,8 @@ MonoBehaviour:
     type: 3}
   MaskPrefab: {fileID: 813953013677775612, guid: 82a8ff6278959a647ace0714fa4db3eb,
     type: 3}
+  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
+    type: 3}
   Opponent: {fileID: 1987294860}
 --- !u!1 &757129159
 GameObject:
@@ -12030,6 +12032,8 @@ MonoBehaviour:
   FramePrefab2: {fileID: 2677227944591313909, guid: 5f7f91e4ea2c9de4ea3a5e63138e5e9c,
     type: 3}
   MaskPrefab: {fileID: 813953013677775612, guid: 82a8ff6278959a647ace0714fa4db3eb,
+    type: 3}
+  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
     type: 3}
   Opponent: {fileID: 673266192}
 --- !u!1 &2021653325
