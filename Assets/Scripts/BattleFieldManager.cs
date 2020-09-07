@@ -15,6 +15,7 @@ public class BattleFieldManager : MonoBehaviour
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
     public GameObject MaskPrefab;
+    public GameObject AttackPointPrefab;
     public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
@@ -26,6 +27,7 @@ public class BattleFieldManager : MonoBehaviour
     private int mCountX = 0;
     private int mCountY = 0;
 
+    public AttackPoints AttackPoints { get; set; }
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
 
@@ -50,8 +52,9 @@ public class BattleFieldManager : MonoBehaviour
 
         RequestNextColors(NextRequestCount);
 
+        StartCoroutine("CheckIdle");
         StartCoroutine(CheckFinish());
-        StartCoroutine(CreateNextProducts());
+        StartCoroutine(CheckNextProducts());
     
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
@@ -73,6 +76,9 @@ public class BattleFieldManager : MonoBehaviour
             }
         }
 
+        GameObject ap = Instantiate(AttackPointPrefab, transform);
+        ap.transform.position = localBasePos + new Vector3(0, GridSize * YCount, 0);
+        AttackPoints = ap.GetComponent<AttackPoints>();
     }
     public void FinishGame(bool success)
     {
@@ -113,6 +119,9 @@ public class BattleFieldManager : MonoBehaviour
         if (MatchLock)
             return;
 
+        StopCoroutine("CheckIdle");
+        StartCoroutine("CheckIdle");
+
         Product mainProduct = matches[0];
         mainProduct.BackupSkillToFrame(matches.Count, true);
 
@@ -121,14 +130,14 @@ public class BattleFieldManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
-        int currentCombo = mainProduct.Combo;
+        int nextCombo = mainProduct.Combo + 1;
         foreach (Product pro in destroies)
         {
-            pro.Combo = currentCombo + 1;
+            pro.Combo = nextCombo;
             pro.StartDestroy();
-            Attack(pro);
         }
 
+        Attack(destroies.Count * nextCombo);
         mainProduct.StartFlash(matches);
     }
     private void OnDestroyProduct(Product pro)
@@ -139,7 +148,7 @@ public class BattleFieldManager : MonoBehaviour
         mDestroyes[idxX].Add(pro.ParentFrame);
     }
 
-    private IEnumerator CreateNextProducts()
+    private IEnumerator CheckNextProducts()
     {
         while (true)
         {
@@ -226,6 +235,53 @@ public class BattleFieldManager : MonoBehaviour
             mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo);
 
         return allSameColors;
+    }
+    private bool IsIdle()
+    {
+        int count = 0;
+        foreach (Frame frame in mFrames)
+            if (frame.ChildProduct != null && !frame.ChildProduct.IsLocked())
+                count++;
+        return mFrames.Length == count;
+    }
+    private void EffectAttackPoints()
+    {
+        if (AttackPoints.IsEmpty)
+            return;
+
+        if (!AttackPoints.IsReady)
+            return;
+
+        int cnt = AttackPoints.Pop(20);
+        for (int y = 0; y < mCountY && cnt > 0; ++y)
+        {
+            for (int x = 0; x < mCountX && cnt > 0; ++x)
+            {
+                if (mFrames[x, y].ChildProduct.IsChocoBlock())
+                    continue;
+
+                mFrames[x, y].ChildProduct.WrapChocoBlock(true);
+                cnt--;
+            }
+        }
+    }
+    private IEnumerator CheckIdle()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(2);
+            while (true)
+            {
+                if (IsIdle())
+                {
+                    EffectAttackPoints();
+                    break;
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+
     }
     private IEnumerator CheckFinish()
     {
@@ -330,9 +386,20 @@ public class BattleFieldManager : MonoBehaviour
             return null;
         return mFrames[x, y];
     }
-    private void Attack(Product pro)
+    private void Attack(int score)
     {
-        Debug.Log("Attack!!");
+        int point = score / attackScore;
+        if (point <= 0)
+            return;
+
+        if (AttackPoints.IsEmpty)
+            Opponent.AttackPoints.Add(point);
+        else
+        {
+            int remainPoint = AttackPoints.Add(-point);
+            Opponent.AttackPoints.Add(Math.Abs(remainPoint));
+        }
+            
     }
     private ProductColor GetNextColor()
     {
