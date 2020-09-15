@@ -19,7 +19,6 @@ public class MenuWaitMatch : MonoBehaviour
         GameObject menuMatch = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuMatch.GetComponent<MenuWaitMatch>().ResetMatchUI();
         menuMatch.SetActive(true);
-        StageManager.Inst.gameObject.SetActive(false);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
@@ -34,7 +33,6 @@ public class MenuWaitMatch : MonoBehaviour
 
         mIsSearching = false;
         gameObject.SetActive(false);
-        StageManager.Inst.gameObject.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 

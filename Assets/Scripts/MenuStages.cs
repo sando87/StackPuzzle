@@ -9,18 +9,19 @@ public class MenuStages : MonoBehaviour
 
     public static void PopUp()
     {
-        GameObject menu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        //menu.GetComponent<MenuStages>().DoSomething();
-        menu.SetActive(true);
+        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(true);
+        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
     }
     public static void Hide()
     {
-        GameObject menu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        menu.SetActive(false);
+        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(false);
+        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
     }
 
     public void OnClose()
     {
-        gameObject.SetActive(false);
+        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(false);
+        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
+        MenuMain.PopUp();
     }
 }
