@@ -45,6 +45,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BaseSprite: {fileID: 5081829746968103039, guid: f7051f857a854084091d9873b5be7663,
     type: 3}
+  Projectile: {fileID: 182304, guid: a5a2656996b92184394ca8a1f9e31c1f, type: 3}
   Images:
   - {fileID: 21300000, guid: b82e3ea1890a56c47be17269dad8e0f5, type: 3}
   - {fileID: 21300000, guid: 6a257569811c10b4c852029a3f40ed01, type: 3}

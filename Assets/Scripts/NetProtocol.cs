@@ -50,13 +50,34 @@ public class ServerField
 
 public class NetProtocol
 {
+    public const int recvBufSize = 1024 * 64;
     static public int HeadSize()
     {
         return 20;
     }
     static public int Length(byte[] msg, int offset = 0)
     {
+        if (offset + HeadSize() > msg.Length)
+            return -1;
+
         return BitConverter.ToInt32(msg, offset + 16);
+    }
+    static public List<byte[]> Split(byte[] recvBuf)
+    {
+        int offset = 0;
+        List<byte[]> messages = new List<byte[]>();
+        while (true)
+        {
+            int length = NetProtocol.Length(recvBuf, offset);
+            if (length <= 0 || offset + length > recvBuf.Length)
+                break;
+
+            byte[] buf = new byte[length];
+            Array.Copy(recvBuf, offset, buf, 0, length);
+            messages.Add(buf);
+            offset += length;
+        }
+        return messages;
     }
     static public byte[] ToArray(Header msg)
     {
@@ -150,9 +171,8 @@ public class UserInfo
 {
     public int userPk = -1;
     public String userName;
-    public int score;
+    public int score = 100;
     public String deviceName;
-    public String ipAddress;
 }
 
 [Serializable]

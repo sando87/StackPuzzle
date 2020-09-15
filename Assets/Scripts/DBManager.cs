@@ -57,7 +57,7 @@ public class DBManager : IDisposable
         }
     }
 
-    public int AddNewUser(UserInfo user)
+    public int AddNewUser(UserInfo user, string ipAddr)
     {
         if (user.userPk != -1)
             return user.userPk;
@@ -67,7 +67,7 @@ public class DBManager : IDisposable
             using (var cmd = new NpgsqlCommand())
             {
                 string query = String.Format("INSERT INTO users (userName, score, deviceName, ipAddress, firstTime) VALUES ('{0}', {1}, '{2}', '{3}', now()) RETURNING userPk", 
-                    user.userName, user.score, user.deviceName, user.ipAddress);
+                    user.userName, user.score, user.deviceName, ipAddr);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())
@@ -158,7 +158,6 @@ public class DBManager : IDisposable
                         user.userName = reader["userName"].ToString();
                         user.score = (int)reader["score"];
                         user.deviceName = reader["deviceName"].ToString();
-                        user.ipAddress = reader["ipAddress"].ToString();
                         return user;
                     }
                 }
@@ -206,7 +205,6 @@ public class DBManager : IDisposable
                         user.userName = reader["userName"].ToString();
                         user.score = (int)reader["score"];
                         user.deviceName = reader["deviceName"].ToString();
-                        user.ipAddress = reader["ipAddress"].ToString();
                         users.Add(user);
                     }
                     return users.ToArray();

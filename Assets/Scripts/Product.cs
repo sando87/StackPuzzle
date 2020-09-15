@@ -320,7 +320,44 @@ public class Product : MonoBehaviour
     }
     public void WrapChocoBlock(bool wrap)
     {
-        ChocoBlock.SetActive(wrap);
+        if (wrap)
+            StartCoroutine(StartAppear());
+        else
+            StartCoroutine(StartDisappear());
+            
+    }
+    IEnumerator StartAppear()
+    {
+        Vector3 scale = new Vector3(10, 10, 10);
+        ChocoBlock.SetActive(true);
+        ChocoBlock.transform.localScale = Vector3.zero;
+        float time = 0;
+        while (time < 0.2f)
+        {
+            ChocoBlock.transform.localScale = scale * time;
+            time += Time.deltaTime;
+            yield return null;
+        }
+        ChocoBlock.transform.localScale = new Vector3(1.6667f, 1.6667f, 1f);
+
+    }
+    IEnumerator StartDisappear()
+    {
+        SpriteRenderer sr = ChocoBlock.GetComponent<SpriteRenderer>();
+        Color color = sr.color;
+        color.a = 1.0f;
+        sr.color = color;
+        float time = 0;
+        while (time < 0.2f)
+        {
+            color.a = 1.0f - (5.0f * time);
+            sr.color = color;
+            time += Time.deltaTime;
+            yield return null;
+        }
+        color.a = 1.0f;
+        sr.color = color;
+        ChocoBlock.SetActive(false);
     }
     public bool IsChocoBlock()
     {

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class BattleFieldManager : MonoBehaviour
 {
     public const int MatchCount = 3;
-    public const int attackScore = 5;
+    public const int attackScore = 1;
     public const float GridSize = 0.8f;
     public const int NextRequestCount = 500;
 
@@ -137,7 +137,7 @@ public class BattleFieldManager : MonoBehaviour
             pro.StartDestroy();
         }
 
-        Attack(destroies.Count * nextCombo);
+        Attack(destroies.Count * nextCombo, mainProduct.transform.position);
         mainProduct.StartFlash(matches);
     }
     private void OnDestroyProduct(Product pro)
@@ -246,7 +246,7 @@ public class BattleFieldManager : MonoBehaviour
     }
     private void EffectAttackPoints()
     {
-        if (AttackPoints.IsEmpty)
+        if (AttackPoints.Count == 0)
             return;
 
         if (!AttackPoints.IsReady)
@@ -269,15 +269,21 @@ public class BattleFieldManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(UserSetting.MatchInterval);
+            int cnt = 0;
             while (true)
             {
                 if (IsIdle())
+                    cnt++;
+                else
+                    cnt = 0;
+
+                if(cnt >= 3)
                 {
                     EffectAttackPoints();
                     break;
                 }
-                yield return new WaitForSeconds(0.1f);
+                yield return null;
             }
         }
 
@@ -386,18 +392,26 @@ public class BattleFieldManager : MonoBehaviour
             return null;
         return mFrames[x, y];
     }
-    private void Attack(int score)
+    private void Attack(int score, Vector3 fromPos)
     {
         int point = score / attackScore;
         if (point <= 0)
             return;
 
-        if (AttackPoints.IsEmpty)
-            Opponent.AttackPoints.Add(point);
+        int remainPt = AttackPoints.Count;
+        if (remainPt == 0)
+            Opponent.AttackPoints.Add(point, fromPos);
         else
         {
-            int remainPoint = AttackPoints.Add(-point);
-            Opponent.AttackPoints.Add(Math.Abs(remainPoint));
+            if (remainPt >= point)
+            {
+                AttackPoints.Add(-point, fromPos);
+            }
+            else
+            {
+                AttackPoints.Add(-remainPt, fromPos);
+                Opponent.AttackPoints.Add(point - remainPt, fromPos);
+            }
         }
             
     }

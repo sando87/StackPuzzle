@@ -10,18 +10,46 @@ public class AttackPoints : MonoBehaviour
     private List<GameObject> mChilds = new List<GameObject>();
 
     public GameObject BaseSprite;
+    public GameObject Projectile;
     public Sprite[] Images = new Sprite[4];
 
-    public bool IsEmpty { get { return mChilds.Count == 0; } }
+    public int Count { get { return mChilds.Count; } }
     public bool IsReady { get { return mIsReady; } }
-    public int Add(int point)
+    public void Add(int point, Vector3 fromPos)
     {
-        mAttackPoint += point;
-        if (mAttackPoint < 0)
+        GameObject proj = Instantiate(Projectile, fromPos, Quaternion.identity);
+        proj.transform.LookAt(transform.position);
+        proj.GetComponent<Rigidbody>().AddForce(proj.transform.forward * 500);
+        StartCoroutine(MovingProjectile(proj, point));
+    }
+    public int Pop(int point)
+    {
+        if (mAttackPoint < point)
         {
-            point = mAttackPoint - point;
+            point = mAttackPoint;
             mAttackPoint = 0;
         }
+        else
+            mAttackPoint -= point;
+
+        StopCoroutine("AnimateFold");
+        StopCoroutine("AnimateUnFold");
+
+        StartCoroutine("AnimateFold");
+        return point;
+    }
+
+    IEnumerator MovingProjectile(GameObject projectile, int point)
+    {
+        while((transform.position - projectile.transform.position).magnitude > 0.05f)
+        {
+            yield return null;
+        }
+        projectile.GetComponent<SciFiProjectileScript>().DeadEffect();
+
+        mAttackPoint += point;
+        if (mAttackPoint < 0)
+            mAttackPoint = 0;
 
         mIsReady = false;
         StopCoroutine("WaitForReady");
@@ -31,27 +59,11 @@ public class AttackPoints : MonoBehaviour
         StopCoroutine("AnimateUnFold");
 
         StartCoroutine("AnimateFold");
-        return point;
+
     }
-    public int Pop(int point)
-    {
-        mAttackPoint -= point;
-        if (mAttackPoint < 0)
-        {
-            point += mAttackPoint;
-            mAttackPoint = 0;
-        }
-
-        StopCoroutine("AnimateFold");
-        StopCoroutine("AnimateUnFold");
-
-        StartCoroutine("AnimateFold");
-        return point;
-    }
-
     IEnumerator WaitForReady()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(UserSetting.MatchInterval);
         mIsReady = true;
     }
 

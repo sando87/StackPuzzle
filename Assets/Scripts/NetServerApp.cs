@@ -50,7 +50,7 @@ public class NetServerApp : MonoBehaviour
         if (requestMsg == null)
             return NetProtocol.ToArray(new Header());
 
-        Debug.Log("recv cmd : " + requestMsg.Cmd);
+        Debug.Log("recv cmd[" + requestMsg.Cmd + "]");
         mRequestMsg = requestMsg;
         mSession = session;
         object body = null;
@@ -76,8 +76,6 @@ public class NetServerApp : MonoBehaviour
         if (body == null)
             return null;
 
-        string ipaddr = ((System.Net.IPEndPoint)session.client.Client.RemoteEndPoint).Address.ToString();
-        Debug.Log("back cmd : " + ipaddr + "," + requestMsg.Cmd + "," + requestMsg.RequestID);
         Header responseMsg = new Header();
         responseMsg.Cmd = requestMsg.Cmd;
         responseMsg.RequestID = requestMsg.RequestID;
@@ -88,7 +86,7 @@ public class NetServerApp : MonoBehaviour
 
     private UserInfo ProcAddUser(UserInfo requestBody)
     {
-        int usePk = DBManager.Inst().AddNewUser(requestBody);
+        int usePk = DBManager.Inst().AddNewUser(requestBody, mSession.ipAddr);
         requestBody.userPk = usePk;
         return requestBody;
     }
@@ -180,22 +178,18 @@ public class NetServerApp : MonoBehaviour
         float time = 0;
         while (true) //search for 20sec
         {
-            Debug.Log("trace0 : " + userPK);
             if (!mMatchingUsers.ContainsKey(userPK))
             {
-                Debug.Log("trace1 : " + userPK);
                 break;
             }
 
             ServerField user = mMatchingUsers[userPK];
             if (user.isMatching)
             {
-                Debug.Log("trace2 : " + userPK);
                 break;
             }
             if(time > 20)
             {
-                Debug.Log("trace3 : " + userPK);
                 SendOppoentInfo(user, null);
                 mMatchingUsers.Remove(user.userPK);
                 break;
@@ -209,7 +203,6 @@ public class NetServerApp : MonoBehaviour
 
                 if(Mathf.Abs(opp.score - user.score) < 5)
                 {
-                    Debug.Log("trace4 : " + userPK);
                     user.isMatching = true;
                     opp.isMatching = true;
                     SendOppoentInfo(user, opp);

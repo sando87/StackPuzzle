@@ -11,6 +11,7 @@ public class MySession
 {
     public TcpClient client;
     public NetworkStream stream;
+    public string ipAddr;
     public byte[] data;
 };
 
@@ -52,6 +53,7 @@ public class NetServerModule
         try
         {
             info.stream.Write(info.data, 0, info.data.Length);
+            Debug.Log("ip[" + info.ipAddr + "], size[" + info.data.Length + "]");
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnectClinet(info); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnectClinet(info); }
@@ -72,7 +74,8 @@ public class NetServerModule
                 MySession info = new MySession();
                 info.client = tc;
                 info.stream = tc.GetStream();
-                info.data = new byte[1024 * 8];
+                info.ipAddr = ((System.Net.IPEndPoint)tc.Client.RemoteEndPoint).Address.ToString();
+                info.data = new byte[NetProtocol.recvBufSize];
 
                 info.stream.BeginRead(info.data, 0, info.data.Length, new AsyncCallback(HandlerReadData), info);
             }
@@ -92,12 +95,17 @@ public class NetServerModule
                 return;
             }
 
-            MySession packet = new MySession();
-            packet.client = retInfo.client;
-            packet.stream = retInfo.stream;
-            packet.data = new byte[recvBytes];
-            Array.Copy(retInfo.data, packet.data, recvBytes);
-            mQueue.Enqueue(packet);
+            byte[] recvBuf = new byte[recvBytes];
+            Array.Copy(retInfo.data, recvBuf, recvBytes);
+            List<byte[]> messages = NetProtocol.Split(recvBuf);
+            foreach(byte[] msg in messages)
+            {
+                MySession packet = new MySession();
+                packet.client = retInfo.client;
+                packet.stream = retInfo.stream;
+                packet.data = msg;
+                mQueue.Enqueue(packet);
+            }
 
             retInfo.stream.BeginRead(retInfo.data, 0, retInfo.data.Length, new AsyncCallback(HandlerReadData), retInfo);
         }
