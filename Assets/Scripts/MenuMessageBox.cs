@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class MenuMessageBox : MonoBehaviour
 {
-    public static GameObject MessageBoxPrefab;
-
     public Text mMessage;
     public GameObject OkButton;
     public GameObject CancleButton;
@@ -16,8 +14,9 @@ public class MenuMessageBox : MonoBehaviour
 
     public static void PopUp(GameObject parent, string message, bool twoButtonMode, Action<bool> onClick)
     {
-        GameObject obj = GameObject.Instantiate(MessageBoxPrefab, parent.transform);
-        MenuMessageBox box = obj.GetComponent<MenuMessageBox>();
+        GameObject prefab = (GameObject)Resources.Load("Prefabs/MessageBox", typeof(GameObject));
+        GameObject objMenu = GameObject.Instantiate(prefab, parent.transform);
+        MenuMessageBox box = objMenu.GetComponent<MenuMessageBox>();
         box.mOnClick = onClick;
         box.mMessage.text = message;
         if (twoButtonMode)

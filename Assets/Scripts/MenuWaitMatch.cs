@@ -33,6 +33,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         mIsSearching = false;
         gameObject.SetActive(false);
+        MenuMain.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 

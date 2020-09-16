@@ -23,6 +23,9 @@ public class MenuMain : MonoBehaviour
     }
     public void PlayBattleMode()
     {
+        gameObject.SetActive(false);
+        GameObject.Find("WorldSpace").transform.Find("MainScreen").gameObject.SetActive(false);
+
         MenuWaitMatch.PopUp();
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);

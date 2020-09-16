@@ -88,10 +88,15 @@ public class BattleFieldManager : MonoBehaviour
         if (!IsPlayerField())
             NetClientApp.GetInstance().EventResponse -= SwipeFromOpponent;
 
+        int deltaScore = success ? 10 : -10;
         EndGame info = new EndGame();
         info.userPk = mThisUserPK;
         info.win = success;
+        info.score = Math.Max(0, UserSetting.UserScore + deltaScore);
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
+
+        MenuFinishBattle.PopUp(success, info.score, deltaScore);
+        MenuBattle.Hide();
     }
 
     private void OnSwipe(GameObject obj, SwipeDirection dir)

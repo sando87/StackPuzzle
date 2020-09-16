@@ -7,25 +7,28 @@ public class MenuFinishBattle : MonoBehaviour
 {
     private const string UIObjName = "CanvasPopUp/MenuFinishBattle";
 
-    public Text Score;
-    public Text TargetScore;
-    public Text StageLevel;
+    public Text Result;
+    public Text CurrentScore;
+    public Text DeltaScore;
 
     public static void PopUp(bool win, int currentScore, int deltaScore)
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-
-        
-        objMenu.SetActive(true);
+        MenuBattle.Hide();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
+        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        objMenu.SetActive(true);
+
+        MenuFinishBattle menu = objMenu.GetComponent<MenuFinishBattle>();
+        menu.CurrentScore.text = currentScore.ToString();
+        menu.DeltaScore.text = deltaScore.ToString();
+        menu.Result.text = win ? "WIN" : "LOSE";
+
     }
 
-    public void OnConfirm()
+    public void OnOK()
     {
         gameObject.SetActive(false);
-        MenuInGame.Hide();
-        MenuStages.PopUp();
-        StageManager.Inst.Activate(true);
+        MenuWaitMatch.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

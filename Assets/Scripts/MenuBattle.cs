@@ -15,13 +15,11 @@ public class MenuBattle : MonoBehaviour
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(true);
-        GameObject.Find("WorldSpace").transform.Find("BattleScreen").gameObject.SetActive(true);
     }
     public static void Hide()
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
-        GameObject.Find("WorldSpace").transform.Find("BattleScreen").gameObject.SetActive(false);
     }
     private void UpdatePanel(int remainLimit, int totalScore, Product product)
     {
@@ -59,6 +57,7 @@ public class MenuBattle : MonoBehaviour
             {
                 BattleFieldManager mgr = GameObject.Find("WorldSpace").transform.Find("BattleScreen").GetComponent<BattleFieldManager>();
                 mgr.FinishGame(false);
+                MenuBattle.Hide();
             }
         });
     }
