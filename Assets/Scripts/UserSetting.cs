@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 public class UserSetting
 {
-    public static int UserPK { get; set; }
-    public static int UserScore { get; set; }
+    public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
+    public static int UserScore { get { return mUserInfo == null ? -1 : mUserInfo.score; } }
 
     public const float MatchInterval = 1.5f;
     public const int MatchCount = 3;

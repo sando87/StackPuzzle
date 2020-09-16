@@ -64,6 +64,10 @@ public class DBManager : IDisposable
 
         try
         {
+            UserInfo info = GetUser(user.deviceName);
+            if (info != null)
+                return info.userPk;
+
             using (var cmd = new NpgsqlCommand())
             {
                 string query = String.Format("INSERT INTO users (userName, score, deviceName, ipAddress, firstTime) VALUES ('{0}', {1}, '{2}', '{3}', now()) RETURNING userPk", 
@@ -147,6 +151,33 @@ public class DBManager : IDisposable
             using (var cmd = new NpgsqlCommand())
             {
                 string query = String.Format("SELECT * FROM users WHERE userPk = {0}", userPk);
+                cmd.Connection = mDBSession;
+                cmd.CommandText = query;
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        UserInfo user = new UserInfo();
+                        user.userPk = (int)reader["userPk"];
+                        user.userName = reader["userName"].ToString();
+                        user.score = (int)reader["score"];
+                        user.deviceName = reader["deviceName"].ToString();
+                        return user;
+                    }
+                }
+            }
+        }
+        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
+        catch (Exception ex) { Debug.Log(ex.Message); }
+        return null;
+    }
+    public UserInfo GetUser(string deviceName)
+    {
+        try
+        {
+            using (var cmd = new NpgsqlCommand())
+            {
+                string query = String.Format("SELECT * FROM users WHERE deviceName = {0}", deviceName);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())

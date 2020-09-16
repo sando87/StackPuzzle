@@ -70,6 +70,10 @@ public class NetClientApp : MonoBehaviour
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
     }
+    public bool IsDisconnected()
+    {
+        return mSession == null;
+    }
 
 
     private void Connect(string ipAddr, int port)

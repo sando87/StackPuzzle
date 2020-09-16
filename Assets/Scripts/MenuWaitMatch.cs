@@ -52,29 +52,22 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatch()
     {
+        if(NetClientApp.GetInstance().IsDisconnected())
+        {
+            MenuMessageBox.PopUp(gameObject, "Network Disconnected", false, null);
+            return;
+        }
+
+        UserInfo userInfo = UserSetting.LoadUserInfo();
+        if (userInfo.userPk <= 0)
+            StartCoroutine(WaitForAddingUserInfo());
+        else
+            RequestMatch();
+
         mIsSearching = true;
         BtnCancle.SetActive(true);
         BtnMatch.SetActive(false);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-
-        SearchOpponentInfo info = new SearchOpponentInfo();
-        info.userPk = UserSetting.UserPK;
-        info.userScore = UserSetting.UserScore;
-        info.opponentUserPk = -1;
-        info.opponentUserScore = -1;
-        info.isDone = false;
-        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
-        {
-            SearchOpponentInfo res = _res as SearchOpponentInfo;
-            if(res.isDone && mIsSearching)
-            {
-                if (res.opponentUserPk == -1)
-                    FailMatch();
-                else
-                    SuccessMatch(res.opponentUserPk);
-            }
-            return;
-        });
 
         StartCoroutine("WaitOpponent");
     }
@@ -93,6 +86,42 @@ public class MenuWaitMatch : MonoBehaviour
             n++;
             yield return new WaitForSeconds(1);
         }
+    }
+
+    IEnumerator WaitForAddingUserInfo()
+    {
+        int limit = 60;
+        while(0 < limit--)
+        {
+            yield return new WaitForSeconds(1);
+            if (UserSetting.UserPK > 0)
+            {
+                RequestMatch();
+                break;
+            }
+        }
+    }
+
+    private void RequestMatch()
+    {
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.userPk = UserSetting.UserPK;
+        info.userScore = UserSetting.UserScore;
+        info.opponentUserPk = -1;
+        info.opponentUserScore = -1;
+        info.isDone = false;
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
+        {
+            SearchOpponentInfo res = _res as SearchOpponentInfo;
+            if (res.isDone && mIsSearching)
+            {
+                if (res.opponentUserPk == -1)
+                    FailMatch();
+                else
+                    SuccessMatch(res.opponentUserPk);
+            }
+            return;
+        });
     }
 
     private void SuccessMatch(int oppPk)
