@@ -24,4 +24,24 @@ public class MenuStages : MonoBehaviour
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
         MenuMain.PopUp();
     }
+    public void OnShopHeart()
+    {
+        MenuHeartShop.PopUp();
+        Hide();
+    }
+    public void OnShopDiamond()
+    {
+        MenuDiamondShop.PopUp();
+        Hide();
+    }
+    public void OnSettings()
+    {
+        MenuSettings.PopUp();
+        Hide();
+    }
+    public void OnShopItem()
+    {
+        MenuItemShop.PopUp();
+        Hide();
+    }
 }

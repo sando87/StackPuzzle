@@ -9,6 +9,7 @@ public class MenuMain : MonoBehaviour
     private void Awake()
     {
         UserSetting.Initialize();
+        Purchases.Initialize();
     }
 
     public static void PopUp()
