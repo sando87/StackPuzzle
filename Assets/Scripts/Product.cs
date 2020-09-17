@@ -25,6 +25,7 @@ public class Product : MonoBehaviour
     public Sprite ImgReduceColor;
     public int ImageIndex;
 
+    public float Weight { get; set; }
     public int Combo { get; set; }
     public bool IsLocked() { return mLocked; }
     public Frame ParentFrame

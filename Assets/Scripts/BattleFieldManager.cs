@@ -6,6 +6,17 @@ using UnityEngine.UI;
 
 public class BattleFieldManager : MonoBehaviour
 {
+    private static BattleFieldManager mInst = null;
+    public static BattleFieldManager Inst
+    {
+        get
+        {
+            if(mInst ==  null)
+                mInst = GameObject.Find("WorldSpace").transform.Find("BattleScreen").GetComponent<BattleFieldManager>();
+            return mInst;
+        }
+    }
+
     public const int MatchCount = 3;
     public const int attackScore = 1;
     public const float GridSize = 0.8f;
@@ -30,6 +41,7 @@ public class BattleFieldManager : MonoBehaviour
     public AttackPoints AttackPoints { get; set; }
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
+    public Action<Product> EventOnChange;
 
     public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
     {
@@ -96,7 +108,6 @@ public class BattleFieldManager : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
 
         MenuFinishBattle.PopUp(success, info.score, deltaScore);
-        MenuBattle.Hide();
     }
 
     private void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -140,6 +151,7 @@ public class BattleFieldManager : MonoBehaviour
         {
             pro.Combo = nextCombo;
             pro.StartDestroy();
+            EventOnChange?.Invoke(pro);
         }
 
         Attack(destroies.Count * nextCombo, mainProduct.transform.position);
@@ -249,7 +261,7 @@ public class BattleFieldManager : MonoBehaviour
                 count++;
         return mFrames.Length == count;
     }
-    private void EffectAttackPoints()
+    private void FlushAttackPoints()
     {
         if (AttackPoints.Count == 0)
             return;
@@ -258,17 +270,37 @@ public class BattleFieldManager : MonoBehaviour
             return;
 
         int cnt = AttackPoints.Pop(20);
-        for (int y = 0; y < mCountY && cnt > 0; ++y)
+        List<Product> products = GetNextTargetProducts(cnt);
+        foreach(Product pro in products)
+            pro.WrapChocoBlock(true);
+    }
+    private List<Product> GetNextTargetProducts(int cnt)
+    {
+        float xCenter = (mCountX - 1.0f) * 0.5f;
+        float yCenter = (mCountY - 1.0f) * 0.5f;
+        List<Product> products = new List<Product>();
+        for (int y = 0; y < mCountY; ++y)
         {
-            for (int x = 0; x < mCountX && cnt > 0; ++x)
+            for (int x = 0; x < mCountX; ++x)
             {
                 if (mFrames[x, y].ChildProduct.IsChocoBlock())
                     continue;
 
-                mFrames[x, y].ChildProduct.WrapChocoBlock(true);
-                cnt--;
+                Product pro = mFrames[x, y].ChildProduct;
+                float distX = Math.Abs(xCenter - x);
+                float distY = Math.Abs(yCenter - y);
+                float max = Math.Max(distX, distY);
+                float weight = max + UnityEngine.Random.Range(-0.4f, 0.4f);
+                pro.Weight = weight;
+                products.Add(pro);
             }
         }
+
+        products.Sort((lsb, msb) =>
+        {
+            return lsb.Weight - msb.Weight > 0 ? 1 : -1;
+        });
+        return products.GetRange(0, cnt);
     }
     private IEnumerator CheckIdle()
     {
@@ -285,7 +317,7 @@ public class BattleFieldManager : MonoBehaviour
 
                 if(cnt >= 3)
                 {
-                    EffectAttackPoints();
+                    FlushAttackPoints();
                     break;
                 }
                 yield return null;

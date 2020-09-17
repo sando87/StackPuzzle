@@ -84,7 +84,7 @@ public class NetProtocol
         List<byte> buf = new List<byte>();
         try
         {
-            byte[] body = Serialize(msg.body);
+            byte[] body = Utils.Serialize(msg.body);
             msg.Length = HeadSize() + body.Length;
 
             buf.AddRange(BitConverter.GetBytes(msg.Magic));
@@ -109,7 +109,7 @@ public class NetProtocol
             msg.Cmd = (NetCMD)BitConverter.ToUInt32(buf, 4);
             msg.RequestID = BitConverter.ToInt64(buf, 8);
             msg.Length = BitConverter.ToInt32(buf, 16);
-            msg.body = Deserialize<object>(buf, 20);
+            msg.body = Utils.Deserialize<object>(buf, 20);
         }
         catch (Exception ex)
         {
@@ -117,42 +117,6 @@ public class NetProtocol
             return null;
         }
         return msg;
-    }
-    static private byte[] Serialize(object source)
-    {
-        try
-        {
-            var formatter = new BinaryFormatter();
-            using (var stream = new MemoryStream())
-            {
-                formatter.Serialize(stream, source);
-                return stream.ToArray();
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.Log(ex.Message);
-        }
-        return null;
-    }
-    static private T Deserialize<T>(byte[] byteArray, int off = 0) where T : class
-    {
-        try
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(byteArray, off, byteArray.Length - off);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = (T)binForm.Deserialize(memStream);
-                return obj;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.Log(ex.Message);
-        }
-        return null;
     }
 }
 

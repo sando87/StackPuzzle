@@ -13,7 +13,6 @@ public class MenuFinishBattle : MonoBehaviour
 
     public static void PopUp(bool win, int currentScore, int deltaScore)
     {
-        MenuBattle.Hide();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
@@ -28,6 +27,7 @@ public class MenuFinishBattle : MonoBehaviour
     public void OnOK()
     {
         gameObject.SetActive(false);
+        MenuBattle.Hide();
         MenuWaitMatch.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }

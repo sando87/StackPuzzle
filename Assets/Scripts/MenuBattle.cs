@@ -8,6 +8,7 @@ public class MenuBattle : MonoBehaviour
     private const string UIObjName = "MenuBattle";
 
     public Text SavedCombo;
+    public Image MatchLock;
     public GameObject ComboText;
     public GameObject ParentPanel;
 
@@ -15,14 +16,28 @@ public class MenuBattle : MonoBehaviour
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(true);
+        menuPlay.GetComponent<MenuBattle>().Init();
     }
     public static void Hide()
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
     }
-    private void UpdatePanel(int remainLimit, int totalScore, Product product)
+    private void Init()
     {
+        SavedCombo.text = "0";
+        BattleFieldManager.Inst.MatchLock = false;
+        MatchLock.color = Color.white;
+        BattleFieldManager.Inst.EventOnChange = UpdatePanel;
+    }
+    private void UpdatePanel(Product product)
+    {
+        if(product.mSkill == ProductSkill.KeepCombo)
+        {
+            int combo = int.Parse(SavedCombo.text);
+            combo = Mathf.Max(combo, product.Combo);
+            SavedCombo.text = combo.ToString();
+        }
         PlayComboAnimation(product);
     }
 
@@ -55,15 +70,14 @@ public class MenuBattle : MonoBehaviour
         {
             if(isOK)
             {
-                BattleFieldManager mgr = GameObject.Find("WorldSpace").transform.Find("BattleScreen").GetComponent<BattleFieldManager>();
-                mgr.FinishGame(false);
-                MenuBattle.Hide();
+                BattleFieldManager.Inst.FinishGame(false);
             }
         });
     }
     public void OnLockMatch()
     {
-        BattleFieldManager mgr = GameObject.Find("WorldSpace").transform.Find("BattleScreen").GetComponent<BattleFieldManager>();
-        mgr.MatchLock = !mgr.MatchLock;
+        bool lockState = !BattleFieldManager.Inst.MatchLock;
+        BattleFieldManager.Inst.MatchLock = lockState;
+        MatchLock.color = lockState ? Color.red : Color.white;
     }
 }

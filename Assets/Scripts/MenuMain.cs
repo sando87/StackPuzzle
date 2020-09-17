@@ -6,6 +6,11 @@ public class MenuMain : MonoBehaviour
 {
     private const string UIObjName = "MenuMain";
 
+    private void Awake()
+    {
+        UserSetting.Initialize();
+    }
+
     public static void PopUp()
     {
         GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(true);
