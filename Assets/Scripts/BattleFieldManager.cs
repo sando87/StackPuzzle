@@ -6,14 +6,24 @@ using UnityEngine.UI;
 
 public class BattleFieldManager : MonoBehaviour
 {
-    private static BattleFieldManager mInst = null;
-    public static BattleFieldManager Inst
+    private static BattleFieldManager mMe = null;
+    private static BattleFieldManager mOpp = null;
+    public static BattleFieldManager Me
     {
         get
         {
-            if(mInst ==  null)
-                mInst = GameObject.Find("WorldSpace").transform.Find("BattleScreen").GetComponent<BattleFieldManager>();
-            return mInst;
+            if(mMe ==  null)
+                mMe = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldMe").GetComponent<BattleFieldManager>();
+            return mMe;
+        }
+    }
+    public static BattleFieldManager Opp
+    {
+        get
+        {
+            if (mOpp == null)
+                mOpp = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldOpp").GetComponent<BattleFieldManager>();
+            return mOpp;
         }
     }
 
@@ -38,10 +48,14 @@ public class BattleFieldManager : MonoBehaviour
     private int mCountX = 0;
     private int mCountY = 0;
 
+    public int CountX { get { return mCountX; } }
+    public int CountY { get { return mCountY; } }
+    public Frame[,] Frames { get { return mFrames; } }
     public AttackPoints AttackPoints { get; set; }
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
     public Action<Product> EventOnChange;
+    public Action EventOnIdle;
 
     public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
     {
@@ -110,7 +124,7 @@ public class BattleFieldManager : MonoBehaviour
         MenuFinishBattle.PopUp(success, info.score, deltaScore);
     }
 
-    private void OnSwipe(GameObject obj, SwipeDirection dir)
+    public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
@@ -318,6 +332,7 @@ public class BattleFieldManager : MonoBehaviour
                 if(cnt >= 3)
                 {
                     FlushAttackPoints();
+                    EventOnIdle?.Invoke();
                     break;
                 }
                 yield return null;
@@ -423,7 +438,7 @@ public class BattleFieldManager : MonoBehaviour
         }
         return null;
     }
-    private Frame GetFrame(int x, int y)
+    public Frame GetFrame(int x, int y)
     {
         if (x < 0 || x >= mCountX || y < 0 || y >= mCountY)
             return null;

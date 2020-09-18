@@ -26,9 +26,10 @@ public class MenuBattle : MonoBehaviour
     private void Init()
     {
         SavedCombo.text = "0";
-        BattleFieldManager.Inst.MatchLock = false;
+        BattleFieldManager.Me.MatchLock = false;
         MatchLock.color = Color.white;
-        BattleFieldManager.Inst.EventOnChange = UpdatePanel;
+        BattleFieldManager.Me.EventOnChange = UpdatePanel;
+        BattleFieldManager.Opp.EventOnChange = UpdatePanel;
     }
     private void UpdatePanel(Product product)
     {
@@ -70,14 +71,14 @@ public class MenuBattle : MonoBehaviour
         {
             if(isOK)
             {
-                BattleFieldManager.Inst.FinishGame(false);
+                BattleFieldManager.Me.FinishGame(false);
             }
         });
     }
     public void OnLockMatch()
     {
-        bool lockState = !BattleFieldManager.Inst.MatchLock;
-        BattleFieldManager.Inst.MatchLock = lockState;
+        bool lockState = !BattleFieldManager.Me.MatchLock;
+        BattleFieldManager.Me.MatchLock = lockState;
         MatchLock.color = lockState ? Color.red : Color.white;
     }
 }

@@ -11,8 +11,6 @@ public class MenuWaitMatch : MonoBehaviour
     public Text State;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
-    public GameObject GameFieldMe;
-    public GameObject GameFieldOpp;
 
     public static void PopUp()
     {
@@ -139,14 +137,14 @@ public class MenuWaitMatch : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldMe.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            BattleFieldManager.Me.StartGame(res.userPk, res.XCount, res.YCount, res.products);
         });
 
         info.userPk = oppPk;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            GameFieldOpp.GetComponent<BattleFieldManager>().StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            BattleFieldManager.Opp.StartGame(res.userPk, res.XCount, res.YCount, res.products);
         });
 
         MenuStages.Hide();

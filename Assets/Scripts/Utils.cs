@@ -59,4 +59,26 @@ public class Utils
                          .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                          .ToArray();
     }
+    public static byte[] Encrypt(byte[] input)
+    {
+        byte[] output = new byte[input.Length];
+        byte key = 0x4f;
+        output[0] = (byte)(key ^ input[0]);
+        for (int i = 1; i< input.Length; ++i)
+        {
+            output[i] = (byte)(output[i - 1] ^ (key ^ input[i]));
+        }
+        return output;
+    }
+    public static byte[] Decrypt(byte[] input)
+    {
+        byte[] output = new byte[input.Length];
+        byte key = 0x4f;
+        for (int i = input.Length - 1; i > 0; --i)
+        {
+            output[i] = (byte)((input[i] ^ input[i-1]) ^ key);
+        }
+        output[0] = (byte)(key ^ input[0]);
+        return output;
+    }
 }
