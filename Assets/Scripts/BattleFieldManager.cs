@@ -55,7 +55,6 @@ public class BattleFieldManager : MonoBehaviour
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
     public Action<Product> EventOnChange;
-    public Action EventOnIdle;
 
     public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
     {
@@ -267,7 +266,7 @@ public class BattleFieldManager : MonoBehaviour
 
         return allSameColors;
     }
-    private bool IsIdle()
+    public bool IsIdle()
     {
         int count = 0;
         foreach (Frame frame in mFrames)
@@ -332,7 +331,6 @@ public class BattleFieldManager : MonoBehaviour
                 if(cnt >= 3)
                 {
                     FlushAttackPoints();
-                    EventOnIdle?.Invoke();
                     break;
                 }
                 yield return null;

@@ -188,45 +188,7 @@ public class Product : MonoBehaviour
     #endregion
 
     #region Support Functions
-    public MatchableInfo ScanMatchable()
-    {
-        MatchableInfo info = new MatchableInfo();
-        info.matches = new List<Product>();
-        info.nearProduct = null;
-        SearchMatchedProducts(info.matches, mColor);
-        if (info.matches.Count < UserSetting.MatchCount)
-        {
-            info.nearProduct = SearchNearProducts(info.matches);
-        }
-
-        return info;
-    }
-    Product SearchNearProducts(List<Product> matches)
-    {
-        int idx = 0;
-        int idxX = ParentFrame.IndexX;
-        int idxY = ParentFrame.IndexY;
-        while (idx <= 10)
-        {
-            int num = (idx / 2) + 1;
-            int sign = num % 2 == 0 ? -1 : 1;
-            while(num-- >= 0)
-            {
-                idxX += idx % 2 == 0 ? sign : 0;
-                idxY += idx % 2 == 0 ? 0 : sign;
-                Frame targetFrame = BattleFieldManager.Me.GetFrame(idxX, idxY);
-                if (targetFrame == null)
-                    continue;
-
-                Product target = targetFrame.ChildProduct;
-                if (!matches.Contains(target) && target.mColor == mColor && !target.IsChocoBlock())
-                    return target;
-            }
-            idx++;
-        }
-        return null;
-    }
-    void SearchMatchedProducts(List<Product> products, ProductColor color)
+    public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
         if (mLocked || mColor != color || IsChocoBlock())
             return;

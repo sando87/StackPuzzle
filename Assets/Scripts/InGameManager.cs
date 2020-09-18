@@ -6,6 +6,17 @@ using UnityEngine.UI;
 
 public class InGameManager : MonoBehaviour
 {
+    private static InGameManager mInst = null;
+    public static InGameManager Inst
+    {
+        get
+        {
+            if (mInst == null)
+                mInst = GameObject.Find("WorldSpace").transform.Find("GameScreen/GameField").GetComponent<InGameManager>();
+            return mInst;
+        }
+    }
+
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -20,6 +31,9 @@ public class InGameManager : MonoBehaviour
     private ProductColor mSkipColor = ProductColor.None;
     private Dictionary<int,List<Frame>> mDestroyes = new Dictionary<int, List<Frame>>();
 
+    public int CountX { get { return mStageInfo.XCount; } }
+    public int CountY { get { return mStageInfo.YCount; } }
+    public Frame[,] Frames { get { return mFrames; } }
     public bool MatchLock { get; set; }
     public bool Pause { get; set; }
     public Action<int, int, Product> EventOnChange;
@@ -70,8 +84,16 @@ public class InGameManager : MonoBehaviour
         ResetGame();
         transform.parent.gameObject.SetActive(false);
     }
+    public bool IsIdle()
+    {
+        int count = 0;
+        foreach (Frame frame in mFrames)
+            if (frame.ChildProduct != null && !frame.ChildProduct.IsLocked())
+                count++;
+        return mFrames.Length == count;
+    }
 
-    private void OnSwipe(GameObject obj, SwipeDirection dir)
+    public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
         if (!IsSwapable())
             return;
@@ -292,7 +314,7 @@ public class InGameManager : MonoBehaviour
         }
         return null;
     }
-    private Frame GetFrame(int x, int y)
+    public Frame GetFrame(int x, int y)
     {
         if (x < 0 || x >= mStageInfo.XCount || y < 0 || y >= mStageInfo.YCount)
             return null;
