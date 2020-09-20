@@ -189,6 +189,7 @@ public class SwipeInfo
 public class EndGame
 {
     public int userPk;
+    public int oppUserPk;
     public bool win;
     public int maxCombo;
     public int score;

@@ -109,10 +109,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: f684fb9e8f0995846844e1e2e6d30917, type: 3}
   - {fileID: 21300000, guid: 7fdc799948986214b96974f207d4a09a, type: 3}
   - {fileID: 21300000, guid: 9b4faa760ca8ddc4296ea3713a2fe59b, type: 3}
-  ImgOneMore: {fileID: 21300000, guid: d9f71c4d7d103d044b709d8ce687e4f4, type: 3}
+  ImgOneMore: {fileID: 21300000, guid: 31fde2c88e559d940b49cb711aa89e91, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 42049c74529902f439ec8822b9c4812b, type: 3}
-  ImgKeepCombo: {fileID: 21300000, guid: d0d1a14d258b8e540a6cc5892453e9f8, type: 3}
-  ImgReduceColor: {fileID: 21300000, guid: 2b5c12b509e72de4ba1237b8c23a0129, type: 3}
+  ImgKeepCombo: {fileID: 21300000, guid: 9814b6707b2d64e40bef166b9e1c4a48, type: 3}
+  ImgReduceColor: {fileID: 21300000, guid: d9f71c4d7d103d044b709d8ce687e4f4, type: 3}
   ImageIndex: 0
 --- !u!61 &3551941158225595881
 BoxCollider2D:

@@ -106,13 +106,13 @@ public class DBManager : IDisposable
         catch (Exception ex) { Debug.Log(ex.Message); }
         return;
     }
-    public void RenewUserScore(UserInfo user)
+    public void RenewUserScore(int userPk, int score)
     {
         try
         {
             using (var cmd = new NpgsqlCommand())
             {
-                string query = String.Format("UPDATE users SET score={1} WHERE userPk = {0}", user.userPk, user.score);
+                string query = String.Format("UPDATE users SET score={1} WHERE userPk = {0}", userPk, score);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())

@@ -107,7 +107,7 @@ public class NetServerApp : MonoBehaviour
     }
     private string ProcRenewScore(UserInfo requestBody)
     {
-        DBManager.Inst().RenewUserScore(requestBody);
+        DBManager.Inst().RenewUserScore(requestBody.userPk, requestBody.score);
         return "OK";
     }
     private UserInfo[] ProcGetUsers()
@@ -170,6 +170,19 @@ public class NetServerApp : MonoBehaviour
     private EndGame ProcEndGame(EndGame requestBody)
     {
         mMatchingUsers.Remove(requestBody.userPk);
+        DBManager.Inst().RenewUserScore(requestBody.userPk, requestBody.score);
+        if (mMatchingUsers.ContainsKey(requestBody.oppUserPk))
+        {
+            MySession session = mMatchingUsers[requestBody.oppUserPk].sessionInfo;
+
+            Header responseMsg = new Header();
+            responseMsg.Cmd = NetCMD.EndGame;
+            responseMsg.RequestID = -1;
+            responseMsg.body = requestBody;
+            session.data = NetProtocol.ToArray(responseMsg);
+
+            mServer.SendData(session);
+        }
         return requestBody;
     }
 

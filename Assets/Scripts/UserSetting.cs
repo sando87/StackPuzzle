@@ -7,7 +7,11 @@ using UnityEngine.UI;
 public class UserSetting
 {
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
-    public static int UserScore { get { return mUserInfo == null ? -1 : mUserInfo.score; } }
+    public static int UserScore
+    {
+        get { return mUserInfo == null ? -1 : mUserInfo.score; }
+        set { mUserInfo.score = value; if (mUserInfo.score < 0) mUserInfo.score = 0; UpdateUserInfo(mUserInfo); }
+    }
 
     public const float MatchInterval = 1.5f;
     public const int MatchCount = 3;
@@ -39,8 +43,8 @@ public class UserSetting
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
             NetClientApp.GetInstance().Request(NetCMD.AddUser, info, (_res) =>
             {
-                UserInfo res = (UserInfo)_res;
-                UpdateUserInfo(res);
+                mUserInfo = (UserInfo)_res;
+                UpdateUserInfo(mUserInfo);
             });
             return info;
         }
@@ -50,7 +54,6 @@ public class UserSetting
         PlayerPrefs.SetInt("userPk", info.userPk);
         PlayerPrefs.SetInt("score", info.score);
         PlayerPrefs.SetString("deviceName", info.deviceName);
-        mUserInfo = info;
         return mUserInfo;
     }
     

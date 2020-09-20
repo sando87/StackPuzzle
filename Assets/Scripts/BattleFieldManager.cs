@@ -73,14 +73,15 @@ public class BattleFieldManager : MonoBehaviour
         if (IsPlayerField())
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
         else
-            NetClientApp.GetInstance().EventResponse += SwipeFromOpponent;
+            NetClientApp.GetInstance().EventResponse += ResponseFromOpponent;
 
         RequestNextColors(NextRequestCount);
 
         StartCoroutine("CheckIdle");
-        StartCoroutine(CheckFinish());
         StartCoroutine(CheckNextProducts());
-    
+        if (IsPlayerField())
+            StartCoroutine(CheckFinish());
+
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
         localBasePos.y += GridSize * 0.5f;
@@ -107,20 +108,25 @@ public class BattleFieldManager : MonoBehaviour
     }
     public void FinishGame(bool success)
     {
-        ResetGame();
-        transform.parent.gameObject.SetActive(false);
-
-        if (!IsPlayerField())
-            NetClientApp.GetInstance().EventResponse -= SwipeFromOpponent;
+        if (mThisUserPK <= 0)
+            return;
 
         int deltaScore = success ? 10 : -10;
+        UserSetting.UserScore += deltaScore;
+
         EndGame info = new EndGame();
         info.userPk = mThisUserPK;
+        info.oppUserPk = Opponent.UserPK;
         info.win = success;
-        info.score = Math.Max(0, UserSetting.UserScore + deltaScore);
+        info.score = UserSetting.UserScore;
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
 
-        MenuFinishBattle.PopUp(success, info.score, deltaScore);
+        if (!IsPlayerField())
+            NetClientApp.GetInstance().EventResponse -= ResponseFromOpponent;
+
+        ResetGame();
+        transform.parent.gameObject.SetActive(false);
+        MenuFinishBattle.PopUp(success, UserSetting.UserScore, deltaScore);
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -369,10 +375,7 @@ public class BattleFieldManager : MonoBehaviour
                 break;
         }
 
-        if(IsPlayerField())
-            FinishGame(false);
-        else
-            FinishGame(true);
+        FinishGame(false);
     }
 
 
@@ -390,18 +393,31 @@ public class BattleFieldManager : MonoBehaviour
         info.dir = dir;
         NetClientApp.GetInstance().Request(NetCMD.SendSwipe, info, null);
     }
-    private void SwipeFromOpponent(Header responseMsg)
+    private void ResponseFromOpponent(Header responseMsg)
     {
-        if (!gameObject.activeSelf || responseMsg.Cmd != NetCMD.SendSwipe)
+        if (!gameObject.activeInHierarchy)
             return;
 
-        SwipeInfo res = responseMsg.body as SwipeInfo;
-        if(res.fromUserPk == mThisUserPK)
+        if(responseMsg.Cmd == NetCMD.SendSwipe)
         {
-            MatchLock = res.matchLock;
-            Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
-            OnSwipe(pro.gameObject, res.dir);
+            SwipeInfo res = responseMsg.body as SwipeInfo;
+            if (res.fromUserPk == mThisUserPK)
+            {
+                MatchLock = res.matchLock;
+                Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
+                OnSwipe(pro.gameObject, res.dir);
+            }
         }
+        else if(responseMsg.Cmd == NetCMD.EndGame)
+        {
+            EndGame res = responseMsg.body as EndGame;
+            if (res.oppUserPk == mThisUserPK)
+            {
+                FinishGame(true);
+            }
+
+        }
+        
     }
     private bool IsPlayerField()
     {
