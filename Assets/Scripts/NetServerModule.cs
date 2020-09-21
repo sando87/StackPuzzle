@@ -103,6 +103,7 @@ public class NetServerModule
                 MySession packet = new MySession();
                 packet.client = retInfo.client;
                 packet.stream = retInfo.stream;
+                packet.ipAddr = retInfo.ipAddr;
                 packet.data = msg;
                 mQueue.Enqueue(packet);
             }

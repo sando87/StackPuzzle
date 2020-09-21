@@ -41,10 +41,12 @@ public class DBManager : IDisposable
         }
         catch (NpgsqlException ex)
         {
+            mDBSession = null;
             Debug.Log(ex.Message);
         }
         catch (Exception ex)
         {
+            mDBSession = null;
             Debug.Log(ex.Message);
         }
     }
@@ -131,7 +133,7 @@ public class DBManager : IDisposable
         {
             using (var cmd = new NpgsqlCommand())
             {
-                string query = String.Format("DELETE FROM users WHERE city={0}", userPk);
+                string query = String.Format("DELETE FROM users WHERE userPk = {0}", userPk);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())
@@ -177,7 +179,7 @@ public class DBManager : IDisposable
         {
             using (var cmd = new NpgsqlCommand())
             {
-                string query = String.Format("SELECT * FROM users WHERE deviceName = {0}", deviceName);
+                string query = String.Format("SELECT * FROM users WHERE deviceName = '{0}'", deviceName);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())

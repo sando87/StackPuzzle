@@ -10,6 +10,7 @@ using UnityEngine;
 
 public class NetClientApp : MonoBehaviour
 {
+    public static NetClientApp mInst = null;
     public string ServerAddress = "localhost"; //"sjleeserver.iptime.org";
     public int ServerPort = 9435;
 
@@ -21,19 +22,7 @@ public class NetClientApp : MonoBehaviour
     private Int64 mRequestID = 0;
     Dictionary<Int64, Action<object>> mHandlerTable = new Dictionary<Int64, Action<object>>();
     public Action<Header> EventResponse;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        if (gameObject.name != GameObjectName)
-        {
-            Debug.Log("Name must be => " + GameObjectName);
-            return;
-        }
-
-        Connect(ServerAddress, ServerPort);
-    }
-
+    
     private void OnDestroy()
     {
         DisConnect();
@@ -47,7 +36,12 @@ public class NetClientApp : MonoBehaviour
 
     static public NetClientApp GetInstance()
     {
-        return GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
+        if(mInst == null)
+        {
+            mInst = GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
+            mInst.Connect();
+        }
+        return mInst;
     }
     public void Request(NetCMD cmd, object body, Action<object> response)
     {
@@ -76,14 +70,14 @@ public class NetClientApp : MonoBehaviour
     }
 
 
-    private void Connect(string ipAddr, int port)
+    private void Connect()
     {
         try
         {
             if (mSession != null)
                 return;
 
-            mSession = new TcpClient(ipAddr, port);
+            mSession = new TcpClient(ServerAddress, ServerPort);
             mStream = mSession.GetStream();
         }
         catch (SocketException ex) { Debug.Log(ex.Message); }

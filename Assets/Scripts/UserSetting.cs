@@ -22,6 +22,18 @@ public class UserSetting
     public static void Initialize()
     {
         mUserInfo = LoadUserInfo();
+        if(mUserInfo.userPk <= 0)
+        {
+            NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_res) =>
+            {
+                UserInfo res = (UserInfo)_res;
+                if (res.userPk <= 0)
+                    return;
+
+                mUserInfo = res;
+                UpdateUserInfo(mUserInfo);
+            });
+        }
     }
 
 
@@ -41,11 +53,6 @@ public class UserSetting
             info.userPk = -1;
             info.score = 100;
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
-            NetClientApp.GetInstance().Request(NetCMD.AddUser, info, (_res) =>
-            {
-                mUserInfo = (UserInfo)_res;
-                UpdateUserInfo(mUserInfo);
-            });
             return info;
         }
     }
@@ -54,7 +61,7 @@ public class UserSetting
         PlayerPrefs.SetInt("userPk", info.userPk);
         PlayerPrefs.SetInt("score", info.score);
         PlayerPrefs.SetString("deviceName", info.deviceName);
-        return mUserInfo;
+        return info;
     }
     
 }
