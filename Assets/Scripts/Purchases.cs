@@ -11,10 +11,7 @@ public class PurchaseInfo
     public int countHeart;
     public long useTimeTick;
     public int countDiamond;
-    public int countItemA;
-    public int countItemB;
-    public int countItemC;
-    public int countItemD;
+    public int[] countItem = new int[4];
     public bool infiniteHeart;
     public byte[] Serialize()
     {
@@ -24,10 +21,10 @@ public class PurchaseInfo
         bytes.AddRange(BitConverter.GetBytes(countHeart));
         bytes.AddRange(BitConverter.GetBytes(useTimeTick));
         bytes.AddRange(BitConverter.GetBytes(countDiamond));
-        bytes.AddRange(BitConverter.GetBytes(countItemA));
-        bytes.AddRange(BitConverter.GetBytes(countItemB));
-        bytes.AddRange(BitConverter.GetBytes(countItemC));
-        bytes.AddRange(BitConverter.GetBytes(countItemD));
+        bytes.AddRange(BitConverter.GetBytes(countItem[0]));
+        bytes.AddRange(BitConverter.GetBytes(countItem[1]));
+        bytes.AddRange(BitConverter.GetBytes(countItem[2]));
+        bytes.AddRange(BitConverter.GetBytes(countItem[3]));
         bytes.AddRange(BitConverter.GetBytes(infiniteHeart));
         return bytes.ToArray();
     }
@@ -38,10 +35,10 @@ public class PurchaseInfo
         countHeart = BitConverter.ToInt32(data, 8);
         useTimeTick = BitConverter.ToInt64(data, 12);
         countDiamond = BitConverter.ToInt32(data, 20);
-        countItemA = BitConverter.ToInt32(data, 24);
-        countItemB = BitConverter.ToInt32(data, 28);
-        countItemC = BitConverter.ToInt32(data, 32);
-        countItemD = BitConverter.ToInt32(data, 36);
+        countItem[0] = BitConverter.ToInt32(data, 24);
+        countItem[1] = BitConverter.ToInt32(data, 28);
+        countItem[2] = BitConverter.ToInt32(data, 32);
+        countItem[3] = BitConverter.ToInt32(data, 36);
         infiniteHeart = BitConverter.ToBoolean(data, 40);
     }
 }
@@ -78,12 +75,28 @@ public class Purchases
         }
         return mInfo.countHeart;
     }
+    public static bool ChargeHeartLimit(int cnt)
+    {
+        mInfo.countHeart += cnt;
+        if (mInfo.countHeart > 20)
+            mInfo.countHeart = 20;
+        mInfo.useTimeTick = DateTime.Now.Ticks;
+        UpdatePurchaseInfo(mInfo);
+        return true;
+    }
     public static bool ChargeHeart(int cnt, int cost)
     {
         if (mInfo.countDiamond < cost)
             return false;
         mInfo.countDiamond -= cost;
         mInfo.countHeart += cnt;
+        mInfo.useTimeTick = DateTime.Now.Ticks;
+        UpdatePurchaseInfo(mInfo);
+        return true;
+    }
+    public static bool ChargeHeartInfinite()
+    {
+        mInfo.infiniteHeart = true;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
         return true;
@@ -104,25 +117,33 @@ public class Purchases
             return 0;
         return (DateTime.Now - new DateTime(mInfo.useTimeTick)).Seconds;
     }
+    public static int CountDiamond()
+    {
+        return mInfo.countDiamond;
+    }
     public static void PurchaseDiamond(int cnt)
     {
         mInfo.countDiamond += cnt;
         UpdatePurchaseInfo(mInfo);
     }
-    public static bool ChargeItemA(int cnt, int cost)
+    public static bool ChargeItem(int type, int cnt, int cost)
     {
         if (mInfo.countDiamond < cost)
             return false;
         mInfo.countDiamond -= cost;
-        mInfo.countItemA += cnt;
+        mInfo.countItem[type] += cnt;
         UpdatePurchaseInfo(mInfo);
         return true;
     }
-    public static bool UseItemA()
+    public static int CountItem(int type)
     {
-        if (mInfo.countItemA <= 0)
+        return mInfo.countItem[type];
+    }
+    public static bool UseItem(int type)
+    {
+        if (mInfo.countItem[type] <= 0)
             return false;
-        mInfo.countItemA--;
+        mInfo.countItem[type]--;
         UpdatePurchaseInfo(mInfo);
         return true;
     }
@@ -146,10 +167,10 @@ public class Purchases
             info.useTimeTick = DateTime.Now.Ticks;
             info.infiniteHeart = false;
             info.countDiamond = 100;
-            info.countItemA = 0;
-            info.countItemB = 0;
-            info.countItemC = 0;
-            info.countItemD = 0;
+            info.countItem[0] = 0;
+            info.countItem[1] = 0;
+            info.countItem[2] = 0;
+            info.countItem[3] = 0;
             UpdatePurchaseInfo(info);
             return info;
         }
