@@ -70,10 +70,10 @@ public class BattleFieldManager : MonoBehaviour
         GameObject mask = Instantiate(MaskPrefab, transform);
         mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
 
-        if (IsPlayerField())
-            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
-        else
-            NetClientApp.GetInstance().EventResponse += ResponseFromOpponent;
+        SwipeDetector sd = GetComponent<SwipeDetector>();
+        if(sd != null)
+            sd.EventSwipe = OnSwipe;
+        NetClientApp.GetInstance().EventResponse += ResponseFromOpponent;
 
         RequestNextColors(NextRequestCount);
 
@@ -105,13 +105,15 @@ public class BattleFieldManager : MonoBehaviour
         GameObject ap = Instantiate(AttackPointPrefab, transform);
         ap.transform.localPosition = localBasePos + new Vector3(0, GridSize * YCount, 0);
         AttackPoints = ap.GetComponent<AttackPoints>();
+
+        MenuBattle.PopUp();
     }
     public void FinishGame(bool success)
     {
         if (mThisUserPK <= 0)
             return;
 
-        int deltaScore = success ? 10 : -10;
+        int deltaScore = success ? 1 : -1;
         UserSetting.UserScore += deltaScore;
 
         EndGame info = new EndGame();
@@ -317,7 +319,7 @@ public class BattleFieldManager : MonoBehaviour
 
         products.Sort((lsb, msb) =>
         {
-            return lsb.Weight - msb.Weight > 0 ? 1 : -1;
+            return lsb.Weight - msb.Weight > 0 ? -1 : 1;
         });
         return products.GetRange(0, cnt);
     }
@@ -483,6 +485,8 @@ public class BattleFieldManager : MonoBehaviour
     }
     private ProductColor GetNextColor()
     {
+        Debug.Log(mNextColors.Count);
+        Debug.Log(mNextPositionIndex);
         int remainCount = mNextColors.Count - mNextPositionIndex;
         if (remainCount < NextRequestCount / 3)
             RequestNextColors(NextRequestCount);
@@ -503,6 +507,4 @@ public class BattleFieldManager : MonoBehaviour
             mNextColors.AddRange(res.nextProducts);
         });
     }
-
-    //attack
 }

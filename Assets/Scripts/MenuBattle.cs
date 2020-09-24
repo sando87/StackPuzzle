@@ -29,7 +29,7 @@ public class MenuBattle : MonoBehaviour
         BattleFieldManager.Me.MatchLock = false;
         MatchLock.color = Color.white;
         BattleFieldManager.Me.EventOnChange = UpdatePanel;
-        BattleFieldManager.Opp.EventOnChange = UpdatePanel;
+        //BattleFieldManager.Opp.EventOnChange = UpdatePanel;
     }
     private void UpdatePanel(Product product)
     {

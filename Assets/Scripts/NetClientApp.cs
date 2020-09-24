@@ -20,6 +20,7 @@ public class NetClientApp : MonoBehaviour
     TcpClient mSession = null;
     NetworkStream mStream = null;
     private Int64 mRequestID = 0;
+    private List<byte> mRecvBuffer = new List<byte>();
     Dictionary<Int64, Action<object>> mHandlerTable = new Dictionary<Int64, Action<object>>();
     public Action<Header> EventResponse;
     
@@ -31,7 +32,8 @@ public class NetClientApp : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        HandleResponse();
+        ReadRecvData();
+        ParseAndInvokeCallback();
     }
 
     static public NetClientApp GetInstance()
@@ -92,45 +94,66 @@ public class NetClientApp : MonoBehaviour
             mStream = null;
             mSession = null;
         }
+        mRecvBuffer.Clear();
         mHandlerTable.Clear();
     }
-    private void HandleResponse()
+
+
+    private void ReadRecvData()
     {
         if (mSession == null)
             return;
 
         try
         {
-            if (mStream.DataAvailable)
+            while (mStream.DataAvailable)
             {
                 byte[] recvBuf = new byte[NetProtocol.recvBufSize];
-                int recvLen = mStream.Read(recvBuf, 0, recvBuf.Length);
-                if (recvLen <= 0)
+                int readLen = mStream.Read(recvBuf, 0, recvBuf.Length);
+                if (readLen <= 0)
                 {
                     DisConnect();
                     return;
                 }
 
-                byte[] temp = new byte[recvLen];
-                Array.Copy(recvBuf, temp, recvLen);
-                List<byte[]> messages = NetProtocol.Split(temp);
-                foreach (byte[] msg in messages)
-                {
-                    Header recvMsg = NetProtocol.ToMessage(msg);
-                    if (recvMsg == null || recvMsg.Magic != 0x12345678)
-                        continue;
-
-                    if (mHandlerTable.ContainsKey(recvMsg.RequestID))
-                    {
-                        mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
-                        mHandlerTable.Remove(recvMsg.RequestID);
-                    }
-
-                    EventResponse?.Invoke(recvMsg);
-                }
+                byte[] subBuf = new byte[readLen];
+                Array.Copy(recvBuf, subBuf, readLen);
+                mRecvBuffer.AddRange(subBuf);
             }
         }
         catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
         catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
     }
+    private void ParseAndInvokeCallback()
+    {
+        if (mRecvBuffer.Count == 0)
+            return;
+
+        try
+        {
+            List<byte[]> messages = NetProtocol.Split(mRecvBuffer.ToArray());
+            foreach (byte[] msg in messages)
+            {
+                mRecvBuffer.RemoveRange(0, msg.Length);
+                Header recvMsg = NetProtocol.ToMessage(msg);
+                if (recvMsg == null || recvMsg.Magic != 0x12345678)
+                    continue;
+
+                if (mHandlerTable.ContainsKey(recvMsg.RequestID))
+                {
+                    mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
+                    mHandlerTable.Remove(recvMsg.RequestID);
+                }
+
+                EventResponse?.Invoke(recvMsg);
+            }
+
+            if(mRecvBuffer.Count != 0)
+                Debug.Log("UnKnown Network Packet : " + mRecvBuffer.Count);
+        }
+        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
+        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
+
+    }
+    
 }
