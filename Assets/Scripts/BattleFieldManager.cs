@@ -128,6 +128,8 @@ public class BattleFieldManager : MonoBehaviour
         BattleFieldManager.Me.ResetGame();
         BattleFieldManager.Opp.ResetGame();
 
+        BattleFieldManager.Me.transform.parent.gameObject.SetActive(false);
+
         MenuFinishBattle.PopUp(success, UserSetting.UserScore, deltaScore);
     }
 
@@ -322,7 +324,7 @@ public class BattleFieldManager : MonoBehaviour
         {
             return lsb.Weight - msb.Weight > 0 ? -1 : 1;
         });
-        return products.GetRange(0, cnt);
+        return (products.Count < cnt) ? products : products.GetRange(0, cnt);
     }
     private IEnumerator CheckIdle()
     {
@@ -414,7 +416,7 @@ public class BattleFieldManager : MonoBehaviour
         else if(responseMsg.Cmd == NetCMD.EndGame)
         {
             EndGame res = responseMsg.body as EndGame;
-            if (res.oppUserPk == mThisUserPK)
+            if (res.userPk == mThisUserPK)
             {
                 FinishGame(true);
             }
@@ -423,12 +425,14 @@ public class BattleFieldManager : MonoBehaviour
         else if (responseMsg.Cmd == NetCMD.SendChoco)
         {
             ChocoInfo res = responseMsg.body as ChocoInfo;
-            if (res.toUserPk == mThisUserPK)
+            if (res.fromUserPk == mThisUserPK)
             {
-                AttackPoints.Pop(res.chocos.Length);
-                foreach (Vector2Int pos in res.chocos)
+                AttackPoints.Pop(res.xIndicies.Length);
+                for(int i = 0; i < res.xIndicies.Length; ++i)
                 {
-                    Product pro = GetFrame(pos.x, pos.y).ChildProduct;
+                    int idxX = res.xIndicies[i];
+                    int idxY = res.yIndicies[i];
+                    Product pro = GetFrame(idxX, idxY).ChildProduct;
                     pro.WrapChocoBlock(true);
                 }
             }
@@ -455,8 +459,6 @@ public class BattleFieldManager : MonoBehaviour
         mKeepCombo = 0;
         mCountX = 0;
         mCountY = 0;
-
-        transform.parent.gameObject.SetActive(false);
     }
     private Product NextUpProductFrom(Frame frame)
     {
@@ -501,8 +503,6 @@ public class BattleFieldManager : MonoBehaviour
     }
     private ProductColor GetNextColor()
     {
-        Debug.Log(mNextColors.Count);
-        Debug.Log(mNextPositionIndex);
         int remainCount = mNextColors.Count - mNextPositionIndex;
         if (remainCount < NextRequestCount / 3)
             RequestNextColors(NextRequestCount);
@@ -525,14 +525,19 @@ public class BattleFieldManager : MonoBehaviour
     }
     private void RequestSendChoco(List<Product> chocos)
     {
-        List<Vector2Int> pos = new List<Vector2Int>();
+        List<int> xIndicies = new List<int>();
+        List<int> yIndicies = new List<int>();
         foreach (Product pro in chocos)
-            pos.Add(new Vector2Int(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+        {
+            xIndicies.Add(pro.ParentFrame.IndexX);
+            yIndicies.Add(pro.ParentFrame.IndexY);
+        }
 
         ChocoInfo info = new ChocoInfo();
-        info.toUserPk = mThisUserPK;
-        info.fromUserPk = Opponent.UserPK;
-        info.chocos = pos.ToArray();
+        info.toUserPk = Opponent.UserPK;
+        info.fromUserPk = mThisUserPK;
+        info.xIndicies = xIndicies.ToArray();
+        info.yIndicies = yIndicies.ToArray();
         NetClientApp.GetInstance().Request(NetCMD.SendChoco, info, null);
     }
 }

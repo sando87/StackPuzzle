@@ -200,5 +200,6 @@ public class ChocoInfo
 {
     public int fromUserPk;
     public int toUserPk;
-    public Vector2Int[] chocos;
+    public int[] xIndicies;
+    public int[] yIndicies;
 }
