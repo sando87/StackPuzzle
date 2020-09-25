@@ -70,17 +70,20 @@ public class BattleFieldManager : MonoBehaviour
         GameObject mask = Instantiate(MaskPrefab, transform);
         mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
 
-        SwipeDetector sd = GetComponent<SwipeDetector>();
-        if(sd != null)
-            sd.EventSwipe = OnSwipe;
-        NetClientApp.GetInstance().EventResponse += ResponseFromOpponent;
+        if(IsPlayerField())
+            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+        else
+            NetClientApp.GetInstance().EventResponse = ResponseFromOpponent;
 
         RequestNextColors(NextRequestCount);
 
-        StartCoroutine("CheckIdle");
         StartCoroutine(CheckNextProducts());
+
         if (IsPlayerField())
+        {
+            StartCoroutine("CheckIdle");
             StartCoroutine(CheckFinish());
+        }
 
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
@@ -108,26 +111,23 @@ public class BattleFieldManager : MonoBehaviour
 
         MenuBattle.PopUp();
     }
-    public void FinishGame(bool success)
+    public static void FinishGame(bool success)
     {
-        if (mThisUserPK <= 0)
-            return;
+        NetClientApp.GetInstance().EventResponse = null;
 
         int deltaScore = success ? 1 : -1;
         UserSetting.UserScore += deltaScore;
 
         EndGame info = new EndGame();
-        info.userPk = mThisUserPK;
-        info.oppUserPk = Opponent.UserPK;
+        info.userPk = BattleFieldManager.Me.UserPK;
+        info.oppUserPk = BattleFieldManager.Opp.UserPK;
         info.win = success;
         info.score = UserSetting.UserScore;
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
 
-        if (!IsPlayerField())
-            NetClientApp.GetInstance().EventResponse -= ResponseFromOpponent;
+        BattleFieldManager.Me.ResetGame();
+        BattleFieldManager.Opp.ResetGame();
 
-        ResetGame();
-        transform.parent.gameObject.SetActive(false);
         MenuFinishBattle.PopUp(success, UserSetting.UserScore, deltaScore);
     }
 
@@ -292,7 +292,8 @@ public class BattleFieldManager : MonoBehaviour
 
         int cnt = AttackPoints.Pop(20);
         List<Product> products = GetNextTargetProducts(cnt);
-        foreach(Product pro in products)
+        RequestSendChoco(products);
+        foreach (Product pro in products)
             pro.WrapChocoBlock(true);
     }
     private List<Product> GetNextTargetProducts(int cnt)
@@ -419,7 +420,20 @@ public class BattleFieldManager : MonoBehaviour
             }
 
         }
-        
+        else if (responseMsg.Cmd == NetCMD.SendChoco)
+        {
+            ChocoInfo res = responseMsg.body as ChocoInfo;
+            if (res.toUserPk == mThisUserPK)
+            {
+                AttackPoints.Pop(res.chocos.Length);
+                foreach (Vector2Int pos in res.chocos)
+                {
+                    Product pro = GetFrame(pos.x, pos.y).ChildProduct;
+                    pro.WrapChocoBlock(true);
+                }
+            }
+        }
+
     }
     private bool IsPlayerField()
     {
@@ -441,6 +455,8 @@ public class BattleFieldManager : MonoBehaviour
         mKeepCombo = 0;
         mCountX = 0;
         mCountY = 0;
+
+        transform.parent.gameObject.SetActive(false);
     }
     private Product NextUpProductFrom(Frame frame)
     {
@@ -506,5 +522,17 @@ public class BattleFieldManager : MonoBehaviour
             NextProducts res = _res as NextProducts;
             mNextColors.AddRange(res.nextProducts);
         });
+    }
+    private void RequestSendChoco(List<Product> chocos)
+    {
+        List<Vector2Int> pos = new List<Vector2Int>();
+        foreach (Product pro in chocos)
+            pos.Add(new Vector2Int(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+
+        ChocoInfo info = new ChocoInfo();
+        info.toUserPk = mThisUserPK;
+        info.fromUserPk = Opponent.UserPK;
+        info.chocos = pos.ToArray();
+        NetClientApp.GetInstance().Request(NetCMD.SendChoco, info, null);
     }
 }

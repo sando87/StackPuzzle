@@ -10,7 +10,7 @@ using UnityEngine;
 public enum NetCMD
 {
     Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
-    SearchOpponent, StopMatching, GetInitField, NextProducts, SendSwipe, EndGame
+    SearchOpponent, StopMatching, GetInitField, NextProducts, SendSwipe, EndGame, SendChoco
 }
 
 public class ServerField
@@ -193,4 +193,12 @@ public class EndGame
     public bool win;
     public int maxCombo;
     public int score;
+}
+
+[Serializable]
+public class ChocoInfo
+{
+    public int fromUserPk;
+    public int toUserPk;
+    public Vector2Int[] chocos;
 }

@@ -71,7 +71,7 @@ public class MenuBattle : MonoBehaviour
         {
             if(isOK)
             {
-                BattleFieldManager.Me.FinishGame(false);
+                BattleFieldManager.FinishGame(false);
             }
         });
     }

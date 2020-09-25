@@ -70,6 +70,7 @@ public class NetServerApp : MonoBehaviour
             case NetCMD.NextProducts:   body = ProcNextProduct(requestMsg.body as NextProducts); break;
             case NetCMD.SendSwipe:      body = ProcSendSwipe(requestMsg.body as SwipeInfo); break;
             case NetCMD.EndGame:        body = ProcEndGame(requestMsg.body as EndGame); break;
+            case NetCMD.SendChoco:      body = ProcSendChoco(requestMsg.body as ChocoInfo); break;
             default:                    body = "Undefied Command"; break;
         }
 
@@ -152,12 +153,29 @@ public class NetServerApp : MonoBehaviour
     }
     private SwipeInfo ProcSendSwipe(SwipeInfo requestBody)
     {
-        if (mMatchingUsers.ContainsKey(requestBody.fromUserPk))
+        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
         {
             MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SendSwipe;
+            responseMsg.RequestID = -1;
+            responseMsg.body = requestBody;
+            session.data = NetProtocol.ToArray(responseMsg);
+
+            mServer.SendData(session);
+        }
+
+        return requestBody;
+    }
+    private ChocoInfo ProcSendChoco(ChocoInfo requestBody)
+    {
+        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
+        {
+            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
+
+            Header responseMsg = new Header();
+            responseMsg.Cmd = NetCMD.SendChoco;
             responseMsg.RequestID = -1;
             responseMsg.body = requestBody;
             session.data = NetProtocol.ToArray(responseMsg);
