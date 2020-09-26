@@ -55,6 +55,8 @@ public class NetClientApp : MonoBehaviour
             Header head = new Header();
             head.Cmd = cmd;
             head.RequestID = mRequestID++;
+            head.Ack = 0;
+            head.UserPk = UserSetting.UserPK;
             head.body = body;
             byte[] data = NetProtocol.ToArray(head);
 

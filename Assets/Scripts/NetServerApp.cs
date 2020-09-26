@@ -80,6 +80,8 @@ public class NetServerApp : MonoBehaviour
         Header responseMsg = new Header();
         responseMsg.Cmd = requestMsg.Cmd;
         responseMsg.RequestID = requestMsg.RequestID;
+        responseMsg.Ack = 1;
+        responseMsg.UserPk = requestMsg.UserPk;
         responseMsg.body = body;
         return NetProtocol.ToArray(responseMsg);
     }
@@ -160,6 +162,8 @@ public class NetServerApp : MonoBehaviour
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SendSwipe;
             responseMsg.RequestID = -1;
+            responseMsg.Ack = 0;
+            responseMsg.UserPk = mRequestMsg.UserPk;
             responseMsg.body = requestBody;
             session.data = NetProtocol.ToArray(responseMsg);
 
@@ -177,6 +181,8 @@ public class NetServerApp : MonoBehaviour
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SendChoco;
             responseMsg.RequestID = -1;
+            responseMsg.Ack = 0;
+            responseMsg.UserPk = mRequestMsg.UserPk;
             responseMsg.body = requestBody;
             session.data = NetProtocol.ToArray(responseMsg);
 
@@ -187,15 +193,17 @@ public class NetServerApp : MonoBehaviour
     }
     private EndGame ProcEndGame(EndGame requestBody)
     {
-        mMatchingUsers.Remove(requestBody.userPk);
-        DBManager.Inst().RenewUserScore(requestBody.userPk, requestBody.score);
-        if (mMatchingUsers.ContainsKey(requestBody.oppUserPk))
+        mMatchingUsers.Remove(requestBody.fromUserPk);
+        DBManager.Inst().RenewUserScore(requestBody.fromUserPk, requestBody.score);
+        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
         {
-            MySession session = mMatchingUsers[requestBody.oppUserPk].sessionInfo;
+            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.EndGame;
             responseMsg.RequestID = -1;
+            responseMsg.Ack = 0;
+            responseMsg.UserPk = mRequestMsg.UserPk;
             responseMsg.body = requestBody;
             session.data = NetProtocol.ToArray(responseMsg);
 
@@ -259,6 +267,8 @@ public class NetServerApp : MonoBehaviour
         Header responseMsg = new Header();
         responseMsg.Cmd = NetCMD.SearchOpponent;
         responseMsg.RequestID = user.requestMsg.RequestID;
+        responseMsg.Ack = 0;
+        responseMsg.UserPk = mRequestMsg.UserPk;
         responseMsg.body = body;
 
         session.data = NetProtocol.ToArray(responseMsg);

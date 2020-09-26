@@ -119,8 +119,8 @@ public class BattleFieldManager : MonoBehaviour
         UserSetting.UserScore += deltaScore;
 
         EndGame info = new EndGame();
-        info.userPk = BattleFieldManager.Me.UserPK;
-        info.oppUserPk = BattleFieldManager.Opp.UserPK;
+        info.fromUserPk = BattleFieldManager.Me.UserPK;
+        info.toUserPk = BattleFieldManager.Opp.UserPK;
         info.win = success;
         info.score = UserSetting.UserScore;
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
@@ -402,11 +402,13 @@ public class BattleFieldManager : MonoBehaviour
     {
         if (!gameObject.activeInHierarchy)
             return;
+        if (responseMsg.Ack == 1)
+            return;
 
-        if(responseMsg.Cmd == NetCMD.SendSwipe)
+        if (responseMsg.Cmd == NetCMD.SendSwipe)
         {
             SwipeInfo res = responseMsg.body as SwipeInfo;
-            if (res.fromUserPk == mThisUserPK)
+            //if (res.fromUserPk == mThisUserPK)
             {
                 MatchLock = res.matchLock;
                 Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
@@ -416,7 +418,7 @@ public class BattleFieldManager : MonoBehaviour
         else if(responseMsg.Cmd == NetCMD.EndGame)
         {
             EndGame res = responseMsg.body as EndGame;
-            if (res.userPk == mThisUserPK)
+            //if (res.fromUserPk == mThisUserPK)
             {
                 FinishGame(true);
             }
@@ -425,7 +427,7 @@ public class BattleFieldManager : MonoBehaviour
         else if (responseMsg.Cmd == NetCMD.SendChoco)
         {
             ChocoInfo res = responseMsg.body as ChocoInfo;
-            if (res.fromUserPk == mThisUserPK)
+            //if (res.fromUserPk == mThisUserPK)
             {
                 AttackPoints.Pop(res.xIndicies.Length);
                 for(int i = 0; i < res.xIndicies.Length; ++i)

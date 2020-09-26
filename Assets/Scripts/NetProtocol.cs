@@ -109,7 +109,9 @@ public class NetProtocol
             msg.Cmd = (NetCMD)BitConverter.ToUInt32(buf, 4);
             msg.RequestID = BitConverter.ToInt64(buf, 8);
             msg.Length = BitConverter.ToInt32(buf, 16);
-            msg.body = Utils.Deserialize<object>(buf, 20);
+            msg.Ack = BitConverter.ToInt32(buf, 20);
+            msg.UserPk = BitConverter.ToInt32(buf, 24);
+            msg.body = Utils.Deserialize<object>(buf, 28);
         }
         catch (Exception ex)
         {
@@ -127,6 +129,8 @@ public class Header
     public NetCMD Cmd = NetCMD.Undef;
     public Int64 RequestID = -1;
     public int Length = 0;
+    public int Ack = 0;
+    public int UserPk = -1;
     public object body = null;
 }
 
@@ -188,8 +192,8 @@ public class SwipeInfo
 [Serializable]
 public class EndGame
 {
-    public int userPk;
-    public int oppUserPk;
+    public int fromUserPk;
+    public int toUserPk;
     public bool win;
     public int maxCombo;
     public int score;
