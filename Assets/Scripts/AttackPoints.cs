@@ -13,13 +13,16 @@ public class AttackPoints : MonoBehaviour
     public GameObject Projectile;
     public Sprite[] Images = new Sprite[4];
 
-    public int Count { get { return mChilds.Count; } }
+    public int Count { get { return mAttackPoint; } }
     public bool IsReady { get { return mIsReady; } }
     public void Add(int point, Vector3 fromPos)
     {
+        fromPos.z = -4;
         GameObject proj = Instantiate(Projectile, fromPos, Quaternion.identity);
-        proj.transform.LookAt(transform.position);
-        proj.GetComponent<Rigidbody>().AddForce(proj.transform.forward * 500);
+        Vector3 dest = transform.position;
+        dest.z = fromPos.z;
+        proj.transform.LookAt(dest);
+        //proj.GetComponent<Rigidbody>().AddForce(proj.transform.forward * 500);
         StartCoroutine(MovingProjectile(proj, point));
     }
     public int Pop(int point)
@@ -41,8 +44,19 @@ public class AttackPoints : MonoBehaviour
 
     IEnumerator MovingProjectile(GameObject projectile, int point)
     {
-        while((transform.position - projectile.transform.position).magnitude > 0.05f)
+        float duration = 1;
+        Vector3 diff = transform.position - projectile.transform.position;
+        diff.z = 0;
+        float dist = diff.magnitude;
+        float a = -1 * dist / (duration * duration);
+        float time = 0;
+        diff.Normalize();
+        Vector3 pos = projectile.transform.position;
+        while (time < duration)
         {
+            float k = a * (time - duration) * (time - duration) + dist;
+            projectile.transform.position = (pos + diff * k);
+            time += Time.deltaTime;
             yield return null;
         }
         projectile.GetComponent<SciFiProjectileScript>().DeadEffect();

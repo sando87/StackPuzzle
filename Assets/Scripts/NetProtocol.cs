@@ -53,7 +53,7 @@ public class NetProtocol
     public const int recvBufSize = 1024 * 64;
     static public int HeadSize()
     {
-        return 20;
+        return 28;
     }
     static public int Length(byte[] msg, int offset = 0)
     {
@@ -91,6 +91,8 @@ public class NetProtocol
             buf.AddRange(BitConverter.GetBytes((UInt32)msg.Cmd));
             buf.AddRange(BitConverter.GetBytes(msg.RequestID));
             buf.AddRange(BitConverter.GetBytes(msg.Length));
+            buf.AddRange(BitConverter.GetBytes(msg.Ack));
+            buf.AddRange(BitConverter.GetBytes(msg.UserPk));
             buf.AddRange(body);
         }
         catch(Exception ex)

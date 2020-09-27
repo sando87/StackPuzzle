@@ -4716,6 +4716,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 823769ff8f358fa4a99e7d0517c2a329, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentHeart: {fileID: 0}
+  CurrentDiamond: {fileID: 0}
 --- !u!1 &359125130
 GameObject:
   m_ObjectHideFlags: 0
@@ -16110,6 +16112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8526e2487f00c0648b1327945b3cb199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentDiamond: {fileID: 0}
 --- !u!1 &1267507449
 GameObject:
   m_ObjectHideFlags: 0
@@ -24137,6 +24140,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8d7f0b5603326642bdccd7e8fbd1bc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentDiamond: {fileID: 0}
+  CurrentItemA: {fileID: 0}
+  CurrentItemB: {fileID: 0}
+  CurrentItemC: {fileID: 0}
+  CurrentItemD: {fileID: 0}
 --- !u!1 &1933647595
 GameObject:
   m_ObjectHideFlags: 0

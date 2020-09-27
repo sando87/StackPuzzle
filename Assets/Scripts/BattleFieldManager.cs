@@ -488,7 +488,9 @@ public class BattleFieldManager : MonoBehaviour
 
         int remainPt = AttackPoints.Count;
         if (remainPt == 0)
+        {
             Opponent.AttackPoints.Add(point, fromPos);
+        }
         else
         {
             if (remainPt >= point)

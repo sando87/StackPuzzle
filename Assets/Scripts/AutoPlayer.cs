@@ -25,9 +25,9 @@ public class AutoPlayer : MonoBehaviour
         while(true)
         {
             yield return new WaitForSeconds(2);
-            if (!InGameManager.Inst.gameObject.activeInHierarchy)
+            if (!BattleFieldManager.Me.gameObject.activeInHierarchy)
                 continue;
-            if (InGameManager.Inst.IsIdle())
+            if (BattleFieldManager.Me.IsIdle())
                 ScanNextProduct();
         }
     }
@@ -36,24 +36,24 @@ public class AutoPlayer : MonoBehaviour
     {
         if (nexts.Count > 1)
         {
-            InGameManager.Inst.MatchLock = true;
-            InGameManager.Inst.OnSwipe(nexts[0].Key.gameObject, nexts[0].Value);
+            BattleFieldManager.Me.MatchLock = true;
+            BattleFieldManager.Me.OnSwipe(nexts[0].Key.gameObject, nexts[0].Value);
             nexts.Remove(nexts[0]);
             return;
         }
         else if (nexts.Count == 1)
         {
-            InGameManager.Inst.MatchLock = false;
-            InGameManager.Inst.OnSwipe(nexts[0].Key.gameObject, nexts[0].Value);
+            BattleFieldManager.Me.MatchLock = false;
+            BattleFieldManager.Me.OnSwipe(nexts[0].Key.gameObject, nexts[0].Value);
             nexts.Clear();
             return;
         }
 
-        int mCntX = InGameManager.Inst.CountX;
-        int mCntY = InGameManager.Inst.CountY;
+        int mCntX = BattleFieldManager.Me.CountX;
+        int mCntY = BattleFieldManager.Me.CountY;
         int baseX = UnityEngine.Random.Range(0, mCntX);
         int baseY = UnityEngine.Random.Range(0, mCntY);
-        Frame[,] frames = InGameManager.Inst.Frames;
+        Frame[,] frames = BattleFieldManager.Me.Frames;
         for (int y = 0; y < mCntY; ++y)
         {
             int fixedY = (baseY + y) % mCntY;
@@ -138,7 +138,7 @@ public class AutoPlayer : MonoBehaviour
             {
                 idxX += idx % 2 == 0 ? sign : 0;
                 idxY += idx % 2 == 0 ? 0 : sign;
-                Frame targetFrame = InGameManager.Inst.GetFrame(idxX, idxY);
+                Frame targetFrame = BattleFieldManager.Me.GetFrame(idxX, idxY);
                 if (targetFrame == null)
                     continue;
 
