@@ -47,6 +47,7 @@ public class Purchases
 {
     private const string prefsKeyName = "pcInfo2";
     private static PurchaseInfo mInfo = null;
+    private const int chargingIntervalMin = 5;
 
     public static void Initialize()
     {
@@ -54,32 +55,14 @@ public class Purchases
     }
     public static int CountHeart()
     {
-        if(mInfo.countHeart < mInfo.maxHeart)
-        {
-            TimeSpan term = DateTime.Now - new DateTime(mInfo.useTimeTick);
-            int fiveMinite = 300;
-            int gainHeart = term.Seconds / fiveMinite;
-            int remainSec = term.Seconds % fiveMinite;
-            mInfo.countHeart += gainHeart;
-            mInfo.countHeart = Math.Min(mInfo.maxHeart, mInfo.countHeart);
-
-            if (mInfo.countHeart < mInfo.maxHeart)
-            {
-                mInfo.useTimeTick = (DateTime.Now - new TimeSpan(0, remainSec / 60, remainSec % 60)).Ticks;
-            }
-            else
-            {
-                mInfo.useTimeTick = DateTime.Now.Ticks;
-            }
-            UpdatePurchaseInfo(mInfo);
-        }
+        UpdateHeartTimer();
         return mInfo.countHeart;
     }
     public static bool ChargeHeartLimit(int cnt)
     {
         mInfo.countHeart += cnt;
-        if (mInfo.countHeart > 20)
-            mInfo.countHeart = 20;
+        if (mInfo.countHeart > mInfo.maxHeart)
+            mInfo.countHeart = mInfo.maxHeart;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
         return true;
@@ -97,6 +80,7 @@ public class Purchases
     public static bool ChargeHeartInfinite()
     {
         mInfo.infiniteHeart = true;
+        mInfo.countHeart = mInfo.maxHeart;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
         return true;
@@ -113,9 +97,34 @@ public class Purchases
     }
     public static int RemainSeconds()
     {
-        if (mInfo.countHeart >= mInfo.maxHeart)
+        if (mInfo.countHeart >= mInfo.maxHeart || mInfo.useTimeTick <= 0)
             return 0;
-        return (DateTime.Now - new DateTime(mInfo.useTimeTick)).Seconds;
+        DateTime nextTime = new DateTime(mInfo.useTimeTick) + new TimeSpan(0, chargingIntervalMin, 0);
+        return (nextTime - DateTime.Now).Seconds;
+    }
+    public static void UpdateHeartTimer()
+    {
+        if (mInfo.countHeart >= mInfo.maxHeart || mInfo.useTimeTick <= 0)
+            return;
+
+        TimeSpan term = DateTime.Now - new DateTime(mInfo.useTimeTick);
+        int fiveMinite = chargingIntervalMin * 60;
+        int gainHeart = term.Seconds / fiveMinite;
+        int remainSec = term.Seconds % fiveMinite;
+        if (gainHeart > 0)
+        {
+            mInfo.countHeart += gainHeart;
+            if (mInfo.countHeart < mInfo.maxHeart)
+            {
+                mInfo.useTimeTick = (DateTime.Now - new TimeSpan(0, remainSec / 60, remainSec % 60)).Ticks;
+            }
+            else
+            {
+                mInfo.countHeart = mInfo.maxHeart;
+                mInfo.useTimeTick = 0;
+            }
+            UpdatePurchaseInfo(mInfo);
+        }
     }
     public static int CountDiamond()
     {

@@ -6,11 +6,18 @@ using UnityEngine.UI;
 public class MenuStages : MonoBehaviour
 {
     private const string UIObjName = "MenuStages";
+    Text HeartTimer;
+    Text HeartCount;
 
     public static void PopUp()
     {
         GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(true);
-        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
+        GameObject obj = GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject;
+        MenuStages menu = obj.GetComponent<MenuStages>();
+
+        obj.SetActive(true);
+        menu.StopCoroutine("UpdateHeartTimer");
+        menu.StartCoroutine("UpdateHeartTimer");
     }
     public static void Hide()
     {
@@ -43,5 +50,27 @@ public class MenuStages : MonoBehaviour
     {
         MenuItemShop.PopUp();
         Hide();
+    }
+    IEnumerable UpdateHeartTimer()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(1);
+            Purchases.UpdateHeartTimer();
+            int remainSec = Purchases.RemainSeconds();
+            int remainLife = Purchases.CountHeart();
+            HeartCount.text = remainLife.ToString();
+            if (remainSec > 0)
+            {
+                int min = remainSec / 60;
+                int sec = remainSec % 60;
+                string secStr = string.Format("{0:D2}", sec);
+                HeartTimer.text = min + ":" + secStr;
+            }
+            else
+            {
+                HeartTimer.text = "Full";
+            }
+        }
     }
 }
