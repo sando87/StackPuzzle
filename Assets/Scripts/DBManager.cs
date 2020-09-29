@@ -42,12 +42,12 @@ public class DBManager : IDisposable
         catch (NpgsqlException ex)
         {
             mDBSession = null;
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
         }
         catch (Exception ex)
         {
             mDBSession = null;
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
         }
     }
     public void Close()
@@ -85,8 +85,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return -1;
     }
     public void EditUserName(UserInfo user)
@@ -104,8 +104,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return;
     }
     public void RenewUserScore(int userPk, int score)
@@ -123,8 +123,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return;
     }
     public void DeleteUser(int userPk)
@@ -142,8 +142,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return;
     }
     public UserInfo GetUser(int userPk)
@@ -169,8 +169,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return null;
     }
     public UserInfo GetUser(string deviceName)
@@ -196,8 +196,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return null;
     }
     public void AddLog(LogInfo log)
@@ -215,8 +215,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return;
     }
     public UserInfo[] GetUsers()
@@ -244,8 +244,8 @@ public class DBManager : IDisposable
                 }
             }
         }
-        catch (NpgsqlException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
         return null;
     }
 

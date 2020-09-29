@@ -8,6 +8,7 @@ public class MenuMain : MonoBehaviour
 
     private void Awake()
     {
+        LOG.LogWriter = (msg, level) => { Debug.Log(msg); };
         UserSetting.Initialize();
         Purchases.Initialize();
     }

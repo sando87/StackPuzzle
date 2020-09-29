@@ -50,7 +50,7 @@ public class NetServerApp : MonoBehaviour
         if (requestMsg == null)
             return NetProtocol.ToArray(new Header());
 
-        Debug.Log("recv cmd[" + requestMsg.Cmd + "]");
+        LOG.echo("recv cmd[" + requestMsg.Cmd + "]");
         mRequestMsg = requestMsg;
         mSession = session;
         object body = null;

@@ -97,7 +97,7 @@ public class NetProtocol
         }
         catch(Exception ex)
         {
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
             return null;
         }
         return buf.ToArray();
@@ -117,7 +117,7 @@ public class NetProtocol
         }
         catch (Exception ex)
         {
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
             return null;
         }
         return msg;

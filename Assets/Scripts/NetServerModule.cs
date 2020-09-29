@@ -53,10 +53,10 @@ public class NetServerModule
         try
         {
             info.stream.Write(info.data, 0, info.data.Length);
-            Debug.Log("ip[" + info.ipAddr + "], size[" + info.data.Length + "]");
+            LOG.echo("ip[" + info.ipAddr + "], size[" + info.data.Length + "]");
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnectClinet(info); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnectClinet(info); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnectClinet(info); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnectClinet(info); }
     }
 
 
@@ -80,8 +80,8 @@ public class NetServerModule
                 info.stream.BeginRead(info.data, 0, info.data.Length, new AsyncCallback(HandlerReadData), info);
             }
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (SocketException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
     }
     private void HandlerReadData(IAsyncResult ar)
     {
@@ -110,8 +110,8 @@ public class NetServerModule
 
             retInfo.stream.BeginRead(retInfo.data, 0, retInfo.data.Length, new AsyncCallback(HandlerReadData), retInfo);
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnectClinet(retInfo); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnectClinet(retInfo); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnectClinet(retInfo); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnectClinet(retInfo); }
     }
     private void DisConnectClinet(MySession clinet)
     {

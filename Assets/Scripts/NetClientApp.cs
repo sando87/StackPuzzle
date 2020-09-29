@@ -65,8 +65,8 @@ public class NetClientApp : MonoBehaviour
             if(response != null)
                 mHandlerTable[head.RequestID] = response;
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
     }
     public bool IsDisconnected()
     {
@@ -84,8 +84,8 @@ public class NetClientApp : MonoBehaviour
             mSession = new TcpClient(ServerAddress, ServerPort);
             mStream = mSession.GetStream();
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); }
-        catch (Exception ex) { Debug.Log(ex.Message); }
+        catch (SocketException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
     }
     private void DisConnect()
     {
@@ -123,8 +123,8 @@ public class NetClientApp : MonoBehaviour
                 mRecvBuffer.AddRange(subBuf);
             }
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
     }
     private void ParseAndInvokeCallback()
     {
@@ -151,10 +151,10 @@ public class NetClientApp : MonoBehaviour
             }
 
             if(mRecvBuffer.Count != 0)
-                Debug.Log("UnKnown Network Packet : " + mRecvBuffer.Count);
+                LOG.warn("UnKnown Network Packet : " + mRecvBuffer.Count);
         }
-        catch (SocketException ex) { Debug.Log(ex.Message); DisConnect(); }
-        catch (Exception ex) { Debug.Log(ex.Message); DisConnect(); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
 
     }
     

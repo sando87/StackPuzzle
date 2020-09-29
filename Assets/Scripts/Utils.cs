@@ -29,7 +29,7 @@ public class Utils
         }
         catch (Exception ex)
         {
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
         }
         return null;
     }
@@ -48,7 +48,7 @@ public class Utils
         }
         catch (Exception ex)
         {
-            Debug.Log(ex.Message);
+            LOG.warn(ex.Message);
         }
         return null;
     }
