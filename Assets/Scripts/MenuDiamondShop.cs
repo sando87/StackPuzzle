@@ -13,6 +13,7 @@ public class MenuDiamondShop : MonoBehaviour
     {
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
+        objMenu.GetComponent<MenuDiamondShop>().CurrentDiamond.text = Purchases.CountDiamond().ToString();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
@@ -27,10 +28,10 @@ public class MenuDiamondShop : MonoBehaviour
     {
         switch(cost)
         {
-            case 500: Purchases.PurchaseDiamond(10); break;
-            case 1000: Purchases.PurchaseDiamond(30); break;
-            case 2500: Purchases.PurchaseDiamond(100); break;
-            case 5000: Purchases.PurchaseDiamond(300); break;
+            case 1: Purchases.PurchaseDiamond(10); break;
+            case 5: Purchases.PurchaseDiamond(50); break;
+            case 10: Purchases.PurchaseDiamond(100); break;
+            case 15: Purchases.PurchaseDiamond(150); break;
             default: break;
         }
         CurrentDiamond.text = Purchases.CountDiamond().ToString();

@@ -14,6 +14,9 @@ public class MenuHeartShop : MonoBehaviour
     {
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
+        MenuHeartShop menu = objMenu.GetComponent<MenuHeartShop>();
+        menu.CurrentHeart.text = Purchases.CountHeart().ToString();
+        menu.CurrentDiamond.text = Purchases.CountDiamond().ToString();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 

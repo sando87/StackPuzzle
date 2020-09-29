@@ -53,6 +53,10 @@ public class Purchases
     {
         mInfo = LoadPurchaseInfo();
     }
+    public static bool MaxHeart()
+    {
+        return mInfo.countHeart >= mInfo.maxHeart;
+    }
     public static int CountHeart()
     {
         UpdateHeartTimer();
@@ -100,7 +104,7 @@ public class Purchases
         if (mInfo.countHeart >= mInfo.maxHeart || mInfo.useTimeTick <= 0)
             return 0;
         DateTime nextTime = new DateTime(mInfo.useTimeTick) + new TimeSpan(0, chargingIntervalMin, 0);
-        return (nextTime - DateTime.Now).Seconds;
+        return (int)(nextTime - DateTime.Now).TotalSeconds;
     }
     public static void UpdateHeartTimer()
     {
@@ -109,8 +113,8 @@ public class Purchases
 
         TimeSpan term = DateTime.Now - new DateTime(mInfo.useTimeTick);
         int fiveMinite = chargingIntervalMin * 60;
-        int gainHeart = term.Seconds / fiveMinite;
-        int remainSec = term.Seconds % fiveMinite;
+        int gainHeart = (int)term.TotalSeconds / fiveMinite;
+        int remainSec = (int)term.TotalSeconds % fiveMinite;
         if (gainHeart > 0)
         {
             mInfo.countHeart += gainHeart;

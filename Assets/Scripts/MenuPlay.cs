@@ -42,6 +42,13 @@ public class MenuPlay : MonoBehaviour
 
     public void OnPlay()
     {
+        if(Purchases.CountHeart() <= 0)
+        {
+            MenuMessageBox.PopUp(gameObject, "No Life", false, null);
+            return;
+        }
+
+        Purchases.UseHeart();
         GameField.GetComponent<InGameManager>().StartGame(mStageInfo);
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();

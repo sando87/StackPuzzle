@@ -1504,7 +1504,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 107003825}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1253723981}
+        m_MethodName: OnPurchaseDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 15
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &107003825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1987,7 +1998,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: $4.99
+  m_Text: $5
 --- !u!222 &135974908
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2991,7 +3002,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 205203057}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 359099817}
+        m_MethodName: OnChargeHeartFromDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 10
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &205203057
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3753,7 +3775,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 277149496}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 359099817}
+        m_MethodName: OnChargeHeartFromVideo
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 15
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &277149496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3985,7 +4018,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 292041514}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1253723981}
+        m_MethodName: OnPurchaseDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 5
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &292041514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4716,8 +4760,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 823769ff8f358fa4a99e7d0517c2a329, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentHeart: {fileID: 0}
-  CurrentDiamond: {fileID: 0}
+  CurrentHeart: {fileID: 1772222492}
+  CurrentDiamond: {fileID: 170353571}
 --- !u!1 &359125130
 GameObject:
   m_ObjectHideFlags: 0
@@ -6029,7 +6073,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 448060393}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 359099817}
+        m_MethodName: OnChargeHeartFromDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 20
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &448060393
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6152,7 +6207,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: $9.99
+  m_Text: $10
 --- !u!222 &451321269
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6762,7 +6817,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 477440873}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1929514293}
+        m_MethodName: OnChargeItem
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1933647595}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &477440873
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10078,7 +10144,7 @@ GameObject:
   m_Component:
   - component: {fileID: 685142021}
   m_Layer: 5
-  m_Name: ItemD
+  m_Name: ItemType3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11103,7 +11169,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: $14.99
+  m_Text: $15
 --- !u!222 &857004812
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12785,7 +12851,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 981936821}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1929514293}
+        m_MethodName: OnChargeItem
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 685142020}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &981936821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12908,7 +12985,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: $0.99
+  m_Text: $1
 --- !u!222 &983529586
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -13581,7 +13658,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1032430010}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 359099817}
+        m_MethodName: OnChargeHeartFromDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 100
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1032430010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14765,7 +14853,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1111973521}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 359099817}
+        m_MethodName: OnChargeHeartFromVideo
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 60
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1111973521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15014,7 +15113,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1114498399}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1929514293}
+        m_MethodName: OnChargeItem
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1523797513}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1114498399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16112,7 +16222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8526e2487f00c0648b1327945b3cb199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentDiamond: {fileID: 0}
+  CurrentDiamond: {fileID: 295385181}
 --- !u!1 &1267507449
 GameObject:
   m_ObjectHideFlags: 0
@@ -19015,7 +19125,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1523797514}
   m_Layer: 5
-  m_Name: ItemC
+  m_Name: ItemType2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20110,7 +20220,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1620346180}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1929514293}
+        m_MethodName: OnChargeItem
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 2034338800}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1620346180
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21024,7 +21145,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1700732474}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1253723981}
+        m_MethodName: OnPurchaseDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1700732474
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21623,7 +21755,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1786196401}
   m_Layer: 5
-  m_Name: ItemE
+  m_Name: ItemType4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21956,7 +22088,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1809632388}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1253723981}
+        m_MethodName: OnPurchaseDiamond
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 10
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1809632388
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24140,11 +24283,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8d7f0b5603326642bdccd7e8fbd1bc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentDiamond: {fileID: 0}
-  CurrentItemA: {fileID: 0}
-  CurrentItemB: {fileID: 0}
-  CurrentItemC: {fileID: 0}
-  CurrentItemD: {fileID: 0}
+  CurrentDiamond: {fileID: 105074612}
+  CurrentItemA: {fileID: 1459272036}
+  CurrentItemB: {fileID: 1189179875}
+  CurrentItemC: {fileID: 145466987}
+  CurrentItemD: {fileID: 1514621638}
 --- !u!1 &1933647595
 GameObject:
   m_ObjectHideFlags: 0
@@ -24155,7 +24298,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1933647596}
   m_Layer: 5
-  m_Name: ItemA
+  m_Name: ItemType0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25227,7 +25370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2034338801}
   m_Layer: 5
-  m_Name: ItemB
+  m_Name: ItemType1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31633,8 +31776,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 34, y: -13}
-  m_SizeDelta: {x: 436, y: 139.3}
+  m_AnchoredPosition: {x: 39.4, y: -5.7}
+  m_SizeDelta: {x: 437.86316, y: 139.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &606471826324087282
 RectTransform:
@@ -32010,8 +32153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 120, y: -12.3}
-  m_SizeDelta: {x: 810.9, y: 618.5}
+  m_AnchoredPosition: {x: 44.7, y: -11.31}
+  m_SizeDelta: {x: 497.0727, y: 236.3404}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &606471826324249562
 RectTransform:
@@ -34461,6 +34604,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 417db2c438de27048afbc0086635dfac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  HeartTimer: {fileID: 606471826346842004}
+  HeartCount: {fileID: 606471826346796656}
+  DiamondCount: {fileID: 606471826346836444}
 --- !u!1 &606471826335555334
 GameObject:
   m_ObjectHideFlags: 0
@@ -39083,13 +39229,13 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 100
-    m_Alignment: 1
+    m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: '1000
+  m_Text: '100
 
 '
 --- !u!114 &606471826346837150
@@ -39172,13 +39318,13 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 100
-    m_Alignment: 3
+    m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: '   Full'
+  m_Text: Full
 --- !u!114 &606471826346843822
 MonoBehaviour:
   m_ObjectHideFlags: 0

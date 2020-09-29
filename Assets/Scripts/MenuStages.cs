@@ -6,13 +6,15 @@ using UnityEngine.UI;
 public class MenuStages : MonoBehaviour
 {
     private const string UIObjName = "MenuStages";
-    Text HeartTimer;
-    Text HeartCount;
+
+    public Text HeartTimer;
+    public Text HeartCount;
+    public Text DiamondCount;
 
     public static void PopUp()
     {
-        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(true);
-        GameObject obj = GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject;
+        GameObject obj = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
         MenuStages menu = obj.GetComponent<MenuStages>();
 
         obj.SetActive(true);
@@ -51,26 +53,27 @@ public class MenuStages : MonoBehaviour
         MenuItemShop.PopUp();
         Hide();
     }
-    IEnumerable UpdateHeartTimer()
+    IEnumerator UpdateHeartTimer()
     {
         while(true)
         {
-            yield return new WaitForSeconds(1);
             Purchases.UpdateHeartTimer();
             int remainSec = Purchases.RemainSeconds();
             int remainLife = Purchases.CountHeart();
             HeartCount.text = remainLife.ToString();
-            if (remainSec > 0)
+            if (Purchases.MaxHeart())
+            {
+                HeartTimer.text = "Full";
+            }
+            else
             {
                 int min = remainSec / 60;
                 int sec = remainSec % 60;
                 string secStr = string.Format("{0:D2}", sec);
                 HeartTimer.text = min + ":" + secStr;
             }
-            else
-            {
-                HeartTimer.text = "Full";
-            }
+            DiamondCount.text = Purchases.CountDiamond().ToString();
+            yield return new WaitForSeconds(1);
         }
     }
 }
