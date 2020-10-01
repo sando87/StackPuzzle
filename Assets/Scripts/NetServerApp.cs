@@ -240,7 +240,8 @@ public class NetServerApp : MonoBehaviour
                 if (opp.userPK == user.userPK || opp.isMatching)
                     continue;
 
-                if(Mathf.Abs(opp.score - user.score) < 5)
+                int diff = time < 17 ? ((int)time + 1) * 5 : 10000;
+                if(Mathf.Abs(opp.score - user.score) <= diff)
                 {
                     user.isMatching = true;
                     opp.isMatching = true;

@@ -9,6 +9,7 @@ public class MenuBattle : MonoBehaviour
 
     public Text SavedCombo;
     public Image MatchLock;
+    public Image MatchUnLock;
     public GameObject ComboText;
     public GameObject ParentPanel;
 
@@ -26,20 +27,24 @@ public class MenuBattle : MonoBehaviour
     private void Init()
     {
         SavedCombo.text = "0";
-        BattleFieldManager.Me.MatchLock = false;
-        MatchLock.color = Color.white;
-        BattleFieldManager.Me.EventOnChange = UpdatePanel;
+        Lock(false);
+        BattleFieldManager.Me.EventOnChange = PlayComboEffect;
+        BattleFieldManager.Me.EventOnKeepCombo = SetKeepCombo;
         //BattleFieldManager.Opp.EventOnChange = UpdatePanel;
     }
-    private void UpdatePanel(Product product)
+    private void PlayComboEffect(Product product)
     {
-        if(product.mSkill == ProductSkill.KeepCombo)
-        {
-            int combo = int.Parse(SavedCombo.text);
-            combo = Mathf.Max(combo, product.Combo);
-            SavedCombo.text = combo.ToString();
-        }
         PlayComboAnimation(product);
+    }
+    private void SetKeepCombo(int combo)
+    {
+        SavedCombo.text = combo.ToString();
+    }
+    private void Lock(bool locked)
+    {
+        BattleFieldManager.Me.MatchLock = locked;
+        MatchLock.gameObject.SetActive(locked);
+        MatchUnLock.gameObject.SetActive(!locked);
     }
 
     private void PlayComboAnimation(Product product)
@@ -75,10 +80,8 @@ public class MenuBattle : MonoBehaviour
             }
         });
     }
-    public void OnLockMatch()
+    public void OnLockMatch(bool locked)
     {
-        bool lockState = !BattleFieldManager.Me.MatchLock;
-        BattleFieldManager.Me.MatchLock = lockState;
-        MatchLock.color = lockState ? Color.red : Color.white;
+        Lock(locked);
     }
 }

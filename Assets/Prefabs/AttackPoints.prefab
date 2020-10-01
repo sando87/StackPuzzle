@@ -47,7 +47,7 @@ MonoBehaviour:
     type: 3}
   Projectile: {fileID: 182304, guid: a5a2656996b92184394ca8a1f9e31c1f, type: 3}
   Images:
-  - {fileID: 21300000, guid: b82e3ea1890a56c47be17269dad8e0f5, type: 3}
-  - {fileID: 21300000, guid: 6a257569811c10b4c852029a3f40ed01, type: 3}
-  - {fileID: 21300000, guid: ec1cdaa0685fd284080f2889e539a1d6, type: 3}
-  - {fileID: 21300000, guid: 98e917296d358664a8dbbaecf99a09bd, type: 3}
+  - {fileID: 21300000, guid: 99755bc976c9726479cef5c940f41bc0, type: 3}
+  - {fileID: 21300000, guid: 448ca790034a0fb489a247283a877511, type: 3}
+  - {fileID: 21300000, guid: ab3fadc94da61a543bfa53567ccaafd7, type: 3}
+  - {fileID: 21300000, guid: 90c44fb153cb1744f89dab28c7a7518b, type: 3}

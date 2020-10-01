@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AttackPoints : MonoBehaviour
 {
-    private const float mGridSize = 1;
+    private const float mDist = 0.6f;
     private int mAttackPoint = 0;
     private bool mIsReady = false;
     private List<GameObject> mChilds = new List<GameObject>();
@@ -83,19 +83,22 @@ public class AttackPoints : MonoBehaviour
 
     IEnumerator AnimateFold()
     {
-        while (mChilds.Count > 0)
+
+        if (mChilds.Count > 0)
         {
-            for(int i = 0; i < mChilds.Count; ++i)
+
+            float time = 0;
+            while (time < 0.2f)
             {
-                GameObject child = mChilds[i];
-                float speed = mGridSize * i * 5;
-                child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, Vector3.zero, speed * Time.deltaTime);
+                for (int i = 0; i < mChilds.Count; ++i)
+                {
+                    GameObject child = mChilds[i];
+                    float speed = mDist * (i + 1) * 5;
+                    child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, Vector3.zero, speed * Time.deltaTime);
+                }
+                time += Time.deltaTime;
+                yield return null;
             }
-
-            if (mChilds[mChilds.Count - 1].transform.localPosition.x <= 0.02f)
-                break;
-
-            yield return null;
         }
 
         CreateNewChild();
@@ -108,32 +111,36 @@ public class AttackPoints : MonoBehaviour
             Destroy(mChilds[i]);
         mChilds.Clear();
 
-        int cntA = mAttackPoint / 100;
-        int cntB = (mAttackPoint % 100) / 25;
-        int cntC = (mAttackPoint % 25) / 5;
-        int cntD = mAttackPoint % 5;
+        int cntA = mAttackPoint / 27;
+        int cntB = (mAttackPoint % 27) / 9;
+        int cntC = (mAttackPoint % 9) / 3;
+        int cntD = mAttackPoint % 3;
 
         for (int i = 0; i < cntA; ++i)
         {
             GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             obj.GetComponent<SpriteRenderer>().sprite = Images[3];
             mChilds.Add(obj);
         }
         for (int i = 0; i < cntB; ++i)
         {
             GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             obj.GetComponent<SpriteRenderer>().sprite = Images[2];
             mChilds.Add(obj);
         }
         for (int i = 0; i < cntC; ++i)
         {
             GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             obj.GetComponent<SpriteRenderer>().sprite = Images[1];
             mChilds.Add(obj);
         }
         for (int i = 0; i < cntD; ++i)
         {
             GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             obj.GetComponent<SpriteRenderer>().sprite = Images[0];
             mChilds.Add(obj);
         }
@@ -149,8 +156,8 @@ public class AttackPoints : MonoBehaviour
             for (int i = 0; i < mChilds.Count; ++i)
             {
                 GameObject child = mChilds[i];
-                float speed = mGridSize * i * 5;
-                Vector3 dest = new Vector3(mGridSize * i, 0, 0);
+                float speed = mDist * (i + 1) * 5;
+                Vector3 dest = new Vector3(mDist * (i + 1), 0, 0);
                 child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, dest, speed * Time.deltaTime);
             }
             time += Time.deltaTime;

@@ -28,7 +28,7 @@ public class BattleFieldManager : MonoBehaviour
     }
 
     public const int MatchCount = 3;
-    public const int attackScore = 1;
+    public const int attackScore = 5;
     public const float GridSize = 0.8f;
     public const int NextRequestCount = 500;
 
@@ -55,6 +55,7 @@ public class BattleFieldManager : MonoBehaviour
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
     public Action<Product> EventOnChange;
+    public Action<int> EventOnKeepCombo;
 
     public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
     {
@@ -106,7 +107,7 @@ public class BattleFieldManager : MonoBehaviour
         }
 
         GameObject ap = Instantiate(AttackPointPrefab, transform);
-        ap.transform.localPosition = localBasePos + new Vector3(0, GridSize * YCount, 0);
+        ap.transform.localPosition = localBasePos + new Vector3(-GridSize + 0.2f, GridSize * YCount - 0.1f, 0);
         AttackPoints = ap.GetComponent<AttackPoints>();
 
         MenuBattle.PopUp();
@@ -150,13 +151,15 @@ public class BattleFieldManager : MonoBehaviour
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
-            mKeepCombo = 0;
         }
     }
     private void OnMatch(List<Product> matches)
     {
         if (MatchLock)
             return;
+
+        mKeepCombo = 0;
+        EventOnKeepCombo?.Invoke(mKeepCombo);
 
         StopCoroutine("CheckIdle");
         StartCoroutine("CheckIdle");
@@ -272,7 +275,11 @@ public class BattleFieldManager : MonoBehaviour
                 pro.Combo += skillComboCount;
 
         if (keepCombo)
-            mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo);
+        {
+            mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo + 1);
+            EventOnKeepCombo?.Invoke(mKeepCombo);
+        }
+            
 
         return allSameColors;
     }
