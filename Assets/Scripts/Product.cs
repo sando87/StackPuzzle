@@ -294,10 +294,10 @@ public class Product : MonoBehaviour
                 ParentFrame.SkillBackupSpace = ProductSkill.MatchOneMore;
                 break;
             case 5:
-                ParentFrame.SkillBackupSpace = ProductSkill.BreakSameColor;
+                ParentFrame.SkillBackupSpace = ProductSkill.KeepCombo;
                 break;
             case 6:
-                ParentFrame.SkillBackupSpace = ProductSkill.KeepCombo;
+                ParentFrame.SkillBackupSpace = ProductSkill.BreakSameColor;
                 break;
             case 7:
                 if (!enabledReduceColor)

@@ -42,11 +42,14 @@ public class BattleFieldManager : MonoBehaviour
     private Frame[,] mFrames = null;
     private Dictionary<int, List<Frame>> mDestroyes = new Dictionary<int, List<Frame>>();
     private List<ProductColor> mNextColors = new List<ProductColor>();
+    private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private int mNextPositionIndex = 0;
     private int mThisUserPK = 0;
     private int mKeepCombo = 0;
     private int mCountX = 0;
     private int mCountY = 0;
+    private Product mSwipedProductA;
+    private Product mSwipedProductB;
 
     public int CountX { get { return mCountX; } }
     public int CountY { get { return mCountY; } }
@@ -151,6 +154,8 @@ public class BattleFieldManager : MonoBehaviour
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
+            mSwipedProductA = product;
+            mSwipedProductB = targetProduct;
         }
     }
     private void OnMatch(List<Product> matches)
@@ -158,20 +163,25 @@ public class BattleFieldManager : MonoBehaviour
         if (MatchLock)
             return;
 
-        mKeepCombo = 0;
-        EventOnKeepCombo?.Invoke(mKeepCombo);
-
         StopCoroutine("CheckIdle");
         StartCoroutine("CheckIdle");
 
         Product mainProduct = matches[0];
-        mainProduct.BackupSkillToFrame(matches.Count, true);
+        if(mainProduct == mSwipedProductA || mainProduct == mSwipedProductB)
+        {
+            mKeepCombo = 0;
+            EventOnKeepCombo?.Invoke(0);
+        }
+
+        //mainProduct.BackupSkillToFrame(matches.Count, true);
+        MakeSkillProduct(matches.Count);
 
         List<Product> allSameColors = ApplySkillEffects(matches);
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
+
         int nextCombo = mainProduct.Combo + 1;
         foreach (Product pro in destroies)
         {
@@ -182,6 +192,27 @@ public class BattleFieldManager : MonoBehaviour
 
         Attack(destroies.Count * nextCombo, mainProduct.transform.position);
         mainProduct.StartFlash(matches);
+    }
+    private void MakeSkillProduct(int matchedCount)
+    {
+        if (matchedCount <= UserSetting.MatchCount)
+            return;
+
+        switch (matchedCount)
+        {
+            case 4:
+                mNextSkills.Enqueue(ProductSkill.MatchOneMore);
+                break;
+            case 5:
+                mNextSkills.Enqueue(ProductSkill.KeepCombo);
+                break;
+            case 6:
+                mNextSkills.Enqueue(ProductSkill.BreakSameColor);
+                break;
+            default:
+                mNextSkills.Enqueue(ProductSkill.BreakSameColor);
+                break;
+        }
     }
     private void OnDestroyProduct(Product pro)
     {
@@ -203,8 +234,6 @@ public class BattleFieldManager : MonoBehaviour
                 List<Frame> vertFrames = vert.Value;
                 vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
 
-                Queue<ProductSkill> nextSkills = new Queue<ProductSkill>();
-
                 Frame curFrame = vertFrames[0];
                 Frame validFrame = curFrame;
                 int emptyCount = 0;
@@ -216,18 +245,18 @@ public class BattleFieldManager : MonoBehaviour
                         validFrame = null;
                         if (emptyCount == 0)
                             emptyCount = mCountY - curFrame.IndexY;
-                        pro = CreateNewProduct(curFrame, GetNextColor(), nextSkills.Count > 0 ? nextSkills.Dequeue() : ProductSkill.Nothing);
+                        pro = CreateNewProduct(curFrame, GetNextColor(), mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
                         pro.StartDropAnimate(curFrame, emptyCount, curFrame == vertFrames[0]);
                     }
                     else
                     {
                         validFrame = pro.ParentFrame;
                         pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == vertFrames[0]);
-                        if (curFrame.SkillBackupSpace != ProductSkill.Nothing)
-                        {
-                            nextSkills.Enqueue(curFrame.SkillBackupSpace);
-                            curFrame.SkillBackupSpace = ProductSkill.Nothing;
-                        }
+                        //if (curFrame.SkillBackupSpace != ProductSkill.Nothing)
+                        //{
+                        //    nextSkills.Enqueue(curFrame.SkillBackupSpace);
+                        //    curFrame.SkillBackupSpace = ProductSkill.Nothing;
+                        //}
                     }
 
                     curFrame = curFrame.Up();
