@@ -12,13 +12,63 @@ public class UserSetting
         get { return mUserInfo == null ? -1 : mUserInfo.score; }
         set { mUserInfo.score = value; if (mUserInfo.score < 0) mUserInfo.score = 0; UpdateUserInfo(mUserInfo); }
     }
+    public static bool StageIsLocked(int stageNum)
+    {
+        byte cnt = StageStarCount[stageNum - 1];
+        return cnt == 0xff;
+    }
+    public static void StageUnLock(int stageNum)
+    {
+        byte cnt = StageStarCount[stageNum - 1];
+        if (cnt == 0xff)
+            SetStageStarCount(stageNum, 0);
+    }
+    public static byte GetStageStarCount(int stageNum)
+    {
+        byte cnt = StageStarCount[stageNum - 1];
+        return cnt == 0xff ? (byte)0 : cnt;
+    }
+    public static void SetStageStarCount(int stageNum, byte starCount)
+    {
+        StageStarCount[stageNum - 1] = starCount;
+        byte[] encryptInfo = Utils.Encrypt(StageStarCount);
+        string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
+        PlayerPrefs.SetString("StageStarCount", hexStr);
+    }
 
+    public const int StageTotalCount = 100;
     public const float MatchInterval = 1.5f;
     public const int MatchCount = 3;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.8f;
 
     private static UserInfo mUserInfo = null;
+    private static byte[] mStageStarCount = null;
+    private static byte[] StageStarCount
+    {
+        get
+        {
+            if (mStageStarCount == null)
+            {
+                if (PlayerPrefs.HasKey("StageStarCount"))
+                {
+                    string hexStr = PlayerPrefs.GetString("StageStarCount");
+                    byte[] bytes = Utils.HexStringToByteArray(hexStr);
+                    byte[] originData = Utils.Decrypt(bytes);
+                    mStageStarCount = originData;
+                }
+                else
+                {
+                    mStageStarCount = new byte[StageTotalCount];
+                    for (int i = 0; i < StageTotalCount; ++i)
+                        mStageStarCount[i] = 0xff; //lock
+                    SetStageStarCount(1, 0);
+                }
+            }
+            return mStageStarCount;
+        }
+    }
+
     public static void Initialize()
     {
         mUserInfo = LoadUserInfo();

@@ -116,6 +116,8 @@ public class Product : MonoBehaviour
         float height = UserSetting.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
         StartCoroutine(AnimateDrop(isComboable));
+        if(isComboable)
+            StartCoroutine(StartHighLight());
     }
     IEnumerator AnimateDrop(bool isComboable)
     {
@@ -184,6 +186,23 @@ public class Product : MonoBehaviour
             yield return null;
         }
         Renderer.material.color = new Color(0, 0, 0, 0);
+    }
+    IEnumerator StartHighLight()
+    {
+        //yield return new WaitForSeconds(0.1f);
+        Vector3 scale = transform.localScale;
+        float t = 0;
+        while (t < 0.2f)
+        {
+            int light = (int)(t * 10) % 2;
+            //Renderer.material.SetColor("_Color", new Color(light, light, light, 0));
+            transform.localScale += new Vector3(1 - light * 2, 1 - light * 2, 0) * 0.01f;
+            t += Time.deltaTime;
+            yield return null;
+        }
+        //Renderer.material.color = new Color(0, 0, 0, 0);
+        transform.localScale = scale;
+        transform.localRotation = Quaternion.identity;
     }
     #endregion
 

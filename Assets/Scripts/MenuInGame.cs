@@ -9,9 +9,10 @@ public class MenuInGame : MonoBehaviour
     private StageInfo mStageInfo;
 
     public Text CurrentScore;
-    public Text TargetScore;
+    public Text KeepCombo;
     public Text Limit;
     public Text StageLevel;
+    public Text GoalType;
     public Image ScoreBar;
     public Image BarStar1;
     public Image BarStar2;
@@ -54,22 +55,29 @@ public class MenuInGame : MonoBehaviour
 
         CurrentScore.text = "0";
         Limit.text = info.MoveLimit.ToString();
-        TargetScore.text = info.GoalScore.ToString();
+        GoalType.text = info.Goals[0].Split('/')[0];
+        KeepCombo.text = "0";
         StageLevel.text = info.Num.ToString();
 
         GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
+        GameField.GetComponent<InGameManager>().EventOnKeepCombo = UpdateKeepCombo;
     }
 
+    private void UpdateKeepCombo(int keepCombo)
+    {
+        KeepCombo.text = keepCombo.ToString();
+    }
     private void UpdateScore(int totalScore)
     {
-        int starCount = InGameManager.GetStarCount(totalScore, mStageInfo.GoalScore);
-        int targetScore = int.Parse(TargetScore.text);
-        float rateTarget = (float)totalScore / (float)targetScore;
+        string goal = mStageInfo.Goals[0].Split('/')[1];
+        float targetScore = float.Parse(goal);
+        float rateTarget = totalScore / targetScore;
         CurrentScore.text = totalScore.ToString();
         ScoreBar.fillAmount = rateTarget;
-        BarStar1.gameObject.SetActive(starCount >= 1);
-        BarStar2.gameObject.SetActive(starCount >= 2);
-        BarStar3.gameObject.SetActive(starCount >= 3);
+        //int starCount = InGameManager.GetStarCount(totalScore, int.Parse(goal));
+        //BarStar1.gameObject.SetActive(starCount >= 1);
+        //BarStar2.gameObject.SetActive(starCount >= 2);
+        //BarStar3.gameObject.SetActive(starCount >= 3);
     }
     private void PlayComboAnimation(Product product)
     {

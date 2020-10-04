@@ -25,12 +25,13 @@ public class MenuPlay : MonoBehaviour
     }
     public void UpdateUIState(StageInfo info)
     {
+        int starCount = UserSetting.GetStageStarCount(info.Num);
         mStageInfo = info;
         StageLevel.text = info.Num.ToString();
-        Star1.gameObject.SetActive(info.StarCount >= 1);
-        Star2.gameObject.SetActive(info.StarCount >= 2);
-        Star3.gameObject.SetActive(info.StarCount >= 3);
-        TargetScore.text = info.GoalScore.ToString();
+        Star1.gameObject.SetActive(starCount >= 1);
+        Star2.gameObject.SetActive(starCount >= 2);
+        Star3.gameObject.SetActive(starCount >= 3);
+        TargetScore.text = info.Goals[0].Split('/')[1];
     }
 
     public void OnClose()

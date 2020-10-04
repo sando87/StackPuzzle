@@ -53,27 +53,27 @@ public class Stage : MonoBehaviour
 
     public void UpdateStarCount(int starCount)
     {
-        mStageInfo.StarCount = starCount;
-        transform.Find("Stars/Separated/Star1").gameObject.SetActive(mStageInfo.StarCount >= 1 ? true : false);
-        transform.Find("Stars/Separated/Star2").gameObject.SetActive(mStageInfo.StarCount >= 2 ? true : false);
-        transform.Find("Stars/Separated/Star3").gameObject.SetActive(mStageInfo.StarCount >= 3 ? true : false);
-        StageInfo.Save(mStageInfo);
+        UserSetting.SetStageStarCount(Number, (byte)starCount);
+        transform.Find("Stars/Separated/Star1").gameObject.SetActive(starCount >= 1 ? true : false);
+        transform.Find("Stars/Separated/Star2").gameObject.SetActive(starCount >= 2 ? true : false);
+        transform.Find("Stars/Separated/Star3").gameObject.SetActive(starCount >= 3 ? true : false);
     }
     public void UnLock()
     {
-        mStageInfo.IsLocked = false;
-        transform.Find("Lock").gameObject.SetActive(mStageInfo.IsLocked);
-        GetComponent<BoxCollider2D>().enabled = !mStageInfo.IsLocked;
-        StageInfo.Save(mStageInfo);
+        UserSetting.StageUnLock(Number);
+        transform.Find("Lock").gameObject.SetActive(false);
+        GetComponent<BoxCollider2D>().enabled = true;
     }
     private void UpdateStageInfo()
     {
+        bool isLocked = UserSetting.StageIsLocked(Number);
+        byte starCount = UserSetting.GetStageStarCount(Number);
         transform.Find("Number").GetComponentInChildren<Text>().text = Number.ToString();
-        transform.Find("Stars/Separated/Star1").gameObject.SetActive(mStageInfo.StarCount >= 1 ? true : false);
-        transform.Find("Stars/Separated/Star2").gameObject.SetActive(mStageInfo.StarCount >= 2 ? true : false);
-        transform.Find("Stars/Separated/Star3").gameObject.SetActive(mStageInfo.StarCount >= 3 ? true : false);
-        transform.Find("Lock").gameObject.SetActive(mStageInfo.IsLocked);
-        GetComponent<BoxCollider2D>().enabled = !mStageInfo.IsLocked;
+        transform.Find("Stars/Separated/Star1").gameObject.SetActive(starCount >= 1 ? true : false);
+        transform.Find("Stars/Separated/Star2").gameObject.SetActive(starCount >= 2 ? true : false);
+        transform.Find("Stars/Separated/Star3").gameObject.SetActive(starCount >= 3 ? true : false);
+        transform.Find("Lock").gameObject.SetActive(isLocked);
+        GetComponent<BoxCollider2D>().enabled = !isLocked;
         
     }
 }
