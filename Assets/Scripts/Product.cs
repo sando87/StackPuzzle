@@ -43,6 +43,7 @@ public class Product : MonoBehaviour
 
     public Action<List<Product>> EventMatched;
     public Action<Product> EventDestroyed;
+    public Action EventUnWrapChoco;
 
     #region MatchCycle
     public void StartSwipe(Frame target, int keepCombo)
@@ -350,6 +351,7 @@ public class Product : MonoBehaviour
         {
             ChocoBlock.tag = "off";
             anim.SetTrigger("hide");
+            EventUnWrapChoco?.Invoke();
         }
     }
     public bool IsChocoBlock()

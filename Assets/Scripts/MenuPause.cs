@@ -14,6 +14,11 @@ public class MenuPause : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(true);
     }
+    public static bool IsPopped()
+    {
+        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        return menuPlay.activeSelf;
+    }
 
     public void OnQuit()
     {

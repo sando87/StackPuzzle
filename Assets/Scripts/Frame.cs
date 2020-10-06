@@ -9,9 +9,14 @@ public class Frame : MonoBehaviour
     private int mIndexX;
     private int mIndexY;
     private int mCoverCount;
+    private bool mIsEmpty;
 
     public Sprite[] Covers;
 
+    public bool Empty {
+        get { return mIsEmpty; }
+        set { mIsEmpty = value; gameObject.SetActive(!value); }
+    }
     public ProductSkill SkillBackupSpace { get; set; }
     public int ComboBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
@@ -19,6 +24,7 @@ public class Frame : MonoBehaviour
     public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }
     public SpriteRenderer CoverRenderer;
     public Func<int, int, Frame> GetFrame;
+    public Action EventBreakCover;
 
     // Start is called before the first frame update
     void Start()
@@ -45,9 +51,12 @@ public class Frame : MonoBehaviour
 
     public void BreakCover(int combo)
     {
+        int backCount = mCoverCount;
         mCoverCount -= combo;
         mCoverCount = Mathf.Max(0, mCoverCount);
         CoverRenderer.sprite = Covers[mCoverCount];
+        if (mCoverCount == 0 && backCount > 0)
+            EventBreakCover?.Invoke();
     }
     public bool IsCovered()
     {

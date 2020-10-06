@@ -166,6 +166,8 @@ public class BattleFieldManager : MonoBehaviour
         StopCoroutine("CheckIdle");
         StartCoroutine("CheckIdle");
 
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
         Product mainProduct = matches[0];
         if(mainProduct == mSwipedProductA || mainProduct == mSwipedProductB)
         {
@@ -176,22 +178,45 @@ public class BattleFieldManager : MonoBehaviour
         //mainProduct.BackupSkillToFrame(matches.Count, true);
         MakeSkillProduct(matches.Count);
 
-        List<Product> allSameColors = ApplySkillEffects(matches);
-
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-        List<Product> destroies = allSameColors.Count > 0 ? allSameColors : matches;
-
-        int nextCombo = mainProduct.Combo + 1;
+        int additionalCombo = 0;
+        bool isSameColorEnable = false;
+        foreach (Product pro in matches)
+        {
+            if (pro.mSkill == ProductSkill.MatchOneMore)
+                additionalCombo++;
+            if (pro.mSkill == ProductSkill.BreakSameColor)
+                isSameColorEnable = true;
+        }
+        
+        List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
+        int nextCombo = mainProduct.Combo + 1 + additionalCombo;
         foreach (Product pro in destroies)
         {
             pro.Combo = nextCombo;
             pro.StartDestroy();
+            if (pro.mSkill == ProductSkill.KeepCombo)
+            {
+                mKeepCombo = Math.Max(mKeepCombo, pro.Combo);
+                EventOnKeepCombo?.Invoke(mKeepCombo);
+            }
             EventOnChange?.Invoke(pro);
         }
 
         Attack(destroies.Count * nextCombo, mainProduct.transform.position);
         mainProduct.StartFlash(matches);
+    }
+    private List<Product> GetSameColorProducts(ProductColor color)
+    {
+        List<Product> list = new List<Product>();
+        foreach (Frame frame in mFrames)
+        {
+            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+                continue;
+            if (frame.ChildProduct.mColor != color)
+                continue;
+            list.Add(frame.ChildProduct);
+        }
+        return list;
     }
     private void MakeSkillProduct(int matchedCount)
     {
@@ -200,13 +225,13 @@ public class BattleFieldManager : MonoBehaviour
 
         switch (matchedCount)
         {
-            case 4:
+            case 5:
                 mNextSkills.Enqueue(ProductSkill.MatchOneMore);
                 break;
-            case 5:
+            case 6:
                 mNextSkills.Enqueue(ProductSkill.KeepCombo);
                 break;
-            case 6:
+            case 7:
                 mNextSkills.Enqueue(ProductSkill.BreakSameColor);
                 break;
             default:
@@ -279,38 +304,6 @@ public class BattleFieldManager : MonoBehaviour
         if (!IsPlayerField())
             obj.GetComponent<BoxCollider2D>().enabled = false;
         return product;
-    }
-    private List<Product> ApplySkillEffects(List<Product> matches)
-    {
-        int skillComboCount = 0;
-        bool keepCombo = false;
-        List<Product> allSameColors = new List<Product>();
-        foreach (Product pro in matches)
-        {
-            if (pro.mSkill == ProductSkill.MatchOneMore)
-                skillComboCount++;
-            else if (pro.mSkill == ProductSkill.KeepCombo)
-                keepCombo = true;
-            else if (pro.mSkill == ProductSkill.BreakSameColor && allSameColors.Count == 0)
-            {
-                foreach (Frame frame in mFrames)
-                    if (frame.ChildProduct != null && frame.ChildProduct.mColor == matches[0].mColor)
-                        allSameColors.Add(frame.ChildProduct);
-            }
-        }
-
-        if (skillComboCount > 0)
-            foreach (Product pro in matches)
-                pro.Combo += skillComboCount;
-
-        if (keepCombo)
-        {
-            mKeepCombo = Math.Max(mKeepCombo, matches[0].Combo + 1);
-            EventOnKeepCombo?.Invoke(mKeepCombo);
-        }
-            
-
-        return allSameColors;
     }
     public bool IsIdle()
     {
