@@ -122,6 +122,9 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateDrop(bool isComboable)
     {
+        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        Renderer.sortingOrder = ParentFrame.MaskLayerOrder;
+        
         //블럭이 떨어져야 하는 높이에 따라 다르게 delay를 줘서 떨어져야 한다.
         //채공시간은 0.6초, 착지순간은 모두 동일하게 수학적으로 계산한다.
         float totalTime = 0.6f;
@@ -147,6 +150,8 @@ public class Product : MonoBehaviour
         transform.position = endPos;
 
         mLocked = false;
+
+        Renderer.maskInteraction = SpriteMaskInteraction.None;
 
         if (isComboable)
         {

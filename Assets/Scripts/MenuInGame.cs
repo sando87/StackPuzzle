@@ -55,7 +55,7 @@ public class MenuInGame : MonoBehaviour
 
         CurrentScore.text = "0";
         Limit.text = info.MoveLimit.ToString();
-        GoalType.text = info.Goals[0].Split('/')[0];
+        GoalType.text = info.GoalType;
         KeepCombo.text = "0";
         StageLevel.text = info.Num.ToString();
 
@@ -69,8 +69,7 @@ public class MenuInGame : MonoBehaviour
     }
     private void UpdateScore(int totalScore)
     {
-        string goal = mStageInfo.Goals[0].Split('/')[1];
-        float targetScore = float.Parse(goal);
+        float targetScore = (float)mStageInfo.GoalValue;
         float rateTarget = totalScore / targetScore;
         CurrentScore.text = totalScore.ToString();
         ScoreBar.fillAmount = rateTarget;

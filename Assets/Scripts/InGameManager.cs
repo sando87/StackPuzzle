@@ -57,16 +57,15 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(true);
         Pause = false;
         mStageInfo = info;
-        mCurrentScore = 0;
         mRemainLimit = info.MoveLimit;
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
-        GameObject mask = Instantiate(MaskPrefab, transform);
-        mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
+        //GameObject mask = Instantiate(MaskPrefab, transform);
+        //mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
 
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
 
-        StartCoroutine(CheckFinish());
+        StartCoroutine("CheckIdle");
         StartCoroutine(CreateNextProducts());
 
         float gridSize = UserSetting.GridSize;
@@ -93,25 +92,48 @@ public class InGameManager : MonoBehaviour
                 //pro.WrapChocoBlock(!info.GetCell(x, y).ProductMovable);
             }
         }
+
+        SecondaryInitFrames();
     }
     public void FinishGame(bool success)
     {
+        if (success)
+        {
+            int starCount = GetStarCount();
+            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
+            currentStage.UpdateStarCount(starCount);
+
+            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
+            if (nextStage != null)
+                nextStage.UnLock();
+
+            SoundPlayer.Inst.Player.Stop();
+            MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore);
+        }
+        else
+        {
+            SoundPlayer.Inst.Player.Stop();
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mCurrentScore);
+        }
+
         ResetGame();
         transform.parent.gameObject.SetActive(false);
     }
-    public bool IsIdle()
+    public bool IsAllProductUnLocked()
     {
-        int count = 0;
         foreach (Frame frame in mFrames)
-            if (frame.ChildProduct != null && !frame.ChildProduct.IsLocked())
-                count++;
-        return mFrames.Length == count;
+            if (frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+                return false;
+        return true;
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
-        if (!IsSwapable())
+        if (CheckState() != InGameState.Running)
             return;
+
+        StopCoroutine("CheckIdle");
+        StartCoroutine("CheckIdle");
 
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
@@ -136,6 +158,9 @@ public class InGameManager : MonoBehaviour
     {
         if (MatchLock)
             return;
+
+        StopCoroutine("CheckIdle");
+        StartCoroutine("CheckIdle");
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
@@ -230,19 +255,15 @@ public class InGameManager : MonoBehaviour
     private Frame[] NextBaseFrames(Frame baseFrame)
     {
         List<Frame> bases = new List<Frame>();
-        int idxX = baseFrame.IndexY;
+        int idxX = baseFrame.IndexX;
         int curIdxY = baseFrame.IndexY;
         bool pushed = false;
         while(curIdxY < CountY)
         {
             Frame frame = mFrames[idxX, curIdxY];
             if (frame.Empty)
-            {
                 pushed = false;
-                continue;
-            }
-
-            if (!pushed && frame.ChildProduct == null)
+            else if (!pushed && frame.ChildProduct == null)
             {
                 bases.Add(frame);
                 pushed = true;
@@ -256,28 +277,24 @@ public class InGameManager : MonoBehaviour
     {
         Frame curFrame = baseFrame;
         Frame validFrame = curFrame;
-        int emptyCount = 0;
         while (curFrame != null)
         {
             Product pro = NextUpProductFrom(validFrame);
             if (pro == null)
-            {
-                validFrame = null;
-                if (emptyCount == 0)
-                    emptyCount = mStageInfo.YCount - curFrame.IndexY;
-                pro = CreateNewProduct(curFrame, mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
-                pro.StartDropAnimate(curFrame, emptyCount, curFrame == baseFrame);
-            }
-            else
-            {
-                validFrame = pro.ParentFrame;
-                pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == baseFrame);
-                //if(curFrame.SkillBackupSpace != ProductSkill.Nothing)
-                //{
-                //    nextSkills.Enqueue(curFrame.SkillBackupSpace);
-                //    curFrame.SkillBackupSpace = ProductSkill.Nothing;
-                //}
-            }
+                break;
+
+            validFrame = pro.ParentFrame;
+            pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == baseFrame);
+
+            curFrame = curFrame.Up();
+        }
+
+        Frame topFrame = SubTopFrame(curFrame);
+        int emptyCount = topFrame.IndexY - curFrame.IndexY + 1;
+        while (curFrame != null)
+        {
+            Product pro = CreateNewProduct(curFrame, mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
+            pro.StartDropAnimate(curFrame, emptyCount, curFrame == baseFrame);
 
             curFrame = curFrame.Up();
         }
@@ -293,11 +310,62 @@ public class InGameManager : MonoBehaviour
             {
                 Frame[] baseFrames = NextBaseFrames(vert.Value);
                 foreach (Frame baseFrame in baseFrames)
+                {
                     StartNextProducts(baseFrame);
+                }
             }
 
             mDestroyes.Clear();
         }
+    }
+    private void SecondaryInitFrames()
+    {
+        for(int x = 0; x < CountX; ++x)
+        {
+            SpriteMask mask = null;
+            int maskOrder = 0;
+            for (int y = 0; y < CountY; ++y)
+            {
+                Frame curFrame = mFrames[x, y];
+                if (curFrame.Empty)
+                    continue;
+
+                Frame subTopFrame = SubTopFrame(curFrame);
+                if (curFrame.Down() == null)
+                {
+                    int height = subTopFrame.IndexY - curFrame.IndexY + 1;
+                    Vector3 centerPos = (curFrame.transform.position + subTopFrame.transform.position) * 0.5f;
+                    mask = CreateMask(centerPos, height, maskOrder);
+                    maskOrder++;
+                }
+                curFrame.SetSubTopFrame(subTopFrame);
+                curFrame.SetSpriteMask(mask);
+            }
+        }
+    }
+    private Frame SubTopFrame(Frame baseFrame)
+    {
+        Frame curFrame = baseFrame;
+        while (true)
+        {
+            if (curFrame.Up() == null)
+                break;
+            else
+                curFrame = curFrame.Up();
+        }
+        return curFrame;
+    }
+    private SpriteMask CreateMask(Vector3 pos, float height, int layerOrder)
+    {
+        GameObject maskObj = Instantiate(MaskPrefab, transform);
+        maskObj.transform.position = pos;
+        maskObj.transform.localScale = new Vector3(1, height, 1);
+
+        SpriteMask mask = maskObj.GetComponent<SpriteMask>();
+        mask.isCustomRangeActive = true;
+        mask.frontSortingOrder = layerOrder + 1;
+        mask.backSortingOrder = layerOrder;
+        return mask;
     }
     private Product CreateNewProduct(Frame parent, ProductSkill skill = ProductSkill.Nothing)
     {
@@ -317,45 +385,20 @@ public class InGameManager : MonoBehaviour
         product.ChangeSkilledProduct(skill);
         return product;
     }
-    private IEnumerator CheckFinish()
+
+    private IEnumerator CheckIdle()
     {
-        float time = 0;
-        while (time < 3)
+        while (true)
         {
-            if (IsSwapable())
-                yield return new WaitForSeconds(1);
-            else
+            yield return new WaitForSeconds(UserSetting.MatchInterval);
+            if (IsAllProductUnLocked())
             {
-                time = (mDestroyes.Count > 0) ? 0 : (time + Time.deltaTime);
-                yield return null;
+                InGameState state = CheckState();
+                if (state == InGameState.Lose)
+                    FinishGame(false);
+                else if(state == InGameState.Win)
+                    FinishGame(true);
             }
-        }
-        FinishGame();
-    }
-    private void FinishGame()
-    {
-        string goal = mStageInfo.Goals[0].Split('/')[1];
-        if (mCurrentScore >= int.Parse(goal))
-        {
-            int starCount = GetStarCount(mCurrentScore, int.Parse(goal));
-            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
-            currentStage.UpdateStarCount(starCount);
-
-            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
-            if (nextStage != null)
-                nextStage.UnLock();
-
-            SoundPlayer.Inst.Player.Stop();
-            MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore);
-
-            FinishGame(true);
-        }
-        else if (mRemainLimit <= 0)
-        {
-            SoundPlayer.Inst.Player.Stop();
-            MenuFailed.PopUp(mStageInfo.Num, int.Parse(goal), mCurrentScore);
-
-            FinishGame(false);
         }
     }
 
@@ -438,24 +481,66 @@ public class InGameManager : MonoBehaviour
         mRemainLimit--;
         EventOnChange?.Invoke(mRemainLimit, 0, null);
     }
-    private bool IsSwapable()
+
+    public int GetStarCount()
     {
-        if (Pause)
-            return false;
+        if (mStageInfo == null)
+            return 0;
 
-        string goal = mStageInfo.Goals[0].Split('/')[1];
-        if (mCurrentScore >= int.Parse(goal))
-            return false;
+        int point = 0;
+        string type = mStageInfo.GoalType;
+        int value = mStageInfo.GoalValue;
+        switch (type)
+        {
+            case "Score":
+                if (mCurrentScore >= value * 3)
+                    point += 100;
+                else if (mCurrentScore >= value * 2)
+                    point += 70;
+                else if (mCurrentScore >= value * 1)
+                    point += 40;
+                break;
+            case "Combo":
+                if (mMaxCombo >= value * 2)
+                    point += 100;
+                else if (mMaxCombo >= value * 1.5f)
+                    point += 70;
+                else if (mMaxCombo >= value)
+                    point += 40;
+                break;
+            case "ItemOneMore":
+                if (mItemOneMoreCount >= value)
+                    point += 100;
+                break;
+            case "ItemKeepCombo":
+                if (mItemKeepComboCount >= value)
+                    point += 100;
+                break;
+            case "ItemSameColor":
+                if (mItemSameColorCount >= value)
+                    point += 100;
+                break;
+            case "Cover":
+                if (mCoverCount >= value)
+                    point += 100;
+                break;
+            case "Choco":
+                if (mChocoCount >= value)
+                    point += 100;
+                break;
+            default: break;
+        }
 
-        if (mRemainLimit <= 0)
-            return false;
+        if (mRemainLimit <= mStageInfo.MoveLimit * 0.25f)
+            point += 50;
+        else if (mRemainLimit <= mStageInfo.MoveLimit * 0.5f)
+            point += 75;
+        else
+            point += 100;
 
-        return true;
-    }
-
-    public static int GetStarCount(int score, int target)
-    {
-        return score / target;
+        float avgPoint = (float)point / 2.0f;
+        int starCount = Math.Min(3, (int)avgPoint / 30);
+        return starCount;
     }
     public InGameState CheckState()
     {
@@ -465,46 +550,44 @@ public class InGameManager : MonoBehaviour
         if (MenuPause.IsPopped())
             return InGameState.Paused;
 
-        int achieveCount = 0;
-        foreach (string goalStr in mStageInfo.Goals)
+        bool isAchieved = false;
+        string type = mStageInfo.GoalType;
+        int value = mStageInfo.GoalValue;
+        switch(type)
         {
-            string type = goalStr.Split('/')[0];
-            int value = int.Parse(goalStr.Split('/')[1]);
-            switch(type)
-            {
-                case "Score":
-                    if (mCurrentScore >= value)
-                        achieveCount++;
-                    break;
-                case "Combo":
-                    if (mMaxCombo >= value)
-                        achieveCount++;
-                    break;
-                case "ItemOneMore":
-                    if (mItemOneMoreCount >= value)
-                        achieveCount++;
-                    break;
-                case "ItemKeepCombo":
-                    if (mItemKeepComboCount >= value)
-                        achieveCount++;
-                    break;
-                case "ItemSameColor":
-                    if (mItemSameColorCount >= value)
-                        achieveCount++;
-                    break;
-                case "Cover":
-                    if (mCoverCount >= value)
-                        achieveCount++;
-                    break;
-                case "Choco":
-                    if (mChocoCount >= value)
-                        achieveCount++;
-                    break;
-                default: break;
-            }
+            case "Score":
+                if (mCurrentScore >= value)
+                    isAchieved = true;
+                break;
+            case "Combo":
+                if (mMaxCombo >= value)
+                    isAchieved = true;
+                break;
+            case "ItemOneMore":
+                if (mItemOneMoreCount >= value)
+                    isAchieved = true;
+                break;
+            case "ItemKeepCombo":
+                if (mItemKeepComboCount >= value)
+                    isAchieved = true;
+                break;
+            case "ItemSameColor":
+                if (mItemSameColorCount >= value)
+                    isAchieved = true;
+                break;
+            case "Cover":
+                if (mCoverCount >= value)
+                    isAchieved = true;
+                break;
+            case "Choco":
+                if (mChocoCount >= value)
+                    isAchieved = true;
+                break;
+            default:
+                break;
         }
 
-        if (achieveCount >= mStageInfo.Goals.Count)
+        if (isAchieved)
             return InGameState.Win;
 
         if(mRemainLimit <= 0)

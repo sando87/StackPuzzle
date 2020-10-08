@@ -18,7 +18,8 @@ public class StageInfo
 {
     public const int Version = 3;
     public int Num;
-    public List<string> Goals = new List<string>();
+    public string GoalType;
+    public int GoalValue;
     public int MoveLimit;
     public int ColorCount;
     public int XCount;
@@ -63,7 +64,8 @@ public class StageInfo
 
             switch(tokens[0])
             {
-                case "Goal": info.Goals.Add(tokens[1]); break;
+                case "GoalType": info.GoalType = tokens[1]; break;
+                case "GoalValue": info.GoalValue = int.Parse(tokens[1]); break;
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = int.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
@@ -80,19 +82,17 @@ public class StageInfo
     }
     public static void Save(StageInfo info)
     {
-        string text = "";
-        for (int i = 0; i < info.Goals.Count; i++)
-            text += "Goal," + info.Goals[i] + "\r\n";
-
-        text += "MoveLimit," + info.MoveLimit.ToString() + "\r\n"
-            + "ColorCount," + info.ColorCount.ToString() + "\r\n"
-            + "XCount," + info.XCount.ToString() + "\r\n"
-            + "YCount," + info.YCount.ToString() + "\r\n"
-            + "ItemOneMore," + info.ItemOneMore + "\r\n"
-            + "ItemKeepCombo," + info.ItemKeepCombo + "\r\n"
-            + "ItemSameColor," + info.ItemSameColor + "\r\n"
-            + "ItemReduceColor," + info.ItemReduceColor + "\r\n"
-            ;
+        string text = "GoalType," + info.GoalType + "\r\n"
+                    + "GoalValue," + info.GoalValue.ToString() + "\r\n"
+                    + "MoveLimit," + info.MoveLimit.ToString() + "\r\n"
+                    + "ColorCount," + info.ColorCount.ToString() + "\r\n"
+                    + "XCount," + info.XCount.ToString() + "\r\n"
+                    + "YCount," + info.YCount.ToString() + "\r\n"
+                    + "ItemOneMore," + info.ItemOneMore + "\r\n"
+                    + "ItemKeepCombo," + info.ItemKeepCombo + "\r\n"
+                    + "ItemSameColor," + info.ItemSameColor + "\r\n"
+                    + "ItemReduceColor," + info.ItemReduceColor + "\r\n"
+                    ;
 
         for(int yIdx = info.YCount - 1; yIdx >= 0; --yIdx)
             text += "Rows," + info.RowToString(yIdx);
@@ -152,7 +152,8 @@ public class StageInfo
     public void DefaultSetting(int level)
     {
         Num = level;
-        Goals.Add("Score/500");
+        GoalType = "Score"; //Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
+        GoalValue = 500;
         MoveLimit = 20;
         ColorCount = 4;
         XCount = 6;

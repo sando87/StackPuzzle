@@ -31,7 +31,7 @@ public class MenuPlay : MonoBehaviour
         Star1.gameObject.SetActive(starCount >= 1);
         Star2.gameObject.SetActive(starCount >= 2);
         Star3.gameObject.SetActive(starCount >= 3);
-        TargetScore.text = info.Goals[0].Split('/')[1];
+        TargetScore.text = info.GoalValue.ToString();
     }
 
     public void OnClose()

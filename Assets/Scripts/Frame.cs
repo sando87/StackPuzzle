@@ -10,6 +10,8 @@ public class Frame : MonoBehaviour
     private int mIndexY;
     private int mCoverCount;
     private bool mIsEmpty;
+    private Frame mSubTopFrame;
+    private SpriteMask mMask;
 
     public Sprite[] Covers;
 
@@ -48,6 +50,17 @@ public class Frame : MonoBehaviour
             CoverRenderer.sprite = Covers[mCoverCount];
         }
     }
+
+    public void SetSubTopFrame(Frame subTopFrame)
+    {
+        mSubTopFrame = subTopFrame;
+    }
+    public void SetSpriteMask(SpriteMask mask)
+    {
+        mMask = mask;
+    }
+
+    public int MaskLayerOrder { get { return mMask.backSortingOrder; } }
 
     public void BreakCover(int combo)
     {

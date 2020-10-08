@@ -27,7 +27,7 @@ public class AutoPlayer : MonoBehaviour
             yield return new WaitForSeconds(2);
             if (!BattleFieldManager.Me.gameObject.activeInHierarchy)
                 continue;
-            if (BattleFieldManager.Me.IsIdle())
+            if (BattleFieldManager.Me.IsAllProductUnLocked())
                 ScanNextProduct();
         }
     }
