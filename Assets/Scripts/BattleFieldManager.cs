@@ -252,7 +252,7 @@ public class BattleFieldManager : MonoBehaviour
         foreach (Product pro in destroies)
         {
             pro.Combo = currentCombo + 1;
-            pro.StartDestroy();
+            pro.StartDestroy(gameObject);
             BreakItemSkill(pro);
             if (IsPlayerField())
             {

@@ -25,6 +25,7 @@ public class Product : MonoBehaviour
     public Sprite ImgKeepCombo;
     public Sprite ImgReduceColor;
     public Sprite ImgCombo;
+    public GameObject ComboNumPrefab;
     public int ImageIndex;
 
     public float Weight { get; set; }
@@ -55,6 +56,7 @@ public class Product : MonoBehaviour
             return;
 
         mLocked = true;
+        IsFirst = true;
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
@@ -80,6 +82,7 @@ public class Product : MonoBehaviour
     {
         ParentFrame = target;
         mLocked = false;
+        StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
     {
@@ -87,6 +90,7 @@ public class Product : MonoBehaviour
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
         EventMatched?.Invoke(matchList);
+        IsFirst = false;
     }
 
     public bool TryMatch()
@@ -99,15 +103,18 @@ public class Product : MonoBehaviour
         return matchList.Count >= UserSetting.MatchCount;
     }
 
-    public void StartDestroy()
+    public void StartDestroy(GameObject mgr, float delay = 0)
     {
         mLocked = true;
-        mAnimation.Play("destroy");
-        UnWrapChocoBlocksAroundMe(Combo);
-        ParentFrame.BreakCover(Combo);
+        EventDestroyed?.Invoke(this);
+        transform.localPosition = new Vector3(0, 0, -1);
+        transform.SetParent(mgr.transform);
+        StartCoroutine(FlashProduct(delay, 1.3f));
     }
     void StartSpriteAnim()
     {
+        UnWrapChocoBlocksAroundMe(Combo);
+        ParentFrame.BreakCover(Combo);
         StartCoroutine(AnimateDestroySprite());
     }
     IEnumerator AnimateDestroySprite()
@@ -121,7 +128,6 @@ public class Product : MonoBehaviour
     void EndDestroy()
     {
         mLocked = false;
-        EventDestroyed?.Invoke(this);
         Destroy(gameObject);
     }
 
@@ -132,8 +138,8 @@ public class Product : MonoBehaviour
         float height = UserSetting.GridSize * emptyCount;
         transform.localPosition = new Vector3(0, height, -1);
         StartCoroutine(AnimateDrop(isComboable));
-        if(isComboable)
-            StartCoroutine(StartHighLight());
+        //if(isComboable)
+        //    StartCoroutine(StartHighLight());
     }
     IEnumerator AnimateDrop(bool isComboable)
     {
@@ -192,6 +198,8 @@ public class Product : MonoBehaviour
     IEnumerator FlashProduct(float delay_sec, float intensity)
     {
         yield return new WaitForSeconds(delay_sec);
+        mAnimation.Play("destroy");
+        //CreateComboTextEffect();
 
         float halfTime = 0.12f;
         float k = -intensity / (halfTime * halfTime);
@@ -226,6 +234,17 @@ public class Product : MonoBehaviour
         transform.localScale = scale;
         transform.localPosition = pos;
         transform.localRotation = Quaternion.identity;
+    }
+    void CreateComboTextEffect()
+    {
+        Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -1);
+        GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, ParentFrame.gameObject.transform);
+        obj.GetComponent<Numbers>().Number = Combo;
+
+        Vector3 destPos = startPos + new Vector3(0, UserSetting.GridSize * 0.5f, 0);
+        StartCoroutine(Utils.AnimateConvex(obj, destPos, 0.7f, () => {
+            Destroy(obj);
+        }));
     }
     #endregion
 

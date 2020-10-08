@@ -1,11 +1,12 @@
 GoalType,Score
-GoalValue,1
-MoveLimit,20
-ColorCount,4
-XCount,5
-YCount,5
-Rows,0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0
+GoalValue,3
+MoveLimit,50
+ColorCount,6
+XCount,6
+YCount,6
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0

@@ -55,7 +55,7 @@ public class InGameManager : MonoBehaviour
         GetComponent<SwipeDetector>().EventClick = OnClick;
 
         StartCoroutine(CheckIdle());
-        StartCoroutine(CreateNextProducts());
+        //StartCoroutine(CreateNextProducts());
 
         float gridSize = UserSetting.GridSize;
         Vector3 localBasePos = new Vector3(-gridSize * info.XCount * 0.5f, -gridSize * info.YCount * 0.5f, 0);
@@ -134,23 +134,12 @@ public class InGameManager : MonoBehaviour
 
     public void OnClick(GameObject obj)
     {
-        if (!IsIdle)
-            return;
-
-        Product product = obj.GetComponent<Product>();
-        mIdleCounter = 1;
-        if (product.TryMatch())
-        {
-            RemoveLimit();
-        }
-        else
-        {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
-            product.mAnimation.Play("swap");
-        }
     }
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
+        if (!IsIdle)
+            return;
+
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
@@ -166,6 +155,7 @@ public class InGameManager : MonoBehaviour
             RemoveLimit();
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
+            mIdleCounter = 2;
         }
     }
     private void OnMatch(List<Product> matches)
@@ -199,17 +189,38 @@ public class InGameManager : MonoBehaviour
 
         int preScore = MenuInGame.Inst().Score;
         int addedScore = 0;
+        float delay = 0;
         foreach (Product pro in destroies)
         {
             addedScore += currentCombo + 1;
             pro.Combo = currentCombo + 1;
-            pro.StartDestroy();
+            pro.StartDestroy(gameObject, delay);
+            delay += (0.3f / destroies.Count);
             AddScore(pro);
         }
 
         MenuInGame.Inst().CurrentCombo = currentCombo + 1;
         ReduceTargetScoreCombo(mainProduct, preScore, preScore + addedScore);
-        mainProduct.StartFlash(matches);
+        StartCoroutine("CheckNextMatch");
+    }
+    IEnumerator CheckNextMatch()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        for (int x = 0; x < CountX; ++x)
+        {
+            if (!mDestroyes.ContainsKey(x))
+                continue;
+
+            Frame[] baseFrames = NextBaseFrames(mDestroyes[x]);
+            if (baseFrames.Length <= 0)
+                continue;
+
+            foreach (Frame baseFrame in baseFrames)
+                StartNextProducts(baseFrame);
+
+            mDestroyes.Remove(x);
+        }
     }
     private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
     {
@@ -318,7 +329,8 @@ public class InGameManager : MonoBehaviour
                 break;
 
             validFrame = pro.ParentFrame;
-            pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == baseFrame);
+            pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, true);
+            mIdleCounter++;
 
             curFrame = curFrame.Up();
         }
@@ -328,7 +340,8 @@ public class InGameManager : MonoBehaviour
         while (curFrame != null)
         {
             Product pro = CreateNewProduct(curFrame, mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
-            pro.StartDropAnimate(curFrame, emptyCount, curFrame == baseFrame);
+            pro.StartDropAnimate(curFrame, emptyCount, true);
+            mIdleCounter++;
 
             curFrame = curFrame.Up();
         }
@@ -357,11 +370,6 @@ public class InGameManager : MonoBehaviour
                     MenuInGame.Inst().CurrentCombo = 0;
                     EventOnIdle?.Invoke();
                 }
-                else
-                {
-                    mIdleCounter = 999;
-                    //MenuInGame.Inst().CurrentCombo++;
-                }
             }
             yield return null;
         }
@@ -373,7 +381,6 @@ public class InGameManager : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
 
-            int comborableCounter = 0;
             for (int x = 0; x < CountX; ++x)
             {
                 if (!mDestroyes.ContainsKey(x))
@@ -383,15 +390,11 @@ public class InGameManager : MonoBehaviour
                 if (baseFrames.Length <= 0)
                     continue;
 
-                comborableCounter += baseFrames.Length;
                 foreach (Frame baseFrame in baseFrames)
                     StartNextProducts(baseFrame);
 
                 mDestroyes.Remove(x);
             }
-
-            if (comborableCounter > 0)
-                mIdleCounter = comborableCounter;
         }
     }
     private void SecondaryInitFrames()
