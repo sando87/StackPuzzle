@@ -17,6 +17,7 @@ public class NetServerApp : MonoBehaviour
     // Open Server
     void Awake()
     {
+        LOG.LogWriter = (msg, level) => { Debug.Log(msg); };
         mServer.OpenServer(ServerPort);
     }
 

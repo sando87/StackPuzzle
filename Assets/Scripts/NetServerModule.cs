@@ -115,9 +115,12 @@ public class NetServerModule
     }
     private void DisConnectClinet(MySession clinet)
     {
+        LOG.echo(clinet.ipAddr);
         clinet.stream.Close();
         clinet.client.Close();
         clinet.stream = null;
         clinet.client = null;
+        clinet.ipAddr = "";
+        clinet.data = null;
     }
 }

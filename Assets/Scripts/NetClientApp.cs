@@ -62,7 +62,7 @@ public class NetClientApp : MonoBehaviour
 
             mStream.Write(data, 0, data.Length);
 
-            if(response != null)
+            if (response != null)
                 mHandlerTable[head.RequestID] = response;
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }

@@ -93,6 +93,7 @@ public class UserSetting
         {
             UserInfo info = new UserInfo();
             info.userPk = PlayerPrefs.GetInt("userPk");
+            info.userName = PlayerPrefs.GetString("userName");
             info.score = PlayerPrefs.GetInt("score");
             info.deviceName = PlayerPrefs.GetString("deviceName");
             return info;
@@ -101,6 +102,7 @@ public class UserSetting
         {
             UserInfo info = new UserInfo();
             info.userPk = -1;
+            info.userName = "No Name";
             info.score = 100;
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
             return info;
@@ -109,6 +111,7 @@ public class UserSetting
     public static UserInfo UpdateUserInfo(UserInfo info)
     {
         PlayerPrefs.SetInt("userPk", info.userPk);
+        PlayerPrefs.SetString("userName", info.userName);
         PlayerPrefs.SetInt("score", info.score);
         PlayerPrefs.SetString("deviceName", info.deviceName);
         return info;
