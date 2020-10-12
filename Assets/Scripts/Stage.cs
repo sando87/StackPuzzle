@@ -6,17 +6,12 @@ using UnityEngine.UI;
 public class Stage : MonoBehaviour
 {
     private Vector3 OriginalScale;
-    private StageInfo mStageInfo;
 
     // Start is called before the first frame update
     void Start()
     {
         OriginalScale = transform.localScale;
-        mStageInfo = StageInfo.Load(Number);
-        if (mStageInfo == null)
-            gameObject.SetActive(false);
-        else
-            UpdateStageInfo();
+        UpdateStageInfo();
     }
 
     #region Properties
@@ -47,7 +42,11 @@ public class Stage : MonoBehaviour
     private void OnMouseUpAsButton()
     {
         transform.localScale = OriginalScale;
-        MenuPlay.PopUp(mStageInfo);
+        StageInfo stageInfo = StageInfo.Load(Number);
+        if (stageInfo == null)
+            MenuMessageBox.PopUp("No Stage Info.", false, null);
+        else
+            MenuPlay.PopUp(stageInfo);
     }
     #endregion
 

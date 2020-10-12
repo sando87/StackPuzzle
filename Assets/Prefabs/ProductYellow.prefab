@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5150723022735153441}
   - component: {fileID: 3944234005862965318}
   m_Layer: 0
-  m_Name: ChocoBlock
+  m_Name: 0
   m_TagString: off
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71,7 +71,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 2dfd8627fef416e4e8eca2f58d81b406, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 99755bc976c9726479cef5c940f41bc0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -210,10 +210,16 @@ MonoBehaviour:
   - {fileID: 21300000, guid: d318d644557112241bcca292cdcbb8c3, type: 3}
   - {fileID: 21300000, guid: 90c5b5071f9b90c46963ca6f0d770214, type: 3}
   - {fileID: 21300000, guid: d666b95e3b256104eb4f52870b0f6430, type: 3}
+  Chocos:
+  - {fileID: 21300000, guid: 99755bc976c9726479cef5c940f41bc0, type: 3}
+  - {fileID: 21300000, guid: 448ca790034a0fb489a247283a877511, type: 3}
+  - {fileID: 21300000, guid: ab3fadc94da61a543bfa53567ccaafd7, type: 3}
+  - {fileID: 21300000, guid: 90c44fb153cb1744f89dab28c7a7518b, type: 3}
   ImgOneMore: {fileID: 21300000, guid: 3e3f26677f3777a4ba82b79057ca475d, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 421a07ffb0571d245a425229f893c58b, type: 3}
   ImgKeepCombo: {fileID: 21300000, guid: c0785ad438d6cc848b2e1acfbd4bf373, type: 3}
   ImgReduceColor: {fileID: 21300000, guid: 96a9a1afee3999849b1b2a8bfc6ca430, type: 3}
+  ImgCombo: {fileID: 21300000, guid: 36456cf22deced04689ce3eeaa03fd0a, type: 3}
   ImageIndex: 0
 --- !u!61 &1056479758494351103
 BoxCollider2D:
@@ -257,6 +263,7 @@ Animation:
   - {fileID: 7400000, guid: 569c286d79d75df4ca963f426570a833, type: 2}
   - {fileID: 7400000, guid: 5b18fd000acc8ab4599e9ec92de96458, type: 2}
   - {fileID: 7400000, guid: 26cbb16ce00fd5c438881b22637e19b5, type: 2}
+  - {fileID: 7400000, guid: 5be7d9571d6c6a04eae114429383a750, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 0
   m_AnimatePhysics: 0

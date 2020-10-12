@@ -72,7 +72,7 @@ public class MenuBattle : MonoBehaviour
 
     public void OnClose()
     {
-        MenuMessageBox.PopUp(gameObject, "Finish Game", true, (bool isOK) =>
+        MenuMessageBox.PopUp("Finish Game", true, (bool isOK) =>
         {
             if(isOK)
             {

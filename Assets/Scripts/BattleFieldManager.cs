@@ -318,6 +318,11 @@ public class BattleFieldManager : MonoBehaviour
                 }
                 curFrame.SetSubTopFrame(subTopFrame);
                 curFrame.SetSpriteMask(mask);
+
+                if (curFrame.Left() == null) curFrame.ShowBorder(0);
+                if (curFrame.Right() == null) curFrame.ShowBorder(1);
+                if (curFrame.Up() == null) curFrame.ShowBorder(2);
+                if (curFrame.Down() == null) curFrame.ShowBorder(3);
             }
         }
     }
@@ -378,7 +383,7 @@ public class BattleFieldManager : MonoBehaviour
         List<Product> products = GetNextTargetProducts(cnt);
         RequestSendChoco(products);
         foreach (Product pro in products)
-            pro.WrapChocoBlock(true);
+            pro.SetChocoBlock(1, true);
     }
     private List<Product> GetNextTargetProducts(int cnt)
     {
@@ -495,7 +500,7 @@ public class BattleFieldManager : MonoBehaviour
                     int idxX = res.xIndicies[i];
                     int idxY = res.yIndicies[i];
                     Product pro = GetFrame(idxX, idxY).ChildProduct;
-                    pro.WrapChocoBlock(true);
+                    pro.SetChocoBlock(1, true);
                 }
             }
         }

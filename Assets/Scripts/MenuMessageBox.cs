@@ -12,10 +12,10 @@ public class MenuMessageBox : MonoBehaviour
 
     private Action<bool> mOnClick = null;
 
-    public static void PopUp(GameObject parent, string message, bool twoButtonMode, Action<bool> onClick)
+    public static void PopUp(string message, bool twoButtonMode, Action<bool> onClick)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MessageBox", typeof(GameObject));
-        GameObject objMenu = GameObject.Instantiate(prefab, parent.transform);
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UIGroup/CanvasPopUp").transform);
         MenuMessageBox box = objMenu.GetComponent<MenuMessageBox>();
         box.mOnClick = onClick;
         box.mMessage.text = message;

@@ -10,6 +10,7 @@ public class MenuPlay : MonoBehaviour
 
     public Text StageLevel;
     public Text TargetScore;
+    public Image TargetType;
     public Image Star1;
     public Image Star2;
     public Image Star3;
@@ -32,6 +33,7 @@ public class MenuPlay : MonoBehaviour
         Star2.gameObject.SetActive(starCount >= 2);
         Star3.gameObject.SetActive(starCount >= 3);
         TargetScore.text = info.GoalValue.ToString();
+        TargetType.sprite = info.GoalTypeImage;
     }
 
     public void OnClose()
@@ -45,7 +47,7 @@ public class MenuPlay : MonoBehaviour
     {
         if(Purchases.CountHeart() <= 0)
         {
-            MenuMessageBox.PopUp(gameObject, "No Life", false, null);
+            MenuMessageBox.PopUp("No Life", false, null);
             return;
         }
 

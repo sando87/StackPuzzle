@@ -40,7 +40,7 @@ public class UserSetting
     public const float MatchInterval = 1.5f;
     public const int MatchCount = 3;
     public const int scorePerProduct = 1;
-    public const float GridSize = 0.8f;
+    public const float GridSize = 0.82f;
 
     private static UserInfo mUserInfo = null;
     private static byte[] mStageStarCount = null;

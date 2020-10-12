@@ -14,11 +14,9 @@ public class Frame : MonoBehaviour
     private SpriteMask mMask;
 
     public Sprite[] Covers;
+    public SpriteRenderer[] Borders;
 
-    public bool Empty {
-        get { return mIsEmpty; }
-        set { mIsEmpty = value; gameObject.SetActive(!value); }
-    }
+    public bool Empty { get { return mIsEmpty; } }
     public ProductSkill SkillBackupSpace { get; set; }
     public int ComboBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
@@ -44,8 +42,16 @@ public class Frame : MonoBehaviour
         mIndexX = idxX;
         mIndexY = idxY;
 
-        if (coverCount < Covers.Length)
+        if (coverCount < 0)
         {
+            mIsEmpty = true;
+            mCoverCount = 0;
+            CoverRenderer.sprite = Covers[0];
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            mIsEmpty = false;
             mCoverCount = coverCount;
             CoverRenderer.sprite = Covers[mCoverCount];
         }
@@ -58,6 +64,11 @@ public class Frame : MonoBehaviour
     public void SetSpriteMask(SpriteMask mask)
     {
         mMask = mask;
+    }
+    public void ShowBorder(int pos)
+    {
+        //pos 0:Left, 1:Right, 2:Top, 3:Bottom
+        Borders[pos].enabled = true;
     }
 
     public int MaskLayerOrder { get { return mMask.backSortingOrder; } }

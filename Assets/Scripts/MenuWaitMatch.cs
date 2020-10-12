@@ -53,7 +53,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         if(NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuMessageBox.PopUp(gameObject, "Network Disconnected", false, null);
+            MenuMessageBox.PopUp("Network Disconnected", false, null);
             return;
         }
 

@@ -19,10 +19,12 @@ public class Product : MonoBehaviour
 
     public SpriteRenderer Renderer;
     public Sprite[] Images;
+    public Sprite[] Chocos;
     public Sprite ImgOneMore;
     public Sprite ImgSameColor;
     public Sprite ImgKeepCombo;
     public Sprite ImgReduceColor;
+    public Sprite ImgCombo;
     public int ImageIndex;
 
     public float Weight { get; set; }
@@ -87,7 +89,7 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         mAnimation.Play("destroy");
-        UnWrapChocoBlocksAroundMe();
+        UnWrapChocoBlocksAroundMe(Combo);
         ParentFrame.ComboBackupSpace = Combo;
         ParentFrame.BreakCover(Combo);
     }
@@ -195,19 +197,22 @@ public class Product : MonoBehaviour
     }
     IEnumerator StartHighLight()
     {
-        //yield return new WaitForSeconds(0.1f);
         Vector3 scale = transform.localScale;
+        Vector3 pos = transform.localPosition;
         float t = 0;
         while (t < 0.2f)
         {
             int light = (int)(t * 10) % 2;
-            //Renderer.material.SetColor("_Color", new Color(light, light, light, 0));
-            transform.localScale += new Vector3(1 - light * 2, 1 - light * 2, 0) * 0.01f;
+            float posY = -10.0f * (t - 0.1f) * (t - 0.1f) + 0.1f;
+            Renderer.material.SetColor("_Color", new Color(1 - light, 1 - light, 1 - light, 0));
+            transform.localScale += new Vector3(light * 2 - 1, 1 - light * 2, 0) * 0.01f;
+            transform.localPosition += new Vector3(0, posY, 0);
             t += Time.deltaTime;
             yield return null;
         }
-        //Renderer.material.color = new Color(0, 0, 0, 0);
+        Renderer.material.color = new Color(0, 0, 0, 0);
         transform.localScale = scale;
+        transform.localPosition = pos;
         transform.localRotation = Quaternion.identity;
     }
     #endregion
@@ -344,39 +349,60 @@ public class Product : MonoBehaviour
             default: break;
         }
     }
-    public void WrapChocoBlock(bool wrap)
+    public bool BreakChocoBlock(int combo)
     {
-        Animator anim = ChocoBlock.GetComponent<Animator>();
-        if (wrap)
+        if (ChocoBlock.tag == "off")
+            return false;
+
+        int chocoLevel = int.Parse(ChocoBlock.name);
+        if (combo < (chocoLevel - 1) * 3)
+            return false;
+
+        ChocoBlock.tag = "off";
+        ChocoBlock.name = "0";
+        ChocoBlock.GetComponent<Animator>().enabled = true;
+        ChocoBlock.GetComponent<Animator>().SetTrigger("hide");
+        EventUnWrapChoco?.Invoke();
+        return true;
+    }
+    public void SetChocoBlock(int level, bool anim = false)
+    {
+        if (level <= 0)
+            return;
+
+        ChocoBlock.tag = "on";
+        ChocoBlock.name = level.ToString();
+        ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
+        if (anim && level == 1)
         {
-            ChocoBlock.tag = "on";
-            anim.SetTrigger("show");
+            ChocoBlock.GetComponent<Animator>().enabled = true;
+            ChocoBlock.GetComponent<Animator>().SetTrigger("show");
         }
         else
         {
-            ChocoBlock.tag = "off";
-            anim.SetTrigger("hide");
-            EventUnWrapChoco?.Invoke();
+            ChocoBlock.GetComponent<Animator>().enabled = false;
+            ChocoBlock.transform.localScale = new Vector3(1, 1, 1);
         }
+            
     }
     public bool IsChocoBlock()
     {
         return ChocoBlock.tag == "on";
     }
-    public void UnWrapChocoBlocksAroundMe()
+    public void UnWrapChocoBlocksAroundMe(int combo)
     {
         Product target = Up();
         if (target != null)
-            target.WrapChocoBlock(false);
+            target.BreakChocoBlock(combo);
         target = Down();
         if (target != null)
-            target.WrapChocoBlock(false);
+            target.BreakChocoBlock(combo);
         target = Right();
         if (target != null)
-            target.WrapChocoBlock(false);
+            target.BreakChocoBlock(combo);
         target = Left();
         if (target != null)
-            target.WrapChocoBlock(false);
+            target.BreakChocoBlock(combo);
     }
     #endregion
 }

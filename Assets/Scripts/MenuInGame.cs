@@ -12,7 +12,10 @@ public class MenuInGame : MonoBehaviour
     public Text KeepCombo;
     public Text Limit;
     public Text StageLevel;
-    public Text GoalType;
+    public Text TargetValue;
+    public Image TargetType;
+    public Image Lock;
+    public Image UnLock;
     public Image ScoreBar;
     public Image BarStar1;
     public Image BarStar2;
@@ -32,18 +35,15 @@ public class MenuInGame : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
     }
-    private void UpdatePanel(int remainLimit, int totalScore, Product product)
+    private void UpdatePanel(InGameBillboard inGameInfo, Product product)
     {
-        if (totalScore > 0)
-        {
-            UpdateScore(totalScore);
+        CurrentScore.text = inGameInfo.CurrentScore.ToString();
+        ScoreBar.fillAmount = inGameInfo.GetAchievementRate(mStageInfo);
+        Limit.text = inGameInfo.RemainLimit.ToString();
+        KeepCombo.text = inGameInfo.KeepCombo.ToString();
+
+        if (product != null)
             PlayComboAnimation(product);
-        }
-        else
-        {
-            Limit.text = remainLimit.ToString();
-        }
-        
     }
     private void InitUIState(StageInfo info)
     {
@@ -52,32 +52,19 @@ public class MenuInGame : MonoBehaviour
         BarStar1.gameObject.SetActive(false);
         BarStar2.gameObject.SetActive(false);
         BarStar3.gameObject.SetActive(false);
+        Lock.gameObject.SetActive(false);
+        UnLock.gameObject.SetActive(true);
 
         CurrentScore.text = "0";
         Limit.text = info.MoveLimit.ToString();
-        GoalType.text = info.GoalType;
+        TargetType.sprite = info.GoalTypeImage;
+        TargetValue.text = info.GoalValue.ToString();
         KeepCombo.text = "0";
         StageLevel.text = info.Num.ToString();
 
         GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
-        GameField.GetComponent<InGameManager>().EventOnKeepCombo = UpdateKeepCombo;
     }
 
-    private void UpdateKeepCombo(int keepCombo)
-    {
-        KeepCombo.text = keepCombo.ToString();
-    }
-    private void UpdateScore(int totalScore)
-    {
-        float targetScore = (float)mStageInfo.GoalValue;
-        float rateTarget = totalScore / targetScore;
-        CurrentScore.text = totalScore.ToString();
-        ScoreBar.fillAmount = rateTarget;
-        //int starCount = InGameManager.GetStarCount(totalScore, int.Parse(goal));
-        //BarStar1.gameObject.SetActive(starCount >= 1);
-        //BarStar2.gameObject.SetActive(starCount >= 2);
-        //BarStar3.gameObject.SetActive(starCount >= 3);
-    }
     private void PlayComboAnimation(Product product)
     {
         GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
@@ -105,9 +92,10 @@ public class MenuInGame : MonoBehaviour
     {
         MenuPause.PopUp();
     }
-    public void OnLockMatch()
+    public void OnLockMatch(bool enableLock)
     {
-        InGameManager mgr = GameField.GetComponent<InGameManager>();
-        mgr.MatchLock = !mgr.MatchLock;
+        GameField.GetComponent<InGameManager>().MatchLock = enableLock;
+        Lock.gameObject.SetActive(enableLock);
+        UnLock.gameObject.SetActive(!enableLock);
     }
 }
