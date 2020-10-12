@@ -195,9 +195,10 @@ public class NetServerApp : MonoBehaviour
     private EndGame ProcEndGame(EndGame requestBody)
     {
         mMatchingUsers.Remove(requestBody.fromUserPk);
-        DBManager.Inst().RenewUserScore(requestBody.fromUserPk, requestBody.score);
         if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
         {
+            DBManager.Inst().RenewUserScore(requestBody.fromUserPk, requestBody.score);
+
             MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
 
             Header responseMsg = new Header();

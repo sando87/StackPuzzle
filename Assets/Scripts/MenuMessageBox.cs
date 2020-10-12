@@ -12,7 +12,7 @@ public class MenuMessageBox : MonoBehaviour
 
     private Action<bool> mOnClick = null;
 
-    public static void PopUp(string message, bool twoButtonMode, Action<bool> onClick)
+    public static MenuMessageBox PopUp(string message, bool twoButtonMode, Action<bool> onClick)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MessageBox", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UIGroup/CanvasPopUp").transform);
@@ -32,6 +32,7 @@ public class MenuMessageBox : MonoBehaviour
             pos.x = 0;
             box.OkButton.transform.localPosition = pos;
         }
+        return box;
     }
 
     public void OnOK()

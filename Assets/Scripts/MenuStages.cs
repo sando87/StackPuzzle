@@ -11,6 +11,15 @@ public class MenuStages : MonoBehaviour
     public Text HeartCount;
     public Text DiamondCount;
 
+    private void Update()
+    {
+#if PLATFORM_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            OnClose();
+        }
+#endif
+    }
     public static void PopUp()
     {
         GameObject obj = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;

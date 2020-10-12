@@ -12,7 +12,18 @@ public class MenuBattle : MonoBehaviour
     public Image MatchUnLock;
     public GameObject ComboText;
     public GameObject ParentPanel;
+    private MenuMessageBox mMenu;
 
+
+    private void Update()
+    {
+#if PLATFORM_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            OnClose();
+        }
+#endif
+    }
     public static void PopUp()
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
@@ -24,8 +35,27 @@ public class MenuBattle : MonoBehaviour
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         menuPlay.SetActive(false);
     }
+
+#if PLATFORM_ANDROID
+    private void OnApplicationPause(bool pause)
+    {
+        BattleFieldManager.FinishGame(false);
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        BattleFieldManager.FinishGame(false);
+    }
+
+    private void OnApplicationQuit()
+    {
+        BattleFieldManager.FinishGame(false);
+    }
+#endif
+
     private void Init()
     {
+        mMenu = null;
         SavedCombo.text = "0";
         Lock(false);
         BattleFieldManager.Me.EventOnChange = PlayComboEffect;
@@ -72,13 +102,20 @@ public class MenuBattle : MonoBehaviour
 
     public void OnClose()
     {
-        MenuMessageBox.PopUp("Finish Game", true, (bool isOK) =>
+        if (mMenu != null)
         {
-            if(isOK)
+            Destroy(mMenu);
+            mMenu = null;
+        }
+        else
+        {
+            mMenu = MenuMessageBox.PopUp("Finish Game", true, (bool isOK) =>
             {
-                BattleFieldManager.FinishGame(false);
-            }
-        });
+                if (isOK)
+                    BattleFieldManager.FinishGame(false);
+            });
+
+        }
     }
     public void OnLockMatch(bool locked)
     {

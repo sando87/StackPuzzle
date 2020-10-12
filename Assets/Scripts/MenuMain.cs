@@ -6,11 +6,18 @@ public class MenuMain : MonoBehaviour
 {
     private const string UIObjName = "MenuMain";
 
+    private MenuMessageBox mMenu = null;
+
     private void Awake()
     {
         LOG.LogWriter = (msg, level) => { Debug.Log(msg); };
         UserSetting.Initialize();
         Purchases.Initialize();
+    }
+
+    private void Update()
+    {
+        QuitProgram();
     }
 
     public static void PopUp()
@@ -36,5 +43,28 @@ public class MenuMain : MonoBehaviour
         MenuWaitMatch.PopUp();
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    private void QuitProgram()
+    {
+#if PLATFORM_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (mMenu == null)
+            {
+                mMenu = MenuMessageBox.PopUp("Quit??", true, (bool isOK) =>
+                {
+                    if (isOK)
+                        Application.Quit();
+                    else
+                        mMenu = null;
+                });
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
+#endif
     }
 }

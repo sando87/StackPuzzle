@@ -24,6 +24,15 @@ public class MenuInGame : MonoBehaviour
     public GameObject ComboText;
     public GameObject GameField;
 
+    private void Update()
+    {
+#if PLATFORM_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            OnPause();
+        }
+#endif
+    }
     public static void PopUp(StageInfo info)
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;

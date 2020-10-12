@@ -118,6 +118,9 @@ public class BattleFieldManager : MonoBehaviour
     }
     public static void FinishGame(bool success)
     {
+        if (Me.mThisUserPK <= 0)
+            return;
+
         NetClientApp.GetInstance().EventResponse = null;
 
         int deltaScore = success ? 1 : -1;
