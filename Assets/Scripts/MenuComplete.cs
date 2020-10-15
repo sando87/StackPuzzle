@@ -26,6 +26,14 @@ public class MenuComplete : MonoBehaviour
 
         menuComp.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
+
+        if (UserSetting.IsBotPlayer)
+            menu.StartCoroutine(menu.AutoEnd());
+    }
+    IEnumerator AutoEnd()
+    {
+        yield return new WaitForSeconds(1);
+        OnNext();
     }
 
     public void OnNext()

@@ -19,6 +19,13 @@ public class SoundPlayer : MonoBehaviour
     private void Awake()
     {
         Inst = this;
+        Player.mute = UserSetting.Mute;
+    }
+
+    public bool OnOff()
+    {
+        Player.mute = !Player.mute;
+        return Player.mute;
     }
 
     public void PlayBackMusic(AudioClip bkMusic)
@@ -27,6 +34,7 @@ public class SoundPlayer : MonoBehaviour
         Player.loop = true;
         Player.Play();
     }
+
 
     public void PlaySoundEffect(AudioClip sound)
     {

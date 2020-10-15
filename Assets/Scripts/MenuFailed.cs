@@ -22,6 +22,14 @@ public class MenuFailed : MonoBehaviour
 
         menuFailed.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
+
+        if (UserSetting.IsBotPlayer)
+            menu.StartCoroutine(menu.AutoEnd());
+    }
+    IEnumerator AutoEnd()
+    {
+        yield return new WaitForSeconds(1);
+        OnAgain();
     }
 
     public void OnAgain()

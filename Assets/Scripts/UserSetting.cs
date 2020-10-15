@@ -15,6 +15,11 @@ public class UserSetting
         get { return mUserInfo == null ? -1 : mUserInfo.score; }
         set { mUserInfo.score = value; if (mUserInfo.score < 0) mUserInfo.score = 0; UpdateUserInfo(mUserInfo); }
     }
+    public static bool Mute
+    {
+        get { return PlayerPrefs.GetInt("userMute", 0) == 1; }
+        set { PlayerPrefs.SetInt("userMute", value ? 1 : 0); }
+    }
     public static bool StageIsLocked(int stageNum)
     {
         byte cnt = StageStarCount[stageNum - 1];
@@ -141,7 +146,16 @@ public class UserSetting
             string fullname = Application.persistentDataPath + "/" + deviceName + ".json";
             if(!File.Exists(fullname))
             {
-                LOG.warn("No File..." + fullname);
+                MenuMessageBox.PopUp("No File. Do you want to create?", true, (isOK) => {
+                    if(isOK)
+                    {
+                        UserInfo virtualUser = new UserInfo();
+                        virtualUser.deviceName = deviceName;
+                        string jsonUserInfo = JsonUtility.ToJson(virtualUser, true);
+                        File.WriteAllText(fullname, jsonUserInfo);
+                        SwitchBotPlayer(true, deviceName);
+                    }
+                });
                 return;
             }
             

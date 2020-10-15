@@ -19,10 +19,19 @@ public class MenuPlay : MonoBehaviour
     public static void PopUp(StageInfo info)
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        menuPlay.GetComponent<MenuPlay>().UpdateUIState(info);
+        MenuPlay menu = menuPlay.GetComponent<MenuPlay>();
+        menu.UpdateUIState(info);
         menuPlay.SetActive(true);
         StageManager.Inst.gameObject.SetActive(false);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+
+        if (UserSetting.IsBotPlayer)
+            menu.StartCoroutine(menu.AutoStart());
+    }
+    IEnumerator AutoStart()
+    {
+        yield return new WaitForSeconds(1);
+        OnPlay();
     }
     public void UpdateUIState(StageInfo info)
     {
@@ -51,7 +60,9 @@ public class MenuPlay : MonoBehaviour
             return;
         }
 
-        Purchases.UseHeart();
+        if (!UserSetting.IsBotPlayer)
+            Purchases.UseHeart();
+
         GameField.GetComponent<InGameManager>().StartGame(mStageInfo);
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();

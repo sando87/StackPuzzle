@@ -10,6 +10,7 @@ public class MenuStages : MonoBehaviour
     public Text HeartTimer;
     public Text HeartCount;
     public Text DiamondCount;
+    private int mAutoNextStageNum = 1;
 
     private void Update()
     {
@@ -29,11 +30,28 @@ public class MenuStages : MonoBehaviour
         obj.SetActive(true);
         menu.StopCoroutine("UpdateHeartTimer");
         menu.StartCoroutine("UpdateHeartTimer");
+
+        if(UserSetting.IsBotPlayer)
+            menu.StartCoroutine(menu.AutoStartNextStage());
     }
     public static void Hide()
     {
         GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(false);
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
+    }
+
+    IEnumerator AutoStartNextStage()
+    {
+        yield return new WaitForSeconds(1);
+        StageInfo stageInfo = StageInfo.Load(mAutoNextStageNum);
+        if (stageInfo == null)
+        {
+            mAutoNextStageNum = 1;
+            stageInfo = StageInfo.Load(mAutoNextStageNum);
+        }
+
+        MenuPlay.PopUp(stageInfo);
+        mAutoNextStageNum++;
     }
 
     public void OnClose()

@@ -140,9 +140,9 @@ public class Header
 public class UserInfo
 {
     public int userPk = -1;
-    public String userName;
+    public String userName = "No Name";
     public int score = 100;
-    public String deviceName;
+    public String deviceName = "";
 }
 
 [Serializable]
