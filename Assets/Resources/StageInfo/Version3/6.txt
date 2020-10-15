@@ -1,10 +1,10 @@
-GoalType,Score
-GoalValue,500
-MoveLimit,20
+GoalType,ItemOneMore
+GoalValue,10
+MoveLimit,25
 ColorCount,4
 XCount,6
 YCount,6
-ItemOneMore,False
+ItemOneMore,True
 ItemKeepCombo,False
 ItemSameColor,False
 ItemReduceColor,False

@@ -1,0 +1,18 @@
+GoalType,Choco
+GoalValue,24
+MoveLimit,20
+ColorCount,5
+XCount,5
+YCount,8
+ItemOneMore,True
+ItemKeepCombo,True
+ItemSameColor,True
+ItemReduceColor,False
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
+Rows,1/0 0/0 1/0 0/0 1/0 
