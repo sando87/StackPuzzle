@@ -22,13 +22,21 @@ public class MenuFinishBattle : MonoBehaviour
         menu.DeltaScore.text = deltaScore.ToString();
         menu.Result.text = win ? "WIN" : "LOSE";
 
+        if (UserSetting.IsBotPlayer)
+            menu.StartCoroutine(menu.AutoNext());
     }
 
-    public void OnOK()
+    public void OnOK(bool autoPlay)
     {
         gameObject.SetActive(false);
         MenuBattle.Hide();
-        MenuWaitMatch.PopUp();
+        MenuWaitMatch.PopUp(autoPlay);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    private IEnumerator AutoNext()
+    {
+        yield return new WaitForSeconds(1);
+        OnOK(true);
     }
 }

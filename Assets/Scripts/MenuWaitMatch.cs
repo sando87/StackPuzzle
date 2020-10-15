@@ -12,12 +12,16 @@ public class MenuWaitMatch : MonoBehaviour
     public GameObject BtnMatch;
     public GameObject BtnCancle;
 
-    public static void PopUp()
+    public static void PopUp(bool autoPlay = false)
     {
         GameObject menuMatch = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        menuMatch.GetComponent<MenuWaitMatch>().ResetMatchUI();
+        MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
+        menu.ResetMatchUI();
         menuMatch.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+
+        if (autoPlay)
+            menu.StartCoroutine(menu.AutoMatch());
     }
 
     public void OnClose()
@@ -115,7 +119,12 @@ public class MenuWaitMatch : MonoBehaviour
             if (res.isDone && mIsSearching)
             {
                 if (res.opponentUserPk == -1)
+                {
                     FailMatch();
+
+                    if (UserSetting.IsBotPlayer)
+                        StartCoroutine(AutoMatch());
+                }
                 else
                     SuccessMatch(res.opponentUserPk);
             }
@@ -158,6 +167,11 @@ public class MenuWaitMatch : MonoBehaviour
         State.text = "Match Failed";
         BtnCancle.SetActive(false);
         BtnMatch.SetActive(true);
+    }
+    private IEnumerator AutoMatch()
+    {
+        yield return new WaitForSeconds(1);
+        OnMatch();
     }
     private void ResetMatchUI()
     {

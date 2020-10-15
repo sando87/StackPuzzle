@@ -242,6 +242,22 @@ public class Product : MonoBehaviour
         if (nearProduct != null)
             nearProduct.SearchMatchedProducts(products, color);
     }
+    public void SearchMatchedProductsAround(List<Product> products, ProductColor color, SwipeDirection skipDir)
+    {
+        Product nearProduct = null;
+        nearProduct = Left();
+        if (nearProduct != null && skipDir != SwipeDirection.LEFT)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Right();
+        if (nearProduct != null && skipDir != SwipeDirection.RIGHT)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Up();
+        if (nearProduct != null && skipDir != SwipeDirection.UP)
+            nearProduct.SearchMatchedProducts(products, color);
+        nearProduct = Down();
+        if (nearProduct != null && skipDir != SwipeDirection.DOWN)
+            nearProduct.SearchMatchedProducts(products, color);
+    }
     public Product Left()
     {
         Frame nearFrame = ParentFrame.Left();

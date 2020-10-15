@@ -15,9 +15,15 @@ public class AutoPlayer : MonoBehaviour
 {
     List<KeyValuePair<Product, SwipeDirection>> nexts = new List<KeyValuePair<Product, SwipeDirection>>();
 
-    private void Start()
+    public static bool AutoPlay
     {
-        StartCoroutine(DoAutoPlay());
+        set
+        {
+            if (value)
+                GameObject.Find("AutoPlayer").GetComponent<AutoPlayer>().StartCoroutine("DoAutoPlay");
+            else
+                GameObject.Find("AutoPlayer").GetComponent<AutoPlayer>().StopCoroutine("DoAutoPlay");
+        }
     }
 
     IEnumerator DoAutoPlay()

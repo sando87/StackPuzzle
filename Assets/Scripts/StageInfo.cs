@@ -52,7 +52,7 @@ public class StageInfo
         //if (fileText == null || fileText.Length == 0)
         //    return null;
 
-        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version3/" + stageNum);
+        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version"+ Version + "/" + stageNum);
         if (ta == null || ta.text.Length == 0)
             return null;
 

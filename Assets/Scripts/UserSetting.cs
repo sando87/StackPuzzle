@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.UI;
 
 public class UserSetting
 {
+    public static bool IsBotPlayer { get { return mIsBotPlayer; } }
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
     public static int UserScore
     {
@@ -42,6 +45,7 @@ public class UserSetting
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
 
+    private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;
     private static byte[] mStageStarCount = null;
     private static byte[] StageStarCount
@@ -110,11 +114,65 @@ public class UserSetting
     }
     public static UserInfo UpdateUserInfo(UserInfo info)
     {
-        PlayerPrefs.SetInt("userPk", info.userPk);
-        PlayerPrefs.SetString("userName", info.userName);
-        PlayerPrefs.SetInt("score", info.score);
-        PlayerPrefs.SetString("deviceName", info.deviceName);
+        if (mIsBotPlayer)
+        {
+            string jsonUserInfo = JsonUtility.ToJson(info, true);
+            string fullname = Application.persistentDataPath + "/" + info.deviceName + ".json";
+            File.WriteAllText(fullname, jsonUserInfo);
+        }
+        else
+        {
+            PlayerPrefs.SetInt("userPk", info.userPk);
+            PlayerPrefs.SetString("userName", info.userName);
+            PlayerPrefs.SetInt("score", info.score);
+            PlayerPrefs.SetString("deviceName", info.deviceName);
+        }
         return info;
     }
-    
+    public static void SwitchBotPlayer(bool enable, string deviceName)
+    {
+        if (enable)
+        {
+#if PLATFORM_ANDROID
+            if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+                Permission.RequestUserPermission(Permission.ExternalStorageRead);
+#endif
+
+            string fullname = Application.persistentDataPath + "/" + deviceName + ".json";
+            if(!File.Exists(fullname))
+            {
+                LOG.warn("No File..." + fullname);
+                return;
+            }
+            
+            string fileText = File.ReadAllText(fullname);
+            if (fileText == null || fileText.Length == 0)
+                return;
+                        
+            mUserInfo = JsonUtility.FromJson<UserInfo>(fileText);
+            mIsBotPlayer = true;
+            AutoPlayer.AutoPlay = true;
+            AutoBalancer.AutoBalance = true;
+            if (mUserInfo.userPk <= 0)
+            {
+                NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_res) =>
+                {
+                    UserInfo res = (UserInfo)_res;
+                    if (res.userPk <= 0)
+                        return;
+
+                    mUserInfo = res;
+                    UpdateUserInfo(mUserInfo);
+                });
+            }
+        }
+        else
+        {
+            mUserInfo = LoadUserInfo();
+            mIsBotPlayer = false;
+            AutoPlayer.AutoPlay = false;
+            AutoBalancer.AutoBalance = false;
+        }
+    }
+
 }
