@@ -10,8 +10,12 @@ public class MenuMain : MonoBehaviour
 
     private void Awake()
     {
-        LOG.LogWriter = (msg, level) => { Debug.Log(msg); };
+        LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
+        LOG.trace();
+
+        NetClientApp.GetInstance().Connect(3);
         UserSetting.Initialize();
+        InitLogSystem();
         Purchases.Initialize();
     }
 
@@ -43,6 +47,18 @@ public class MenuMain : MonoBehaviour
         MenuWaitMatch.PopUp();
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    private void InitLogSystem()
+    {
+        LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
+        LOG.LogWriterDB = (msg) => {
+            LogInfo info = new LogInfo();
+            info.userPk = UserSetting.UserPK;
+            info.message = msg;
+            return NetClientApp.GetInstance().Request(NetCMD.AddLog, info, null);
+        };
+        LOG.Initialize(Application.persistentDataPath);
     }
 
     private void QuitProgram()

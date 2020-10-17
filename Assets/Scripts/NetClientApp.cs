@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 
 public class NetClientApp : MonoBehaviour
@@ -26,6 +27,7 @@ public class NetClientApp : MonoBehaviour
     
     private void OnDestroy()
     {
+        LOG.UnInitialize();
         DisConnect();
     }
 
@@ -39,16 +41,13 @@ public class NetClientApp : MonoBehaviour
     static public NetClientApp GetInstance()
     {
         if(mInst == null)
-        {
             mInst = GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
-            mInst.Connect();
-        }
         return mInst;
     }
-    public void Request(NetCMD cmd, object body, Action<object> response)
+    public bool Request(NetCMD cmd, object body, Action<object> response)
     {
         if (mSession == null)
-            return;
+            return false;
 
         try
         {
@@ -65,8 +64,9 @@ public class NetClientApp : MonoBehaviour
             if (response != null)
                 mHandlerTable[head.RequestID] = response;
         }
-        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
-        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); return false; }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); return false; }
+        return true;
     }
     public bool IsDisconnected()
     {
@@ -74,18 +74,31 @@ public class NetClientApp : MonoBehaviour
     }
 
 
-    private void Connect()
+    public bool Connect(int timeoutSec)
     {
+        if (mSession != null)
+            return true;
+
         try
         {
-            if (mSession != null)
-                return;
+            TcpClient session = new TcpClient();
+            session.BeginConnect(ServerAddress, ServerPort, null, null);
+            float st = Time.realtimeSinceStartup;
+            while(Time.realtimeSinceStartup - st < timeoutSec)
+            {
+                if (session.Connected)
+                {
+                    mSession = session;
+                    mStream = session.GetStream();
+                    return true;
+                }
+            }
 
-            mSession = new TcpClient(ServerAddress, ServerPort);
-            mStream = mSession.GetStream();
+            throw new TimeoutException();
         }
-        catch (SocketException ex) { LOG.warn(ex.Message); }
-        catch (Exception ex) { LOG.warn(ex.Message); }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
+        return false;
     }
     private void DisConnect()
     {

@@ -1,7 +1,7 @@
-GoalType,Combo
-GoalValue,8
-MoveLimit,25
-ColorCount,4
+GoalType,Score
+GoalValue,5000
+MoveLimit,50
+ColorCount,5
 XCount,6
 YCount,6
 ItemOneMore,False

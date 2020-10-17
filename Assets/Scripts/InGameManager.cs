@@ -88,6 +88,7 @@ public class InGameManager : MonoBehaviour
     {
         if (success)
         {
+            LOG.echo(SummaryToCSVString(true));
             int starCount = mBillboard.GetStarCount(mStageInfo);
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
@@ -101,12 +102,41 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
+            LOG.echo(SummaryToCSVString(false));
             SoundPlayer.Inst.Player.Stop();
             MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mBillboard.CurrentScore);
         }
 
         ResetGame();
         transform.parent.gameObject.SetActive(false);
+    }
+
+    public string SummaryToCSVString(bool success)
+    {
+        //stageNum, XCount, YCount, ColorCount, GoalType, GoalValue, MoveLimit, Item(1-1-1-1), Success, CurScore, MaxCombo, MoveCount, Item(4-2-5-0)
+        string ret = mStageInfo.Num + ","
+            + CountX + ","
+            + CountY + ","
+            + mStageInfo.ColorCount + ","
+            + mStageInfo.GoalType + ","
+            + mStageInfo.GoalValue + ","
+            + mStageInfo.MoveLimit + ","
+            + "Item("
+            + mStageInfo.ItemOneMore + "-"
+            + mStageInfo.ItemKeepCombo + "-"
+            + mStageInfo.ItemSameColor + "-"
+            + mStageInfo.ItemReduceColor + "),"
+            + success + ","
+            + mBillboard.CurrentScore + ","
+            + mBillboard.MaxCombo + ","
+            + (mStageInfo.MoveLimit - mBillboard.RemainLimit) + ","
+            + "Item("
+            + mBillboard.ItemOneMoreCount + "-"
+            + mBillboard.ItemKeepComboCount + "-"
+            + mBillboard.ItemSameColorCount + "-"
+            + mBillboard.ItemReduceColorCount + ")";
+
+        return ret;
     }
     public bool IsAllProductUnLocked()
     {
