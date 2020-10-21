@@ -171,6 +171,9 @@ public class MenuInGame : MonoBehaviour
         Lock.gameObject.SetActive(false);
         UnLock.gameObject.SetActive(true);
 
+
+        mAddedScore = 0;
+        mCurrentScore = 0;
         CurrentScore.text = "0";
         Limit.text = info.MoveLimit.ToString();
         TargetType.sprite = info.GoalTypeImage;
@@ -205,9 +208,10 @@ public class MenuInGame : MonoBehaviour
         Destroy(obj);
     }
 
-    public void EffectKeepCombo(Vector3 pos, int combo)
+    public void SetNextCombo(int combo)
     {
         KeepCombo.text = combo.ToString();
+        KeepCombo.GetComponent<Animation>().Play("touch");
     }
 
     public void ReduceLimit()
@@ -215,10 +219,14 @@ public class MenuInGame : MonoBehaviour
         int value = int.Parse(Limit.text) - 1;
         value = Mathf.Max(0, value);
         Limit.text = value.ToString();
+        Limit.GetComponent<Animation>().Play("touch");
     }
 
-    public void ReduceGoalValue(Vector3 worldPos)
+    public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)
     {
+        if (type != mStageInfo.GoalTypeEnum)
+            return;
+
         GameObject GoalTypeObj = GameObject.Instantiate(GoalTypePrefab, worldPos, Quaternion.identity, ParentPanel.transform);
         Image img = GoalTypeObj.GetComponent<Image>();
         img.sprite = mStageInfo.GoalTypeImage;
@@ -231,11 +239,12 @@ public class MenuInGame : MonoBehaviour
         float a = -1 * height / (duration * duration);
         Vector3 startPos = obj.transform.position;
         Vector3 offset = Vector3.zero;
-        offset.x = Random.Range(-0.02f, 0.02f);
+        float dx = 1;
         float time = 0;
         while (time < duration)
         {
             offset.y = a * (time - duration) * (time - duration) + height;
+            offset.x = dx * time;
             obj.transform.position = startPos + offset;
             time += Time.deltaTime;
             yield return null;
@@ -244,7 +253,7 @@ public class MenuInGame : MonoBehaviour
         duration = Random.Range(0.2f, 0.3f);
         time = 0;
         startPos = obj.transform.position;
-        Vector3 destPos = TargetType.transform.position;
+        Vector3 destPos = TargetValue.transform.position;
         Vector3 dir = destPos - startPos;
         float slope = dir.magnitude / (duration * duration);
         dir.Normalize();
@@ -260,7 +269,6 @@ public class MenuInGame : MonoBehaviour
         value = Mathf.Max(0, value);
         TargetValue.text = value.ToString();
         TargetValue.GetComponent<Animation>().Play("touch");
-        TargetType.GetComponent<Animation>().Play("touch");
         Destroy(obj);
     }
 

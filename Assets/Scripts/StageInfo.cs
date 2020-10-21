@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Android;
+public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco }
 public class StageInfoCell
 {
     public int ProductChocoCount;
@@ -21,6 +22,7 @@ public class StageInfo
     public string GoalType;
     public int GoalValue;
     public Sprite GoalTypeImage;
+    public StageGoalType GoalTypeEnum;
     public int MoveLimit;
     public int ColorCount;
     public int XCount;
@@ -85,6 +87,7 @@ public class StageInfo
         }
 
         info.GoalTypeImage = TypeToImage(info.GoalType);
+        info.GoalTypeEnum = StringToType(info.GoalType);
 
         return info;
     }
@@ -136,6 +139,22 @@ public class StageInfo
             default: break;
         }
         return image;
+    }
+    public static StageGoalType StringToType(string goalType)
+    {
+        StageGoalType type = StageGoalType.None;
+        switch (goalType)
+        {
+            case "Score": type = StageGoalType.Score; break;
+            case "Combo": type = StageGoalType.Combo; break;
+            case "ItemOneMore": type = StageGoalType.ItemOneMore; break;
+            case "ItemKeepCombo": type = StageGoalType.ItemKeepCombo; break;
+            case "ItemSameColor": type = StageGoalType.ItemSameColor; break;
+            case "Cover": type = StageGoalType.Cover; break;
+            case "Choco": type = StageGoalType.Choco; break;
+            default: break;
+        }
+        return type;
     }
     public void ParseRow(int rowIndex, string row)
     {
