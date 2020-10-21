@@ -81,8 +81,7 @@ public class Product : MonoBehaviour
         yield return null;
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
-        if (matchList.Count >= UserSetting.MatchCount)
-            EventMatched?.Invoke(matchList);
+        EventMatched?.Invoke(matchList);
     }
 
     public void StartDestroy()
@@ -374,6 +373,8 @@ public class Product : MonoBehaviour
         if (combo < (chocoLevel - 1) * 3)
             return false;
 
+        StartCoroutine(AnimBreakChoco());
+        Renderer.enabled = true;
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
         ChocoBlock.GetComponent<Animator>().enabled = true;
@@ -381,11 +382,17 @@ public class Product : MonoBehaviour
         EventUnWrapChoco?.Invoke();
         return true;
     }
+    IEnumerator AnimBreakChoco()
+    {
+        yield return new WaitForSeconds(0.2f);
+        mAnimation.Play("swap");
+    }
     public void SetChocoBlock(int level, bool anim = false)
     {
         if (level <= 0)
             return;
 
+        Renderer.enabled = false;
         ChocoBlock.tag = "on";
         ChocoBlock.name = level.ToString();
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];

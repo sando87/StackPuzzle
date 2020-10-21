@@ -92,7 +92,7 @@ public class AutoBalancer : MonoBehaviour
             if (!InGameManager.Inst.gameObject.activeInHierarchy)
                 continue;
 
-            if (InGameManager.Inst.IsAllProductUnLocked())
+            if (InGameManager.Inst.IsIdle)
                 AutoSwipeNextProduct();
         }
     }
