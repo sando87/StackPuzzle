@@ -106,12 +106,14 @@ public class InGameManager : MonoBehaviour
                 nextStage.UnLock();
 
             SoundPlayer.Inst.Player.Stop();
+            MenuInGame.Hide();
             MenuComplete.PopUp(mStageInfo.Num, starCount, mBillboard.CurrentScore);
         }
         else
         {
             LOG.echo(SummaryToCSVString(false));
             SoundPlayer.Inst.Player.Stop();
+            MenuInGame.Hide();
             MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mBillboard.CurrentScore);
         }
 
@@ -161,7 +163,7 @@ public class InGameManager : MonoBehaviour
             if(mBillboard.KeepCombo > 0)
             {
                 mBillboard.KeepCombo = 0;
-                MenuInGame.Inst().SetNextCombo(0);
+                MenuInGame.Inst().UseNextCombo();
             }
         }
 
@@ -177,6 +179,7 @@ public class InGameManager : MonoBehaviour
                 additionalCombo++;
                 mBillboard.ItemOneMoreCount++;
                 MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.ItemOneMore);
+                MenuInGame.Inst().OneMoreCombo(pro);
             }
             else if (pro.mSkill == ProductSkill.BreakSameColor)
             {
@@ -456,7 +459,7 @@ public class InGameManager : MonoBehaviour
             mBillboard.ItemKeepComboCount++;
             mBillboard.KeepCombo = Math.Max(mBillboard.KeepCombo, product.Combo);
             MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemKeepCombo);
-            MenuInGame.Inst().SetNextCombo(mBillboard.KeepCombo);
+            MenuInGame.Inst().KeepNextCombo(product);
         }
 
         mBillboard.MaxCombo = Math.Max(mBillboard.MaxCombo, product.Combo);

@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class MenuInGame : MonoBehaviour
 {
@@ -14,6 +16,7 @@ public class MenuInGame : MonoBehaviour
 
     public Text CurrentScore;
     public Text KeepCombo;
+    public Text CurrentComboDisplay;
     public Text Limit;
     public Text StageLevel;
     public Text TargetValue;
@@ -30,7 +33,7 @@ public class MenuInGame : MonoBehaviour
     public GameObject ParentPanel;
     public GameObject ComboText;
     public GameObject GameField;
-    public GameObject GoalTypePrefab;
+    public GameObject ItemPrefab;
 
     private void Update()
     {
@@ -179,6 +182,7 @@ public class MenuInGame : MonoBehaviour
         TargetType.sprite = info.GoalTypeImage;
         TargetValue.text = info.GoalValue.ToString();
         KeepCombo.text = "0";
+        CurrentComboDisplay.text = "0";
         StageLevel.text = info.Num.ToString();
 
         //GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
@@ -208,10 +212,52 @@ public class MenuInGame : MonoBehaviour
         Destroy(obj);
     }
 
-    public void SetNextCombo(int combo)
+    public int CurrentCombo { get { return int.Parse(CurrentComboDisplay.text); } }
+
+    public int UseNextCombo()
     {
-        KeepCombo.text = combo.ToString();
-        KeepCombo.GetComponent<Animation>().Play("touch");
+        int keepCombo = int.Parse(KeepCombo.text);
+        if (keepCombo > 0)
+            KeepCombo.GetComponent<Animation>().Play("touch");
+
+        KeepCombo.text = "0";
+        return keepCombo;
+    }
+
+    public void KeepNextCombo(Product product)
+    {
+        if (product.mSkill != ProductSkill.KeepCombo)
+            return;
+
+        int nextCombo = product.Combo;
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        Image img = obj.GetComponent<Image>();
+        img.sprite = product.Renderer.sprite;
+        StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
+        {
+            int prevKeepCombo = int.Parse(KeepCombo.text);
+            if (nextCombo > prevKeepCombo)
+            {
+                KeepCombo.text = nextCombo.ToString();
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
+        }));
+    }
+
+    public void OneMoreCombo(Product product)
+    {
+        if (product.mSkill != ProductSkill.MatchOneMore)
+            return;
+
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        Image img = obj.GetComponent<Image>();
+        img.sprite = product.Renderer.sprite;
+        StartCoroutine(AnimateItem(obj, CurrentComboDisplay.transform.position, () =>
+        {
+            int currentCombo = int.Parse(CurrentComboDisplay.text);
+            CurrentComboDisplay.text = (currentCombo + 1).ToString();
+            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+        }));
     }
 
     public void ReduceLimit()
@@ -227,10 +273,41 @@ public class MenuInGame : MonoBehaviour
         if (type != mStageInfo.GoalTypeEnum)
             return;
 
-        GameObject GoalTypeObj = GameObject.Instantiate(GoalTypePrefab, worldPos, Quaternion.identity, ParentPanel.transform);
+        GameObject GoalTypeObj = GameObject.Instantiate(ItemPrefab, worldPos, Quaternion.identity, ParentPanel.transform);
         Image img = GoalTypeObj.GetComponent<Image>();
         img.sprite = mStageInfo.GoalTypeImage;
-        StartCoroutine(SkillMatchedEffect(GoalTypeObj));
+        StartCoroutine(AnimateItem(GoalTypeObj, TargetValue.transform.position, () =>
+        {
+            int value = int.Parse(TargetValue.text) - 1;
+            value = Mathf.Max(0, value);
+            TargetValue.text = value.ToString();
+            TargetValue.GetComponent<Animation>().Play("touch");
+        }));
+    }
+    IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
+    {
+        float duration = 1.0f;
+        float time = 0;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = worldDest;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        Vector3 deltaSize = new Vector3(0.01f, 0.01f, 0);
+        float slope = -dir.y / (duration * duration);
+        while (time < duration)
+        {
+            offset.y = slope * (time - duration) * (time - duration) + dir.y;
+            offset.x = dir.x * time;
+            obj.transform.position = startPos + offset;
+            //obj.transform.localScale += time < duration * 0.5f ? deltaSize : -deltaSize;
+            obj.transform.Rotate(axisZ, offset.x - dir.x - 1);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action.Invoke();
+        Destroy(obj);
     }
     IEnumerator SkillMatchedEffect(GameObject obj)
     {
@@ -271,6 +348,32 @@ public class MenuInGame : MonoBehaviour
         TargetValue.GetComponent<Animation>().Play("touch");
         Destroy(obj);
     }
+    IEnumerator AnimateJump(GameObject obj)
+    {
+        float duration = 0.3f;
+        float peekTime = duration * 0.5f;
+        float peekHeight = 1.0f;
+        float coeffB = 2f * peekHeight / peekTime;
+        float coeffALow = -1f * peekHeight * 0.8f / (peekTime * 0.8f * peekTime * 0.8f);
+        float coeffAHigh = -1f * peekHeight * 1.2f / (peekTime * 1.2f * peekTime * 1.2f);
+        float coeffA = Random.Range(coeffALow, coeffAHigh);
+        int dx = Random.Range(0, 1) == 0 ? 1 : -1;
+        Vector3 startPos = obj.transform.position;
+        Vector3 offset = Vector3.zero;
+        Vector3 deltaSize = new Vector3(0.02f, 0.02f, 0.02f);
+        float time = 0;
+        while (time < peekTime)
+        {
+            offset.y = coeffA * time * time + coeffB * time;
+            offset.x = dx * time;
+            obj.transform.position = startPos + offset;
+            obj.transform.localScale += time < peekTime ? deltaSize : -deltaSize;
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+    }
+    
 
     public void OnPause()
     {
