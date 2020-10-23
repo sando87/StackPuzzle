@@ -40,24 +40,22 @@ public class BattleFieldManager : MonoBehaviour
     public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
-    private Dictionary<int, List<Frame>> mDestroyes = new Dictionary<int, List<Frame>>();
+    private Dictionary<int, Frame> mDestroyes = new Dictionary<int, Frame>();
     private List<ProductColor> mNextColors = new List<ProductColor>();
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private int mNextPositionIndex = 0;
     private int mThisUserPK = 0;
-    private int mKeepCombo = 0;
     private int mCountX = 0;
     private int mCountY = 0;
-    private Product mSwipedProductA;
-    private Product mSwipedProductB;
+    private int mIdleCounter = -1;
 
+    public bool IsIdle { get { return mIdleCounter < 0; } }
     public int CountX { get { return mCountX; } }
     public int CountY { get { return mCountY; } }
     public Frame[,] Frames { get { return mFrames; } }
     public AttackPoints AttackPoints { get; set; }
     public bool MatchLock { get; set; }
     public int UserPK { get { return mThisUserPK; } }
-    public Action<Product> EventOnChange;
     public Action<int> EventOnKeepCombo;
 
     public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
@@ -85,7 +83,8 @@ public class BattleFieldManager : MonoBehaviour
 
         if (IsPlayerField())
         {
-            StartCoroutine("CheckIdle");
+            StartCoroutine(CheckIdle());
+            StartCoroutine(FlushChocos());
         }
 
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
@@ -143,8 +142,8 @@ public class BattleFieldManager : MonoBehaviour
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
-        StopCoroutine("CheckIdle");
-        StartCoroutine("CheckIdle");
+        if (!IsIdle)
+            return;
 
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
@@ -161,55 +160,41 @@ public class BattleFieldManager : MonoBehaviour
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
-            mSwipedProductA = product;
-            mSwipedProductB = targetProduct;
+            mIdleCounter = 2;
         }
     }
     private void OnMatch(List<Product> matches)
     {
-        if (MatchLock)
+        mIdleCounter--;
+        if (MatchLock || matches.Count < UserSetting.MatchCount)
             return;
-
-        StopCoroutine("CheckIdle");
-        StartCoroutine("CheckIdle");
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        Product mainProduct = matches[0];
-        if(mainProduct == mSwipedProductA || mainProduct == mSwipedProductB)
-        {
-            mKeepCombo = 0;
-            EventOnKeepCombo?.Invoke(0);
-        }
-
-        //mainProduct.BackupSkillToFrame(matches.Count, true);
         MakeSkillProduct(matches.Count);
 
-        int additionalCombo = 0;
         bool isSameColorEnable = false;
         foreach (Product pro in matches)
         {
-            if (pro.mSkill == ProductSkill.MatchOneMore)
-                additionalCombo++;
             if (pro.mSkill == ProductSkill.BreakSameColor)
-                isSameColorEnable = true;
-        }
-        
-        List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
-        int nextCombo = mainProduct.Combo + 1 + additionalCombo;
-        foreach (Product pro in destroies)
-        {
-            pro.Combo = nextCombo;
-            pro.StartDestroy();
-            if (pro.mSkill == ProductSkill.KeepCombo)
             {
-                mKeepCombo = Math.Max(mKeepCombo, pro.Combo);
-                EventOnKeepCombo?.Invoke(mKeepCombo);
+                isSameColorEnable = true;
+                break;
             }
-            EventOnChange?.Invoke(pro);
         }
 
-        Attack(destroies.Count * nextCombo, mainProduct.transform.position);
+        Product mainProduct = matches[0];
+        List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
+        int currentCombo = mainProduct.IsSwipe ? MenuBattle.Inst().UseNextCombo() : MenuBattle.Inst().CurrentCombo;
+        foreach (Product pro in destroies)
+        {
+            pro.Combo = currentCombo + 1;
+            pro.StartDestroy();
+            BreakItemSkill(pro);
+            MenuBattle.Inst().AddScore(pro);
+        }
+
+        Attack(destroies.Count * (currentCombo + 1), mainProduct.transform.position);
         mainProduct.StartFlash(matches);
     }
     private List<Product> GetSameColorProducts(ProductColor color)
@@ -224,6 +209,20 @@ public class BattleFieldManager : MonoBehaviour
             list.Add(frame.ChildProduct);
         }
         return list;
+    }
+    private void BreakItemSkill(Product product)
+    {
+        if (product.mSkill == ProductSkill.MatchOneMore)
+        {
+            MenuBattle.Inst().OneMoreCombo(product);
+        }
+        else if (product.mSkill == ProductSkill.KeepCombo)
+        {
+            MenuBattle.Inst().KeepNextCombo(product);
+        }
+        else if (product.mSkill == ProductSkill.BreakSameColor)
+        {
+        }
     }
     private void MakeSkillProduct(int matchedCount)
     {
@@ -250,8 +249,12 @@ public class BattleFieldManager : MonoBehaviour
     {
         int idxX = pro.ParentFrame.IndexX;
         if (!mDestroyes.ContainsKey(idxX))
-            mDestroyes[idxX] = new List<Frame>();
-        mDestroyes[idxX].Add(pro.ParentFrame);
+            mDestroyes[idxX] = pro.ParentFrame;
+        else
+        {
+            if (pro.ParentFrame.IndexY < mDestroyes[idxX].IndexY)
+                mDestroyes[idxX] = pro.ParentFrame;
+        }
     }
 
     private void StartNextProducts(Frame baseFrame)
@@ -286,18 +289,46 @@ public class BattleFieldManager : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
 
-            foreach (var vert in mDestroyes)
+            int comborableCounter = 0;
+            for (int x = 0; x < CountX; ++x)
             {
-                int idxX = vert.Key;
-                List<Frame> vertFrames = vert.Value;
-                vertFrames.Sort((a, b) => { return a.IndexY - b.IndexY; });
+                if (!mDestroyes.ContainsKey(x))
+                    continue;
 
-                Frame baseFrame = vertFrames[0];
-                StartNextProducts(baseFrame);
+                Frame[] baseFrames = NextBaseFrames(mDestroyes[x]);
+                if (baseFrames.Length <= 0)
+                    continue;
+
+                comborableCounter += baseFrames.Length;
+                foreach (Frame baseFrame in baseFrames)
+                    StartNextProducts(baseFrame);
+
+                mDestroyes.Remove(x);
             }
 
-            mDestroyes.Clear();
+            if (comborableCounter > 0)
+                mIdleCounter = comborableCounter;
         }
+    }
+    private Frame[] NextBaseFrames(Frame baseFrame)
+    {
+        List<Frame> bases = new List<Frame>();
+        int idxX = baseFrame.IndexX;
+        int curIdxY = baseFrame.IndexY;
+        bool pushed = false;
+        while (curIdxY < CountY)
+        {
+            Frame frame = mFrames[idxX, curIdxY];
+            if (frame.Empty)
+                pushed = false;
+            else if (!pushed && frame.ChildProduct == null)
+            {
+                bases.Add(frame);
+                pushed = true;
+            }
+            curIdxY++;
+        }
+        return bases.ToArray();
     }
     private void SecondaryInitFrames()
     {
@@ -367,26 +398,54 @@ public class BattleFieldManager : MonoBehaviour
             obj.GetComponent<BoxCollider2D>().enabled = false;
         return product;
     }
-    public bool IsAllProductUnLocked()
+    public bool IsAllIdle()
     {
         foreach (Frame frame in mFrames)
+        {
+            if (frame.Empty)
+                continue;
             if (frame.ChildProduct == null || frame.ChildProduct.IsLocked())
                 return false;
+        }
         return true;
     }
-    private void FlushAttackPoints()
+    private IEnumerator CheckIdle()
     {
-        if (AttackPoints.Count == 0)
-            return;
-
-        if (!AttackPoints.IsReady)
-            return;
-
-        int cnt = AttackPoints.Pop(20);
-        List<Product> products = GetNextTargetProducts(cnt);
-        RequestSendChoco(products);
-        foreach (Product pro in products)
-            pro.SetChocoBlock(1, true);
+        while (true)
+        {
+            if (mIdleCounter == 0)
+            {
+                if (IsAllIdle())
+                {
+                    mIdleCounter = -1; //set Idle enable
+                    MenuBattle.Inst().CurrentCombo = 0;
+                }
+                else
+                {
+                    mIdleCounter = 1;
+                    MenuBattle.Inst().CurrentCombo++;
+                }
+            }
+            yield return null;
+        }
+    }
+    private IEnumerator FlushChocos()
+    {
+        while (true)
+        {
+            yield return null;
+            if (AttackPoints.Count <= 0 || !AttackPoints.IsReady || !IsIdle)
+                continue;
+    
+            int cnt = AttackPoints.Pop(20);
+            List<Product> products = GetNextTargetProducts(cnt);
+            RequestSendChoco(products);
+            foreach (Product pro in products)
+                pro.SetChocoBlock(1, true);
+    
+            if (CheckState() == InGameState.Lose)
+                FinishGame(false);
+        }
     }
     private List<Product> GetNextTargetProducts(int cnt)
     {
@@ -415,20 +474,6 @@ public class BattleFieldManager : MonoBehaviour
             return lsb.Weight - msb.Weight > 0 ? -1 : 1;
         });
         return (products.Count < cnt) ? products : products.GetRange(0, cnt);
-    }
-    private IEnumerator CheckIdle()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(UserSetting.MatchInterval);
-            if(IsAllProductUnLocked())
-            {
-                if(CheckState() == InGameState.Lose)
-                    FinishGame(false);
-                else
-                    FlushAttackPoints();
-            }
-        }
     }
     public InGameState CheckState()
     {
@@ -521,14 +566,15 @@ public class BattleFieldManager : MonoBehaviour
 
         mDestroyes.Clear();
         mNextColors.Clear();
+        mNextSkills.Clear();
 
         mFrames = null;
         mNextPositionIndex = 0;
         MatchLock = false;
         mThisUserPK = 0;
-        mKeepCombo = 0;
         mCountX = 0;
         mCountY = 0;
+        mIdleCounter = -1;
     }
     private Product NextUpProductFrom(Frame frame)
     {

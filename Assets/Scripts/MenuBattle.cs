@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class MenuBattle : MonoBehaviour
 {
+    private static MenuBattle mInst = null;
     private const string UIObjName = "MenuBattle";
     private const int mScorePerBar = 300;
 
@@ -26,6 +27,7 @@ public class MenuBattle : MonoBehaviour
     private int mCurrentScore;
     private List<GameObject> mScoreStars = new List<GameObject>();
 
+
     private void Update()
     {
 #if PLATFORM_ANDROID
@@ -35,6 +37,7 @@ public class MenuBattle : MonoBehaviour
         }
 #endif
         UpdateScore();
+
     }
 
     private void UpdateScore()
@@ -77,11 +80,13 @@ public class MenuBattle : MonoBehaviour
     private void FillScoreStar()
     {
         int starCount = mCurrentScore / mScorePerBar;
-        float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width;
-        float imgHeight = ScoreStarPrefab.GetComponent<Image>().sprite.rect.height;
-        Vector3 basePos = ScoreBar1.transform.position + new Vector3(imgWidth * 0.5f, 0, -0.1f);
+        float pixelPerUnit = GetComponent<CanvasScaler>().referencePixelsPerUnit;
+        float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
+        float barWidth = ScoreBar1.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
+        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
         while(mScoreStars.Count < starCount)
         {
+            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
             basePos.x += (imgWidth * mScoreStars.Count);
             GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
             mScoreStars.Add(obj);
@@ -121,16 +126,21 @@ public class MenuBattle : MonoBehaviour
 
     }
 
+    public static MenuBattle Inst()
+    {
+        if (mInst == null)
+            mInst = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.GetComponent<MenuBattle>();
+        return mInst;
+    }
+
     public static void PopUp()
     {
-        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        menuPlay.SetActive(true);
-        menuPlay.GetComponent<MenuBattle>().Init();
+        Inst().gameObject.SetActive(true);
+        Inst().Init();
     }
     public static void Hide()
     {
-        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
-        menuPlay.SetActive(false);
+        Inst().gameObject.SetActive(false);
     }
 
 #if PLATFORM_ANDROID
@@ -152,13 +162,24 @@ public class MenuBattle : MonoBehaviour
 
     private void Init()
     {
+        foreach (GameObject obj in mScoreStars)
+            Destroy(obj);
+
+        mScoreStars.Clear();
+
         mMenu = null;
+        mAddedScore = 0;
+        mCurrentScore = 0;
+        CurrentScore.text = "0";
         KeepCombo.text = "0";
         CurrentComboDisplay.text = "0";
         Lock(false);
-        //BattleFieldManager.Opp.EventOnChange = UpdatePanel;
+        ScoreBar1.fillAmount = 0;
+        ScoreBar2.gameObject.SetActive(false);
     }
-    private void AddScore(Product product)
+
+
+    public void AddScore(Product product)
     {
         mAddedScore += product.Combo;
         GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);

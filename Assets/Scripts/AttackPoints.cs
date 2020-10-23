@@ -77,7 +77,7 @@ public class AttackPoints : MonoBehaviour
     }
     IEnumerator WaitForReady()
     {
-        yield return new WaitForSeconds(UserSetting.MatchInterval);
+        yield return new WaitForSeconds(UserSetting.ChocoFlushInterval);
         mIsReady = true;
     }
 

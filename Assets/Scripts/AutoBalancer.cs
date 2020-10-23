@@ -73,12 +73,7 @@ public class AutoBalancer : MonoBehaviour
         set
         {
             if (value)
-            {
-                GameObject obj = GameObject.Find("AutoBalancer");
-                AutoBalancer com = obj.GetComponent<AutoBalancer>();
-                com.StartCoroutine("DoAutoBalancer");
-            }
-                
+                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StartCoroutine("DoAutoBalancer");
             else
                 GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StopCoroutine("DoAutoBalancer");
         }
