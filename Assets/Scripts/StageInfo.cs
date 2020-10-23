@@ -156,6 +156,22 @@ public class StageInfo
         }
         return type;
     }
+    public string ToCSVString()
+    {
+        string ret = ""
+            + Num + ","
+            + GoalType + ","
+            + GoalValue + ","
+            + MoveLimit + ","
+            + ColorCount + ","
+            + XCount + ","
+            + YCount + ","
+            + ItemOneMore + ","
+            + ItemKeepCombo + ","
+            + ItemSameColor + ","
+            + ItemReduceColor;
+        return ret;
+    }
     public void ParseRow(int rowIndex, string row)
     {
         if (Field == null)

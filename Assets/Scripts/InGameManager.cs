@@ -26,21 +26,19 @@ public class InGameManager : MonoBehaviour
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
 
-    private float mTouchTime = -1;
-    private Product mSwipedProductA = null;
-    private Product mSwipedProductB = null;
-    private InGameBillboard mBillboard = new InGameBillboard();
+    private int mIdleCounter = -1;
     private ProductColor mSkipColor = ProductColor.None;
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private Dictionary<int,Frame> mDestroyes = new Dictionary<int, Frame>();
 
-    public bool IsIdle { get { return mTouchTime < 0; } }
+    public bool IsIdle { get { return mIdleCounter < 0; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public Frame[,] Frames { get { return mFrames; } }
     public bool MatchLock { get; set; }
     public bool Pause { get; set; }
     public Action<InGameBillboard, Product> EventOnChange;
+    public Action EventOnIdle;
 
     public void StartGame(StageInfo info)
     {
@@ -49,7 +47,6 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(true);
         Pause = false;
         mStageInfo = info;
-        mBillboard.RemainLimit = info.MoveLimit;
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
         //GameObject mask = Instantiate(MaskPrefab, transform);
@@ -78,13 +75,11 @@ public class InGameManager : MonoBehaviour
                 mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount);
                 mFrames[x, y].GetFrame = GetFrame;
                 mFrames[x, y].EventBreakCover = () => {
-                    mBillboard.CoverCount++;
                     MenuInGame.Inst().ReduceGoalValue(mFrames[x, y].transform.position, StageGoalType.Cover);
                 };
                 Product pro = CreateNewProduct(mFrames[x, y]);
                 pro.SetChocoBlock(info.GetCell(x, y).ProductChocoCount);
                 pro.EventUnWrapChoco = () => {
-                    mBillboard.ChocoCount++;
                     MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.Choco);
                 };
             }
@@ -97,7 +92,7 @@ public class InGameManager : MonoBehaviour
         if (success)
         {
             LOG.echo(SummaryToCSVString(true));
-            int starCount = mBillboard.GetStarCount(mStageInfo);
+            int starCount = 3;
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 
@@ -106,15 +101,13 @@ public class InGameManager : MonoBehaviour
                 nextStage.UnLock();
 
             SoundPlayer.Inst.Player.Stop();
-            MenuInGame.Hide();
-            MenuComplete.PopUp(mStageInfo.Num, starCount, mBillboard.CurrentScore);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, MenuInGame.Inst().CurrentCombo);
         }
         else
         {
             LOG.echo(SummaryToCSVString(false));
             SoundPlayer.Inst.Player.Stop();
-            MenuInGame.Hide();
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mBillboard.CurrentScore);
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, MenuInGame.Inst().CurrentCombo);
         }
 
         ResetGame();
@@ -126,10 +119,6 @@ public class InGameManager : MonoBehaviour
         if (!IsIdle)
             return;
 
-        if (mBillboard.CheckState(mStageInfo) != InGameState.Running)
-            return;
-
-        mTouchTime = 0;
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
@@ -143,63 +132,59 @@ public class InGameManager : MonoBehaviour
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
         {
             RemoveLimit();
-            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mBillboard.KeepCombo);
-            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mBillboard.KeepCombo);
-            mSwipedProductA = product;
-            mSwipedProductB = targetProduct;
+            product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
+            targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
+            mIdleCounter = 2;
         }
     }
     private void OnMatch(List<Product> matches)
     {
+        mIdleCounter--;
         if (MatchLock || matches.Count < UserSetting.MatchCount)
             return;
 
-        mTouchTime = 0;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        Product mainProduct = matches[0];
-        if (mainProduct == mSwipedProductA || mainProduct == mSwipedProductB)
-        {
-            if(mBillboard.KeepCombo > 0)
-            {
-                mBillboard.KeepCombo = 0;
-                MenuInGame.Inst().UseNextCombo();
-            }
-        }
-
-        //mainProduct.BackupSkillToFrame(matches.Count, mSkipColor != ProductColor.None);
         MakeSkillProduct(matches.Count);
 
-        int additionalCombo = 0;
         bool isSameColorEnable = false;
         foreach (Product pro in matches)
         {
-            if (pro.mSkill == ProductSkill.MatchOneMore)
-            {
-                additionalCombo++;
-                mBillboard.ItemOneMoreCount++;
-                MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.ItemOneMore);
-                MenuInGame.Inst().OneMoreCombo(pro);
-            }
-            else if (pro.mSkill == ProductSkill.BreakSameColor)
+            if (pro.mSkill == ProductSkill.BreakSameColor)
             {
                 isSameColorEnable = true;
-                mBillboard.ItemSameColorCount++;
-                MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.ItemSameColor);
+                break;
             }
-                
         }
 
+        Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
-        int currentCombo = mainProduct.Combo;
+        int currentCombo = mainProduct.IsSwipe ? MenuInGame.Inst().UseNextCombo() : MenuInGame.Inst().CurrentCombo;
         foreach (Product pro in destroies)
         {
-            pro.Combo = currentCombo + 1 + additionalCombo;
+            pro.Combo = currentCombo + 1;
             pro.StartDestroy();
             AddScore(pro);
         }
 
         mainProduct.StartFlash(matches);
+    }
+    private void BreakItemSkill(Product product)
+    {
+        if (product.mSkill == ProductSkill.MatchOneMore)
+        {
+            MenuInGame.Inst().OneMoreCombo(product);
+            MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemOneMore);
+        }
+        else if (product.mSkill == ProductSkill.KeepCombo)
+        {
+            MenuInGame.Inst().KeepNextCombo(product);
+            MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemKeepCombo);
+        }
+        else if (product.mSkill == ProductSkill.BreakSameColor)
+        {
+            MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemSameColor);
+        }
     }
     private List<Product> GetSameColorProducts(ProductColor color)
     {
@@ -299,22 +284,36 @@ public class InGameManager : MonoBehaviour
         }
     }
 
+    public bool IsAllIdle()
+    {
+        foreach(Frame frame in mFrames)
+        {
+            if (frame.Empty)
+                continue;
+            if (frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+                return false;
+        }
+        return true;
+    }
     private IEnumerator CheckIdle()
     {
         while(true)
         {
-            yield return new WaitForSeconds(1);
-
-            if(mTouchTime >= 0)
+            if(mIdleCounter == 0)
             {
-                while (mTouchTime < UserSetting.MatchInterval)
+                if (IsAllIdle())
                 {
-                    yield return null;
-                    mTouchTime += Time.deltaTime;
+                    mIdleCounter = -1; //set Idle enable
+                    MenuInGame.Inst().CurrentCombo = 0;
+                    EventOnIdle?.Invoke();
                 }
-
-                mTouchTime = -1;
+                else
+                {
+                    mIdleCounter = 1;
+                    MenuInGame.Inst().CurrentCombo++;
+                }
             }
+            yield return null;
         }
     }
 
@@ -324,6 +323,7 @@ public class InGameManager : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
 
+            int comborableCounter = 0;
             for (int x = 0; x < CountX; ++x)
             {
                 if (!mDestroyes.ContainsKey(x))
@@ -331,17 +331,17 @@ public class InGameManager : MonoBehaviour
 
                 Frame[] baseFrames = NextBaseFrames(mDestroyes[x]);
                 if (baseFrames.Length <= 0)
-                {
-                    LOG.trace();
                     continue;
-                }
 
-
+                comborableCounter += baseFrames.Length;
                 foreach (Frame baseFrame in baseFrames)
                     StartNextProducts(baseFrame);
 
                 mDestroyes.Remove(x);
             }
+
+            if (comborableCounter > 0)
+                mIdleCounter = comborableCounter;
         }
     }
     private void SecondaryInitFrames()
@@ -426,9 +426,6 @@ public class InGameManager : MonoBehaviour
         mFrames = null;
         mStageInfo = null;
         Pause = false;
-        mSwipedProductA = null;
-        mSwipedProductB = null;
-        mBillboard.Reset();
         mSkipColor = ProductColor.None;
         MatchLock = false;
     }
@@ -454,38 +451,11 @@ public class InGameManager : MonoBehaviour
     }
     private void AddScore(Product product)
     {
-        if (product.mSkill == ProductSkill.KeepCombo)
-        {
-            mBillboard.ItemKeepComboCount++;
-            mBillboard.KeepCombo = Math.Max(mBillboard.KeepCombo, product.Combo);
-            MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemKeepCombo);
-            MenuInGame.Inst().KeepNextCombo(product);
-        }
-
-        mBillboard.MaxCombo = Math.Max(mBillboard.MaxCombo, product.Combo);
-        mBillboard.CurrentScore += (UserSetting.scorePerProduct * product.Combo);
+        BreakItemSkill(product);
         MenuInGame.Inst().AddScore(product);
-    }
-    private void SetSkipProduct(ProductColor color, int returnCount)
-    {
-        if (mSkipColor != ProductColor.None)
-            return;
-
-        mSkipColor = color;
-        StartCoroutine(ReturnToStopSkipping(returnCount));
-    }
-    private IEnumerator ReturnToStopSkipping(int count)
-    {
-        int returnCount = mBillboard.RemainLimit - count;
-        if (returnCount < 0) returnCount = 0;
-        while (returnCount < mBillboard.RemainLimit)
-            yield return null;
-
-        mSkipColor = ProductColor.None;
     }
     private void RemoveLimit()
     {
-        mBillboard.RemainLimit--;
         MenuInGame.Inst().ReduceLimit();
     }
     public string SummaryToCSVString(bool success)
@@ -503,15 +473,7 @@ public class InGameManager : MonoBehaviour
             + mStageInfo.ItemKeepCombo + "-"
             + mStageInfo.ItemSameColor + "-"
             + mStageInfo.ItemReduceColor + "),"
-            + success + ","
-            + mBillboard.CurrentScore + ","
-            + mBillboard.MaxCombo + ","
-            + (mStageInfo.MoveLimit - mBillboard.RemainLimit) + ","
-            + "Item("
-            + mBillboard.ItemOneMoreCount + "-"
-            + mBillboard.ItemKeepComboCount + "-"
-            + mBillboard.ItemSameColorCount + "-"
-            + mBillboard.ItemReduceColorCount + ")";
+            + success + ",";
 
         return ret;
     }

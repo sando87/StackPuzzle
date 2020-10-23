@@ -159,8 +159,8 @@ public class BattleFieldManager : MonoBehaviour
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
         {
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
-            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), mKeepCombo);
-            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), mKeepCombo);
+            product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
+            targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
             mSwipedProductA = product;
             mSwipedProductB = targetProduct;
         }

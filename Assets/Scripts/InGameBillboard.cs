@@ -159,4 +159,19 @@ public class InGameBillboard
 
         return InGameState.Running;
     }
+    public string ToCSVString()
+    {
+        string ret = ""
+        + MaxCombo + ","
+        + ItemOneMoreCount + ","
+        + ItemKeepComboCount + ","
+        + ItemSameColorCount + ","
+        + ItemReduceColorCount + ","
+        + CoverCount + ","
+        + ChocoCount + ","
+        + CurrentScore + ","
+        + RemainLimit + ","
+        + KeepCombo;
+        return ret;
+    }
 }

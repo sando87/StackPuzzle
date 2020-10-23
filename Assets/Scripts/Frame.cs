@@ -18,7 +18,6 @@ public class Frame : MonoBehaviour
 
     public bool Empty { get { return mIsEmpty; } }
     public ProductSkill SkillBackupSpace { get; set; }
-    public int ComboBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
     public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }

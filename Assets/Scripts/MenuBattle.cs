@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,14 +7,24 @@ using UnityEngine.UI;
 public class MenuBattle : MonoBehaviour
 {
     private const string UIObjName = "MenuBattle";
+    private const int mScorePerBar = 300;
 
-    public Text SavedCombo;
+    public Image ScoreBar1;
+    public Image ScoreBar2;
+    public Text CurrentScore;
+    public Text KeepCombo;
+    public Text CurrentComboDisplay;
     public Image MatchLock;
     public Image MatchUnLock;
     public GameObject ComboText;
     public GameObject ParentPanel;
-    private MenuMessageBox mMenu;
+    public GameObject ItemPrefab;
+    public GameObject ScoreStarPrefab;
 
+    private MenuMessageBox mMenu;
+    private int mAddedScore;
+    private int mCurrentScore;
+    private List<GameObject> mScoreStars = new List<GameObject>();
 
     private void Update()
     {
@@ -23,7 +34,93 @@ public class MenuBattle : MonoBehaviour
             OnClose();
         }
 #endif
+        UpdateScore();
     }
+
+    private void UpdateScore()
+    {
+        if (mAddedScore <= 0)
+            return;
+
+        if (mAddedScore < 30)
+        {
+            mCurrentScore += mAddedScore;
+            mAddedScore = 0;
+            int n = mCurrentScore % mScorePerBar;
+            ScoreBar1.fillAmount = n / (float)mScorePerBar;
+            ScoreBar2.gameObject.SetActive(false);
+            CurrentScore.text = mCurrentScore.ToString();
+            CurrentScore.GetComponent<Animation>().Play("touch");
+        }
+        else if ((mCurrentScore + mAddedScore) / mScorePerBar > mCurrentScore / mScorePerBar)
+        {
+            mCurrentScore += mAddedScore;
+            mAddedScore = 0;
+            int n = mCurrentScore % mScorePerBar;
+            ScoreBar1.fillAmount = n / (float)mScorePerBar;
+            ScoreBar2.gameObject.SetActive(false);
+            CurrentScore.text = mCurrentScore.ToString();
+            CurrentScore.GetComponent<Animation>().Play("touch");
+        }
+        else
+        {
+            StartCoroutine(ScoreBarEffect(mCurrentScore, mAddedScore));
+            mCurrentScore += mAddedScore;
+            mAddedScore = 0;
+            int n = mCurrentScore % mScorePerBar;
+            CurrentScore.text = mCurrentScore.ToString();
+            CurrentScore.GetComponent<Animation>().Play("touch");
+        }
+
+        FillScoreStar();
+    }
+    private void FillScoreStar()
+    {
+        int starCount = mCurrentScore / mScorePerBar;
+        float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width;
+        float imgHeight = ScoreStarPrefab.GetComponent<Image>().sprite.rect.height;
+        Vector3 basePos = ScoreBar1.transform.position + new Vector3(imgWidth * 0.5f, 0, -0.1f);
+        while(mScoreStars.Count < starCount)
+        {
+            basePos.x += (imgWidth * mScoreStars.Count);
+            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
+            mScoreStars.Add(obj);
+        }
+    }
+    private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
+    {
+        int nextScore = prevScore + addedScore;
+        float totalWidth = ScoreBar1.sprite.rect.width;
+        float fromRate = (prevScore % mScorePerBar) / (float)mScorePerBar;
+        float toRate = (nextScore % mScorePerBar) / (float)mScorePerBar;
+        float bar2Width = totalWidth * (toRate - fromRate) + 1;
+        ScoreBar1.fillAmount = fromRate;
+        ScoreBar2.gameObject.SetActive(true);
+        RectTransform rt = ScoreBar2.GetComponent<RectTransform>();
+        Vector2 pos = rt.anchoredPosition;
+        Vector2 size = rt.sizeDelta;
+        pos.x = totalWidth * toRate;
+        size.x = bar2Width;
+        rt.anchoredPosition = pos;
+        rt.sizeDelta = size;
+        float time = 0;
+        float duration = 0.5f;
+        float slope1 = (toRate - fromRate) / (duration * duration);
+        float slope2 = -bar2Width / (duration * duration);
+        while (time < duration)
+        {
+            size.x = slope2 * time * time + bar2Width;
+            ScoreBar1.fillAmount = slope1 * time * time + fromRate;
+            rt.sizeDelta = size;
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        ScoreBar1.fillAmount = toRate;
+        ScoreBar2.gameObject.SetActive(false);
+
+    }
+
     public static void PopUp()
     {
         GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
@@ -56,29 +153,14 @@ public class MenuBattle : MonoBehaviour
     private void Init()
     {
         mMenu = null;
-        SavedCombo.text = "0";
+        KeepCombo.text = "0";
+        CurrentComboDisplay.text = "0";
         Lock(false);
-        BattleFieldManager.Me.EventOnChange = PlayComboEffect;
-        BattleFieldManager.Me.EventOnKeepCombo = SetKeepCombo;
         //BattleFieldManager.Opp.EventOnChange = UpdatePanel;
     }
-    private void PlayComboEffect(Product product)
+    private void AddScore(Product product)
     {
-        PlayComboAnimation(product);
-    }
-    private void SetKeepCombo(int combo)
-    {
-        SavedCombo.text = combo.ToString();
-    }
-    private void Lock(bool locked)
-    {
-        BattleFieldManager.Me.MatchLock = locked;
-        MatchLock.gameObject.SetActive(locked);
-        MatchUnLock.gameObject.SetActive(!locked);
-    }
-
-    private void PlayComboAnimation(Product product)
-    {
+        mAddedScore += product.Combo;
         GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
         Text combo = comboTextObj.GetComponent<Text>();
         combo.text = product.Combo.ToString();
@@ -99,7 +181,97 @@ public class MenuBattle : MonoBehaviour
         }
         Destroy(obj);
     }
+    public int CurrentCombo
+    {
+        get { return int.Parse(CurrentComboDisplay.text); }
+        set
+        {
+            CurrentComboDisplay.text = value.ToString();
+            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+        }
+    }
+    public int UseNextCombo()
+    {
+        int keepCombo = int.Parse(KeepCombo.text);
+        if (keepCombo > 0)
+        {
+            CurrentCombo += keepCombo;
+            KeepCombo.GetComponent<Animation>().Play("touch");
+        }
 
+        KeepCombo.text = "0";
+        return keepCombo;
+    }
+    public void KeepNextCombo(Product product)
+    {
+        if (product.mSkill != ProductSkill.KeepCombo)
+            return;
+
+        int nextCombo = product.Combo;
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        Image img = obj.GetComponent<Image>();
+        img.sprite = product.Renderer.sprite;
+        StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
+        {
+            int prevKeepCombo = int.Parse(KeepCombo.text);
+            if (nextCombo > prevKeepCombo)
+            {
+                KeepCombo.text = nextCombo.ToString();
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
+        }));
+    }
+    public void OneMoreCombo(Product product)
+    {
+        if (product.mSkill != ProductSkill.MatchOneMore)
+            return;
+
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        Image img = obj.GetComponent<Image>();
+        img.sprite = product.Renderer.sprite;
+        StartCoroutine(AnimateItem(obj, CurrentComboDisplay.transform.position, () =>
+        {
+            int currentCombo = int.Parse(CurrentComboDisplay.text);
+            CurrentComboDisplay.text = (currentCombo + 1).ToString();
+            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+        }));
+    }
+    IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
+    {
+        float duration = 1.0f;
+        float time = 0;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = worldDest;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        Vector3 deltaSize = new Vector3(0.01f, 0.01f, 0);
+        float slope = -dir.y / (duration * duration);
+        while (time < duration)
+        {
+            offset.y = slope * (time - duration) * (time - duration) + dir.y;
+            offset.x = dir.x * time;
+            obj.transform.position = startPos + offset;
+            //obj.transform.localScale += time < duration * 0.5f ? deltaSize : -deltaSize;
+            obj.transform.Rotate(axisZ, offset.x - dir.x);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action.Invoke();
+        Destroy(obj);
+    }
+
+
+
+
+
+    private void Lock(bool locked)
+    {
+        BattleFieldManager.Me.MatchLock = locked;
+        MatchLock.gameObject.SetActive(locked);
+        MatchUnLock.gameObject.SetActive(!locked);
+    }
     public void OnClose()
     {
         if (mMenu != null)

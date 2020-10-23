@@ -99,17 +99,24 @@ public class MenuInGame : MonoBehaviour
         if (mStageInfo.GoalType == "Score")
         {
             if (mCurrentScore > mStageInfo.GoalValue)
+            {
                 InGameManager.Inst.FinishGame(true);
+                Hide();
+            }
         }
         else
         {
             if (TargetValue.text == "0")
+            {
                 InGameManager.Inst.FinishGame(true);
+                Hide();
+            }
         }
 
         if(Limit.text == "0")
         {
             InGameManager.Inst.FinishGame(false);
+            Hide();
         }
     }
     private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
@@ -212,13 +219,23 @@ public class MenuInGame : MonoBehaviour
         Destroy(obj);
     }
 
-    public int CurrentCombo { get { return int.Parse(CurrentComboDisplay.text); } }
+    public int CurrentCombo
+    {
+        get { return int.Parse(CurrentComboDisplay.text); }
+        set {
+            CurrentComboDisplay.text = value.ToString();
+            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+        }
+    }
 
     public int UseNextCombo()
     {
         int keepCombo = int.Parse(KeepCombo.text);
         if (keepCombo > 0)
+        {
+            CurrentCombo += keepCombo;
             KeepCombo.GetComponent<Animation>().Play("touch");
+        }
 
         KeepCombo.text = "0";
         return keepCombo;
@@ -301,7 +318,7 @@ public class MenuInGame : MonoBehaviour
             offset.x = dir.x * time;
             obj.transform.position = startPos + offset;
             //obj.transform.localScale += time < duration * 0.5f ? deltaSize : -deltaSize;
-            obj.transform.Rotate(axisZ, offset.x - dir.x - 1);
+            obj.transform.Rotate(axisZ, offset.x - dir.x);
             time += Time.deltaTime;
             yield return null;
         }

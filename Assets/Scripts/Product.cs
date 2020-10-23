@@ -29,6 +29,7 @@ public class Product : MonoBehaviour
 
     public float Weight { get; set; }
     public int Combo { get; set; }
+    public bool IsSwipe { get; set; }
     public bool IsLocked() { return mLocked; }
     public Frame ParentFrame
     {
@@ -48,13 +49,13 @@ public class Product : MonoBehaviour
     public Action EventUnWrapChoco;
 
     #region MatchCycle
-    public void StartSwipe(Frame target, int keepCombo)
+    public void StartSwipe(Frame target)
     {
         if (mLocked)
             return;
 
         mLocked = true;
-        Combo = keepCombo;
+        IsSwipe = true;
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
@@ -82,6 +83,7 @@ public class Product : MonoBehaviour
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
         EventMatched?.Invoke(matchList);
+        IsSwipe = false;
     }
 
     public void StartDestroy()
@@ -89,7 +91,6 @@ public class Product : MonoBehaviour
         mLocked = true;
         mAnimation.Play("destroy");
         UnWrapChocoBlocksAroundMe(Combo);
-        ParentFrame.ComboBackupSpace = Combo;
         ParentFrame.BreakCover(Combo);
     }
     void StartSpriteAnim()
@@ -156,7 +157,6 @@ public class Product : MonoBehaviour
 
         if (isComboable)
         {
-            Combo = ParentFrame.ComboBackupSpace;
             StartCoroutine(DoMatch());
         }
             
