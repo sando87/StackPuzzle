@@ -13,6 +13,8 @@ public class MenuMain : MonoBehaviour
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         LOG.trace();
 
+        Application.targetFrameRate = 30;
+
         NetClientApp.GetInstance().Connect(3);
         UserSetting.Initialize();
         InitLogSystem();
