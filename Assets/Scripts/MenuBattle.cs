@@ -146,17 +146,17 @@ public class MenuBattle : MonoBehaviour
 #if PLATFORM_ANDROID
     private void OnApplicationPause(bool pause)
     {
-        BattleFieldManager.FinishGame(false);
+        //BattleFieldManager.FinishGame(false);
     }
 
     private void OnApplicationFocus(bool focus)
     {
-        BattleFieldManager.FinishGame(false);
+        //BattleFieldManager.FinishGame(false);
     }
 
     private void OnApplicationQuit()
     {
-        BattleFieldManager.FinishGame(false);
+        //BattleFieldManager.FinishGame(false);
     }
 #endif
 
