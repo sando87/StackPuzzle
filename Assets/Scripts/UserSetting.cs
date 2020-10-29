@@ -46,7 +46,7 @@ public class UserSetting
 
     public const int StageTotalCount = 100;
     public const float MatchInterval = 2.0f;
-    public const float ChocoFlushInterval = 2.0f;
+    public const float ChocoFlushInterval = 1.5f;
     public const int MatchCount = 3;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;

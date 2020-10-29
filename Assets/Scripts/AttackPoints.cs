@@ -35,6 +35,10 @@ public class AttackPoints : MonoBehaviour
         else
             mAttackPoint -= point;
 
+        mIsReady = false;
+        StopCoroutine("WaitForReady");
+        StartCoroutine("WaitForReady");
+
         StopCoroutine("AnimateFold");
         StopCoroutine("AnimateUnFold");
 

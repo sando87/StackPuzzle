@@ -43,11 +43,15 @@ public class BattleFieldManager : MonoBehaviour
     private Dictionary<int, Frame> mDestroyes = new Dictionary<int, Frame>();
     private List<ProductColor> mNextColors = new List<ProductColor>();
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
+    private LinkedList<Header> mNetMessages = new LinkedList<Header>();
     private int mNextPositionIndex = 0;
     private int mThisUserPK = 0;
     private int mCountX = 0;
     private int mCountY = 0;
     private int mIdleCounter = -1;
+    private bool mAtleastOneMatched = false;
+    private int mCurrentCombo = 0;
+    private int mKeepCombo = 0;
 
     public bool IsIdle { get { return mIdleCounter < 0; } }
     public int CountX { get { return mCountX; } }
@@ -73,19 +77,21 @@ public class BattleFieldManager : MonoBehaviour
         //mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
 
         if(IsPlayerField())
+        {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+            StartCoroutine(FlushChocos());
+        }
         else
+        {
             NetClientApp.GetInstance().EventResponse = ResponseFromOpponent;
+            StartCoroutine(CheckNetMessage());
+        }
 
         RequestNextColors(NextRequestCount);
 
         StartCoroutine(CheckNextProducts());
 
-        if (IsPlayerField())
-        {
-            StartCoroutine(CheckIdle());
-            StartCoroutine(FlushChocos());
-        }
+        StartCoroutine(CheckIdle());
 
         Vector3 localBasePos = new Vector3(-GridSize * XCount * 0.5f, -GridSize * YCount * 0.5f, 0);
         localBasePos.x += GridSize * 0.5f;
@@ -155,7 +161,7 @@ public class BattleFieldManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsChocoBlock() && !targetProduct.IsChocoBlock())
+        if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
         {
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
@@ -169,6 +175,7 @@ public class BattleFieldManager : MonoBehaviour
         if (MatchLock || matches.Count < UserSetting.MatchCount)
             return;
 
+        mAtleastOneMatched = true;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         MakeSkillProduct(matches.Count);
@@ -185,13 +192,21 @@ public class BattleFieldManager : MonoBehaviour
 
         Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
-        int currentCombo = mainProduct.IsSwipe ? MenuBattle.Inst().UseNextCombo() : MenuBattle.Inst().CurrentCombo;
+        //int currentCombo = mainProduct.IsSwipe ? MenuBattle.Inst().UseNextCombo() : MenuBattle.Inst().CurrentCombo;
+
+        int currentCombo = mCurrentCombo;
+        if (mainProduct.IsSwipe)
+        {
+            currentCombo = mKeepCombo;
+            mKeepCombo = 0;
+        }
+
         foreach (Product pro in destroies)
         {
             pro.Combo = currentCombo + 1;
             pro.StartDestroy();
             BreakItemSkill(pro);
-            MenuBattle.Inst().AddScore(pro);
+            //MenuBattle.Inst().AddScore(pro);
         }
 
         Attack(destroies.Count * (currentCombo + 1), mainProduct.transform.position);
@@ -202,7 +217,7 @@ public class BattleFieldManager : MonoBehaviour
         List<Product> list = new List<Product>();
         foreach (Frame frame in mFrames)
         {
-            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked() || frame.ChildProduct.IsChocoBlock())
                 continue;
             if (frame.ChildProduct.mColor != color)
                 continue;
@@ -214,11 +229,13 @@ public class BattleFieldManager : MonoBehaviour
     {
         if (product.mSkill == ProductSkill.MatchOneMore)
         {
-            MenuBattle.Inst().OneMoreCombo(product);
+            mCurrentCombo++;
+            //MenuBattle.Inst().OneMoreCombo(product);
         }
         else if (product.mSkill == ProductSkill.KeepCombo)
         {
-            MenuBattle.Inst().KeepNextCombo(product);
+            mKeepCombo = Mathf.Max(mKeepCombo, product.Combo);
+            //MenuBattle.Inst().KeepNextCombo(product);
         }
         else if (product.mSkill == ProductSkill.BreakSameColor)
         {
@@ -287,7 +304,7 @@ public class BattleFieldManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return null;
 
             int comborableCounter = 0;
             for (int x = 0; x < CountX; ++x)
@@ -307,7 +324,9 @@ public class BattleFieldManager : MonoBehaviour
             }
 
             if (comborableCounter > 0)
+            {
                 mIdleCounter = comborableCounter;
+            }
         }
     }
     private Frame[] NextBaseFrames(Frame baseFrame)
@@ -415,15 +434,18 @@ public class BattleFieldManager : MonoBehaviour
         {
             if (mIdleCounter == 0)
             {
-                if (IsAllIdle())
+                if (mAtleastOneMatched)
                 {
-                    mIdleCounter = -1; //set Idle enable
-                    MenuBattle.Inst().CurrentCombo = 0;
+                    mAtleastOneMatched = false;
+                    mIdleCounter = 1;
+                    mCurrentCombo++;
+                    //MenuBattle.Inst().CurrentCombo++;
                 }
                 else
                 {
-                    mIdleCounter = 1;
-                    MenuBattle.Inst().CurrentCombo++;
+                    mIdleCounter = -1; //set Idle enable
+                    mCurrentCombo = 0;
+                    //MenuBattle.Inst().CurrentCombo = 0;
                 }
             }
             yield return null;
@@ -436,7 +458,7 @@ public class BattleFieldManager : MonoBehaviour
             yield return null;
             if (AttackPoints.Count <= 0 || !AttackPoints.IsReady || !IsIdle)
                 continue;
-    
+
             int cnt = AttackPoints.Pop(20);
             List<Product> products = GetNextTargetProducts(cnt);
             RequestSendChoco(products);
@@ -518,41 +540,55 @@ public class BattleFieldManager : MonoBehaviour
         if (responseMsg.Ack == 1)
             return;
 
-        if (responseMsg.Cmd == NetCMD.SendSwipe)
-        {
-            SwipeInfo res = responseMsg.body as SwipeInfo;
-            //if (res.fromUserPk == mThisUserPK)
-            {
-                MatchLock = res.matchLock;
-                Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
-                OnSwipe(pro.gameObject, res.dir);
-            }
-        }
-        else if(responseMsg.Cmd == NetCMD.EndGame)
-        {
-            EndGame res = responseMsg.body as EndGame;
-            //if (res.fromUserPk == mThisUserPK)
-            {
-                FinishGame(true);
-            }
 
-        }
-        else if (responseMsg.Cmd == NetCMD.SendChoco)
+        if (responseMsg.Cmd == NetCMD.EndGame)
         {
-            ChocoInfo res = responseMsg.body as ChocoInfo;
-            //if (res.fromUserPk == mThisUserPK)
+            mNetMessages.AddFirst(responseMsg);
+        }
+        else
+        {
+            mNetMessages.AddLast(responseMsg);
+        }
+    }
+    private IEnumerator CheckNetMessage()
+    {
+        while (true)
+        {
+            yield return null;
+
+            if (mNetMessages.Count > 0 && IsIdle)
             {
-                AttackPoints.Pop(res.xIndicies.Length);
-                for(int i = 0; i < res.xIndicies.Length; ++i)
+                Header msg = mNetMessages.First.Value;
+                if (msg.Cmd == NetCMD.EndGame)
                 {
-                    int idxX = res.xIndicies[i];
-                    int idxY = res.yIndicies[i];
-                    Product pro = GetFrame(idxX, idxY).ChildProduct;
-                    pro.SetChocoBlock(1, true);
+                    EndGame res = msg.body as EndGame;
+                    FinishGame(!res.win);
+                }
+                else if (msg.Cmd == NetCMD.SendSwipe)
+                {
+                    SwipeInfo res = msg.body as SwipeInfo;
+                    MatchLock = res.matchLock;
+                    Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
+                    OnSwipe(pro.gameObject, res.dir);
+
+                    mNetMessages.RemoveFirst();
+                }
+                else if (msg.Cmd == NetCMD.SendChoco)
+                {
+                    ChocoInfo res = msg.body as ChocoInfo;
+                    AttackPoints.Pop(res.xIndicies.Length);
+                    for (int i = 0; i < res.xIndicies.Length; ++i)
+                    {
+                        int idxX = res.xIndicies[i];
+                        int idxY = res.yIndicies[i];
+                        Product pro = GetFrame(idxX, idxY).ChildProduct;
+                        pro.SetChocoBlock(1, true);
+                    }
+
+                    mNetMessages.RemoveFirst();
                 }
             }
         }
-
     }
     private bool IsPlayerField()
     {
@@ -567,6 +603,7 @@ public class BattleFieldManager : MonoBehaviour
         mDestroyes.Clear();
         mNextColors.Clear();
         mNextSkills.Clear();
+        mNetMessages.Clear();
 
         mFrames = null;
         mNextPositionIndex = 0;
@@ -575,7 +612,11 @@ public class BattleFieldManager : MonoBehaviour
         mCountX = 0;
         mCountY = 0;
         mIdleCounter = -1;
+        mAtleastOneMatched = false;
+        mCurrentCombo = 0;
+        mKeepCombo = 0;
     }
+
     private Product NextUpProductFrom(Frame frame)
     {
         Frame curFrame = frame;

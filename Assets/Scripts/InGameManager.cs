@@ -191,7 +191,7 @@ public class InGameManager : MonoBehaviour
         List<Product> list = new List<Product>();
         foreach (Frame frame in mFrames)
         {
-            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked() || frame.ChildProduct.IsChocoBlock())
                 continue;
             if (frame.ChildProduct.mColor != color)
                 continue;
