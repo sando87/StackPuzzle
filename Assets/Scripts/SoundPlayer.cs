@@ -22,6 +22,29 @@ public class SoundPlayer : MonoBehaviour
         Player.mute = UserSetting.Mute;
     }
 
+    private void Start()
+    {
+        //StartCoroutine(FPSCounter());
+    }
+
+    IEnumerator FPSCounter()
+    {
+        float time = 0;
+        int count = 0;
+        while(true)
+        {
+            count++;
+            time += Time.deltaTime;
+            if(time > 1)
+            {
+                Debug.Log(count);
+                count = 0;
+                time = 0;
+            }
+            yield return null;
+        }
+    }
+
     public bool OnOff()
     {
         Player.mute = !Player.mute;
