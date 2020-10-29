@@ -30,15 +30,13 @@ public class AttackPoints : MonoBehaviour
         }
 
         fromPos.z -= 1;
-        GameObject obj = GameObject.Instantiate(Projectile, fromPos, Quaternion.identity);
+        GameObject obj = GameObject.Instantiate(Projectile, fromPos, Quaternion.identity, transform.parent);
         int imgIndex = Mathf.Abs(point) >= 12 ? 3 : (Mathf.Abs(point) / 3);
         obj.GetComponent<SpriteRenderer>().sprite = Images[imgIndex];
-
-        float duration = 1.0f;
-        Destroy(obj, duration);
-        StartCoroutine(Utils.AnimateConcave(obj, transform.position, duration, () =>
+        StartCoroutine(Utils.AnimateConcave(obj, transform.position, 1.0f, () =>
         {
             AddChoco(point);
+            Destroy(obj);
         }));
     }
     public int Pop(int point)

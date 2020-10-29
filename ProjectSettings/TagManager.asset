@@ -44,6 +44,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BattleMaskMe
+    uniqueID: 3007819399
+    locked: 0
+  - name: BattleMaskOpp
+    uniqueID: 819098123
+    locked: 0
   - name: UI
     uniqueID: 58496801
     locked: 0

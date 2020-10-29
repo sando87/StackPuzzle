@@ -98,7 +98,7 @@ public class Utils
             offset.x = slopeX * nowT * nowT + dir.x;
             offset.y = slopeY * time * time;
             obj.transform.position = startPos + offset;
-            obj.transform.Rotate(axisZ, offset.x - dir.x);
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
             time += Time.deltaTime;
             yield return null;
         }
@@ -122,7 +122,7 @@ public class Utils
             offset.x = slopeX * nowT * nowT + dir.x;
             offset.y = slopeY * nowT * nowT + dir.y;
             obj.transform.position = startPos + offset;
-            obj.transform.Rotate(axisZ, offset.x - dir.x);
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
             time += Time.deltaTime;
             yield return null;
         }

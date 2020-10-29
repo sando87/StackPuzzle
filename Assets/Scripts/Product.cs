@@ -159,6 +159,7 @@ public class Product : MonoBehaviour
 
         mLocked = false;
 
+        Renderer.sortingLayerName = "Default";
         Renderer.maskInteraction = SpriteMaskInteraction.None;
 
         if (isComboable)
@@ -362,10 +363,10 @@ public class Product : MonoBehaviour
         mSkill = skill;
         switch (skill)
         {
-            case ProductSkill.MatchOneMore:     GetComponent<SpriteRenderer>().sprite = ImgOneMore; break;
-            case ProductSkill.KeepCombo:        GetComponent<SpriteRenderer>().sprite = ImgKeepCombo; break;
-            case ProductSkill.BreakSameColor:   GetComponent<SpriteRenderer>().sprite = ImgSameColor; break;
-            case ProductSkill.ReduceColor:      GetComponent<SpriteRenderer>().sprite = ImgReduceColor; break;
+            case ProductSkill.MatchOneMore:     Renderer.sprite = ImgOneMore; break;
+            case ProductSkill.KeepCombo:        Renderer.sprite = ImgKeepCombo; break;
+            case ProductSkill.BreakSameColor:   Renderer.sprite = ImgSameColor; break;
+            case ProductSkill.ReduceColor:      Renderer.sprite = ImgReduceColor; break;
             default: break;
         }
     }

@@ -291,6 +291,7 @@ public class BattleFieldManager : MonoBehaviour
 
             validFrame = pro.ParentFrame;
             pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, curFrame == baseFrame);
+            pro.Renderer.sortingLayerName = IsPlayerField() ? "BattleMaskMe" : "BattleMaskOpp";
 
             curFrame = curFrame.Up();
         }
@@ -301,6 +302,7 @@ public class BattleFieldManager : MonoBehaviour
         {
             Product pro = CreateNewProduct(curFrame, GetNextColor(), mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
             pro.StartDropAnimate(curFrame, emptyCount, curFrame == baseFrame);
+            pro.Renderer.sortingLayerName = IsPlayerField() ? "BattleMaskMe" : "BattleMaskOpp";
 
             curFrame = curFrame.Up();
         }
@@ -406,6 +408,8 @@ public class BattleFieldManager : MonoBehaviour
         mask.isCustomRangeActive = true;
         mask.frontSortingOrder = layerOrder + 1;
         mask.backSortingOrder = layerOrder;
+        mask.frontSortingLayerID = IsPlayerField() ? SortingLayer.NameToID("BattleMaskMe") : SortingLayer.NameToID("BattleMaskOpp");
+        mask.backSortingLayerID = IsPlayerField() ? SortingLayer.NameToID("BattleMaskMe") : SortingLayer.NameToID("BattleMaskOpp");
         return mask;
     }
     private Product CreateNewProduct(Frame parent, ProductColor color,ProductSkill skill = ProductSkill.Nothing)
