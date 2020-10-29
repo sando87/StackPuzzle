@@ -64,6 +64,7 @@ public class Product : MonoBehaviour
         float duration = 0.3f;
         Vector3 start = transform.position;
         Vector3 dest = target.transform.position;
+        dest.z = start.z;
         Vector3 vel = (dest - start) / duration;
         Vector3 offset = Vector3.zero;
         float time = 0;
@@ -164,7 +165,6 @@ public class Product : MonoBehaviour
         {
             StartCoroutine(DoMatch());
         }
-            
     }
 
     public void StartFlash(List<Product> matchedPros)

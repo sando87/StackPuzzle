@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class AttackPoints : MonoBehaviour
 {
@@ -17,7 +16,7 @@ public class AttackPoints : MonoBehaviour
     public Sprite[] Images = new Sprite[4];
 
     public int Count { get { return mAttackPoint; } }
-    public bool IsReady { get { return mIsReady; } }
+    public bool IsReady { get { return mIsReady && mChocoCount > 0; } }
     public void Add(int point, Vector3 fromPos)
     {
         if (OppAttackPoints == null)
@@ -30,8 +29,10 @@ public class AttackPoints : MonoBehaviour
             mAttackPoint = 0;
         }
 
+        fromPos.z -= 1;
         GameObject obj = GameObject.Instantiate(Projectile, fromPos, Quaternion.identity);
-        obj.GetComponent<Image>().sprite = Images[0];
+        int imgIndex = Mathf.Abs(point) >= 12 ? 3 : (Mathf.Abs(point) / 3);
+        obj.GetComponent<SpriteRenderer>().sprite = Images[imgIndex];
 
         float duration = 1.0f;
         Destroy(obj, duration);
@@ -42,22 +43,12 @@ public class AttackPoints : MonoBehaviour
     }
     public int Pop(int point)
     {
-        if (mAttackPoint < point)
-        {
-            point = mAttackPoint;
-            mAttackPoint = 0;
-        }
-        else
-            mAttackPoint -= point;
+        if (mChocoCount < point)
+            point = mChocoCount;
 
-        mIsReady = false;
-        StopCoroutine("WaitForReady");
-        StartCoroutine("WaitForReady");
+        mAttackPoint -= point;
+        AddChoco(-point);
 
-        StopCoroutine("AnimateFold");
-        StopCoroutine("AnimateUnFold");
-
-        StartCoroutine("AnimateFold");
         return point;
     }
 
