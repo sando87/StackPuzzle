@@ -61,11 +61,16 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateSwipe(Frame target)
     {
+        float duration = 0.3f;
+        Vector3 start = transform.position;
         Vector3 dest = target.transform.position;
-        dest.z = transform.position.z;
-        while ((transform.position - dest).magnitude >= 0.02f)
+        Vector3 vel = (dest - start) / duration;
+        Vector3 offset = Vector3.zero;
+        float time = 0;
+        while (time < duration)
         {
-            transform.position = Vector3.MoveTowards(transform.position, dest, UserSetting.GridSize * 3 * Time.deltaTime);
+            transform.position = start + (vel * time);
+            time += Time.deltaTime;
             yield return null;
         }
         transform.position = dest;
