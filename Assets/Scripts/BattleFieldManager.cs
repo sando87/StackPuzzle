@@ -192,13 +192,15 @@ public class BattleFieldManager : MonoBehaviour
 
         Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
-        //int currentCombo = mainProduct.IsSwipe ? MenuBattle.Inst().UseNextCombo() : MenuBattle.Inst().CurrentCombo;
 
         int currentCombo = mCurrentCombo;
         if (mainProduct.IsSwipe)
         {
             currentCombo = mKeepCombo;
+            mCurrentCombo = mKeepCombo;
             mKeepCombo = 0;
+            if (IsPlayerField())
+                MenuBattle.Inst().UseNextCombo();
         }
 
         foreach (Product pro in destroies)
@@ -206,7 +208,8 @@ public class BattleFieldManager : MonoBehaviour
             pro.Combo = currentCombo + 1;
             pro.StartDestroy();
             BreakItemSkill(pro);
-            //MenuBattle.Inst().AddScore(pro);
+            if (IsPlayerField())
+                MenuBattle.Inst().AddScore(pro);
         }
 
         Attack(destroies.Count * (currentCombo + 1), mainProduct.transform.position);
@@ -230,12 +233,14 @@ public class BattleFieldManager : MonoBehaviour
         if (product.mSkill == ProductSkill.MatchOneMore)
         {
             mCurrentCombo++;
-            //MenuBattle.Inst().OneMoreCombo(product);
+            if (IsPlayerField())
+                MenuBattle.Inst().OneMoreCombo(product);
         }
         else if (product.mSkill == ProductSkill.KeepCombo)
         {
             mKeepCombo = Mathf.Max(mKeepCombo, product.Combo);
-            //MenuBattle.Inst().KeepNextCombo(product);
+            if (IsPlayerField())
+                MenuBattle.Inst().KeepNextCombo(product);
         }
         else if (product.mSkill == ProductSkill.BreakSameColor)
         {
@@ -439,13 +444,15 @@ public class BattleFieldManager : MonoBehaviour
                     mAtleastOneMatched = false;
                     mIdleCounter = 1;
                     mCurrentCombo++;
-                    //MenuBattle.Inst().CurrentCombo++;
+                    if (IsPlayerField())
+                        MenuBattle.Inst().CurrentCombo++;
                 }
                 else
                 {
                     mIdleCounter = -1; //set Idle enable
                     mCurrentCombo = 0;
-                    //MenuBattle.Inst().CurrentCombo = 0;
+                    if (IsPlayerField())
+                        MenuBattle.Inst().CurrentCombo = 0;
                 }
             }
             yield return null;
@@ -642,21 +649,13 @@ public class BattleFieldManager : MonoBehaviour
             return;
 
         int remainPt = AttackPoints.Count;
-        if (remainPt == 0)
+        if (remainPt <= 0)
         {
             Opponent.AttackPoints.Add(point, fromPos);
         }
         else
         {
-            if (remainPt >= point)
-            {
-                AttackPoints.Add(-point, fromPos);
-            }
-            else
-            {
-                AttackPoints.Add(-remainPt, fromPos);
-                Opponent.AttackPoints.Add(point - remainPt, fromPos);
-            }
+            AttackPoints.Add(-point, fromPos);
         }
             
     }

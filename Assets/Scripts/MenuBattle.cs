@@ -232,7 +232,7 @@ public class MenuBattle : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
+        StartCoroutine(Utils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
         {
             int prevKeepCombo = int.Parse(KeepCombo.text);
             if (nextCombo > prevKeepCombo)
@@ -250,40 +250,13 @@ public class MenuBattle : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(AnimateItem(obj, CurrentComboDisplay.transform.position, () =>
+        StartCoroutine(Utils.AnimateConvex(obj, CurrentComboDisplay.transform.position, 1.0f, () =>
         {
             int currentCombo = int.Parse(CurrentComboDisplay.text);
             CurrentComboDisplay.text = (currentCombo + 1).ToString();
             CurrentComboDisplay.GetComponent<Animation>().Play("touch");
         }));
     }
-    IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
-    {
-        float duration = 1.0f;
-        float time = 0;
-        Vector3 startPos = obj.transform.position;
-        Vector3 destPos = worldDest;
-        Vector3 dir = destPos - startPos;
-        Vector3 offset = Vector3.zero;
-        Vector3 axisZ = new Vector3(0, 0, 1);
-        Vector3 deltaSize = new Vector3(0.01f, 0.01f, 0);
-        float slope = -dir.y / (duration * duration);
-        while (time < duration)
-        {
-            offset.y = slope * (time - duration) * (time - duration) + dir.y;
-            offset.x = dir.x * time;
-            obj.transform.position = startPos + offset;
-            //obj.transform.localScale += time < duration * 0.5f ? deltaSize : -deltaSize;
-            obj.transform.Rotate(axisZ, offset.x - dir.x);
-            time += Time.deltaTime;
-            yield return null;
-        }
-
-        action.Invoke();
-        Destroy(obj);
-    }
-
-
 
 
 

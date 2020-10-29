@@ -1,12 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AttackPoints : MonoBehaviour
 {
     private const float mDist = 0.6f;
+    private int mChocoCount = 0;
     private int mAttackPoint = 0;
     private bool mIsReady = false;
+    private AttackPoints OppAttackPoints = null;
     private List<GameObject> mChilds = new List<GameObject>();
 
     public GameObject BaseSprite;
@@ -17,13 +20,25 @@ public class AttackPoints : MonoBehaviour
     public bool IsReady { get { return mIsReady; } }
     public void Add(int point, Vector3 fromPos)
     {
-        fromPos.z = -4;
-        GameObject proj = Instantiate(Projectile, fromPos, Quaternion.identity);
-        Vector3 dest = transform.position;
-        dest.z = fromPos.z;
-        proj.transform.LookAt(dest);
-        //proj.GetComponent<Rigidbody>().AddForce(proj.transform.forward * 500);
-        StartCoroutine(MovingProjectile(proj, point));
+        if (OppAttackPoints == null)
+            OppAttackPoints = transform.parent.GetComponent<BattleFieldManager>().Opponent.AttackPoints;
+
+        mAttackPoint += point;
+        if(mAttackPoint < 0)
+        {
+            OppAttackPoints.mAttackPoint = Mathf.Abs(mAttackPoint);
+            mAttackPoint = 0;
+        }
+
+        GameObject obj = GameObject.Instantiate(Projectile, fromPos, Quaternion.identity);
+        obj.GetComponent<Image>().sprite = Images[0];
+
+        float duration = 1.0f;
+        Destroy(obj, duration);
+        StartCoroutine(Utils.AnimateConcave(obj, transform.position, duration, () =>
+        {
+            AddChoco(point);
+        }));
     }
     public int Pop(int point)
     {
@@ -46,28 +61,9 @@ public class AttackPoints : MonoBehaviour
         return point;
     }
 
-    IEnumerator MovingProjectile(GameObject projectile, int point)
+    void AddChoco(int count)
     {
-        float duration = 1;
-        Vector3 diff = transform.position - projectile.transform.position;
-        diff.z = 0;
-        float dist = diff.magnitude;
-        float a = -1 * dist / (duration * duration);
-        float time = 0;
-        diff.Normalize();
-        Vector3 pos = projectile.transform.position;
-        while (time < duration)
-        {
-            float k = a * (time - duration) * (time - duration) + dist;
-            projectile.transform.position = (pos + diff * k);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        projectile.GetComponent<SciFiProjectileScript>().DeadEffect();
-
-        mAttackPoint += point;
-        if (mAttackPoint < 0)
-            mAttackPoint = 0;
+        mChocoCount += count;
 
         mIsReady = false;
         StopCoroutine("WaitForReady");
@@ -76,8 +72,16 @@ public class AttackPoints : MonoBehaviour
         StopCoroutine("AnimateFold");
         StopCoroutine("AnimateUnFold");
 
-        StartCoroutine("AnimateFold");
-
+        if (mChocoCount < 0)
+        {
+            OppAttackPoints.AddChoco(Mathf.Abs(mChocoCount));
+            mChocoCount = 0;
+            StartCoroutine("AnimateFold", mChocoCount);
+        }
+        else
+        {
+            StartCoroutine("AnimateFold", mChocoCount);
+        }
     }
     IEnumerator WaitForReady()
     {
@@ -85,7 +89,7 @@ public class AttackPoints : MonoBehaviour
         mIsReady = true;
     }
 
-    IEnumerator AnimateFold()
+    IEnumerator AnimateFold(int count)
     {
 
         if (mChilds.Count > 0)
@@ -105,20 +109,25 @@ public class AttackPoints : MonoBehaviour
             }
         }
 
-        CreateNewChild();
+        ClearChocos();
+        if(count > 0)
+            CreateNewChild(count);
 
     }
 
-    private void CreateNewChild()
+    private void ClearChocos()
     {
         for (int i = 0; i < mChilds.Count; ++i)
             Destroy(mChilds[i]);
         mChilds.Clear();
+    }
 
-        int cntA = mAttackPoint / 27;
-        int cntB = (mAttackPoint % 27) / 9;
-        int cntC = (mAttackPoint % 9) / 3;
-        int cntD = mAttackPoint % 3;
+    private void CreateNewChild(int count)
+    {
+        int cntA = count / 27;
+        int cntB = (count % 27) / 9;
+        int cntC = (count % 9) / 3;
+        int cntD = count % 3;
 
         for (int i = 0; i < cntA; ++i)
         {
