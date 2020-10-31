@@ -61,17 +61,23 @@ public class AutoPlayer : MonoBehaviour
             int ranX = UnityEngine.Random.Range(0, mCntX);
             int ranY = UnityEngine.Random.Range(0, mCntY);
             Frame randomFrame = BattleFieldManager.Me.GetFrame(ranX, ranY);
-            if (randomFrame != null && randomFrame.ChildProduct != null)
+            if (randomFrame != null && randomFrame.ChildProduct != null && !randomFrame.ChildProduct.IsChocoBlock())
             {
                 Product randomPro = randomFrame.ChildProduct;
-                if (randomPro.Left() != null)
-                    BattleFieldManager.Me.OnSwipe(randomPro.gameObject, SwipeDirection.LEFT);
-                else if (randomPro.Right() != null)
-                    BattleFieldManager.Me.OnSwipe(randomPro.gameObject, SwipeDirection.RIGHT);
-                else if (randomPro.Up() != null)
-                    BattleFieldManager.Me.OnSwipe(randomPro.gameObject, SwipeDirection.UP);
-                else if (randomPro.Down() != null)
-                    BattleFieldManager.Me.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
+                if (ranY % 2 == 0)
+                {
+                    if (randomPro.Left() != null)
+                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.LEFT);
+                    else if (randomPro.Right() != null)
+                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.RIGHT);
+                }
+                else
+                {
+                    if (randomPro.Up() != null)
+                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.UP);
+                    else if (randomPro.Down() != null)
+                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
+                }
             }
         }
     }
