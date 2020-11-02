@@ -1,30 +1,40 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Numbers : MonoBehaviour
+public class NumbersUI : MonoBehaviour
 {
+    public Animation Anim;
     public Sprite[] NumberImages;
     public Sprite[] NumberOutlineImages;
-    public SpriteRenderer First;
-    public SpriteRenderer FirstOutline;
-    public SpriteRenderer Second;
-    public SpriteRenderer SecondOutline;
-    public SpriteRenderer Third;
-    public SpriteRenderer ThirdOutline;
+    public Image First;
+    public Image FirstOutline;
+    public Image Second;
+    public Image SecondOutline;
+    public Image Third;
+    public Image ThirdOutline;
+    public Image ComboText;
+    public Image ComboTextOutline;
 
-    public int Number = 321;
-    public bool Outline = true;
-    public float gap = 0.3f;
+    private bool Outline = true;
+    private float gap = 0.5f;
+    private int Number = 0;
 
-    private void Start()
+    public int GetNumber() { return Number; }
+    public void SetNumber(int num)
     {
-        float imgWorldWidth = 0.64f * gap;
-        if (Number >= 1000)
-            Number = 999;
-        if (Number < 0)
-            Number = 0;
+        if (Number == num)
+            return;
 
+        if (num >= 1000)
+            Number = 999;
+        else if (num < 0)
+            Number = 0;
+        else
+            Number = num;
+
+        float imgWorldWidth = 0.64f * gap;
         if (Number < 10)
         {
             First.sprite = NumberImages[Number];
@@ -84,5 +94,50 @@ public class Numbers : MonoBehaviour
             SecondOutline.gameObject.SetActive(Outline);
             ThirdOutline.gameObject.SetActive(Outline);
         }
+
+
+        gameObject.SetActive(true);
+        Anim.Play("comboUI");
+        StopCoroutine("Disappear");
+        StartCoroutine("Disappear");
+    }
+
+    IEnumerator Disappear()
+    {
+        yield return new WaitForSeconds(UserSetting.MatchInterval);
+
+        Number = 0;
+
+        float time = 0;
+        Color white = Color.white;
+        Vector3 oriPos = transform.position;
+        Vector3 offset = new Vector3(0, 0.01f, 0);
+        while (time < 1)
+        {
+            white.a = 1 - time;
+            First.color = white;
+            FirstOutline.color = white;
+            Second.color = white;
+            SecondOutline.color = white;
+            Third.color = white;
+            ThirdOutline.color = white;
+            ComboText.color = white;
+            ComboTextOutline.color = white;
+            transform.position += offset;
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        gameObject.SetActive(false);
+        transform.position = oriPos;
+        white.a = 1;
+        First.color = white;
+        FirstOutline.color = white;
+        Second.color = white;
+        SecondOutline.color = white;
+        Third.color = white;
+        ThirdOutline.color = white;
+        ComboText.color = white;
+        ComboTextOutline.color = white;
     }
 }

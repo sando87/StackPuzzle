@@ -30,6 +30,7 @@ public class MenuInGame : MonoBehaviour
     public Image BarStar3;
     public Image BarStar4;
     public Image BarStar5;
+    public NumbersUI ComboNumber;
     public GameObject ParentPanel;
     public GameObject ComboText;
     public GameObject GameField;
@@ -191,6 +192,7 @@ public class MenuInGame : MonoBehaviour
         KeepCombo.text = "0";
         CurrentComboDisplay.text = "0";
         StageLevel.text = info.Num.ToString();
+        ComboNumber.gameObject.SetActive(false);
 
         //GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
     }
@@ -198,10 +200,10 @@ public class MenuInGame : MonoBehaviour
     public void AddScore(Product product)
     {
         mAddedScore += product.Combo;
-        GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Text combo = comboTextObj.GetComponent<Text>();
-        combo.text = product.Combo.ToString();
-        StartCoroutine(ComboEffect(comboTextObj));
+        //GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        //Text combo = comboTextObj.GetComponent<Text>();
+        //combo.text = product.Combo.ToString();
+        //StartCoroutine(ComboEffect(comboTextObj));
     }
     IEnumerator ComboEffect(GameObject obj)
     {
@@ -221,10 +223,16 @@ public class MenuInGame : MonoBehaviour
 
     public int CurrentCombo
     {
-        get { return int.Parse(CurrentComboDisplay.text); }
-        set {
-            CurrentComboDisplay.text = value.ToString();
-            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+        get
+        {
+            //return int.Parse(CurrentComboDisplay.text);
+            return ComboNumber.GetNumber();
+        }
+        set
+        {
+            //CurrentComboDisplay.text = value.ToString();
+            //CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+            ComboNumber.SetNumber(value);
         }
     }
 
@@ -271,9 +279,7 @@ public class MenuInGame : MonoBehaviour
         img.sprite = product.Renderer.sprite;
         StartCoroutine(AnimateItem(obj, CurrentComboDisplay.transform.position, () =>
         {
-            int currentCombo = int.Parse(CurrentComboDisplay.text);
-            CurrentComboDisplay.text = (currentCombo + 1).ToString();
-            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+            CurrentCombo++;
         }));
     }
 

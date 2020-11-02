@@ -22,6 +22,7 @@ public class InGameManager : MonoBehaviour
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
     public GameObject MaskPrefab;
+    public GameObject ComboNumPrefab;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -167,6 +168,7 @@ public class InGameManager : MonoBehaviour
             AddScore(pro);
         }
 
+        MenuInGame.Inst().CurrentCombo = currentCombo + 1;
         mainProduct.StartFlash(matches);
     }
     private void BreakItemSkill(Product product)
@@ -304,13 +306,13 @@ public class InGameManager : MonoBehaviour
                 if (IsAllIdle())
                 {
                     mIdleCounter = -1; //set Idle enable
-                    MenuInGame.Inst().CurrentCombo = 0;
+                    //MenuInGame.Inst().CurrentCombo = 0;
                     EventOnIdle?.Invoke();
                 }
                 else
                 {
                     mIdleCounter = 1;
-                    MenuInGame.Inst().CurrentCombo++;
+                    //MenuInGame.Inst().CurrentCombo++;
                 }
             }
             yield return null;
@@ -423,9 +425,13 @@ public class InGameManager : MonoBehaviour
         for (int i = 0; i < cnt; ++i)
             Destroy(transform.GetChild(i).gameObject);
 
+        mNextSkills.Clear();
+        mDestroyes.Clear();
+
         mFrames = null;
         mStageInfo = null;
         Pause = false;
+        mIdleCounter = -1;
         mSkipColor = ProductColor.None;
         MatchLock = false;
     }
@@ -453,7 +459,17 @@ public class InGameManager : MonoBehaviour
     {
         BreakItemSkill(product);
         MenuInGame.Inst().AddScore(product);
+
+        Vector3 pos = product.transform.position;
+        pos.z -= 1;
+        GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, product.ParentFrame.transform);
+        obj.GetComponent<Numbers>().Number = product.Combo;
+        pos.y += UserSetting.GridSize * 0.4f;
+        StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, ()=>{
+            Destroy(obj);
+        }));
     }
+
     private void RemoveLimit()
     {
         MenuInGame.Inst().ReduceLimit();
