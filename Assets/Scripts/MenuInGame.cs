@@ -32,7 +32,7 @@ public class MenuInGame : MonoBehaviour
     public GameObject ItemPrefab;
     public GameObject ScoreStarPrefab;
 
-    public int Score { get { return mCurrentScore; } }
+    public int Score { get { return mCurrentScore + mAddedScore; } }
 
     private void Update()
     {
@@ -238,17 +238,23 @@ public class MenuInGame : MonoBehaviour
         }
     }
 
-    public int UseNextCombo()
+    public int NextCombo
     {
-        int keepCombo = int.Parse(KeepCombo.text);
-        if (keepCombo > 0)
+        get { return int.Parse(KeepCombo.text); }
+        set
         {
-            CurrentCombo += keepCombo;
-            KeepCombo.GetComponent<Animation>().Play("touch");
+            int pre = int.Parse(KeepCombo.text);
+            if (value > pre)
+            {
+                KeepCombo.text = value.ToString();
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
+            else if(value == 0)
+            {
+                KeepCombo.text = "0";
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
         }
-
-        KeepCombo.text = "0";
-        return keepCombo;
     }
 
     public void KeepNextCombo(Product product)
@@ -262,18 +268,13 @@ public class MenuInGame : MonoBehaviour
         img.sprite = product.Renderer.sprite;
         StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
         {
-            int prevKeepCombo = int.Parse(KeepCombo.text);
-            if (nextCombo > prevKeepCombo)
-            {
-                KeepCombo.text = nextCombo.ToString();
-                KeepCombo.GetComponent<Animation>().Play("touch");
-            }
+            NextCombo = nextCombo;
         }));
     }
 
     public void OneMoreCombo(Product product)
     {
-        if (product.mSkill != ProductSkill.MatchOneMore)
+        if (product.mSkill != ProductSkill.OneMore)
             return;
 
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);

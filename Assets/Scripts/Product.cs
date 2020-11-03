@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum ProductColor { None, Blue, Green, Orange, Purple, Red, Yellow };
-public enum ProductSkill { Nothing, MatchOneMore, BreakSameColor, KeepCombo, ReduceColor };
+public enum ProductSkill { Nothing, OneMore, KeepCombo, SameColor };
 
 public class Product : MonoBehaviour
 {
@@ -334,39 +334,14 @@ public class Product : MonoBehaviour
         }
         return idleFrames;
     }
-    public void BackupSkillToFrame(int matchCount, bool enabledReduceColor)
-    {
-        if (matchCount <= UserSetting.MatchCount)
-            return;
-
-        switch(matchCount)
-        {
-            case 4:
-                ParentFrame.SkillBackupSpace = ProductSkill.MatchOneMore;
-                break;
-            case 5:
-                ParentFrame.SkillBackupSpace = ProductSkill.KeepCombo;
-                break;
-            case 6:
-                ParentFrame.SkillBackupSpace = ProductSkill.BreakSameColor;
-                break;
-            case 7:
-                if (!enabledReduceColor)
-                    ParentFrame.SkillBackupSpace = ProductSkill.ReduceColor;
-                break;
-            default:
-                break;
-        }
-    }
     public void ChangeSkilledProduct(ProductSkill skill)
     {
         mSkill = skill;
         switch (skill)
         {
-            case ProductSkill.MatchOneMore:     Renderer.sprite = ImgOneMore; break;
-            case ProductSkill.KeepCombo:        Renderer.sprite = ImgKeepCombo; break;
-            case ProductSkill.BreakSameColor:   Renderer.sprite = ImgSameColor; break;
-            case ProductSkill.ReduceColor:      Renderer.sprite = ImgReduceColor; break;
+            case ProductSkill.OneMore:      Renderer.sprite = ImgOneMore; break;
+            case ProductSkill.KeepCombo:    Renderer.sprite = ImgKeepCombo; break;
+            case ProductSkill.SameColor:    Renderer.sprite = ImgSameColor; break;
             default: break;
         }
     }

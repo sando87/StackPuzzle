@@ -183,7 +183,7 @@ public class BattleFieldManager : MonoBehaviour
         bool isSameColorEnable = false;
         foreach (Product pro in matches)
         {
-            if (pro.mSkill == ProductSkill.BreakSameColor)
+            if (pro.mSkill == ProductSkill.SameColor)
             {
                 isSameColorEnable = true;
                 break;
@@ -230,7 +230,7 @@ public class BattleFieldManager : MonoBehaviour
     }
     private void BreakItemSkill(Product product)
     {
-        if (product.mSkill == ProductSkill.MatchOneMore)
+        if (product.mSkill == ProductSkill.OneMore)
         {
             mCurrentCombo++;
             if (IsPlayerField())
@@ -242,7 +242,7 @@ public class BattleFieldManager : MonoBehaviour
             if (IsPlayerField())
                 MenuBattle.Inst().KeepNextCombo(product);
         }
-        else if (product.mSkill == ProductSkill.BreakSameColor)
+        else if (product.mSkill == ProductSkill.SameColor)
         {
         }
     }
@@ -253,18 +253,10 @@ public class BattleFieldManager : MonoBehaviour
 
         switch (matchedCount)
         {
-            case 5:
-                mNextSkills.Enqueue(ProductSkill.MatchOneMore);
-                break;
-            case 6:
-                mNextSkills.Enqueue(ProductSkill.KeepCombo);
-                break;
-            case 7:
-                mNextSkills.Enqueue(ProductSkill.BreakSameColor);
-                break;
-            default:
-                mNextSkills.Enqueue(ProductSkill.MatchOneMore);
-                break;
+            case 5: mNextSkills.Enqueue(ProductSkill.OneMore); break;
+            case 6: mNextSkills.Enqueue(ProductSkill.KeepCombo); break;
+            case 7: mNextSkills.Enqueue(ProductSkill.SameColor); break;
+            default: mNextSkills.Enqueue(ProductSkill.OneMore); break;
         }
     }
     private void OnDestroyProduct(Product pro)

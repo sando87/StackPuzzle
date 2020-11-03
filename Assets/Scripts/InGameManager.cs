@@ -151,7 +151,7 @@ public class InGameManager : MonoBehaviour
         bool isSameColorEnable = false;
         foreach (Product pro in matches)
         {
-            if (pro.mSkill == ProductSkill.BreakSameColor)
+            if (pro.mSkill == ProductSkill.SameColor)
             {
                 isSameColorEnable = true;
                 break;
@@ -160,7 +160,13 @@ public class InGameManager : MonoBehaviour
 
         Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
-        int currentCombo = mainProduct.IsSwipe ? MenuInGame.Inst().UseNextCombo() : MenuInGame.Inst().CurrentCombo;
+        int currentCombo = MenuInGame.Inst().CurrentCombo;
+        if(mainProduct.IsSwipe && MenuInGame.Inst().NextCombo > 0)
+        {
+            currentCombo = MenuInGame.Inst().NextCombo;
+            MenuInGame.Inst().NextCombo = 0;
+        }
+
         int preScore = MenuInGame.Inst().Score;
         int addedScore = 0;
         foreach (Product pro in destroies)
@@ -179,7 +185,7 @@ public class InGameManager : MonoBehaviour
     {
         if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
         {
-            int newStarCount = nextScore % UserSetting.ScorePerBar - preScore % UserSetting.ScorePerBar;
+            int newStarCount = nextScore / UserSetting.ScorePerBar - preScore / UserSetting.ScorePerBar;
             for(int i = 0; i < newStarCount; ++i)
                 MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.Score);
         }
@@ -194,7 +200,7 @@ public class InGameManager : MonoBehaviour
     }
     private void BreakItemSkill(Product product)
     {
-        if (product.mSkill == ProductSkill.MatchOneMore)
+        if (product.mSkill == ProductSkill.OneMore)
         {
             MenuInGame.Inst().OneMoreCombo(product);
             MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemOneMore);
@@ -204,7 +210,7 @@ public class InGameManager : MonoBehaviour
             MenuInGame.Inst().KeepNextCombo(product);
             MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemKeepCombo);
         }
-        else if (product.mSkill == ProductSkill.BreakSameColor)
+        else if (product.mSkill == ProductSkill.SameColor)
         {
             MenuInGame.Inst().ReduceGoalValue(product.transform.position, StageGoalType.ItemSameColor);
         }
@@ -227,25 +233,16 @@ public class InGameManager : MonoBehaviour
         if (matchedCount <= UserSetting.MatchCount)
             return;
 
-        switch (matchedCount)
-        {
-            case 5:
-                if(mStageInfo.ItemOneMore)
-                    mNextSkills.Enqueue(ProductSkill.MatchOneMore);
-                break;
-            case 6:
-                if (mStageInfo.ItemKeepCombo)
-                    mNextSkills.Enqueue(ProductSkill.KeepCombo);
-                break;
-            case 7:
-                if (mStageInfo.ItemSameColor)
-                    mNextSkills.Enqueue(ProductSkill.BreakSameColor);
-                break;
-            default:
-                if (mStageInfo.ItemOneMore)
-                    mNextSkills.Enqueue(ProductSkill.MatchOneMore);
-                break;
-        }
+        ProductSkill skill = ProductSkill.Nothing;
+        if (mStageInfo.Items.ContainsKey(matchedCount))
+            skill = mStageInfo.Items[matchedCount];
+        else if (mStageInfo.Items.ContainsKey(-1))
+            skill = mStageInfo.Items[-1];
+
+        if (skill == ProductSkill.Nothing)
+            return;
+
+        mNextSkills.Enqueue(skill);
     }
     private void OnDestroyProduct(Product pro)
     {
@@ -505,11 +502,7 @@ public class InGameManager : MonoBehaviour
             + mStageInfo.GoalType + ","
             + mStageInfo.GoalValue + ","
             + mStageInfo.MoveLimit + ","
-            + "Item("
-            + mStageInfo.ItemOneMore + "-"
-            + mStageInfo.ItemKeepCombo + "-"
-            + mStageInfo.ItemSameColor + "-"
-            + mStageInfo.ItemReduceColor + "),"
+            + StageInfo.ItemToString(mStageInfo.Items) + ","
             + success + ",";
 
         return ret;

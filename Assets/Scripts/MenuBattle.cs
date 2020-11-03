@@ -243,7 +243,7 @@ public class MenuBattle : MonoBehaviour
     }
     public void OneMoreCombo(Product product)
     {
-        if (product.mSkill != ProductSkill.MatchOneMore)
+        if (product.mSkill != ProductSkill.OneMore)
             return;
 
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);

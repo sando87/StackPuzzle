@@ -7515,6 +7515,7 @@ MonoBehaviour:
     type: 3}
   ScoreStarPrefab: {fileID: 8932229453365648688, guid: 5e4e6483a06933b4493fff4b9ada6da2,
     type: 3}
+  ComboNumber: {fileID: 0}
 --- !u!114 &490542765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27009,17 +27010,14 @@ MonoBehaviour:
   UnLock: {fileID: 1181366364}
   ScoreBar1: {fileID: 1839459708}
   ScoreBar2: {fileID: 250776623}
-  BarStar1: {fileID: 1966708839}
-  BarStar2: {fileID: 940062437}
-  BarStar3: {fileID: 1268082356}
-  BarStar4: {fileID: 1196151452}
-  BarStar5: {fileID: 1557073281}
   ComboNumber: {fileID: 1520264939}
   ParentPanel: {fileID: 649745244}
   ComboText: {fileID: 667044977129615326, guid: 2e70363c19bb08549b2b21dee9a5de2e,
     type: 3}
   GameField: {fileID: 1050245870}
   ItemPrefab: {fileID: 1501522922865324670, guid: 32c20692a60a45346a190f56fca8c3c0,
+    type: 3}
+  ScoreStarPrefab: {fileID: 8932229453365648688, guid: 5e4e6483a06933b4493fff4b9ada6da2,
     type: 3}
 --- !u!1 &1975109332
 GameObject:

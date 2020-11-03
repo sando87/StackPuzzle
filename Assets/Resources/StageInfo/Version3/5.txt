@@ -4,10 +4,6 @@ MoveLimit,50
 ColorCount,5
 XCount,5
 YCount,5
-ItemOneMore,False
-ItemKeepCombo,False
-ItemSameColor,False
-ItemReduceColor,False
 Rows,0/0 0/0 0/0 0/0 0/0 
 Rows,0/0 0/0 0/0 0/0 0/0 
 Rows,0/0 0/0 0/0 0/0 0/0 

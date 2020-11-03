@@ -27,10 +27,7 @@ public class StageInfo
     public int ColorCount;
     public int XCount;
     public int YCount;
-    public bool ItemOneMore;
-    public bool ItemKeepCombo;
-    public bool ItemSameColor;
-    public bool ItemReduceColor;
+    public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
     public StageInfoCell[,] Field;
 
     public static StageInfo Load(int stageNum)
@@ -78,10 +75,7 @@ public class StageInfo
                 case "ColorCount": info.ColorCount = int.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
-                case "ItemOneMore": info.ItemOneMore = bool.Parse(tokens[1]); break;
-                case "ItemKeepCombo": info.ItemKeepCombo = bool.Parse(tokens[1]); break;
-                case "ItemSameColor": info.ItemSameColor = bool.Parse(tokens[1]); break;
-                case "ItemReduceColor": info.ItemReduceColor = bool.Parse(tokens[1]); break;
+                case "Items": info.Items = Parse(tokens[1]); break;
                 case "Rows": info.ParseRow(--RowIndex, tokens[1]); break;
             }
         }
@@ -92,10 +86,10 @@ public class StageInfo
         return info;
     }
 
-    private Dictionary<int, ProductSkill> Parse(string token)
+    private static Dictionary<int, ProductSkill> Parse(string token)
     {
         Dictionary<int, ProductSkill> infos = new Dictionary<int, ProductSkill>();
-        string[] items = token.Split(',');
+        string[] items = token.Split('/');
         foreach(string item in items)
         {
             string[] keyValue = item.Split(':');
@@ -109,9 +103,14 @@ public class StageInfo
 
         return infos;
     }
-    private string ItemToString()
+    public static string ItemToString(Dictionary<int, ProductSkill> items)
     {
-        return "";
+        string ret = "";
+        foreach(var item in items)
+        {
+            ret += item.Key.ToString() + ":" + item.Value.ToString() + "/";
+        }
+        return ret;
     }
 
     public static void CreateStageInfoFolder()
@@ -179,10 +178,7 @@ public class StageInfo
             + ColorCount + ","
             + XCount + ","
             + YCount + ","
-            + ItemOneMore + ","
-            + ItemKeepCombo + ","
-            + ItemSameColor + ","
-            + ItemReduceColor;
+            + StageInfo.ItemToString(Items);
         return ret;
     }
     public void ParseRow(int rowIndex, string row)
@@ -220,22 +216,4 @@ public class StageInfo
         return Field[idxX, idxY];
     }
 
-    //public void DefaultSetting(int level)
-    //{
-    //    Num = level;
-    //    GoalType = "Score"; //Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
-    //    GoalValue = 500;
-    //    MoveLimit = 20;
-    //    ColorCount = 4;
-    //    XCount = 6;
-    //    YCount = 6;
-    //    ItemOneMore = false;
-    //    ItemKeepCombo = false;
-    //    ItemSameColor = false;
-    //    ItemReduceColor = false;
-    //    Field = new StageInfoCell[XCount, YCount];
-    //    for (int y =0; y < YCount; ++y)
-    //        for (int x = 0; x < XCount; ++x)
-    //            Field[x, y] = new StageInfoCell(0, 0);
-    //}
 }
