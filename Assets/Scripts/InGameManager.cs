@@ -161,15 +161,36 @@ public class InGameManager : MonoBehaviour
         Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
         int currentCombo = mainProduct.IsSwipe ? MenuInGame.Inst().UseNextCombo() : MenuInGame.Inst().CurrentCombo;
+        int preScore = MenuInGame.Inst().Score;
+        int addedScore = 0;
         foreach (Product pro in destroies)
         {
+            addedScore += currentCombo + 1;
             pro.Combo = currentCombo + 1;
             pro.StartDestroy();
             AddScore(pro);
         }
 
         MenuInGame.Inst().CurrentCombo = currentCombo + 1;
+        ReduceTargetScoreCombo(mainProduct, preScore, preScore + addedScore);
         mainProduct.StartFlash(matches);
+    }
+    private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
+    {
+        if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
+        {
+            int newStarCount = nextScore % UserSetting.ScorePerBar - preScore % UserSetting.ScorePerBar;
+            for(int i = 0; i < newStarCount; ++i)
+                MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.Score);
+        }
+        else if (mStageInfo.GoalTypeEnum == StageGoalType.Combo)
+        {
+            string goalType = mStageInfo.GoalType;
+            int targetCombo = int.Parse(goalType[goalType.Length - 1].ToString());
+            int curCombo = MenuInGame.Inst().CurrentCombo;
+            if (targetCombo == curCombo)
+                MenuInGame.Inst().ReduceGoalValue(pro.transform.position, StageGoalType.Combo);
+        }
     }
     private void BreakItemSkill(Product product)
     {
@@ -221,8 +242,8 @@ public class InGameManager : MonoBehaviour
                     mNextSkills.Enqueue(ProductSkill.BreakSameColor);
                 break;
             default:
-                if (mStageInfo.ItemSameColor)
-                    mNextSkills.Enqueue(ProductSkill.BreakSameColor);
+                if (mStageInfo.ItemOneMore)
+                    mNextSkills.Enqueue(ProductSkill.MatchOneMore);
                 break;
         }
     }

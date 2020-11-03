@@ -1,5 +1,5 @@
 GoalType,Score
-GoalValue,5000
+GoalValue,1
 MoveLimit,50
 ColorCount,4
 XCount,7

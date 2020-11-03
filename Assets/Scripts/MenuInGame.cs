@@ -9,10 +9,10 @@ public class MenuInGame : MonoBehaviour
 {
     private static MenuInGame mInst = null;
     private const string UIObjName = "MenuInGame";
-    private const int mScorePerBar = 300;
     private StageInfo mStageInfo;
     private int mAddedScore;
     private int mCurrentScore;
+    private List<GameObject> mScoreStars = new List<GameObject>();
 
     public Text CurrentScore;
     public Text KeepCombo;
@@ -25,16 +25,14 @@ public class MenuInGame : MonoBehaviour
     public Image UnLock;
     public Image ScoreBar1;
     public Image ScoreBar2;
-    public Image BarStar1;
-    public Image BarStar2;
-    public Image BarStar3;
-    public Image BarStar4;
-    public Image BarStar5;
     public NumbersUI ComboNumber;
     public GameObject ParentPanel;
     public GameObject ComboText;
     public GameObject GameField;
     public GameObject ItemPrefab;
+    public GameObject ScoreStarPrefab;
+
+    public int Score { get { return mCurrentScore; } }
 
     private void Update()
     {
@@ -51,6 +49,7 @@ public class MenuInGame : MonoBehaviour
 
     private void UpdateScore()
     {
+        int scorePerBar = UserSetting.ScorePerBar;
         if (mAddedScore <= 0)
             return;
 
@@ -58,18 +57,18 @@ public class MenuInGame : MonoBehaviour
         {
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % mScorePerBar;
-            ScoreBar1.fillAmount = n / (float)mScorePerBar;
+            int n = mCurrentScore % scorePerBar;
+            ScoreBar1.fillAmount = n / (float)scorePerBar;
             ScoreBar2.gameObject.SetActive(false);
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
         }
-        else if ((mCurrentScore+mAddedScore)/mScorePerBar > mCurrentScore/mScorePerBar)
+        else if ((mCurrentScore+mAddedScore)/ scorePerBar > mCurrentScore/ scorePerBar)
         {
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % mScorePerBar;
-            ScoreBar1.fillAmount = n / (float)mScorePerBar;
+            int n = mCurrentScore % scorePerBar;
+            ScoreBar1.fillAmount = n / (float)scorePerBar;
             ScoreBar2.gameObject.SetActive(false);
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
@@ -79,17 +78,28 @@ public class MenuInGame : MonoBehaviour
             StartCoroutine(ScoreBarEffect(mCurrentScore, mAddedScore));
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % mScorePerBar;
+            int n = mCurrentScore % scorePerBar;
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
 
         }
 
-        BarStar1.gameObject.SetActive(mCurrentScore / mScorePerBar > 0);
-        BarStar2.gameObject.SetActive(mCurrentScore / mScorePerBar > 1);
-        BarStar3.gameObject.SetActive(mCurrentScore / mScorePerBar > 2);
-        BarStar4.gameObject.SetActive(mCurrentScore / mScorePerBar > 3);
-        BarStar5.gameObject.SetActive(mCurrentScore / mScorePerBar > 4);
+        FillScoreStar();
+    }
+    private void FillScoreStar()
+    {
+        int starCount = mCurrentScore / UserSetting.ScorePerBar;
+        float pixelPerUnit = GetComponent<CanvasScaler>().referencePixelsPerUnit;
+        float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
+        float barWidth = ScoreBar1.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
+        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+        while (mScoreStars.Count < starCount)
+        {
+            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+            basePos.x += (imgWidth * mScoreStars.Count);
+            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
+            mScoreStars.Add(obj);
+        }
     }
 
     private void CheckFinish()
@@ -97,24 +107,13 @@ public class MenuInGame : MonoBehaviour
         if (!InGameManager.Inst.IsIdle)
             return;
 
-        if (mStageInfo.GoalType == "Score")
+        if (TargetValue.text == "0")
         {
-            if (mCurrentScore > mStageInfo.GoalValue)
-            {
-                InGameManager.Inst.FinishGame(true);
-                Hide();
-            }
-        }
-        else
-        {
-            if (TargetValue.text == "0")
-            {
-                InGameManager.Inst.FinishGame(true);
-                Hide();
-            }
+            InGameManager.Inst.FinishGame(true);
+            Hide();
         }
 
-        if(Limit.text == "0")
+        if (Limit.text == "0")
         {
             InGameManager.Inst.FinishGame(false);
             Hide();
@@ -122,10 +121,11 @@ public class MenuInGame : MonoBehaviour
     }
     private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
     {
+        int scorePerBar = UserSetting.ScorePerBar;
         int nextScore = prevScore + addedScore;
         float totalWidth = ScoreBar1.sprite.rect.width;
-        float fromRate = (prevScore % mScorePerBar) / (float)mScorePerBar;
-        float toRate = (nextScore % mScorePerBar) / (float)mScorePerBar;
+        float fromRate = (prevScore % scorePerBar) / (float)scorePerBar;
+        float toRate = (nextScore % scorePerBar) / (float)scorePerBar;
         float bar2Width = totalWidth * (toRate - fromRate) + 1;
         ScoreBar1.fillAmount = fromRate;
         ScoreBar2.gameObject.SetActive(true);
@@ -171,14 +171,14 @@ public class MenuInGame : MonoBehaviour
     }
     private void InitUIState(StageInfo info)
     {
+        foreach (GameObject obj in mScoreStars)
+            Destroy(obj);
+
+        mScoreStars.Clear();
+
         mStageInfo = info;
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
-        BarStar1.gameObject.SetActive(false);
-        BarStar2.gameObject.SetActive(false);
-        BarStar3.gameObject.SetActive(false);
-        BarStar4.gameObject.SetActive(false);
-        BarStar5.gameObject.SetActive(false);
         Lock.gameObject.SetActive(false);
         UnLock.gameObject.SetActive(true);
 
@@ -220,6 +220,8 @@ public class MenuInGame : MonoBehaviour
         }
         Destroy(obj);
     }
+
+    public int StarCount { get { return mScoreStars.Count; } }
 
     public int CurrentCombo
     {

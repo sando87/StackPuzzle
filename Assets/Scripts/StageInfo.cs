@@ -91,25 +91,28 @@ public class StageInfo
 
         return info;
     }
-    //public static void Save(StageInfo info)
-    //{
-    //    string text = "GoalType," + info.GoalType + "\r\n"
-    //                + "GoalValue," + info.GoalValue.ToString() + "\r\n"
-    //                + "MoveLimit," + info.MoveLimit.ToString() + "\r\n"
-    //                + "ColorCount," + info.ColorCount.ToString() + "\r\n"
-    //                + "XCount," + info.XCount.ToString() + "\r\n"
-    //                + "YCount," + info.YCount.ToString() + "\r\n"
-    //                + "ItemOneMore," + info.ItemOneMore + "\r\n"
-    //                + "ItemKeepCombo," + info.ItemKeepCombo + "\r\n"
-    //                + "ItemSameColor," + info.ItemSameColor + "\r\n"
-    //                + "ItemReduceColor," + info.ItemReduceColor + "\r\n"
-    //                ;
-    //
-    //    for(int yIdx = info.YCount - 1; yIdx >= 0; --yIdx)
-    //        text += "Rows," + info.RowToString(yIdx);
-    //
-    //    File.WriteAllText(GetPath() + info.Num + ".txt", text);
-    //}
+
+    private Dictionary<int, ProductSkill> Parse(string token)
+    {
+        Dictionary<int, ProductSkill> infos = new Dictionary<int, ProductSkill>();
+        string[] items = token.Split(',');
+        foreach(string item in items)
+        {
+            string[] keyValue = item.Split(':');
+            if (keyValue.Length != 2)
+                continue;
+
+            int matchCount = int.Parse(keyValue[0]);
+            ProductSkill skill = (ProductSkill)Enum.Parse(typeof(ProductSkill), keyValue[1]);
+            infos[matchCount] = skill;
+        }
+
+        return infos;
+    }
+    private string ItemToString()
+    {
+        return "";
+    }
 
     public static void CreateStageInfoFolder()
     {
@@ -130,7 +133,12 @@ public class StageInfo
         switch(goalType)
         {
             case "Score": image = Resources.Load<Sprite>("Images/score"); break;
-            case "Combo": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo3": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo6": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo9": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo12": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo15": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo18": image = Resources.Load<Sprite>("Images/combo"); break;
             case "ItemOneMore": image = Resources.Load<Sprite>("Images/itemOneMore"); break;
             case "ItemKeepCombo": image = Resources.Load<Sprite>("Images/itemKeepCombo"); break;
             case "ItemSameColor": image = Resources.Load<Sprite>("Images/itemSameColor"); break;
@@ -146,7 +154,12 @@ public class StageInfo
         switch (goalType)
         {
             case "Score": type = StageGoalType.Score; break;
-            case "Combo": type = StageGoalType.Combo; break;
+            case "Combo3": type = StageGoalType.Combo; break;
+            case "Combo6": type = StageGoalType.Combo; break;
+            case "Combo9": type = StageGoalType.Combo; break;
+            case "Combo12": type = StageGoalType.Combo; break;
+            case "Combo15": type = StageGoalType.Combo; break;
+            case "Combo18": type = StageGoalType.Combo; break;
             case "ItemOneMore": type = StageGoalType.ItemOneMore; break;
             case "ItemKeepCombo": type = StageGoalType.ItemKeepCombo; break;
             case "ItemSameColor": type = StageGoalType.ItemSameColor; break;

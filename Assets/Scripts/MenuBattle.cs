@@ -21,6 +21,7 @@ public class MenuBattle : MonoBehaviour
     public GameObject ParentPanel;
     public GameObject ItemPrefab;
     public GameObject ScoreStarPrefab;
+    public NumbersUI ComboNumber;
 
     private MenuMessageBox mMenu;
     private int mAddedScore;
@@ -176,6 +177,7 @@ public class MenuBattle : MonoBehaviour
         Lock(false);
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
+        ComboNumber.gameObject.SetActive(false);
     }
 
 
@@ -204,12 +206,8 @@ public class MenuBattle : MonoBehaviour
     }
     public int CurrentCombo
     {
-        get { return int.Parse(CurrentComboDisplay.text); }
-        set
-        {
-            CurrentComboDisplay.text = value.ToString();
-            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
-        }
+        get { return ComboNumber.GetNumber(); }
+        set { ComboNumber.SetNumber(value); }
     }
     public int UseNextCombo()
     {
@@ -254,9 +252,7 @@ public class MenuBattle : MonoBehaviour
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, CurrentComboDisplay.transform.position, 1.0f, () =>
         {
-            int currentCombo = int.Parse(CurrentComboDisplay.text);
-            CurrentComboDisplay.text = (currentCombo + 1).ToString();
-            CurrentComboDisplay.GetComponent<Animation>().Play("touch");
+            CurrentCombo++;
         }));
     }
 

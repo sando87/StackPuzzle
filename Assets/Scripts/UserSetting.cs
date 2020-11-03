@@ -50,6 +50,7 @@ public class UserSetting
     public const int MatchCount = 3;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
+    public const int ScorePerBar = 300;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;

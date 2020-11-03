@@ -263,7 +263,7 @@ public class BattleFieldManager : MonoBehaviour
                 mNextSkills.Enqueue(ProductSkill.BreakSameColor);
                 break;
             default:
-                mNextSkills.Enqueue(ProductSkill.BreakSameColor);
+                mNextSkills.Enqueue(ProductSkill.MatchOneMore);
                 break;
         }
     }
