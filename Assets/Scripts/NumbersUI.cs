@@ -34,6 +34,8 @@ public class NumbersUI : MonoBehaviour
         else
             Number = num;
 
+        ResetRenderState();
+
         float imgWorldWidth = 0.64f * gap;
         if (Number < 10)
         {
@@ -98,19 +100,22 @@ public class NumbersUI : MonoBehaviour
 
         gameObject.SetActive(true);
         Anim.Play("comboUI");
-        StopCoroutine("Disappear");
-        StartCoroutine("Disappear");
+    }
+
+    public void BreakCombo()
+    {
+        Number = 0;
+        if (gameObject.activeSelf)
+        {
+            StopCoroutine("Disappear");
+            StartCoroutine("Disappear");
+        }
     }
 
     IEnumerator Disappear()
     {
-        yield return new WaitForSeconds(UserSetting.MatchInterval);
-
-        Number = 0;
-
         float time = 0;
         Color white = Color.white;
-        Vector3 oriPos = transform.position;
         Vector3 offset = new Vector3(0, 0.01f, 0);
         while (time < 1)
         {
@@ -129,15 +134,25 @@ public class NumbersUI : MonoBehaviour
         }
 
         gameObject.SetActive(false);
-        transform.position = oriPos;
-        white.a = 1;
-        First.color = white;
-        FirstOutline.color = white;
-        Second.color = white;
-        SecondOutline.color = white;
-        Third.color = white;
-        ThirdOutline.color = white;
-        ComboText.color = white;
-        ComboTextOutline.color = white;
+    }
+
+    private void ResetRenderState()
+    {
+        StopCoroutine("Disappear");
+        First.color = Color.white;
+        FirstOutline.color = Color.white;
+        Second.color = Color.white;
+        SecondOutline.color = Color.white;
+        Third.color = Color.white;
+        ThirdOutline.color = Color.white;
+        ComboText.color = Color.white;
+        ComboTextOutline.color = Color.white;
+        GetComponent<RectTransform>().localPosition = new Vector3(0, -130.0f);
+    }
+
+    public void Clear()
+    {
+        Number = 0;
+        gameObject.SetActive(false);
     }
 }

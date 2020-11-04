@@ -16,7 +16,6 @@ public class MenuInGame : MonoBehaviour
 
     public Text CurrentScore;
     public Text KeepCombo;
-    public Text CurrentComboDisplay;
     public Text Limit;
     public Text StageLevel;
     public Text TargetValue;
@@ -91,11 +90,11 @@ public class MenuInGame : MonoBehaviour
         int starCount = mCurrentScore / UserSetting.ScorePerBar;
         float pixelPerUnit = GetComponent<CanvasScaler>().referencePixelsPerUnit;
         float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
-        float barWidth = ScoreBar1.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
-        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+        float barWidth = ScoreBar1.GetComponent<RectTransform>().rect.width / pixelPerUnit;
+        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
         while (mScoreStars.Count < starCount)
         {
-            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
             basePos.x += (imgWidth * mScoreStars.Count);
             GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
             mScoreStars.Add(obj);
@@ -123,7 +122,7 @@ public class MenuInGame : MonoBehaviour
     {
         int scorePerBar = UserSetting.ScorePerBar;
         int nextScore = prevScore + addedScore;
-        float totalWidth = ScoreBar1.sprite.rect.width;
+        float totalWidth = ScoreBar1.GetComponent<RectTransform>().rect.width;
         float fromRate = (prevScore % scorePerBar) / (float)scorePerBar;
         float toRate = (nextScore % scorePerBar) / (float)scorePerBar;
         float bar2Width = totalWidth * (toRate - fromRate) + 1;
@@ -190,9 +189,8 @@ public class MenuInGame : MonoBehaviour
         TargetType.sprite = info.GoalTypeImage;
         TargetValue.text = info.GoalValue.ToString();
         KeepCombo.text = "0";
-        CurrentComboDisplay.text = "0";
         StageLevel.text = info.Num.ToString();
-        ComboNumber.gameObject.SetActive(false);
+        ComboNumber.Clear();
 
         //GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
     }
@@ -227,14 +225,14 @@ public class MenuInGame : MonoBehaviour
     {
         get
         {
-            //return int.Parse(CurrentComboDisplay.text);
             return ComboNumber.GetNumber();
         }
         set
         {
-            //CurrentComboDisplay.text = value.ToString();
-            //CurrentComboDisplay.GetComponent<Animation>().Play("touch");
-            ComboNumber.SetNumber(value);
+            if (value == 0)
+                ComboNumber.BreakCombo();
+            else
+                ComboNumber.SetNumber(value);
         }
     }
 
@@ -280,7 +278,7 @@ public class MenuInGame : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(AnimateItem(obj, CurrentComboDisplay.transform.position, () =>
+        StartCoroutine(AnimateItem(obj, ComboNumber.transform.position, () =>
         {
             CurrentCombo++;
         }));

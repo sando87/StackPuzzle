@@ -14,7 +14,6 @@ public class MenuBattle : MonoBehaviour
     public Image ScoreBar2;
     public Text CurrentScore;
     public Text KeepCombo;
-    public Text CurrentComboDisplay;
     public Image MatchLock;
     public Image MatchUnLock;
     public GameObject ComboText;
@@ -83,11 +82,11 @@ public class MenuBattle : MonoBehaviour
         int starCount = mCurrentScore / mScorePerBar;
         float pixelPerUnit = GetComponent<CanvasScaler>().referencePixelsPerUnit;
         float imgWidth = ScoreStarPrefab.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
-        float barWidth = ScoreBar1.GetComponent<Image>().sprite.rect.width / pixelPerUnit;
-        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+        float barWidth = ScoreBar1.GetComponent<RectTransform>().rect.width / pixelPerUnit;
+        Vector3 basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
         while(mScoreStars.Count < starCount)
         {
-            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.5f, 0);
+            basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
             basePos.x += (imgWidth * mScoreStars.Count);
             GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
             mScoreStars.Add(obj);
@@ -96,7 +95,7 @@ public class MenuBattle : MonoBehaviour
     private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
     {
         int nextScore = prevScore + addedScore;
-        float totalWidth = ScoreBar1.sprite.rect.width;
+        float totalWidth = ScoreBar1.GetComponent<RectTransform>().rect.width;
         float fromRate = (prevScore % mScorePerBar) / (float)mScorePerBar;
         float toRate = (nextScore % mScorePerBar) / (float)mScorePerBar;
         float bar2Width = totalWidth * (toRate - fromRate) + 1;
@@ -173,21 +172,20 @@ public class MenuBattle : MonoBehaviour
         mCurrentScore = 0;
         CurrentScore.text = "0";
         KeepCombo.text = "0";
-        CurrentComboDisplay.text = "0";
         Lock(false);
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
-        ComboNumber.gameObject.SetActive(false);
+        ComboNumber.Clear();
     }
 
 
     public void AddScore(Product product)
     {
         mAddedScore += product.Combo;
-        GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Text combo = comboTextObj.GetComponent<Text>();
-        combo.text = product.Combo.ToString();
-        StartCoroutine(ComboEffect(comboTextObj));
+        //GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        //Text combo = comboTextObj.GetComponent<Text>();
+        //combo.text = product.Combo.ToString();
+        //StartCoroutine(ComboEffect(comboTextObj));
     }
     IEnumerator ComboEffect(GameObject obj)
     {
@@ -207,19 +205,31 @@ public class MenuBattle : MonoBehaviour
     public int CurrentCombo
     {
         get { return ComboNumber.GetNumber(); }
-        set { ComboNumber.SetNumber(value); }
-    }
-    public int UseNextCombo()
-    {
-        int keepCombo = int.Parse(KeepCombo.text);
-        if (keepCombo > 0)
+        set
         {
-            CurrentCombo += keepCombo;
-            KeepCombo.GetComponent<Animation>().Play("touch");
+            if (value == 0)
+                ComboNumber.BreakCombo();
+            else
+                ComboNumber.SetNumber(value);
         }
-
-        KeepCombo.text = "0";
-        return keepCombo;
+    }
+    public int NextCombo
+    {
+        get { return int.Parse(KeepCombo.text); }
+        set
+        {
+            int pre = int.Parse(KeepCombo.text);
+            if (value > pre)
+            {
+                KeepCombo.text = value.ToString();
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
+            else if (value == 0)
+            {
+                KeepCombo.text = "0";
+                KeepCombo.GetComponent<Animation>().Play("touch");
+            }
+        }
     }
     public void KeepNextCombo(Product product)
     {
@@ -228,17 +238,12 @@ public class MenuBattle : MonoBehaviour
 
         int nextCombo = product.Combo;
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Destroy(obj, 1.0f);
+        Destroy(obj, 1.1f);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
         {
-            int prevKeepCombo = int.Parse(KeepCombo.text);
-            if (nextCombo > prevKeepCombo)
-            {
-                KeepCombo.text = nextCombo.ToString();
-                KeepCombo.GetComponent<Animation>().Play("touch");
-            }
+            NextCombo = nextCombo;
         }));
     }
     public void OneMoreCombo(Product product)
@@ -247,10 +252,10 @@ public class MenuBattle : MonoBehaviour
             return;
 
         GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Destroy(obj, 1.0f);
+        Destroy(obj, 1.1f);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(Utils.AnimateConvex(obj, CurrentComboDisplay.transform.position, 1.0f, () =>
+        StartCoroutine(Utils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>
         {
             CurrentCombo++;
         }));

@@ -324,7 +324,7 @@ public class InGameManager : MonoBehaviour
                 if (IsAllIdle())
                 {
                     mIdleCounter = -1; //set Idle enable
-                    //MenuInGame.Inst().CurrentCombo = 0;
+                    MenuInGame.Inst().CurrentCombo = 0;
                     EventOnIdle?.Invoke();
                 }
                 else

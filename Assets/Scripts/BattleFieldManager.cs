@@ -37,6 +37,7 @@ public class BattleFieldManager : MonoBehaviour
     public GameObject FramePrefab2;
     public GameObject MaskPrefab;
     public GameObject AttackPointPrefab;
+    public GameObject ComboNumPrefab;
     public BattleFieldManager Opponent;
 
     private Frame[,] mFrames = null;
@@ -194,14 +195,17 @@ public class BattleFieldManager : MonoBehaviour
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
 
         int currentCombo = mCurrentCombo;
-        if (mainProduct.IsSwipe)
+        if (mainProduct.IsSwipe && mKeepCombo > 0)
         {
             currentCombo = mKeepCombo;
-            mCurrentCombo = mKeepCombo;
             mKeepCombo = 0;
             if (IsPlayerField())
-                MenuBattle.Inst().UseNextCombo();
+                MenuBattle.Inst().NextCombo = 0;
         }
+
+        mCurrentCombo = currentCombo + 1;
+        if (IsPlayerField())
+            MenuBattle.Inst().CurrentCombo = mCurrentCombo;
 
         foreach (Product pro in destroies)
         {
@@ -209,7 +213,18 @@ public class BattleFieldManager : MonoBehaviour
             pro.StartDestroy();
             BreakItemSkill(pro);
             if (IsPlayerField())
+            {
                 MenuBattle.Inst().AddScore(pro);
+
+                Vector3 pos = pro.transform.position;
+                pos.z -= 1;
+                GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, pro.ParentFrame.transform);
+                obj.GetComponent<Numbers>().Number = pro.Combo;
+                pos.y += UserSetting.GridSize * 0.4f;
+                StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, () => {
+                    Destroy(obj);
+                }));
+            }
         }
 
         Attack(destroies.Count * (currentCombo + 1), mainProduct.transform.position);
@@ -439,9 +454,6 @@ public class BattleFieldManager : MonoBehaviour
                 {
                     mAtleastOneMatched = false;
                     mIdleCounter = 1;
-                    mCurrentCombo++;
-                    if (IsPlayerField())
-                        MenuBattle.Inst().CurrentCombo++;
                 }
                 else
                 {
