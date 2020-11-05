@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class MenuStages : MonoBehaviour
 {
     private const string UIObjName = "MenuStages";
+    private static MenuStages mInst = null;
 
     public Text HeartTimer;
     public Text HeartCount;
@@ -21,22 +22,29 @@ public class MenuStages : MonoBehaviour
         }
 #endif
     }
+    public static MenuStages Inst
+    {
+        get
+        {
+            if (mInst == null)
+                mInst = GameObject.Find("UIGroup").transform.Find(UIObjName).GetComponent<MenuStages>();
+            return mInst;
+        }
+    }
     public static void PopUp()
     {
-        GameObject obj = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
-        MenuStages menu = obj.GetComponent<MenuStages>();
 
-        obj.SetActive(true);
-        menu.StopCoroutine("UpdateHeartTimer");
-        menu.StartCoroutine("UpdateHeartTimer");
+        Inst.gameObject.SetActive(true);
+        Inst.StopCoroutine("UpdateHeartTimer");
+        Inst.StartCoroutine("UpdateHeartTimer");
 
         if(UserSetting.IsBotPlayer)
-            menu.StartCoroutine(menu.AutoStartNextStage());
+            Inst.StartCoroutine(Inst.AutoStartNextStage());
     }
     public static void Hide()
     {
-        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(false);
+        Inst.gameObject.SetActive(false);
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
     }
 
@@ -56,7 +64,7 @@ public class MenuStages : MonoBehaviour
 
     public void OnClose()
     {
-        GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.SetActive(false);
+        Inst.gameObject.SetActive(false);
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
         MenuMain.PopUp();
     }

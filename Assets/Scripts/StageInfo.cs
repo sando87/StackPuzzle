@@ -216,4 +216,27 @@ public class StageInfo
         return Field[idxX, idxY];
     }
 
+    public static void SaveDeefault(int stageNum)
+    {
+        CreateStageInfoFolder();
+        string fullname = GetPath() + stageNum + ".txt";
+        string defaultData = 
+        "GoalType,Score\r\n" +
+        "GoalValue,3\r\n" +
+        "MoveLimit,25\r\n" +
+        "ColorCount,5\r\n" +
+        "Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor\r\n" +
+        "XCount,7\r\n" +
+        "YCount,7\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n";
+
+        File.WriteAllText(fullname, defaultData);
+    }
+
 }

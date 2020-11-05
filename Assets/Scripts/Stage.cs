@@ -12,6 +12,7 @@ public class Stage : MonoBehaviour
     {
         OriginalScale = transform.localScale;
         UpdateStageInfo();
+        //StageInfo.SaveDeefault(Number);
     }
 
     #region Properties

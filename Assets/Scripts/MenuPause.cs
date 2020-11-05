@@ -24,9 +24,6 @@ public class MenuPause : MonoBehaviour
     {
         gameObject.SetActive(false);
         GameField.GetComponent<InGameManager>().FinishGame(false);
-        MenuInGame.Hide();
-        MenuStages.PopUp();
-        StageManager.Inst.Activate(true);
     }
     public void OnResume()
     {
