@@ -51,6 +51,7 @@ public class UserSetting
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
     public const int ScorePerBar = 300;
+    public const float BattleOppResize = 0.6f;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;

@@ -84,6 +84,7 @@ public class BattleFieldManager : MonoBehaviour
         }
         else
         {
+            transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
             NetClientApp.GetInstance().EventResponse = ResponseFromOpponent;
             StartCoroutine(CheckNetMessage());
         }
@@ -605,7 +606,7 @@ public class BattleFieldManager : MonoBehaviour
             }
         }
     }
-    private bool IsPlayerField()
+    public bool IsPlayerField()
     {
         return UserSetting.UserPK == mThisUserPK;
     }

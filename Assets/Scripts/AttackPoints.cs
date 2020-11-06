@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,8 @@ public class AttackPoints : MonoBehaviour
     private int mChocoCount = 0;
     private int mAttackPoint = 0;
     private bool mIsReady = false;
+    private float InitSize = 1.0f;
+    private float mScaleForEffect = 1.0f;
     private AttackPoints OppAttackPoints = null;
     private List<GameObject> mChilds = new List<GameObject>();
 
@@ -20,7 +23,14 @@ public class AttackPoints : MonoBehaviour
     public void Add(int point, Vector3 fromPos)
     {
         if (OppAttackPoints == null)
-            OppAttackPoints = transform.parent.GetComponent<BattleFieldManager>().Opponent.AttackPoints;
+        {
+            BattleFieldManager mgr = transform.parent.GetComponent<BattleFieldManager>();
+            OppAttackPoints = mgr.Opponent.AttackPoints;
+            InitSize = Projectile.transform.localScale.x;
+            mScaleForEffect = mgr.IsPlayerField() ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
+            mScaleForEffect *= InitSize;
+        }
+            
 
         mAttackPoint += point;
         if(mAttackPoint < 0)
@@ -31,13 +41,43 @@ public class AttackPoints : MonoBehaviour
 
         fromPos.z -= 1;
         GameObject obj = GameObject.Instantiate(Projectile, fromPos, Quaternion.identity, transform.parent);
+        obj.transform.localScale = new Vector3(mScaleForEffect, mScaleForEffect, 1);
         int imgIndex = Mathf.Abs(point) >= 12 ? 3 : (Mathf.Abs(point) / 3);
         obj.GetComponent<SpriteRenderer>().sprite = Images[imgIndex];
-        StartCoroutine(Utils.AnimateConcave(obj, transform.position, 1.0f, () =>
+        StartCoroutine(AnimateThrow(obj, transform.position, 1.0f, () =>
         {
             AddChoco(point);
             Destroy(obj);
         }));
+    }
+    IEnumerator AnimateThrow(GameObject obj, Vector3 worldDest, float duration, Action action = null)
+    {
+        float time = 0;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = worldDest;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        Vector3 resize = new Vector3(1, 1, 1);
+        float slopeY = dir.y / (duration * duration);
+        float slopeX = -dir.x / (duration * duration);
+        float slopeSize = (InitSize - mScaleForEffect) / duration;
+        while (time < duration)
+        {
+            float nowT = time - duration;
+            offset.x = slopeX * nowT * nowT + dir.x;
+            offset.y = slopeY * time * time;
+            obj.transform.position = startPos + offset;
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
+
+            resize.x = slopeSize * time + mScaleForEffect;
+            resize.y = slopeSize * time + mScaleForEffect;
+            obj.transform.localScale = resize;
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action?.Invoke();
     }
     public int Pop(int point)
     {

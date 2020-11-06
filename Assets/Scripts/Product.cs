@@ -138,10 +138,9 @@ public class Product : MonoBehaviour
         float totalTime = 0.6f;
         float totalHeight = UserSetting.GridSize * 8; //totalTime 동안 떨어지는 블럭 높이(즉 속도조절값)
         float a = totalHeight / (totalTime * totalTime);
-        float delay = totalTime - Mathf.Sqrt(transform.localPosition.y / a);
-
         Vector3 startPos = transform.position;
         Vector3 endPos = ParentFrame.transform.position;
+        float delay = totalTime - Mathf.Sqrt((startPos.y - endPos.y) / a);
         endPos.z = startPos.z;
         float time = 0;
         while (time < totalTime)

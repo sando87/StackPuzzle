@@ -139,8 +139,8 @@ public class MenuWaitMatch : MonoBehaviour
         State.text = "Matched Player : " + oppPk;
 
         InitFieldInfo info = new InitFieldInfo();
-        info.XCount = 7;
-        info.YCount = 7;
+        info.XCount = 5;
+        info.YCount = 9;
 
         info.userPk = UserSetting.UserPK;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
