@@ -1,10 +1,9 @@
-GoalType,ItemOneMore
-GoalValue,10
-MoveLimit,50
-ColorCount,5
+GoalType,Score
+GoalValue,3
+MoveLimit,25
+ColorCount,4
 XCount,7
 YCount,7
-Items,4:OneMore/5:KeepCombo/6:SameColor/-1:OneMore
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0

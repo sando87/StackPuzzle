@@ -1,6 +1,6 @@
 GoalType,Score
-GoalValue,3
-MoveLimit,25
+GoalValue,10
+MoveLimit,50
 ColorCount,5
 Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor
 XCount,5

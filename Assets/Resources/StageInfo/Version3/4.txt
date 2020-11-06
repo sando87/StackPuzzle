@@ -1,12 +1,13 @@
-GoalType,Score
-GoalValue,5000
-MoveLimit,50
-ColorCount,5
-XCount,6
-YCount,6
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 
+GoalType,Combo6
+GoalValue,5
+MoveLimit,25
+ColorCount,4
+XCount,7
+YCount,7
+Rows,0/-1 0/-1 0/0 0/0 0/0 0/-1 0/-1 
+Rows,0/-1 0/0 0/0 0/0 0/0 0/0 0/-1
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/-1 0/0 0/0 0/0 0/0 0/0 0/-1
+Rows,0/-1 0/-1 0/0 0/0 0/0 0/-1 0/-1

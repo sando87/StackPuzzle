@@ -1,14 +1,15 @@
-GoalType,Score
-GoalValue,5000
-MoveLimit,50
+GoalType,ItemKeepCombo
+GoalValue,3
+MoveLimit,15
 ColorCount,5
-XCount,7
-YCount,7
-Items,4:OneMore
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Items,4:OneMore/5:KeepCombo
+XCount,6
+YCount,8
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1 
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0

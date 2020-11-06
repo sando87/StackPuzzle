@@ -1,10 +1,9 @@
-GoalType,Combo6
+GoalType,Combo3
 GoalValue,5
-MoveLimit,50
+MoveLimit,25
 ColorCount,5
 XCount,7
 YCount,7
-Items,6:SameColor
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0

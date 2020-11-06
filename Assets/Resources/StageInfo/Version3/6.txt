@@ -1,14 +1,13 @@
-GoalType,Score
-GoalValue,5000
-MoveLimit,50
-ColorCount,5
-XCount,8
-YCount,8
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0 
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
+GoalType,ItemOneMore
+GoalValue,10
+MoveLimit,25
+ColorCount,4
+Items,4:OneMore
+XCount,6
+YCount,6
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/-1 0/-1 0/0 0/0
+Rows,0/0 0/0 0/-1 0/-1 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
