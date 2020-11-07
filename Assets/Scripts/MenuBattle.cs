@@ -16,8 +16,7 @@ public class MenuBattle : MonoBehaviour
     public Text KeepCombo;
     public Image MatchLock;
     public Image MatchUnLock;
-    public GameObject ComboText;
-    public GameObject ParentPanel;
+    public GameObject EffectParent;
     public GameObject ItemPrefab;
     public GameObject ScoreStarPrefab;
     public NumbersUI ComboNumber;
@@ -59,18 +58,21 @@ public class MenuBattle : MonoBehaviour
         {
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % mScorePerBar;
-            ScoreBar1.fillAmount = n / (float)mScorePerBar;
-            ScoreBar2.gameObject.SetActive(false);
+
+            int preScore = (mCurrentScore / mScorePerBar) * mScorePerBar;
+            int addScore = mCurrentScore % mScorePerBar;
+            StartCoroutine(ScoreBarEffect(preScore, addScore));
+
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
         }
         else
         {
             StartCoroutine(ScoreBarEffect(mCurrentScore, mAddedScore));
+
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % mScorePerBar;
+
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
         }
@@ -88,7 +90,7 @@ public class MenuBattle : MonoBehaviour
         {
             basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
             basePos.x += (imgWidth * mScoreStars.Count);
-            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
+            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, EffectParent.transform);
             mScoreStars.Add(obj);
         }
     }
@@ -162,8 +164,8 @@ public class MenuBattle : MonoBehaviour
 
     private void Init()
     {
-        foreach (GameObject obj in mScoreStars)
-            Destroy(obj);
+        for (int i = 0; i < EffectParent.transform.childCount; ++i)
+            Destroy(EffectParent.transform.GetChild(i).gameObject);
 
         mScoreStars.Clear();
 
@@ -182,25 +184,6 @@ public class MenuBattle : MonoBehaviour
     public void AddScore(Product product)
     {
         mAddedScore += product.Combo;
-        //GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        //Text combo = comboTextObj.GetComponent<Text>();
-        //combo.text = product.Combo.ToString();
-        //StartCoroutine(ComboEffect(comboTextObj));
-    }
-    IEnumerator ComboEffect(GameObject obj)
-    {
-        float time = 0;
-        while(time < 0.7)
-        {
-            float x = (time * 10) + 1;
-            float y = (1 / x) * Time.deltaTime;
-            Vector3 pos = obj.transform.position;
-            pos.y += y;
-            obj.transform.position = pos;
-            time += Time.deltaTime;
-            yield return null;
-        }
-        Destroy(obj);
     }
     public int CurrentCombo
     {
@@ -237,13 +220,13 @@ public class MenuBattle : MonoBehaviour
             return;
 
         int nextCombo = product.Combo;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Destroy(obj, 1.1f);
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
         {
             NextCombo = nextCombo;
+            Destroy(obj);
         }));
     }
     public void OneMoreCombo(Product product)
@@ -251,13 +234,13 @@ public class MenuBattle : MonoBehaviour
         if (product.mSkill != ProductSkill.OneMore)
             return;
 
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        Destroy(obj, 1.1f);
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>
         {
             CurrentCombo++;
+            Destroy(obj);
         }));
     }
 
@@ -278,7 +261,7 @@ public class MenuBattle : MonoBehaviour
         }
         else
         {
-            mMenu = MenuMessageBox.PopUp("Finish Game", true, (bool isOK) =>
+            mMenu = MenuMessageBox.PopUp("Finish Game?", true, (bool isOK) =>
             {
                 if (isOK)
                     BattleFieldManager.FinishGame(false);

@@ -12,6 +12,7 @@ public class MenuInGame : MonoBehaviour
     private StageInfo mStageInfo;
     private int mAddedScore;
     private int mCurrentScore;
+    private MenuMessageBox mMenu = null;
     private List<GameObject> mScoreStars = new List<GameObject>();
 
     public Text CurrentScore;
@@ -25,13 +26,13 @@ public class MenuInGame : MonoBehaviour
     public Image ScoreBar1;
     public Image ScoreBar2;
     public NumbersUI ComboNumber;
-    public GameObject ParentPanel;
-    public GameObject ComboText;
+    public GameObject EffectParent;
     public GameObject GameField;
     public GameObject ItemPrefab;
     public GameObject ScoreStarPrefab;
 
     public int Score { get { return mCurrentScore + mAddedScore; } }
+    public int RemainLimit { get { return int.Parse(Limit.text); } }
 
     private void Update()
     {
@@ -66,21 +67,23 @@ public class MenuInGame : MonoBehaviour
         {
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % scorePerBar;
-            ScoreBar1.fillAmount = n / (float)scorePerBar;
-            ScoreBar2.gameObject.SetActive(false);
+
+            int preScore = (mCurrentScore / scorePerBar) * scorePerBar;
+            int addScore = mCurrentScore % scorePerBar;
+            StartCoroutine(ScoreBarEffect(preScore, addScore));
+
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
         }
         else
         {
             StartCoroutine(ScoreBarEffect(mCurrentScore, mAddedScore));
+
             mCurrentScore += mAddedScore;
             mAddedScore = 0;
-            int n = mCurrentScore % scorePerBar;
+            
             CurrentScore.text = mCurrentScore.ToString();
             CurrentScore.GetComponent<Animation>().Play("touch");
-
         }
 
         FillScoreStar();
@@ -96,7 +99,7 @@ public class MenuInGame : MonoBehaviour
         {
             basePos = ScoreBar1.transform.position + new Vector3((imgWidth - barWidth) * 0.5f, 0.3f, 0);
             basePos.x += (imgWidth * mScoreStars.Count);
-            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, ParentPanel.transform);
+            GameObject obj = GameObject.Instantiate(ScoreStarPrefab, basePos, Quaternion.identity, EffectParent.transform);
             mScoreStars.Add(obj);
         }
     }
@@ -170,8 +173,8 @@ public class MenuInGame : MonoBehaviour
     }
     private void InitUIState(StageInfo info)
     {
-        foreach (GameObject obj in mScoreStars)
-            Destroy(obj);
+        for (int i = 0; i < EffectParent.transform.childCount; ++i)
+            Destroy(EffectParent.transform.GetChild(i).gameObject);
 
         mScoreStars.Clear();
 
@@ -191,32 +194,11 @@ public class MenuInGame : MonoBehaviour
         KeepCombo.text = "0";
         StageLevel.text = info.Num.ToString();
         ComboNumber.Clear();
-
-        //GameField.GetComponent<InGameManager>().EventOnChange = UpdatePanel;
     }
 
     public void AddScore(Product product)
     {
         mAddedScore += product.Combo;
-        //GameObject comboTextObj = GameObject.Instantiate(ComboText, product.transform.position, Quaternion.identity, ParentPanel.transform);
-        //Text combo = comboTextObj.GetComponent<Text>();
-        //combo.text = product.Combo.ToString();
-        //StartCoroutine(ComboEffect(comboTextObj));
-    }
-    IEnumerator ComboEffect(GameObject obj)
-    {
-        float time = 0;
-        while(time < 0.7)
-        {
-            float x = (time * 10) + 1;
-            float y = (1 / x) * Time.deltaTime;
-            Vector3 pos = obj.transform.position;
-            pos.y += y;
-            obj.transform.position = pos;
-            time += Time.deltaTime;
-            yield return null;
-        }
-        Destroy(obj);
     }
 
     public int StarCount { get { return mScoreStars.Count; } }
@@ -261,7 +243,7 @@ public class MenuInGame : MonoBehaviour
             return;
 
         int nextCombo = product.Combo;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
@@ -275,7 +257,7 @@ public class MenuInGame : MonoBehaviour
         if (product.mSkill != ProductSkill.OneMore)
             return;
 
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, ParentPanel.transform);
+        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(AnimateItem(obj, ComboNumber.transform.position, () =>
@@ -297,7 +279,7 @@ public class MenuInGame : MonoBehaviour
         if (type != mStageInfo.GoalTypeEnum)
             return;
 
-        GameObject GoalTypeObj = GameObject.Instantiate(ItemPrefab, worldPos, Quaternion.identity, ParentPanel.transform);
+        GameObject GoalTypeObj = GameObject.Instantiate(ItemPrefab, worldPos, Quaternion.identity, EffectParent.transform);
         Image img = GoalTypeObj.GetComponent<Image>();
         img.sprite = mStageInfo.GoalTypeImage;
         StartCoroutine(AnimateItem(GoalTypeObj, TargetValue.transform.position, () =>
@@ -401,7 +383,19 @@ public class MenuInGame : MonoBehaviour
 
     public void OnPause()
     {
-        MenuPause.PopUp();
+        if (mMenu != null)
+        {
+            Destroy(mMenu);
+            mMenu = null;
+        }
+        else
+        {
+            mMenu = MenuMessageBox.PopUp("Quit Stage?", true, (bool isOK) =>
+            {
+                if (isOK)
+                    InGameManager.Inst.FinishGame(false);
+            });
+        }
     }
     public void OnLockMatch(bool enableLock)
     {

@@ -93,7 +93,7 @@ public class InGameManager : MonoBehaviour
         if (success)
         {
             LOG.echo(SummaryToCSVString(true));
-            int starCount = 3;
+            int starCount = GetGrade();
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 
@@ -102,17 +102,33 @@ public class InGameManager : MonoBehaviour
                 nextStage.UnLock();
 
             SoundPlayer.Inst.Player.Stop();
-            MenuComplete.PopUp(mStageInfo.Num, starCount, MenuInGame.Inst().CurrentCombo);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, MenuInGame.Inst().Score);
         }
         else
         {
             LOG.echo(SummaryToCSVString(false));
             SoundPlayer.Inst.Player.Stop();
-            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, MenuInGame.Inst().CurrentCombo);
+            MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mStageInfo.GoalTypeImage, MenuInGame.Inst().Score);
         }
 
         ResetGame();
         transform.parent.gameObject.SetActive(false);
+    }
+
+    public int GetGrade()
+    {
+        float totlaRemain = mStageInfo.MoveLimit;
+        float currentRemin = MenuInGame.Inst().RemainLimit;
+        if (totlaRemain < 5)
+            return 3;
+        else if (totlaRemain * 0.4f < currentRemin)
+            return 3;
+        else if (totlaRemain * 0.2f < currentRemin)
+            return 2;
+        else if (0 < currentRemin)
+            return 1;
+
+        return 0;
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)

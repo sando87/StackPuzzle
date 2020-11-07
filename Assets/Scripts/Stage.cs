@@ -53,6 +53,10 @@ public class Stage : MonoBehaviour
 
     public void UpdateStarCount(int starCount)
     {
+        int currentStarCount = UserSetting.GetStageStarCount(Number);
+        if (starCount < currentStarCount)
+            return;
+
         UserSetting.SetStageStarCount(Number, (byte)starCount);
         transform.Find("Stars/Separated/Star1").gameObject.SetActive(starCount >= 1 ? true : false);
         transform.Find("Stars/Separated/Star2").gameObject.SetActive(starCount >= 2 ? true : false);

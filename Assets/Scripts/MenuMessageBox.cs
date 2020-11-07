@@ -6,9 +6,15 @@ using UnityEngine.UI;
 
 public class MenuMessageBox : MonoBehaviour
 {
+    public Text mTitle;
     public Text mMessage;
     public GameObject OkButton;
     public GameObject CancleButton;
+
+    public string Title {
+        get { return mTitle.text; }
+        set { mTitle.text = value; }
+    }
 
     private Action<bool> mOnClick = null;
 

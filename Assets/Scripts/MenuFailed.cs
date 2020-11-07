@@ -9,9 +9,10 @@ public class MenuFailed : MonoBehaviour
 
     public Text Score;
     public Text TargetScore;
+    public Image TargetType;
     public Text StageLevel;
 
-    public static void PopUp(int level, int target, int score)
+    public static void PopUp(int level, int target, Sprite targetImg, int score)
     {
         GameObject menuFailed = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
 
@@ -19,6 +20,7 @@ public class MenuFailed : MonoBehaviour
         menu.Score.text = score.ToString();
         menu.StageLevel.text = level.ToString();
         menu.TargetScore.text = target.ToString();
+        menu.TargetType.sprite = targetImg;
 
         menuFailed.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
