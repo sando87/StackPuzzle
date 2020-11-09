@@ -237,7 +237,7 @@ public class NetServerApp : MonoBehaviour
                 break;
             }
 
-            float detectRange = time * 30.0f;
+            float detectRange = time < 18 ? time * 30.0f : 10000.0f;
             List<ServerField> tmpList = new List<ServerField>();
             foreach (var target in mMatchingUsers)
             {

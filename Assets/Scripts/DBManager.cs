@@ -58,6 +58,7 @@ public class DBManager : IDisposable
             mDBSession = null;
         }
     }
+    public bool IsConnected { get { return mDBSession != null; } }
 
     public int AddNewUser(UserInfo user, string ipAddr)
     {
@@ -220,7 +221,7 @@ public class DBManager : IDisposable
         catch (Exception ex) { LOG.warn(ex.Message); }
         return null;
     }
-    public void AddLog(LogInfo log)
+    public bool AddLog(LogInfo log)
     {
         try
         {
@@ -231,13 +232,13 @@ public class DBManager : IDisposable
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())
                 {
-                    return;
+                    return true;
                 }
             }
         }
         catch (NpgsqlException ex) { LOG.warn(ex.Message); }
         catch (Exception ex) { LOG.warn(ex.Message); }
-        return;
+        return false;
     }
     public UserInfo[] GetUsers()
     {

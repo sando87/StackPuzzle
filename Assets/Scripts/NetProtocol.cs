@@ -55,7 +55,7 @@ public class ServerField
             if(remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
                 idx = UnityEngine.Random.Range(0, count - 1);
         }
-        return idx;
+        return idx + 1;
     }
 }
 
@@ -182,6 +182,7 @@ public class InitFieldInfo
     public int userPk;
     public int XCount;
     public int YCount;
+    public float colorCount;
     public ProductColor[,] products;
 }
 
