@@ -28,7 +28,6 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo = null;
 
     private int mIdleCounter = -1;
-    private ProductColor mSkipColor = ProductColor.None;
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private Dictionary<int,Frame> mDestroyes = new Dictionary<int, Frame>();
 
@@ -54,6 +53,7 @@ public class InGameManager : MonoBehaviour
         //mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
 
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+        GetComponent<SwipeDetector>().EventClick = OnClick;
 
         StartCoroutine(CheckIdle());
         StartCoroutine(CreateNextProducts());
@@ -131,6 +131,10 @@ public class InGameManager : MonoBehaviour
         return 0;
     }
 
+    public void OnClick(GameObject obj)
+    {
+        Debug.Log("OnClick!!!");
+    }
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
         if (!IsIdle)
@@ -436,13 +440,7 @@ public class InGameManager : MonoBehaviour
     }
     private Product CreateNewProduct(Frame parent, ProductSkill skill = ProductSkill.Nothing)
     {
-        int colorCount = Math.Min(mStageInfo.ColorCount, ProductPrefabs.Length);
-        int typeIdx = UnityEngine.Random.Range(0, colorCount);
-        if (mSkipColor != ProductColor.None && ProductPrefabs[typeIdx].GetComponent<Product>().mColor == mSkipColor)
-        {
-            int nextIdx = UnityEngine.Random.Range(1, colorCount);
-            typeIdx = (typeIdx + nextIdx) % colorCount;
-        }
+        int typeIdx = RandomNextColor();
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
@@ -451,6 +449,18 @@ public class InGameManager : MonoBehaviour
         product.EventDestroyed = OnDestroyProduct;
         product.ChangeSkilledProduct(skill);
         return product;
+    }
+    private int RandomNextColor()
+    {
+        int count = (int)(mStageInfo.ColorCount + 0.99f);
+        float remain = mStageInfo.ColorCount - (int)mStageInfo.ColorCount;
+        int idx = UnityEngine.Random.Range(0, count);
+        if (remain > 0 && idx == count - 1)
+        {
+            if (remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
+                idx = UnityEngine.Random.Range(0, count - 1);
+        }
+        return idx;
     }
 
     private void ResetGame()
@@ -466,7 +476,6 @@ public class InGameManager : MonoBehaviour
         mStageInfo = null;
         Pause = false;
         mIdleCounter = -1;
-        mSkipColor = ProductColor.None;
         MatchLock = false;
     }
     private Product NextUpProductFrom(Frame frame)

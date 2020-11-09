@@ -130,7 +130,8 @@ public class NetServerApp : MonoBehaviour
         ServerField info = new ServerField();
         info.isMatching = false;
         info.userPK = requestBody.userPk;
-        info.score = requestBody.userScore;
+        info.colorCount = requestBody.colorCount;
+        info.userInfo = DBManager.Inst().GetUser(requestBody.userPk);
         info.sessionInfo = mSession;
         info.requestMsg = mRequestMsg;
         mMatchingUsers[requestBody.userPk] = info;
@@ -195,10 +196,10 @@ public class NetServerApp : MonoBehaviour
     private EndGame ProcEndGame(EndGame requestBody)
     {
         mMatchingUsers.Remove(requestBody.fromUserPk);
+        DBManager.Inst().UpdateUserInfo(requestBody.userInfo);
+
         if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
         {
-            DBManager.Inst().RenewUserScore(requestBody.fromUserPk, requestBody.score);
-
             MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
 
             Header responseMsg = new Header();
@@ -236,24 +237,33 @@ public class NetServerApp : MonoBehaviour
                 break;
             }
 
+            float detectRange = time * 30.0f;
+            List<ServerField> tmpList = new List<ServerField>();
             foreach (var target in mMatchingUsers)
             {
                 ServerField opp = target.Value;
-                if (opp.userPK == user.userPK || opp.isMatching)
-                    continue;
-
-                int diff = time < 17 ? ((int)time + 1) * 5 : 10000;
-                if(Mathf.Abs(opp.score - user.score) <= diff)
-                {
-                    user.isMatching = true;
-                    opp.isMatching = true;
-                    SendOppoentInfo(user, opp);
-                    SendOppoentInfo(opp, user);
-                    break;
-                }
+                if (opp.userPK != user.userPK && !opp.isMatching)
+                    if(Mathf.Abs(user.userInfo.score - opp.userInfo.score) < detectRange)
+                        tmpList.Add(target.Value);
             }
-            yield return new WaitForSeconds(1);
-            time += 1;
+
+
+            tmpList.Sort((lhs, rhs) => {
+                return Mathf.Abs(user.colorCount - lhs.colorCount) > Mathf.Abs(user.colorCount - rhs.colorCount) ? 1 : -1;
+            });
+
+            if(tmpList.Count > 0)
+            {
+                ServerField opp = tmpList[0];
+                user.isMatching = true;
+                opp.isMatching = true;
+                SendOppoentInfo(user, opp);
+                SendOppoentInfo(opp, user);
+                break;
+            }
+
+            yield return new WaitForSeconds(2);
+            time += 2;
         }
     }
     private void SendOppoentInfo(ServerField user, ServerField opponent)
@@ -262,9 +272,9 @@ public class NetServerApp : MonoBehaviour
 
         SearchOpponentInfo body = new SearchOpponentInfo();
         body.userPk = user.userPK;
-        body.userPk = user.score;
-        body.opponentUserPk = opponent == null ? -1 : opponent.userPK;
-        body.opponentUserScore = opponent == null ?  0 : opponent.score;
+        body.colorCount = user.colorCount;
+        body.oppUser = opponent == null ? null : opponent.userInfo;
+        body.oppColorCount = opponent == null ?  -1 : opponent.colorCount;
         body.isDone = true;
 
         Header responseMsg = new Header();

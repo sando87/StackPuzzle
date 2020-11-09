@@ -17,7 +17,8 @@ public class ServerField
 {
     public bool isMatching = false;
     public int userPK = 0;
-    public int score = 0;
+    public UserInfo userInfo = null;
+    public float colorCount = 0;
     public MySession sessionInfo = null;
     public Header requestMsg = null;
     public ProductColor[,] initField = null;
@@ -26,11 +27,10 @@ public class ServerField
     {
         if(initField == null)
         {
-            int colorTypeCount = System.Enum.GetValues(typeof(ProductColor)).Length;
             initField = new ProductColor[xCount, yCount];
             for(int y = 0; y < yCount; ++y)
                 for (int x = 0; x < xCount; ++x)
-                    initField[x, y] = (ProductColor)UnityEngine.Random.Range(1, colorTypeCount);
+                    initField[x, y] = (ProductColor)RandomNextColor();
         }
 
         return initField;
@@ -39,12 +39,23 @@ public class ServerField
     {
         if (nextColors.Count < offset + count)
         {
-            int colorTypeCount = System.Enum.GetValues(typeof(ProductColor)).Length;
             int n = offset + count - nextColors.Count;
             for (int i = 0; i < n; ++i)
-                nextColors.Add((ProductColor)UnityEngine.Random.Range(1, colorTypeCount));
+                nextColors.Add((ProductColor)RandomNextColor());
         }
         return nextColors.GetRange(offset, count).ToArray();
+    }
+    private int RandomNextColor()
+    {
+        int count = (int)(colorCount + 0.99f);
+        float remain = colorCount - (int)colorCount;
+        int idx = UnityEngine.Random.Range(0, count);
+        if(remain > 0 && idx == count - 1)
+        {
+            if(remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
+                idx = UnityEngine.Random.Range(0, count - 1);
+        }
+        return idx;
     }
 }
 
@@ -142,6 +153,9 @@ public class UserInfo
     public int userPk = -1;
     public String userName = "No Name";
     public int score = 100;
+    public int win = 0;
+    public int lose = 0;
+    public int total = 0;
     public String deviceName = "";
 }
 
@@ -156,9 +170,9 @@ public class LogInfo
 public class SearchOpponentInfo
 {
     public int userPk;
-    public int userScore;
-    public int opponentUserPk;
-    public int opponentUserScore;
+    public float colorCount;
+    public UserInfo oppUser;
+    public float oppColorCount;
     public bool isDone;
 }
 
@@ -197,8 +211,7 @@ public class EndGame
     public int fromUserPk;
     public int toUserPk;
     public bool win;
-    public int maxCombo;
-    public int score;
+    public UserInfo userInfo;
 }
 
 [Serializable]

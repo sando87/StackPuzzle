@@ -14,6 +14,7 @@ public class SwipeDetector : MonoBehaviour
     private Vector3 mDownPosition;
 
     public Action<GameObject, SwipeDirection> EventSwipe;
+    public Action<GameObject> EventClick;
 
     void Update()
     {
@@ -58,6 +59,11 @@ public class SwipeDetector : MonoBehaviour
         }
         else if (Input.GetMouseButtonUp(0))
         {
+            Vector3 worldPt = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Collider2D hit = Physics2D.OverlapPoint(worldPt);
+            if (hit != null && hit.gameObject == mDownObject)
+                EventClick?.Invoke(mDownObject);
+
             mDownObject = null;
             mDownPosition = Vector3.zero;
         }

@@ -9,11 +9,21 @@ using UnityEngine.UI;
 public class UserSetting
 {
     public static bool IsBotPlayer { get { return mIsBotPlayer; } }
+    public static UserInfo UserInfo { get { return mUserInfo; } }
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
     public static int UserScore
     {
         get { return mUserInfo == null ? -1 : mUserInfo.score; }
-        set { mUserInfo.score = value; if (mUserInfo.score < 0) mUserInfo.score = 0; UpdateUserInfo(mUserInfo); }
+        set {
+            
+            if (mUserInfo.score < value)
+                mUserInfo.win++;
+            else
+                mUserInfo.lose++;
+            mUserInfo.total++;
+            mUserInfo.score = value;
+            UpdateUserInfo(mUserInfo);
+        }
     }
     public static bool Mute
     {
@@ -107,6 +117,9 @@ public class UserSetting
             info.userPk = PlayerPrefs.GetInt("userPk");
             info.userName = PlayerPrefs.GetString("userName");
             info.score = PlayerPrefs.GetInt("score");
+            info.win = PlayerPrefs.GetInt("win");
+            info.lose = PlayerPrefs.GetInt("lose");
+            info.total = PlayerPrefs.GetInt("total");
             info.deviceName = PlayerPrefs.GetString("deviceName");
             return info;
         }
@@ -116,6 +129,9 @@ public class UserSetting
             info.userPk = -1;
             info.userName = "No Name";
             info.score = 100;
+            info.win = 0;
+            info.lose = 0;
+            info.total = 0;
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
             return info;
         }
@@ -133,6 +149,9 @@ public class UserSetting
             PlayerPrefs.SetInt("userPk", info.userPk);
             PlayerPrefs.SetString("userName", info.userName);
             PlayerPrefs.SetInt("score", info.score);
+            PlayerPrefs.SetInt("win", info.win);
+            PlayerPrefs.SetInt("lose", info.lose);
+            PlayerPrefs.SetInt("total", info.total);
             PlayerPrefs.SetString("deviceName", info.deviceName);
         }
         return info;

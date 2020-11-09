@@ -24,7 +24,7 @@ public class StageInfo
     public Sprite GoalTypeImage;
     public StageGoalType GoalTypeEnum;
     public int MoveLimit;
-    public int ColorCount;
+    public float ColorCount;
     public int XCount;
     public int YCount;
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
@@ -72,7 +72,7 @@ public class StageInfo
                 case "GoalType": info.GoalType = tokens[1]; break;
                 case "GoalValue": info.GoalValue = int.Parse(tokens[1]); break;
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
-                case "ColorCount": info.ColorCount = int.Parse(tokens[1]); break;
+                case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
                 case "Items": info.Items = Parse(tokens[1]); break;
@@ -224,7 +224,7 @@ public class StageInfo
         "GoalType,Score\r\n" +
         "GoalValue,3\r\n" +
         "MoveLimit,25\r\n" +
-        "ColorCount,5\r\n" +
+        "ColorCount,5.0\r\n" +
         "Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor\r\n" +
         "XCount,7\r\n" +
         "YCount,7\r\n" +

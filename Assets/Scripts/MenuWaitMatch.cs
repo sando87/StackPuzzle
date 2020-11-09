@@ -109,16 +109,16 @@ public class MenuWaitMatch : MonoBehaviour
     {
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
-        info.userScore = UserSetting.UserScore;
-        info.opponentUserPk = -1;
-        info.opponentUserScore = -1;
+        info.colorCount = 4.0f; // 4~6.0f
+        info.oppUser = null;
+        info.oppColorCount = 0;
         info.isDone = false;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
         {
             SearchOpponentInfo res = _res as SearchOpponentInfo;
             if (res.isDone && mIsSearching)
             {
-                if (res.opponentUserPk == -1)
+                if (res.oppUser == null)
                 {
                     FailMatch();
 
@@ -126,17 +126,17 @@ public class MenuWaitMatch : MonoBehaviour
                         StartCoroutine(AutoMatch());
                 }
                 else
-                    SuccessMatch(res.opponentUserPk);
+                    SuccessMatch(res);
             }
             return;
         });
     }
 
-    private void SuccessMatch(int oppPk)
+    private void SuccessMatch(SearchOpponentInfo matchInfo)
     {
         mIsSearching = false;
         StopCoroutine("WaitOpponent");
-        State.text = "Matched Player : " + oppPk;
+        State.text = "Matched Player : " + matchInfo.oppUser.userPk;
 
         InitFieldInfo info = new InitFieldInfo();
         info.XCount = 5;
@@ -146,14 +146,14 @@ public class MenuWaitMatch : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            BattleFieldManager.Me.StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            BattleFieldManager.Me.StartGame(res.userPk, res.XCount, res.YCount, res.products, matchInfo.colorCount);
         });
 
-        info.userPk = oppPk;
+        info.userPk = matchInfo.oppUser.userPk;
         NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
         {
             InitFieldInfo res = _res as InitFieldInfo;
-            BattleFieldManager.Opp.StartGame(res.userPk, res.XCount, res.YCount, res.products);
+            BattleFieldManager.Opp.StartGame(res.userPk, res.XCount, res.YCount, res.products, matchInfo.colorCount);
         });
 
         MenuStages.Hide();

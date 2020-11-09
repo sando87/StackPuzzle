@@ -89,6 +89,26 @@ public class DBManager : IDisposable
         catch (Exception ex) { LOG.warn(ex.Message); }
         return -1;
     }
+    public void UpdateUserInfo(UserInfo user)
+    {
+        try
+        {
+            using (var cmd = new NpgsqlCommand())
+            {
+                string query = String.Format("UPDATE users SET userName='{1}',score='{2}',win='{3}',lose='{4}',total='{5}' WHERE userPk = {0}", 
+                    user.userPk, user.userName, user.score, user.win, user.lose, user.total);
+                cmd.Connection = mDBSession;
+                cmd.CommandText = query;
+                using (var reader = cmd.ExecuteReader())
+                {
+                    return;
+                }
+            }
+        }
+        catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
+        return;
+    }
     public void EditUserName(UserInfo user)
     {
         try

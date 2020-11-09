@@ -53,6 +53,7 @@ public class BattleFieldManager : MonoBehaviour
     private bool mAtleastOneMatched = false;
     private int mCurrentCombo = 0;
     private int mKeepCombo = 0;
+    private float mColorCount = 0;
 
     public bool IsIdle { get { return mIdleCounter < 0; } }
     public int CountX { get { return mCountX; } }
@@ -63,13 +64,14 @@ public class BattleFieldManager : MonoBehaviour
     public int UserPK { get { return mThisUserPK; } }
     public Action<int> EventOnKeepCombo;
 
-    public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors)
+    public void StartGame(int userPK, int XCount, int YCount, ProductColor[,] initColors, float colorCount)
     {
         ResetGame();
     
         mThisUserPK = userPK;
         mCountX = XCount;
         mCountY = YCount;
+        mColorCount = colorCount;
 
         transform.parent.gameObject.SetActive(true);
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
@@ -130,14 +132,14 @@ public class BattleFieldManager : MonoBehaviour
 
         NetClientApp.GetInstance().EventResponse = null;
 
-        int deltaScore = success ? 1 : -1;
+        int deltaScore = NextDeltaScore(success, UserSetting.UserScore, Me.mColorCount);
         UserSetting.UserScore += deltaScore;
 
         EndGame info = new EndGame();
         info.fromUserPk = BattleFieldManager.Me.UserPK;
         info.toUserPk = BattleFieldManager.Opp.UserPK;
         info.win = success;
-        info.score = UserSetting.UserScore;
+        info.userInfo = UserSetting.UserInfo;
         NetClientApp.GetInstance().Request(NetCMD.EndGame, info, null);
 
         BattleFieldManager.Me.ResetGame();
@@ -146,6 +148,20 @@ public class BattleFieldManager : MonoBehaviour
         BattleFieldManager.Me.transform.parent.gameObject.SetActive(false);
 
         MenuFinishBattle.PopUp(success, UserSetting.UserScore, deltaScore);
+    }
+
+    public static int NextDeltaScore(bool isWin, int curScore, float colorCount)
+    {
+        float difficulty = (colorCount - 4.0f) * 5.0f;
+        float curX = curScore * 0.01f;
+        float degree = 90 - (Mathf.Atan(curX - difficulty) * Mathf.Rad2Deg);
+        float nextX = 0;
+        if (isWin)
+            nextX = curX + (degree / 1000.0f);
+        else
+            nextX = curX - ((180 - degree) / 1000.0f);
+
+        return (int)((nextX - curX) * 100.0f);
     }
 
     public void OnSwipe(GameObject obj, SwipeDirection dir)
