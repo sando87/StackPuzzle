@@ -134,6 +134,7 @@ public class BattleFieldManager : MonoBehaviour
 
         int deltaScore = NextDeltaScore(success, UserSetting.UserScore, Me.mColorCount);
         UserSetting.UserScore += deltaScore;
+        UserSetting.Win = success;
 
         EndGame info = new EndGame();
         info.fromUserPk = BattleFieldManager.Me.UserPK;

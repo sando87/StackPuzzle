@@ -114,8 +114,7 @@ public class MenuInGame : MonoBehaviour
             InGameManager.Inst.FinishGame(true);
             Hide();
         }
-
-        if (Limit.text == "0")
+        else if (Limit.text == "0")
         {
             InGameManager.Inst.FinishGame(false);
             Hide();
@@ -393,7 +392,10 @@ public class MenuInGame : MonoBehaviour
             mMenu = MenuMessageBox.PopUp("Quit Stage?", true, (bool isOK) =>
             {
                 if (isOK)
+                {
                     InGameManager.Inst.FinishGame(false);
+                    Hide();
+                }
             });
         }
     }

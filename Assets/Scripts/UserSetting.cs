@@ -25,6 +25,17 @@ public class UserSetting
             UpdateUserInfo(mUserInfo);
         }
     }
+    public static bool Win {
+        set
+        {
+            if (value)
+                mUserInfo.win++;
+            else
+                mUserInfo.lose++;
+            mUserInfo.total++;
+            UpdateUserInfo(mUserInfo);
+        }
+    }
     public static bool Mute
     {
         get { return PlayerPrefs.GetInt("userMute", 0) == 1; }

@@ -8,7 +8,10 @@ public class MenuWaitMatch : MonoBehaviour
     private const string UIObjName = "CanvasPopUp/MenuWaitMatch";
     private bool mIsSearching = false;
 
-    public Text State;
+    public Text MyUserInfo;
+    public Text OppUserInfo;
+    public Text CountDown;
+    public GameObject BtnClose;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
 
@@ -41,11 +44,7 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnCancle()
     {
-        mIsSearching = false;
-        StopCoroutine("WaitOpponent");
-        State.text = "Match Ready";
-        BtnCancle.SetActive(false);
-        BtnMatch.SetActive(true);
+        ResetMatchUI();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
 
         SearchOpponentInfo info = new SearchOpponentInfo();
@@ -82,9 +81,9 @@ public class MenuWaitMatch : MonoBehaviour
         {
             switch(n%3)
             {
-                case 0: State.text = "Matching.."; break;
-                case 1: State.text = "Matching..."; break;
-                case 2: State.text = "Matching...."; break;
+                case 0: OppUserInfo.text = "Matching.."; break;
+                case 1: OppUserInfo.text = "Matching..."; break;
+                case 2: OppUserInfo.text = "Matching...."; break;
             }
             n++;
             yield return new WaitForSeconds(1);
@@ -109,7 +108,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
-        info.colorCount = 4.0f; // 4~6.0f
+        info.colorCount = 5.0f; // 4~6.0f
         info.oppUser = null;
         info.oppColorCount = 0;
         info.isDone = false;
@@ -126,47 +125,59 @@ public class MenuWaitMatch : MonoBehaviour
                         StartCoroutine(AutoMatch());
                 }
                 else
-                    SuccessMatch(res);
+                    StartCoroutine(StartCountDown(res));
             }
             return;
         });
     }
 
-    private void SuccessMatch(SearchOpponentInfo matchInfo)
+    IEnumerator StartCountDown(SearchOpponentInfo matchInfo)
     {
-        mIsSearching = false;
-        StopCoroutine("WaitOpponent");
-        State.text = "Matched Player : " + matchInfo.oppUser.userPk;
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+
+        InitFieldInfo player = null;
+        InitFieldInfo opponent = null;
 
         InitFieldInfo info = new InitFieldInfo();
         info.XCount = 5;
         info.YCount = 9;
-
+        info.colorCount = matchInfo.colorCount;
         info.userPk = UserSetting.UserPK;
-        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
-        {
-            InitFieldInfo res = _res as InitFieldInfo;
-            BattleFieldManager.Me.StartGame(res.userPk, res.XCount, res.YCount, res.products, matchInfo.colorCount);
-        });
-
+        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) => { player = _res as InitFieldInfo; });
+        info.colorCount = matchInfo.oppColorCount;
         info.userPk = matchInfo.oppUser.userPk;
-        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) =>
-        {
-            InitFieldInfo res = _res as InitFieldInfo;
-            BattleFieldManager.Opp.StartGame(res.userPk, res.XCount, res.YCount, res.products, matchInfo.colorCount);
-        });
+        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) => { opponent = _res as InitFieldInfo; });
 
-        MenuStages.Hide();
-        StageManager.Inst.Activate(false);
-        gameObject.SetActive(false);
+        mIsSearching = false;
+        StopCoroutine("WaitOpponent");
+        UpdateUserInfo(matchInfo.oppUser);
+        BtnClose.SetActive(false);
+        BtnMatch.SetActive(false);
+        BtnCancle.SetActive(false);
+
+        CountDown.gameObject.SetActive(true);
+        CountDown.text = "3";
+        yield return new WaitForSeconds(1);
+        CountDown.text = "2";
+        yield return new WaitForSeconds(1);
+        CountDown.text = "1";
+        yield return new WaitForSeconds(1);
+
+        if (player != null && opponent != null)
+        {
+            BattleFieldManager.Me.StartGame(player.userPk, player.XCount, player.YCount, player.products, player.colorCount);
+            BattleFieldManager.Opp.StartGame(opponent.userPk, opponent.XCount, opponent.YCount, opponent.products, opponent.colorCount);
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            ResetMatchUI();
+            MenuMessageBox.PopUp("Match Failed", false, null);
+        }
     }
     private void FailMatch()
     {
-        mIsSearching = false;
-        StopCoroutine("WaitOpponent");
-        State.text = "Match Failed";
-        BtnCancle.SetActive(false);
-        BtnMatch.SetActive(true);
+        ResetMatchUI();
     }
     private IEnumerator AutoMatch()
     {
@@ -178,8 +189,24 @@ public class MenuWaitMatch : MonoBehaviour
         mIsSearching = false;
         BtnCancle.SetActive(false);
         BtnMatch.SetActive(true);
-        State.text = "Match Ready";
+        BtnClose.SetActive(true);
+        UpdateUserInfo(UserSetting.UserInfo);
+        OppUserInfo.text = "No Matched User";
+        CountDown.text = "0";
+        CountDown.gameObject.SetActive(false);
         StopCoroutine("WaitOpponent");
+    }
+    private void UpdateUserInfo(UserInfo info)
+    {
+        string text =
+            "ID : #" + info.userPk + "\n" +
+            "Name : " + info.userName + "\n" +
+            "Score : " + info.score + "\n" +
+            "Win/Lose : " + info.win + "/" + info.lose;
 
+        if (UserSetting.UserPK == info.userPk)
+            MyUserInfo.text = text;
+        else
+            OppUserInfo.text = text;
     }
 }
