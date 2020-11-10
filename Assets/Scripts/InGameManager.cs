@@ -139,7 +139,11 @@ public class InGameManager : MonoBehaviour
 
         Product product = obj.GetComponent<Product>();
         mIdleCounter = 1;
-        if (!product.TryMatch())
+        if (product.TryMatch())
+        {
+            RemoveLimit();
+        }
+        else
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
             product.mAnimation.Play("swap");

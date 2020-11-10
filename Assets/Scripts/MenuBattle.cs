@@ -220,7 +220,9 @@ public class MenuBattle : MonoBehaviour
             return;
 
         int nextCombo = product.Combo;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
+        Vector3 pos = product.transform.position;
+        pos.z = 0;
+        GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
@@ -234,7 +236,9 @@ public class MenuBattle : MonoBehaviour
         if (product.mSkill != ProductSkill.OneMore)
             return;
 
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
+        Vector3 pos = product.transform.position;
+        pos.z = 0;
+        GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
         StartCoroutine(Utils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>

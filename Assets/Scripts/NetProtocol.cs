@@ -202,7 +202,7 @@ public class SwipeInfo
     public int toUserPk;
     public int idxX;
     public int idxY;
-    public bool matchLock;
+    public bool isClick;
     public SwipeDirection dir;
 }
 

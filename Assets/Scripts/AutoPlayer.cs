@@ -21,12 +21,18 @@ public class AutoPlayer : MonoBehaviour
     {
         while(true)
         {
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(3);
             if (!BattleFieldManager.Me.gameObject.activeInHierarchy)
                 continue;
 
             if (BattleFieldManager.Me.IsIdle)
-                ScanNextProduct();
+            {
+                if (UnityEngine.Random.Range(0, 3) == 0)
+                    ScanNextProduct();
+                else
+                    AutoClickNextProduct();
+            }
+                
         }
     }
 
@@ -79,6 +85,41 @@ public class AutoPlayer : MonoBehaviour
                         InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
                 }
             }
+        }
+    }
+    void AutoClickNextProduct()
+    {
+        int mCntX = BattleFieldManager.Me.CountX;
+        int mCntY = BattleFieldManager.Me.CountY;
+        List<KeyValuePair<Product, int>> candidates = new List<KeyValuePair<Product, int>>();
+        Dictionary<Product, int> scannedProducts = new Dictionary<Product, int>();
+        for (int y = 0; y < mCntY; ++y)
+        {
+            for (int x = 0; x < mCntX; ++x)
+            {
+                Frame frame = BattleFieldManager.Me.GetFrame(x, y);
+                if (frame == null || frame.ChildProduct == null)
+                    continue;
+
+                Product pro = frame.ChildProduct;
+                if (scannedProducts.ContainsKey(pro))
+                    continue;
+
+                List<Product> matchedList = new List<Product>();
+                pro.SearchMatchedProducts(matchedList, pro.mColor);
+                foreach (Product tmp in matchedList)
+                    scannedProducts[tmp] = 1;
+
+                if (matchedList.Count >= UserSetting.MatchCount)
+                    candidates.Add(new KeyValuePair<Product, int>(pro, matchedList.Count));
+            }
+        }
+
+
+        if (candidates.Count > 0)
+        {
+            candidates.Sort((lsh, rsh) => { return rsh.Value - lsh.Value; });
+            BattleFieldManager.Me.OnClick(candidates[0].Key.gameObject);
         }
     }
 }

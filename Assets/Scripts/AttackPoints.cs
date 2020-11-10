@@ -12,6 +12,7 @@ public class AttackPoints : MonoBehaviour
     private float InitSize = 1.0f;
     private float mScaleForEffect = 1.0f;
     private AttackPoints OppAttackPoints = null;
+    private BattleFieldManager ParentManager = null;
     private List<GameObject> mChilds = new List<GameObject>();
 
     public GameObject BaseSprite;
@@ -24,10 +25,10 @@ public class AttackPoints : MonoBehaviour
     {
         if (OppAttackPoints == null)
         {
-            BattleFieldManager mgr = transform.parent.GetComponent<BattleFieldManager>();
-            OppAttackPoints = mgr.Opponent.AttackPoints;
+            ParentManager = transform.parent.GetComponent<BattleFieldManager>();
+            OppAttackPoints = ParentManager.Opponent.AttackPoints;
             InitSize = Projectile.transform.localScale.x;
-            mScaleForEffect = mgr.IsPlayerField() ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
+            mScaleForEffect = ParentManager.IsPlayerField() ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
             mScaleForEffect *= InitSize;
         }
             
@@ -44,13 +45,25 @@ public class AttackPoints : MonoBehaviour
         obj.transform.localScale = new Vector3(mScaleForEffect, mScaleForEffect, 1);
         int imgIndex = Mathf.Abs(point) >= 12 ? 3 : (Mathf.Abs(point) / 3);
         obj.GetComponent<SpriteRenderer>().sprite = Images[imgIndex];
-        StartCoroutine(AnimateThrow(obj, transform.position, 1.0f, () =>
+
+        if (!ParentManager.IsPlayerField() && point > 0)
         {
-            AddChoco(point);
-            Destroy(obj);
-        }));
+            StartCoroutine(AnimateThrowSide(obj, transform.position, 1.0f, () =>
+            {
+                AddChoco(point);
+                Destroy(obj);
+            }));
+        }
+        else
+        {
+            StartCoroutine(AnimateThrowOver(obj, transform.position, 1.0f, () =>
+            {
+                AddChoco(point);
+                Destroy(obj);
+            }));
+        }
     }
-    IEnumerator AnimateThrow(GameObject obj, Vector3 worldDest, float duration, Action action = null)
+    IEnumerator AnimateThrowSide(GameObject obj, Vector3 worldDest, float duration, Action action = null)
     {
         float time = 0;
         Vector3 startPos = obj.transform.position;
@@ -79,6 +92,36 @@ public class AttackPoints : MonoBehaviour
 
         action?.Invoke();
     }
+    IEnumerator AnimateThrowOver(GameObject obj, Vector3 worldDest, float duration, Action action = null)
+    {
+        float time = 0;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = worldDest;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        Vector3 resize = new Vector3(1, 1, 1);
+        float slopeY = -dir.y / (duration * duration);
+        float slopeX = -dir.x / (duration * duration);
+        float slopeSize = (InitSize - mScaleForEffect) / duration;
+        while (time < duration)
+        {
+            float nowT = time - duration;
+            offset.x = slopeX * nowT * nowT + dir.x;
+            offset.y = slopeY * nowT * nowT + dir.y;
+            obj.transform.position = startPos + offset;
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
+
+            resize.x = slopeSize * time + mScaleForEffect;
+            resize.y = slopeSize * time + mScaleForEffect;
+            obj.transform.localScale = resize;
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action?.Invoke();
+    }
+
     public int Pop(int point)
     {
         if (mChocoCount < point)

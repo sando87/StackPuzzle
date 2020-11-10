@@ -65,19 +65,17 @@ public class MenuWaitMatch : MonoBehaviour
 
         if (!UserSetting.IsBotPlayer)
         {
-            if (UserSetting.StageIsLocked(21))
-            {
-                MenuMessageBox.PopUp("Required 20 Stages", false, null);
-                return;
-            }
+            //if (UserSetting.StageIsLocked(21))
+            //{
+            //    MenuMessageBox.PopUp("Required\n20 Stages", false, null);
+            //    return;
+            //}
 
             if (Purchases.CountHeart() <= 0)
             {
                 MenuMessageBox.PopUp("No Life", false, null);
                 return;
             }
-            else
-                Purchases.UseHeart();
         }
 
         UserInfo userInfo = UserSetting.LoadUserInfo();
@@ -185,6 +183,9 @@ public class MenuWaitMatch : MonoBehaviour
 
         if (player != null && opponent != null)
         {
+            if (!UserSetting.IsBotPlayer)
+                Purchases.UseHeart();
+
             SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
             BattleFieldManager.Me.StartGame(player.userPk, player.XCount, player.YCount, player.products, player.colorCount);
             BattleFieldManager.Opp.StartGame(opponent.userPk, opponent.XCount, opponent.YCount, opponent.products, opponent.colorCount);

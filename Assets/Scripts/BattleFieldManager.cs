@@ -180,7 +180,11 @@ public class BattleFieldManager : MonoBehaviour
 
         Product product = obj.GetComponent<Product>();
         mIdleCounter = 1;
-        if (!product.TryMatch())
+        if (product.TryMatch())
+        {
+            SendControlInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, SwipeDirection.LEFT, true);
+        }
+        else
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
             product.mAnimation.Play("swap");
@@ -200,7 +204,7 @@ public class BattleFieldManager : MonoBehaviour
 
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
         {
-            SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
+            SendControlInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir, false);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
         }
@@ -569,7 +573,7 @@ public class BattleFieldManager : MonoBehaviour
     }
 
 
-    private void SendSwipeInfo(int idxX, int idxY, SwipeDirection dir)
+    private void SendControlInfo(int idxX, int idxY, SwipeDirection dir, bool isClick)
     {
         if (!IsPlayerField())
             return;
@@ -577,7 +581,7 @@ public class BattleFieldManager : MonoBehaviour
         SwipeInfo info = new SwipeInfo();
         info.idxX = idxX;
         info.idxY = idxY;
-        info.matchLock = MatchLock;
+        info.isClick = isClick;
         info.fromUserPk = mThisUserPK;
         info.toUserPk = Opponent.UserPK;
         info.dir = dir;
@@ -617,9 +621,11 @@ public class BattleFieldManager : MonoBehaviour
                 else if (msg.Cmd == NetCMD.SendSwipe)
                 {
                     SwipeInfo res = msg.body as SwipeInfo;
-                    MatchLock = res.matchLock;
                     Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
-                    OnSwipe(pro.gameObject, res.dir);
+                    if (res.isClick)
+                        OnClick(pro.gameObject);
+                    else
+                        OnSwipe(pro.gameObject, res.dir);
 
                     mNetMessages.RemoveFirst();
                 }

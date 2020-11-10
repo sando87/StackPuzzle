@@ -91,7 +91,12 @@ public class AutoBalancer : MonoBehaviour
                 continue;
 
             if (InGameManager.Inst.IsIdle)
-                AutoSwipeNextProduct();
+            {
+                if (UnityEngine.Random.Range(0, 3) == 0)
+                    AutoSwipeNextProduct();
+                else
+                    AutoClickNextProduct();
+            }
         }
     }
 
@@ -144,6 +149,41 @@ public class AutoBalancer : MonoBehaviour
                         InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
                 }
             }
+        }
+    }
+    void AutoClickNextProduct()
+    {
+        int mCntX = InGameManager.Inst.CountX;
+        int mCntY = InGameManager.Inst.CountY;
+        List<KeyValuePair< Product, int>> candidates = new List<KeyValuePair<Product, int>>();
+        Dictionary<Product, int> scannedProducts = new Dictionary<Product, int>();
+        for (int y = 0; y < mCntY; ++y)
+        {
+            for (int x = 0; x < mCntX; ++x)
+            {
+                Frame frame = InGameManager.Inst.GetFrame(x, y);
+                if (frame == null || frame.ChildProduct == null)
+                    continue;
+
+                Product pro = frame.ChildProduct;
+                if (scannedProducts.ContainsKey(pro))
+                    continue;
+
+                List<Product> matchedList = new List<Product>();
+                pro.SearchMatchedProducts(matchedList, pro.mColor);
+                foreach (Product tmp in matchedList)
+                    scannedProducts[tmp] = 1;
+
+                if (matchedList.Count >= UserSetting.MatchCount)
+                    candidates.Add(new KeyValuePair<Product, int>(pro, matchedList.Count));
+            }
+        }
+
+
+        if (candidates.Count > 0)
+        {
+            candidates.Sort((lsh, rsh) => { return rsh.Value - lsh.Value; });
+            InGameManager.Inst.OnClick(candidates[0].Key.gameObject);
         }
     }
 }
