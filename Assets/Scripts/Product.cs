@@ -29,7 +29,7 @@ public class Product : MonoBehaviour
 
     public float Weight { get; set; }
     public int Combo { get; set; }
-    public bool IsSwipe { get; set; }
+    public bool IsFirst { get; set; }
     public bool IsLocked() { return mLocked; }
     public Frame ParentFrame
     {
@@ -55,7 +55,6 @@ public class Product : MonoBehaviour
             return;
 
         mLocked = true;
-        IsSwipe = true;
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target));
     }
@@ -81,7 +80,6 @@ public class Product : MonoBehaviour
     {
         ParentFrame = target;
         mLocked = false;
-        StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
     {
@@ -89,7 +87,16 @@ public class Product : MonoBehaviour
         List<Product> matchList = new List<Product>();
         SearchMatchedProducts(matchList, mColor);
         EventMatched?.Invoke(matchList);
-        IsSwipe = false;
+    }
+
+    public bool TryMatch()
+    {
+        IsFirst = true;
+        List<Product> matchList = new List<Product>();
+        SearchMatchedProducts(matchList, mColor);
+        EventMatched?.Invoke(matchList);
+        IsFirst = false;
+        return matchList.Count >= UserSetting.MatchCount;
     }
 
     public void StartDestroy()

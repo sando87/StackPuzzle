@@ -8,6 +8,8 @@ public class MenuWaitMatch : MonoBehaviour
     private const string UIObjName = "CanvasPopUp/MenuWaitMatch";
     private bool mIsSearching = false;
 
+    public Text HeartTimer;
+    public Text HeartCount;
     public Text MyUserInfo;
     public Text OppUserInfo;
     public Text CountDown;
@@ -21,7 +23,6 @@ public class MenuWaitMatch : MonoBehaviour
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menu.ResetMatchUI();
         menuMatch.SetActive(true);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
 
         if (autoPlay)
             menu.StartCoroutine(menu.AutoMatch());
@@ -39,13 +40,13 @@ public class MenuWaitMatch : MonoBehaviour
         mIsSearching = false;
         gameObject.SetActive(false);
         MenuMain.PopUp();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
     public void OnCancle()
     {
         ResetMatchUI();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
 
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
@@ -54,11 +55,22 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatch()
     {
-        if(NetClientApp.GetInstance().IsDisconnected())
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        if (NetClientApp.GetInstance().IsDisconnected())
         {
             MenuMessageBox.PopUp("Network Disconnected", false, null);
             return;
         }
+
+        if (Purchases.CountHeart() <= 0)
+        {
+            MenuMessageBox.PopUp("No Life", false, null);
+            return;
+        }
+
+        if (!UserSetting.IsBotPlayer)
+            Purchases.UseHeart();
 
         UserInfo userInfo = UserSetting.LoadUserInfo();
         if (userInfo.userPk <= 0)
@@ -69,7 +81,6 @@ public class MenuWaitMatch : MonoBehaviour
         mIsSearching = true;
         BtnCancle.SetActive(true);
         BtnMatch.SetActive(false);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
 
         StartCoroutine("WaitOpponent");
     }
@@ -133,8 +144,6 @@ public class MenuWaitMatch : MonoBehaviour
 
     IEnumerator StartCountDown(SearchOpponentInfo matchInfo)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-
         InitFieldInfo player = null;
         InitFieldInfo opponent = null;
 
@@ -156,27 +165,33 @@ public class MenuWaitMatch : MonoBehaviour
         BtnCancle.SetActive(false);
 
         CountDown.gameObject.SetActive(true);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
         CountDown.text = "3";
         yield return new WaitForSeconds(1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
         CountDown.text = "2";
         yield return new WaitForSeconds(1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
         CountDown.text = "1";
         yield return new WaitForSeconds(1);
 
         if (player != null && opponent != null)
         {
+            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
             BattleFieldManager.Me.StartGame(player.userPk, player.XCount, player.YCount, player.products, player.colorCount);
             BattleFieldManager.Opp.StartGame(opponent.userPk, opponent.XCount, opponent.YCount, opponent.products, opponent.colorCount);
             gameObject.SetActive(false);
         }
         else
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAlarm);
             ResetMatchUI();
             MenuMessageBox.PopUp("Match Failed", false, null);
         }
     }
     private void FailMatch()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAlarm);
         ResetMatchUI();
     }
     private IEnumerator AutoMatch()
@@ -195,6 +210,8 @@ public class MenuWaitMatch : MonoBehaviour
         CountDown.text = "0";
         CountDown.gameObject.SetActive(false);
         StopCoroutine("WaitOpponent");
+        StopCoroutine("UpdateHeartTimer");
+        StartCoroutine("UpdateHeartTimer");
     }
     private void UpdateUserInfo(UserInfo info)
     {
@@ -208,5 +225,27 @@ public class MenuWaitMatch : MonoBehaviour
             MyUserInfo.text = text;
         else
             OppUserInfo.text = text;
+    }
+    IEnumerator UpdateHeartTimer()
+    {
+        while (true)
+        {
+            Purchases.UpdateHeartTimer();
+            int remainSec = Purchases.RemainSeconds();
+            int remainLife = Purchases.CountHeart();
+            HeartCount.text = remainLife.ToString();
+            if (Purchases.MaxHeart())
+            {
+                HeartTimer.text = "Full";
+            }
+            else
+            {
+                int min = remainSec / 60;
+                int sec = remainSec % 60;
+                string secStr = string.Format("{0:D2}", sec);
+                HeartTimer.text = min + ":" + secStr;
+            }
+            yield return new WaitForSeconds(1);
+        }
     }
 }

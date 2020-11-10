@@ -382,6 +382,7 @@ public class MenuInGame : MonoBehaviour
 
     public void OnPause()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         if (mMenu != null)
         {
             Destroy(mMenu);
@@ -401,6 +402,7 @@ public class MenuInGame : MonoBehaviour
     }
     public void OnLockMatch(bool enableLock)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         GameField.GetComponent<InGameManager>().MatchLock = enableLock;
         Lock.gameObject.SetActive(enableLock);
         UnLock.gameObject.SetActive(!enableLock);

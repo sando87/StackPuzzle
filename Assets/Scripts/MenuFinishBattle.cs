@@ -7,20 +7,32 @@ public class MenuFinishBattle : MonoBehaviour
 {
     private const string UIObjName = "CanvasPopUp/MenuFinishBattle";
 
-    public Text Result;
-    public Text CurrentScore;
+    public Image Star1;
+    public Image Star2;
+    public Image Star3;
+    public Text Title;
     public Text DeltaScore;
+    public Text PlayerInfo;
 
-    public static void PopUp(bool win, int currentScore, int deltaScore)
+    public static void PopUp(bool win, UserInfo info, int deltaScore)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
 
         MenuFinishBattle menu = objMenu.GetComponent<MenuFinishBattle>();
-        menu.CurrentScore.text = currentScore.ToString();
+        menu.Star1.gameObject.SetActive(win ? true : false);
+        menu.Star2.gameObject.SetActive(deltaScore > 5 ? true : false);
+        menu.Star3.gameObject.SetActive(deltaScore > 10 ? true : false);
+        menu.Title.text = win ? "WIN" : "LOSE";
         menu.DeltaScore.text = deltaScore.ToString();
-        menu.Result.text = win ? "WIN" : "LOSE";
+
+        string text =
+            "ID : #" + info.userPk + "\n" +
+            "Name : " + info.userName + "\n" +
+            "Score : " + info.score + "\n" +
+            "Win/Lose : " + info.win + "/" + info.lose;
+
+        menu.PlayerInfo.text = text;
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoNext());
@@ -28,10 +40,10 @@ public class MenuFinishBattle : MonoBehaviour
 
     public void OnOK(bool autoPlay)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         gameObject.SetActive(false);
         MenuBattle.Hide();
         MenuWaitMatch.PopUp(autoPlay);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
     private IEnumerator AutoNext()

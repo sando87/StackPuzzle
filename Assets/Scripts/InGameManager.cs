@@ -47,7 +47,6 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(true);
         Pause = false;
         mStageInfo = info;
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
 
         //GameObject mask = Instantiate(MaskPrefab, transform);
         //mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
@@ -102,12 +101,14 @@ public class InGameManager : MonoBehaviour
                 nextStage.UnLock();
 
             SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuComplete.PopUp(mStageInfo.Num, starCount, MenuInGame.Inst().Score);
         }
         else
         {
             LOG.echo(SummaryToCSVString(false));
             SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
             MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mStageInfo.GoalTypeImage, MenuInGame.Inst().Score);
         }
 
@@ -133,13 +134,16 @@ public class InGameManager : MonoBehaviour
 
     public void OnClick(GameObject obj)
     {
-        Debug.Log("OnClick!!!");
-    }
-    public void OnSwipe(GameObject obj, SwipeDirection dir)
-    {
         if (!IsIdle)
             return;
 
+        Product product = obj.GetComponent<Product>();
+        mIdleCounter = 1;
+        if (!product.TryMatch())
+            product.mAnimation.Play("swap");
+    }
+    public void OnSwipe(GameObject obj, SwipeDirection dir)
+    {
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
@@ -155,7 +159,6 @@ public class InGameManager : MonoBehaviour
             RemoveLimit();
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
-            mIdleCounter = 2;
         }
     }
     private void OnMatch(List<Product> matches)
@@ -181,7 +184,7 @@ public class InGameManager : MonoBehaviour
         Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
         int currentCombo = MenuInGame.Inst().CurrentCombo;
-        if(mainProduct.IsSwipe && MenuInGame.Inst().NextCombo > 0)
+        if(mainProduct.IsFirst && MenuInGame.Inst().NextCombo > 0)
         {
             currentCombo = MenuInGame.Inst().NextCombo;
             MenuInGame.Inst().NextCombo = 0;
@@ -349,7 +352,7 @@ public class InGameManager : MonoBehaviour
                 }
                 else
                 {
-                    mIdleCounter = 1;
+                    mIdleCounter = 999;
                     //MenuInGame.Inst().CurrentCombo++;
                 }
             }
@@ -519,7 +522,7 @@ public class InGameManager : MonoBehaviour
     }
     public string SummaryToCSVString(bool success)
     {
-        //stageNum, XCount, YCount, ColorCount, GoalType, GoalValue, MoveLimit, Item(1-1-1-1), Success, CurScore, MaxCombo, MoveCount, Item(4-2-5-0)
+        //stageNum, XCount, YCount, ColorCount, GoalType, GoalValue, MoveLimit, Item(1-1-1-1), Success, CurScore, RemainLimit, HeartCount
         string ret = mStageInfo.Num + ","
             + CountX + ","
             + CountY + ","
@@ -528,7 +531,10 @@ public class InGameManager : MonoBehaviour
             + mStageInfo.GoalValue + ","
             + mStageInfo.MoveLimit + ","
             + StageInfo.ItemToString(mStageInfo.Items) + ","
-            + success + ",";
+            + success + ","
+            + MenuInGame.Inst().Score + ","
+            + MenuInGame.Inst().RemainLimit +","
+            + Purchases.CountHeart();
 
         return ret;
     }

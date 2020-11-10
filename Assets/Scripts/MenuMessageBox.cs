@@ -43,11 +43,13 @@ public class MenuMessageBox : MonoBehaviour
 
     public void OnOK()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         Destroy(gameObject);
         mOnClick?.Invoke(true);
     }
     public void OnCancle()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         Destroy(gameObject);
         mOnClick?.Invoke(false);
     }

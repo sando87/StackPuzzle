@@ -42,6 +42,7 @@ public class Stage : MonoBehaviour
     }
     private void OnMouseUpAsButton()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         transform.localScale = OriginalScale;
         StageInfo stageInfo = StageInfo.Load(Number);
         if (stageInfo == null)

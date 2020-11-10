@@ -64,27 +64,33 @@ public class MenuStages : MonoBehaviour
 
     public void OnClose()
     {
+        SoundPlayer.Inst.Player.Stop();
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         Inst.gameObject.SetActive(false);
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
         MenuMain.PopUp();
     }
     public void OnShopHeart()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuHeartShop.PopUp();
         Hide();
     }
     public void OnShopDiamond()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuDiamondShop.PopUp();
         Hide();
     }
     public void OnSettings()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuSettings.PopUp();
         Hide();
     }
     public void OnShopItem()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuItemShop.PopUp();
         Hide();
     }

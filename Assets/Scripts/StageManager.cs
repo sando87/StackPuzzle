@@ -16,16 +16,9 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
-    }
-
     public void Activate(bool isActivate)
     {
         gameObject.SetActive(isActivate);
-        if(isActivate)
-            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
     }
 
     public Stage GetStage(int stageNumber)

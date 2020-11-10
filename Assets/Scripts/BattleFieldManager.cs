@@ -74,7 +74,6 @@ public class BattleFieldManager : MonoBehaviour
         mColorCount = colorCount;
 
         transform.parent.gameObject.SetActive(true);
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
     
         //GameObject mask = Instantiate(MaskPrefab, transform);
         //mask.transform.localScale = new Vector3(XCount * 0.97f, YCount * 0.97f, 1);
@@ -130,11 +129,19 @@ public class BattleFieldManager : MonoBehaviour
         if (Me.mThisUserPK <= 0)
             return;
 
+        SoundPlayer.Inst.Player.Stop();
+        if (success)
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
+        else
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
+
         NetClientApp.GetInstance().EventResponse = null;
 
         int deltaScore = NextDeltaScore(success, UserSetting.UserScore, Me.mColorCount);
         UserSetting.UserScore += deltaScore;
         UserSetting.Win = success;
+
+        LOG.echo(Me.SummaryToCSVString(success, deltaScore));
 
         EndGame info = new EndGame();
         info.fromUserPk = BattleFieldManager.Me.UserPK;
@@ -148,7 +155,7 @@ public class BattleFieldManager : MonoBehaviour
 
         BattleFieldManager.Me.transform.parent.gameObject.SetActive(false);
 
-        MenuFinishBattle.PopUp(success, UserSetting.UserScore, deltaScore);
+        MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaScore);
     }
 
     public static int NextDeltaScore(bool isWin, int curScore, float colorCount)
@@ -213,7 +220,7 @@ public class BattleFieldManager : MonoBehaviour
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
 
         int currentCombo = mCurrentCombo;
-        if (mainProduct.IsSwipe && mKeepCombo > 0)
+        if (mainProduct.IsFirst && mKeepCombo > 0)
         {
             currentCombo = mKeepCombo;
             mKeepCombo = 0;
@@ -723,5 +730,22 @@ public class BattleFieldManager : MonoBehaviour
         info.xIndicies = xIndicies.ToArray();
         info.yIndicies = yIndicies.ToArray();
         NetClientApp.GetInstance().Request(NetCMD.SendChoco, info, null);
+    }
+    public string SummaryToCSVString(bool success, int deltaScore)
+    {
+        //pvp, XCount, YCount, UserPk, score, colorCount, OppUserPk, Success, deltaScore, heartCount
+        string ret = 
+            "PVP Mode,"
+            + CountX + ","
+            + CountY + ","
+            + Me.UserPK + ","
+            + UserSetting.UserScore + ","
+            + mColorCount + ","
+            + Opponent.UserPK + ","
+            + success + ","
+            + deltaScore + ","
+            + Purchases.CountHeart();
+
+        return ret;
     }
 }

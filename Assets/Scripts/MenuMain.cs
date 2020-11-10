@@ -11,7 +11,6 @@ public class MenuMain : MonoBehaviour
     private void Awake()
     {
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
-        LOG.trace();
 
         Application.targetFrameRate = 30;
 
@@ -19,6 +18,8 @@ public class MenuMain : MonoBehaviour
         UserSetting.Initialize();
         InitLogSystem();
         Purchases.Initialize();
+
+        LOG.echo("Start StackPuzzle");
     }
 
     private void Update()
@@ -38,7 +39,8 @@ public class MenuMain : MonoBehaviour
         GameObject.Find("WorldSpace").transform.Find("MainScreen").gameObject.SetActive(false);
 
         MenuStages.PopUp();
-        
+
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
     public void PlayBattleMode()

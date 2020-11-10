@@ -38,11 +38,13 @@ public class MenuEditBox : MonoBehaviour
 
     public void OnOK()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         mOnClick?.Invoke(true, mInputField.text);
         Destroy(gameObject);
     }
     public void OnCancle()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         mOnClick?.Invoke(false, mInputField.text);
         Destroy(gameObject);
     }

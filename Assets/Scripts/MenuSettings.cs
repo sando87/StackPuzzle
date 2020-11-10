@@ -15,14 +15,13 @@ public class MenuSettings : MonoBehaviour
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
         objMenu.GetComponent<MenuSettings>().SoundOFF.gameObject.SetActive(UserSetting.Mute);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
     public void OnClose()
     {
         gameObject.SetActive(false);
         MenuStages.PopUp();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
     public void OnSound()
@@ -30,6 +29,7 @@ public class MenuSettings : MonoBehaviour
         bool isMute = SoundPlayer.Inst.OnOff();
         SoundOFF.gameObject.SetActive(isMute);
         UserSetting.Mute = isMute;
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
     public void OnAutoPlay()
@@ -43,6 +43,7 @@ public class MenuSettings : MonoBehaviour
         mTouchCount++;
         if(mTouchCount >= 5)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             MenuEditBox.PopUp("write test device name, no name for disable", true, (isOK, inputText) =>
             {
                 if(isOK)

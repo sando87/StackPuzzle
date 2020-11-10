@@ -254,6 +254,7 @@ public class MenuBattle : MonoBehaviour
     }
     public void OnClose()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         if (mMenu != null)
         {
             Destroy(mMenu);
@@ -271,6 +272,7 @@ public class MenuBattle : MonoBehaviour
     }
     public void OnLockMatch(bool locked)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         Lock(locked);
     }
 }

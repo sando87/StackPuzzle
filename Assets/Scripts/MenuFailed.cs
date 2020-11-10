@@ -23,7 +23,6 @@ public class MenuFailed : MonoBehaviour
         menu.TargetType.sprite = targetImg;
 
         menuFailed.SetActive(true);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoEnd());
@@ -40,6 +39,7 @@ public class MenuFailed : MonoBehaviour
         MenuInGame.Hide();
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

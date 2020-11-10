@@ -17,14 +17,13 @@ public class MenuHeartShop : MonoBehaviour
         MenuHeartShop menu = objMenu.GetComponent<MenuHeartShop>();
         menu.CurrentHeart.text = Purchases.CountHeart().ToString();
         menu.CurrentDiamond.text = Purchases.CountDiamond().ToString();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
     public void OnClose()
     {
         gameObject.SetActive(false);
         MenuStages.PopUp();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
     public void OnChargeHeartFromVideo(int sec)

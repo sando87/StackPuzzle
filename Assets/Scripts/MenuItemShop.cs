@@ -18,7 +18,6 @@ public class MenuItemShop : MonoBehaviour
         GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
         objMenu.GetComponent<MenuItemShop>().Init();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
     public void Init()
@@ -34,7 +33,7 @@ public class MenuItemShop : MonoBehaviour
     {
         gameObject.SetActive(false);
         MenuStages.PopUp();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
     public void OnChargeItem(GameObject item)
     {

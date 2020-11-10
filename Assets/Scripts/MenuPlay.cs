@@ -23,7 +23,6 @@ public class MenuPlay : MonoBehaviour
         menu.UpdateUIState(info);
         menuPlay.SetActive(true);
         StageManager.Inst.gameObject.SetActive(false);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoStart());
@@ -49,12 +48,13 @@ public class MenuPlay : MonoBehaviour
     {
         gameObject.SetActive(false);
         StageManager.Inst.gameObject.SetActive(true);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
     public void OnPlay()
     {
-        if(Purchases.CountHeart() <= 0)
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        if (Purchases.CountHeart() <= 0)
         {
             MenuMessageBox.PopUp("No Life", false, null);
             return;
@@ -63,11 +63,12 @@ public class MenuPlay : MonoBehaviour
         if (!UserSetting.IsBotPlayer)
             Purchases.UseHeart();
 
+        SoundPlayer.Inst.Player.Stop();
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         GameField.GetComponent<InGameManager>().StartGame(mStageInfo);
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();
         StageManager.Inst.Activate(false);
         gameObject.SetActive(false);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

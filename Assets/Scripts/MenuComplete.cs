@@ -25,7 +25,6 @@ public class MenuComplete : MonoBehaviour
         menu.StageLevel.text = level.ToString();
 
         menuComp.SetActive(true);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoEnd());
@@ -42,6 +41,7 @@ public class MenuComplete : MonoBehaviour
         MenuInGame.Hide();
         MenuStages.PopUp();
         StageManager.Inst.Activate(true);
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }
