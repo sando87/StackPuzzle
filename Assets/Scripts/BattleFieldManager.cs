@@ -81,6 +81,7 @@ public class BattleFieldManager : MonoBehaviour
         if(IsPlayerField())
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+            GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(FlushChocos());
         }
         else
@@ -172,11 +173,21 @@ public class BattleFieldManager : MonoBehaviour
         return (int)((nextX - curX) * 100.0f);
     }
 
-    public void OnSwipe(GameObject obj, SwipeDirection dir)
+    public void OnClick(GameObject obj)
     {
         if (!IsIdle)
             return;
 
+        Product product = obj.GetComponent<Product>();
+        mIdleCounter = 1;
+        if (!product.TryMatch())
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
+            product.mAnimation.Play("swap");
+        }
+    }
+    public void OnSwipe(GameObject obj, SwipeDirection dir)
+    {
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
@@ -192,7 +203,6 @@ public class BattleFieldManager : MonoBehaviour
             SendSwipeInfo(product.ParentFrame.IndexX, product.ParentFrame.IndexY, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
-            mIdleCounter = 2;
         }
     }
     private void OnMatch(List<Product> matches)
@@ -478,7 +488,7 @@ public class BattleFieldManager : MonoBehaviour
                 if (mAtleastOneMatched)
                 {
                     mAtleastOneMatched = false;
-                    mIdleCounter = 1;
+                    mIdleCounter = 999;
                 }
                 else
                 {

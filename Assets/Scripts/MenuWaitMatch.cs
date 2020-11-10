@@ -21,8 +21,8 @@ public class MenuWaitMatch : MonoBehaviour
     {
         GameObject menuMatch = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
-        menu.ResetMatchUI();
         menuMatch.SetActive(true);
+        menu.ResetMatchUI();
 
         if (autoPlay)
             menu.StartCoroutine(menu.AutoMatch());

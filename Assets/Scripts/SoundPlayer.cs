@@ -17,6 +17,7 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectAlarm;
     public AudioClip EffectCountDown;
     public AudioClip EffectMatched;
+    public AudioClip EffectWrongMatched;
 
     private void Awake()
     {

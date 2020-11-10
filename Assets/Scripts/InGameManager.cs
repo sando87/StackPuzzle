@@ -140,7 +140,10 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         mIdleCounter = 1;
         if (!product.TryMatch())
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
             product.mAnimation.Play("swap");
+        }
     }
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
