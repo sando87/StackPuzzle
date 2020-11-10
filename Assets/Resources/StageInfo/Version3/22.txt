@@ -1,15 +1,13 @@
-GoalType,Choco
+GoalType,Combo6
 GoalValue,8
 MoveLimit,20
-ColorCount,5
-Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor
-XCount,4
-YCount,8
-Rows,1/0 1/0 1/0 1/0
-Rows,0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/-1 0/-1
-Rows,0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0
-Rows,0/-1 0/-1 0/0 0/0
-Rows,0/0 0/0 0/0 0/0
-Rows,1/0 1/0 1/0 1/0
+ColorCount,4
+Items,4:OneMore/5:KeepCombo/6:SameColor/-1:OneMore
+XCount,8
+YCount,6
+Rows,0/0 0/-1 0/0 0/-1 0/0 0/-1 0/0 0/0
+Rows,0/0 0/-1 0/0 0/-1 0/0 0/-1 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/-1 0/0 0/-1 0/0 0/-1 0/0
+Rows,0/0 0/0 0/-1 0/0 0/-1 0/0 0/-1 0/0

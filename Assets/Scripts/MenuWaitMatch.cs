@@ -63,14 +63,22 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        if (Purchases.CountHeart() <= 0)
-        {
-            MenuMessageBox.PopUp("No Life", false, null);
-            return;
-        }
-
         if (!UserSetting.IsBotPlayer)
-            Purchases.UseHeart();
+        {
+            if (UserSetting.StageIsLocked(21))
+            {
+                MenuMessageBox.PopUp("Required 20 Stages", false, null);
+                return;
+            }
+
+            if (Purchases.CountHeart() <= 0)
+            {
+                MenuMessageBox.PopUp("No Life", false, null);
+                return;
+            }
+            else
+                Purchases.UseHeart();
+        }
 
         UserInfo userInfo = UserSetting.LoadUserInfo();
         if (userInfo.userPk <= 0)

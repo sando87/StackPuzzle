@@ -1,14 +1,16 @@
-GoalType,Cover
-GoalValue,9
-MoveLimit,20
+GoalType,Score
+GoalValue,5
+MoveLimit,15
 ColorCount,5
-Items,4:OneMore/5:KeepCombo/6:SameColor/-1:OneMore
-XCount,7
-YCount,7
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/1 0/1 0/1 0/0 0/0
-Rows,0/0 0/0 0/1 0/1 0/1 0/0 0/0
-Rows,0/0 0/0 0/1 0/1 0/1 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor
+XCount,9
+YCount,9
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/-1 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/-1 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/-1 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/-1 0/0 0/0
+Rows,0/0 0/0 0/-1 0/-1 0/-1 0/-1 0/-1 0/0 0/0
+Rows,0/0 0/0 0/-1 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/-1 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/-1 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/-1 0/0 0/0 0/0 0/0 0/0 0/0
