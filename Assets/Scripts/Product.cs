@@ -184,8 +184,8 @@ public class Product : MonoBehaviour
         foreach (Product pro in matchedPros)
         {
             float dist = (pro.transform.position - transform.position).magnitude;
-            float delay_sec = dist / 10.0f; //0 ~ 1.0f ~;
-            float intensity = 1 - (dist / 5.0f); //1.0f ~ 0 ~;
+            float delay_sec = dist / 7.0f; //0 ~ 1.0f ~;
+            float intensity = 1.3f;// 1 - (dist / 5.0f); //1.0f ~ 0 ~;
             StartCoroutine(pro.FlashProduct(delay_sec, intensity));
         }
     }
@@ -200,6 +200,7 @@ public class Product : MonoBehaviour
         {
             float light = k * (t - halfTime) * (t - halfTime) + intensity;
             light = light < 0 ? 0 : light;
+            light = light > 1 ? 1 : light;
             Renderer.material.SetColor("_Color", new Color(light, light, light, 0));
             t += Time.deltaTime;
             yield return null;

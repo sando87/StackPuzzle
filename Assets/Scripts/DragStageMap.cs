@@ -23,7 +23,7 @@ public class DragStageMap : MonoBehaviour
         _transform = transform;
         currentTime = 0;
         speed = 0;
-
+        SetCameraWidth(8.0f);
     }
 
     public void OnDrawGizmos()
@@ -33,11 +33,8 @@ public class DragStageMap : MonoBehaviour
 
     public void Update()
     {
-        //background image size 800x1280 => 400x640 => 4.0fx6.4f
         if (MenuStages.Inst.gameObject.activeSelf)
         {
-            float aspect = (float)Screen.height / Screen.width;
-            Camera.orthographicSize = aspect * 4.0f;
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
 		    HandleTouchInput();
 #else
@@ -46,15 +43,20 @@ public class DragStageMap : MonoBehaviour
         }
         else
         {
-            Camera.orthographicSize = 6.4f;
             transform.position = defaultPosision;
         }
     }
 
+    public void SetCameraWidth(float worldWidth)
+    {
+        float aspect = (float)Screen.height / Screen.width;
+        Camera.orthographicSize = aspect * worldWidth * 0.5f;
+    }
+
     void LateUpdate()
     {
-
-        SetPosition(transform.position);
+        if (MenuStages.Inst.gameObject.activeSelf)
+            SetPosition(transform.position);
     }
 
     private void HandleTouchInput()

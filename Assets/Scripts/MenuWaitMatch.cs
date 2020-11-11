@@ -65,11 +65,11 @@ public class MenuWaitMatch : MonoBehaviour
 
         if (!UserSetting.IsBotPlayer)
         {
-            //if (UserSetting.StageIsLocked(21))
-            //{
-            //    MenuMessageBox.PopUp("Required\n20 Stages", false, null);
-            //    return;
-            //}
+            if (UserSetting.StageIsLocked(16))
+            {
+                MenuMessageBox.PopUp("Required\n15 Stages", false, null);
+                return;
+            }
 
             if (Purchases.CountHeart() <= 0)
             {
@@ -125,7 +125,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
-        info.colorCount = 5.0f; // 4~6.0f
+        info.colorCount = 4.2f; // 4~6.0f
         info.oppUser = null;
         info.oppColorCount = 0;
         info.isDone = false;
@@ -205,7 +205,7 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private IEnumerator AutoMatch()
     {
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(5);
         OnMatch();
     }
     private void ResetMatchUI()

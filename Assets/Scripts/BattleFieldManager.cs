@@ -28,7 +28,7 @@ public class BattleFieldManager : MonoBehaviour
     }
 
     public const int MatchCount = 3;
-    public const int attackScore = 5;
+    public const int attackScore = 10;
     public const float GridSize = 0.8f;
     public const int NextRequestCount = 500;
 
@@ -192,6 +192,9 @@ public class BattleFieldManager : MonoBehaviour
     }
     public void OnSwipe(GameObject obj, SwipeDirection dir)
     {
+        if (!IsIdle)
+            return;
+
         Product product = obj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
@@ -310,7 +313,7 @@ public class BattleFieldManager : MonoBehaviour
             case 5: mNextSkills.Enqueue(ProductSkill.OneMore); break;
             case 6: mNextSkills.Enqueue(ProductSkill.KeepCombo); break;
             case 7: mNextSkills.Enqueue(ProductSkill.SameColor); break;
-            default: mNextSkills.Enqueue(ProductSkill.OneMore); break;
+            //default: mNextSkills.Enqueue(ProductSkill.OneMore); break;
         }
     }
     private void OnDestroyProduct(Product pro)

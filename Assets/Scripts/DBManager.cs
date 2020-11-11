@@ -73,8 +73,8 @@ public class DBManager : IDisposable
 
             using (var cmd = new NpgsqlCommand())
             {
-                string query = String.Format("INSERT INTO users (userName, score, deviceName, ipAddress, firstTime) VALUES ('{0}', {1}, '{2}', '{3}', now()) RETURNING userPk", 
-                    user.userName, user.score, user.deviceName, ipAddr);
+                string query = String.Format("INSERT INTO users (userName, score, deviceName, ipAddress, firstTime, win, lose, total) VALUES ('{0}', {1}, '{2}', '{3}', now(), '{4}', '{5}', '{6}') RETURNING userPk", 
+                    user.userName, user.score, user.deviceName, ipAddr, user.win, user.lose, user.total);
                 cmd.Connection = mDBSession;
                 cmd.CommandText = query;
                 using (var reader = cmd.ExecuteReader())
@@ -185,6 +185,9 @@ public class DBManager : IDisposable
                         user.userName = reader["userName"].ToString();
                         user.score = (int)reader["score"];
                         user.deviceName = reader["deviceName"].ToString();
+                        user.win = (int)reader["win"];
+                        user.lose = (int)reader["lose"];
+                        user.total = (int)reader["total"];
                         return user;
                     }
                 }
@@ -212,6 +215,9 @@ public class DBManager : IDisposable
                         user.userName = reader["userName"].ToString();
                         user.score = (int)reader["score"];
                         user.deviceName = reader["deviceName"].ToString();
+                        user.win = (int)reader["win"];
+                        user.lose = (int)reader["lose"];
+                        user.total = (int)reader["total"];
                         return user;
                     }
                 }
@@ -259,6 +265,9 @@ public class DBManager : IDisposable
                         user.userName = reader["userName"].ToString();
                         user.score = (int)reader["score"];
                         user.deviceName = reader["deviceName"].ToString();
+                        user.win = (int)reader["win"];
+                        user.lose = (int)reader["lose"];
+                        user.total = (int)reader["total"];
                         users.Add(user);
                     }
                     return users.ToArray();

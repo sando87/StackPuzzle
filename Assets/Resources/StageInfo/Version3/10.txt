@@ -1,5 +1,5 @@
 GoalType,ItemSameColor
-GoalValue,10
+GoalValue,5
 MoveLimit,20
 ColorCount,4
 Items,4:OneMore/5:KeepCombo/6:SameColor

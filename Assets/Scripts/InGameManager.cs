@@ -515,9 +515,10 @@ public class InGameManager : MonoBehaviour
 
         Vector3 pos = product.transform.position;
         pos.z -= 1;
+        pos.y += UserSetting.GridSize * 0.2f;
         GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, product.ParentFrame.transform);
         obj.GetComponent<Numbers>().Number = product.Combo;
-        pos.y += UserSetting.GridSize * 0.4f;
+        pos.y += UserSetting.GridSize * 0.5f;
         StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, ()=>{
             Destroy(obj);
         }));

@@ -132,12 +132,12 @@ public class StageInfo
         switch(goalType)
         {
             case "Score": image = Resources.Load<Sprite>("Images/score"); break;
-            case "Combo3": image = Resources.Load<Sprite>("Images/combo"); break;
-            case "Combo6": image = Resources.Load<Sprite>("Images/combo"); break;
-            case "Combo9": image = Resources.Load<Sprite>("Images/combo"); break;
-            case "Combo12": image = Resources.Load<Sprite>("Images/combo"); break;
-            case "Combo15": image = Resources.Load<Sprite>("Images/combo"); break;
-            case "Combo18": image = Resources.Load<Sprite>("Images/combo"); break;
+            case "Combo3": image = Resources.Load<Sprite>("Images/combo3"); break;
+            case "Combo6": image = Resources.Load<Sprite>("Images/combo6"); break;
+            case "Combo9": image = Resources.Load<Sprite>("Images/combo9"); break;
+            case "Combo12": image = Resources.Load<Sprite>("Images/combo12"); break;
+            case "Combo15": image = Resources.Load<Sprite>("Images/combo15"); break;
+            case "Combo18": image = Resources.Load<Sprite>("Images/combo18"); break;
             case "ItemOneMore": image = Resources.Load<Sprite>("Images/itemOneMore"); break;
             case "ItemKeepCombo": image = Resources.Load<Sprite>("Images/itemKeepCombo"); break;
             case "ItemSameColor": image = Resources.Load<Sprite>("Images/itemSameColor"); break;

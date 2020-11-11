@@ -15,12 +15,6 @@ public class UserSetting
     {
         get { return mUserInfo == null ? -1 : mUserInfo.score; }
         set {
-            
-            if (mUserInfo.score < value)
-                mUserInfo.win++;
-            else
-                mUserInfo.lose++;
-            mUserInfo.total++;
             mUserInfo.score = value;
             UpdateUserInfo(mUserInfo);
         }

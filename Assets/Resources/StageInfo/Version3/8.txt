@@ -1,7 +1,7 @@
 GoalType,ItemKeepCombo
-GoalValue,7
+GoalValue,5
 MoveLimit,25
-ColorCount,5
+ColorCount,4
 Items,4:OneMore/5:KeepCombo
 XCount,7
 YCount,7
