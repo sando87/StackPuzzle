@@ -19,6 +19,7 @@ public class ServerField
     public int userPK = 0;
     public UserInfo userInfo = null;
     public float colorCount = 0;
+    public bool skipBotPlayer = false;
     public MySession sessionInfo = null;
     public Header requestMsg = null;
     public ProductColor[,] initField = null;

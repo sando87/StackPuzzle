@@ -134,6 +134,7 @@ public class NetServerApp : MonoBehaviour
         info.userInfo = DBManager.Inst().GetUser(requestBody.userPk);
         info.sessionInfo = mSession;
         info.requestMsg = mRequestMsg;
+        info.skipBotPlayer = requestBody.oppColorCount < 0 ? true : false;
         mMatchingUsers[requestBody.userPk] = info;
         StartCoroutine(SearchMatching(requestBody.userPk));
         return null;
@@ -242,6 +243,9 @@ public class NetServerApp : MonoBehaviour
             foreach (var target in mMatchingUsers)
             {
                 ServerField opp = target.Value;
+                if (user.skipBotPlayer && opp.skipBotPlayer)
+                    continue;
+
                 if (opp.userPK != user.userPK && !opp.isMatching)
                     if(Mathf.Abs(user.userInfo.score - opp.userInfo.score) < detectRange)
                         tmpList.Add(target.Value);

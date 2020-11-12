@@ -63,20 +63,19 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        if (!UserSetting.IsBotPlayer)
+#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
+        if (UserSetting.StageIsLocked(16))
         {
-            if (UserSetting.StageIsLocked(16))
-            {
-                MenuMessageBox.PopUp("Required\n15 Stages", false, null);
-                return;
-            }
-
-            if (Purchases.CountHeart() <= 0)
-            {
-                MenuMessageBox.PopUp("No Life", false, null);
-                return;
-            }
+            MenuMessageBox.PopUp("Required\n15 Stages", false, null);
+            return;
         }
+
+        if (Purchases.CountHeart() <= 0)
+        {
+            MenuMessageBox.PopUp("No Life", false, null);
+            return;
+        }
+#endif
 
         UserInfo userInfo = UserSetting.LoadUserInfo();
         if (userInfo.userPk <= 0)
@@ -127,7 +126,7 @@ public class MenuWaitMatch : MonoBehaviour
         info.userPk = UserSetting.UserPK;
         info.colorCount = 4.2f; // 4~6.0f
         info.oppUser = null;
-        info.oppColorCount = 0;
+        info.oppColorCount = UserSetting.UserInfo.deviceName.Contains("home") ? -1 : 0; //temp skip bot player on/off
         info.isDone = false;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
         {

@@ -145,7 +145,7 @@ public class MenuBattle : MonoBehaviour
         Inst().gameObject.SetActive(false);
     }
 
-#if PLATFORM_ANDROID
+#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
     private void OnApplicationPause(bool pause)
     {
         BattleFieldManager.FinishGame(false);
