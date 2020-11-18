@@ -220,6 +220,8 @@ MonoBehaviour:
   ImgKeepCombo: {fileID: 21300000, guid: c0785ad438d6cc848b2e1acfbd4bf373, type: 3}
   ImgReduceColor: {fileID: 21300000, guid: 96a9a1afee3999849b1b2a8bfc6ca430, type: 3}
   ImgCombo: {fileID: 21300000, guid: 36456cf22deced04689ce3eeaa03fd0a, type: 3}
+  ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
+    type: 3}
   ImageIndex: 0
 --- !u!61 &1056479758494351103
 BoxCollider2D:

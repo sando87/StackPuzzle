@@ -194,8 +194,9 @@ public class InGameManager : MonoBehaviour
         {
             addedScore += currentCombo + 1;
             pro.Combo = currentCombo + 1;
+            delay = (pro.transform.position - mainProduct.transform.position).magnitude;
+            delay = delay / 7.0f;
             pro.StartDestroy(gameObject, delay);
-            delay += (0.3f / destroies.Count);
             AddScore(pro);
         }
 
@@ -205,7 +206,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator CheckNextMatch()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.4f);
 
         for (int x = 0; x < CountX; ++x)
         {
@@ -516,15 +517,15 @@ public class InGameManager : MonoBehaviour
         BreakItemSkill(product);
         MenuInGame.Inst().AddScore(product);
 
-        Vector3 pos = product.transform.position;
-        pos.z -= 1;
-        pos.y += UserSetting.GridSize * 0.2f;
-        GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, product.ParentFrame.transform);
-        obj.GetComponent<Numbers>().Number = product.Combo;
-        pos.y += UserSetting.GridSize * 0.5f;
-        StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, ()=>{
-            Destroy(obj);
-        }));
+        //Vector3 pos = product.transform.position;
+        //pos.z -= 1;
+        //pos.y += UserSetting.GridSize * 0.2f;
+        //GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, product.ParentFrame.transform);
+        //obj.GetComponent<Numbers>().Number = product.Combo;
+        //pos.y += UserSetting.GridSize * 0.5f;
+        //StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, ()=>{
+        //    Destroy(obj);
+        //}));
     }
 
     private void RemoveLimit()

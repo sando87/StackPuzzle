@@ -174,7 +174,7 @@ public class MenuBattle : MonoBehaviour
         mCurrentScore = 0;
         CurrentScore.text = "0";
         KeepCombo.text = "0";
-        Lock(false);
+        //Lock(false);
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
         ComboNumber.Clear();

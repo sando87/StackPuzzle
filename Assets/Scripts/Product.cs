@@ -199,7 +199,7 @@ public class Product : MonoBehaviour
     {
         yield return new WaitForSeconds(delay_sec);
         mAnimation.Play("destroy");
-        //CreateComboTextEffect();
+        CreateComboTextEffect();
 
         float halfTime = 0.12f;
         float k = -intensity / (halfTime * halfTime);

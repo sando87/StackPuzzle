@@ -180,8 +180,8 @@ public class MenuInGame : MonoBehaviour
         mStageInfo = info;
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
-        Lock.gameObject.SetActive(false);
-        UnLock.gameObject.SetActive(true);
+        //Lock.gameObject.SetActive(false);
+        //UnLock.gameObject.SetActive(true);
 
 
         mAddedScore = 0;
