@@ -102,5 +102,15 @@ public class Frame : MonoBehaviour
     {
         return GetFrame(mIndexX, mIndexY + 1);
     }
+    public Frame[] GetAroundFrames()
+    {
+        Frame frame = null;
+        List<Frame> frames = new List<Frame>();
+        frame = Left(); if (frame != null && !frame.Empty) frames.Add(frame);
+        frame = Right(); if (frame != null && !frame.Empty) frames.Add(frame);
+        frame = Up(); if (frame != null && !frame.Empty) frames.Add(frame);
+        frame = Down(); if (frame != null && !frame.Empty) frames.Add(frame);
+        return frames.ToArray();
+    }
 
 }

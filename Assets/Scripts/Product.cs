@@ -92,6 +92,10 @@ public class Product : MonoBehaviour
         EventMatched?.Invoke(matchList);
         IsFirst = false;
     }
+    public void StartMatch()
+    {
+        StartCoroutine(DoMatch());
+    }
 
     public bool TryMatch()
     {
@@ -314,12 +318,14 @@ public class Product : MonoBehaviour
     }
     public Product[] GetAroundProducts()
     {
-        Product pro = null;
+        Frame[] frames = ParentFrame.GetAroundFrames();
         List<Product> products = new List<Product>();
-        pro = Left(); if (pro != null) products.Add(pro);
-        pro = Right(); if (pro != null) products.Add(pro);
-        pro = Up(); if (pro != null) products.Add(pro);
-        pro = Down(); if (pro != null) products.Add(pro);
+        foreach(Frame frame in frames)
+        {
+            Product child = frame.ChildProduct;
+            if (child != null)
+                products.Add(child);
+        }
         return products.ToArray();
     }
     List<Frame> GetEmptyDownFrames()

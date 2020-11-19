@@ -30,6 +30,7 @@ public class InGameManager : MonoBehaviour
     private int mIdleCounter = -1;
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private Dictionary<int,Frame> mDestroyes = new Dictionary<int, Frame>();
+    private List<Frame> mDestroyeses = new List<Frame>();
 
     public bool IsIdle { get { return mIdleCounter < 0; } }
     public int CountX { get { return mStageInfo.XCount; } }
@@ -202,7 +203,7 @@ public class InGameManager : MonoBehaviour
 
         MenuInGame.Inst().CurrentCombo = currentCombo + 1;
         ReduceTargetScoreCombo(mainProduct, preScore, preScore + addedScore);
-        StartCoroutine("CheckNextMatch");
+        StartCoroutine("CheckNextMatch2");
     }
     IEnumerator CheckNextMatch()
     {
@@ -221,6 +222,41 @@ public class InGameManager : MonoBehaviour
                 StartNextProducts(baseFrame);
 
             mDestroyes.Remove(x);
+        }
+    }
+    IEnumerator CheckNextMatch2()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        List<Product> aroundProducts = new List<Product>();
+        foreach (Frame frame in mDestroyeses)
+        {
+            Frame[] aroundFrames = frame.GetAroundFrames();
+            foreach (Frame sub in aroundFrames)
+            {
+                Product pro = sub.ChildProduct;
+                if (pro != null && !pro.IsLocked())
+                    aroundProducts.Add(pro);
+            }
+        }
+
+        foreach (Product pro in aroundProducts)
+        {
+            pro.StartMatch();
+            mIdleCounter++;
+        }
+
+        StartCoroutine(CreateNextProducts(mDestroyeses.ToArray()));
+        mDestroyeses.Clear();
+    }
+    IEnumerator CreateNextProducts(Frame[] next)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        foreach(Frame frame in next)
+        {
+            Product newProduct = CreateNewProduct(frame);
+            newProduct.mAnimation.Play("swap");
         }
     }
     private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
@@ -288,6 +324,8 @@ public class InGameManager : MonoBehaviour
     }
     private void OnDestroyProduct(Product pro)
     {
+        mDestroyeses.Add(pro.ParentFrame);
+
         int idxX = pro.ParentFrame.IndexX;
         if (!mDestroyes.ContainsKey(idxX))
             mDestroyes[idxX] = pro.ParentFrame;
