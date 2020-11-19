@@ -59,7 +59,7 @@ public class AutoPlayer : MonoBehaviour
 
         if (candidates.Count > 0)
         {
-            candidates.Sort((lsh, rsh) => { return rsh.matchedList.Count - lsh.matchedList.Count; });
+            candidates.Sort((lsh, rsh) => { return rsh.maxCount - lsh.maxCount; });
             BattleFieldManager.Me.OnSwipe(candidates[0].targetProduct.gameObject, candidates[0].direct);
         }
         else

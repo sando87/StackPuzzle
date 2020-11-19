@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class AutoBalancerInfo
 {
     public Product targetProduct = null;
-    public List<Product> matchedList = new List<Product>();
+    public int maxCount = 0;
     public SwipeDirection direct = SwipeDirection.LEFT;
     public bool DecideDirection(Product cenPro)
     {
@@ -17,12 +17,15 @@ public class AutoBalancerInfo
         if (cenPro.Left() != null)
         {
             Product pro = cenPro.Left();
-            List<Product> matches = new List<Product>();
-            pro.SearchMatchedProductsAround(matches, cenPro.mColor, SwipeDirection.RIGHT);
-            if(matches.Count > matchedList.Count)
+            Product[] aroundPros = pro.GetAroundProducts();
+            int sameColorCount = 0;
+            foreach (Product item in aroundPros)
+                if (cenPro.mColor == item.mColor)
+                    sameColorCount++;
+
+            if(sameColorCount > maxCount)
             {
                 targetProduct = cenPro;
-                matchedList = matches;
                 direct = SwipeDirection.LEFT;
             }
         }
@@ -30,12 +33,15 @@ public class AutoBalancerInfo
         if (cenPro.Right() != null)
         {
             Product pro = cenPro.Right();
-            List<Product> matches = new List<Product>();
-            pro.SearchMatchedProductsAround(matches, cenPro.mColor, SwipeDirection.LEFT);
-            if (matches.Count > matchedList.Count)
+            Product[] aroundPros = pro.GetAroundProducts();
+            int sameColorCount = 0;
+            foreach (Product item in aroundPros)
+                if (cenPro.mColor == item.mColor)
+                    sameColorCount++;
+
+            if (sameColorCount > maxCount)
             {
                 targetProduct = cenPro;
-                matchedList = matches;
                 direct = SwipeDirection.RIGHT;
             }
         }
@@ -43,12 +49,15 @@ public class AutoBalancerInfo
         if (cenPro.Up() != null)
         {
             Product pro = cenPro.Up();
-            List<Product> matches = new List<Product>();
-            pro.SearchMatchedProductsAround(matches, cenPro.mColor, SwipeDirection.DOWN);
-            if (matches.Count > matchedList.Count)
+            Product[] aroundPros = pro.GetAroundProducts();
+            int sameColorCount = 0;
+            foreach (Product item in aroundPros)
+                if (cenPro.mColor == item.mColor)
+                    sameColorCount++;
+
+            if (sameColorCount > maxCount)
             {
                 targetProduct = cenPro;
-                matchedList = matches;
                 direct = SwipeDirection.UP;
             }
         }
@@ -56,12 +65,15 @@ public class AutoBalancerInfo
         if (cenPro.Down() != null)
         {
             Product pro = cenPro.Down();
-            List<Product> matches = new List<Product>();
-            pro.SearchMatchedProductsAround(matches, cenPro.mColor, SwipeDirection.UP);
-            if (matches.Count > matchedList.Count)
+            Product[] aroundPros = pro.GetAroundProducts();
+            int sameColorCount = 0;
+            foreach (Product item in aroundPros)
+                if (cenPro.mColor == item.mColor)
+                    sameColorCount++;
+
+            if (sameColorCount > maxCount)
             {
                 targetProduct = cenPro;
-                matchedList = matches;
                 direct = SwipeDirection.DOWN;
             }
         }
@@ -123,7 +135,7 @@ public class AutoBalancer : MonoBehaviour
         
         if (candidates.Count > 0)
         {
-            candidates.Sort((lsh, rsh) => { return rsh.matchedList.Count - lsh.matchedList.Count; });
+            candidates.Sort((lsh, rsh) => { return rsh.maxCount - lsh.maxCount; });
             InGameManager.Inst.OnSwipe(candidates[0].targetProduct.gameObject, candidates[0].direct);
         }
         else

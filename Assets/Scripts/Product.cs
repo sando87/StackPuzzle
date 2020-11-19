@@ -259,40 +259,15 @@ public class Product : MonoBehaviour
 
         products.Add(this);
 
-        Product nearProduct = null;
-        nearProduct = Left();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Right();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Up();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Down();
-        if (nearProduct != null)
-            nearProduct.SearchMatchedProducts(products, color);
-    }
-    public void SearchMatchedProductsAround(List<Product> products, ProductColor color, SwipeDirection skipDir)
-    {
-        Product nearProduct = null;
-        nearProduct = Left();
-        if (nearProduct != null && skipDir != SwipeDirection.LEFT)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Right();
-        if (nearProduct != null && skipDir != SwipeDirection.RIGHT)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Up();
-        if (nearProduct != null && skipDir != SwipeDirection.UP)
-            nearProduct.SearchMatchedProducts(products, color);
-        nearProduct = Down();
-        if (nearProduct != null && skipDir != SwipeDirection.DOWN)
-            nearProduct.SearchMatchedProducts(products, color);
+
+        Product[] around = GetAroundProducts();
+        foreach (Product pro in around)
+            pro.SearchMatchedProducts(products, color);
     }
     public Product Left()
     {
         Frame nearFrame = ParentFrame.Left();
-        if (nearFrame == null)
+        if (nearFrame == null || nearFrame.Empty)
             return null;
 
         Product pro = nearFrame.GetComponentInChildren<Product>();
@@ -304,7 +279,7 @@ public class Product : MonoBehaviour
     public Product Right()
     {
         Frame nearFrame = ParentFrame.Right();
-        if (nearFrame == null)
+        if (nearFrame == null || nearFrame.Empty)
             return null;
 
         Product pro = nearFrame.GetComponentInChildren<Product>();
@@ -316,7 +291,7 @@ public class Product : MonoBehaviour
     public Product Up()
     {
         Frame nearFrame = ParentFrame.Up();
-        if (nearFrame == null)
+        if (nearFrame == null || nearFrame.Empty)
             return null;
 
         Product pro = nearFrame.GetComponentInChildren<Product>();
@@ -328,7 +303,7 @@ public class Product : MonoBehaviour
     public Product Down()
     {
         Frame nearFrame = ParentFrame.Down();
-        if (nearFrame == null)
+        if (nearFrame == null || nearFrame.Empty)
             return null;
 
         Product pro = nearFrame.GetComponentInChildren<Product>();
@@ -336,6 +311,16 @@ public class Product : MonoBehaviour
             return null;
 
         return pro;
+    }
+    public Product[] GetAroundProducts()
+    {
+        Product pro = null;
+        List<Product> products = new List<Product>();
+        pro = Left(); if (pro != null) products.Add(pro);
+        pro = Right(); if (pro != null) products.Add(pro);
+        pro = Up(); if (pro != null) products.Add(pro);
+        pro = Down(); if (pro != null) products.Add(pro);
+        return products.ToArray();
     }
     List<Frame> GetEmptyDownFrames()
     {
@@ -421,18 +406,9 @@ public class Product : MonoBehaviour
     }
     public void UnWrapChocoBlocksAroundMe(int combo)
     {
-        Product target = Up();
-        if (target != null)
-            target.BreakChocoBlock(combo);
-        target = Down();
-        if (target != null)
-            target.BreakChocoBlock(combo);
-        target = Right();
-        if (target != null)
-            target.BreakChocoBlock(combo);
-        target = Left();
-        if (target != null)
-            target.BreakChocoBlock(combo);
+        Product[] around = GetAroundProducts();
+        foreach(Product pro in around)
+            pro.BreakChocoBlock(combo);
     }
     #endregion
 }
