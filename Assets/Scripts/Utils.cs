@@ -82,6 +82,15 @@ public class Utils
         return output;
     }
 
+    public static IEnumerator CallAfterSeconds(float delay, Action func)
+    {
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
+
+        func.Invoke();
+
+        yield return null;
+    }
     public static IEnumerator AnimateConcave(GameObject obj, Vector3 worldDest, float duration, Action action = null)
     {
         float time = 0;

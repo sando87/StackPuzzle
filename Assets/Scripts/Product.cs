@@ -82,7 +82,7 @@ public class Product : MonoBehaviour
     {
         ParentFrame = target;
         mLocked = false;
-        StartCoroutine(DoMatch());
+        //StartCoroutine(DoMatch());
     }
     IEnumerator DoMatch()
     {
@@ -91,10 +91,6 @@ public class Product : MonoBehaviour
         SearchMatchedProducts(matchList, mColor);
         EventMatched?.Invoke(matchList);
         IsFirst = false;
-    }
-    public void StartMatch()
-    {
-        StartCoroutine(DoMatch());
     }
 
     public bool TryMatch()

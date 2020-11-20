@@ -4,19 +4,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
 public class InGameManager : MonoBehaviour
 {
-    private static InGameManager mInst = null;
+    private static InGameManager mInstStage = null;
+    private static InGameManager mInstPVP_Player = null;
+    private static InGameManager mInstPVP_Opponent = null;
     public static InGameManager Inst
-    {
-        get
-        {
-            if (mInst == null)
-                mInst = GameObject.Find("WorldSpace").transform.Find("GameScreen/GameField").GetComponent<InGameManager>();
-            return mInst;
-        }
-    }
+    { get { if (mInstStage == null) mInstStage = GameObject.Find("WorldSpace").transform.Find("GameScreen/GameField").GetComponent<InGameManager>(); return mInstStage; } }
+    public static InGameManager InstPVP_Player
+    { get { if (mInstPVP_Player == null) mInstPVP_Player = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldMe").GetComponent<InGameManager>(); return mInstPVP_Player; } }
+    public static InGameManager InstPVP_Opponent
+    { get { if (mInstPVP_Opponent == null) mInstPVP_Opponent = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldOpp").GetComponent<InGameManager>(); return mInstPVP_Opponent; } }
 
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
@@ -27,12 +27,16 @@ public class InGameManager : MonoBehaviour
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
 
-    private int mIdleCounter = -1;
+    private bool mIsIdle = true;
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
-    private Dictionary<int,Frame> mDestroyes = new Dictionary<int, Frame>();
-    private List<Frame> mDestroyeses = new List<Frame>();
+    private List<Frame> mDestroyes = new List<Frame>();
 
-    public bool IsIdle { get { return mIdleCounter < 0; } }
+    public GameFieldType FieldType { get {
+            return this == mInstStage ? GameFieldType.Stage :
+                (this == mInstPVP_Player ? GameFieldType.pvpPlayer :
+                (this == mInstPVP_Opponent ? GameFieldType.pvpOpponent : GameFieldType.Noting)); }
+    }
+    public bool IsIdle { get { return mIsIdle; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public Frame[,] Frames { get { return mFrames; } }
@@ -55,8 +59,6 @@ public class InGameManager : MonoBehaviour
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
         GetComponent<SwipeDetector>().EventClick = OnClick;
 
-        StartCoroutine(CheckIdle());
-        //StartCoroutine(CreateNextProducts());
 
         float gridSize = UserSetting.GridSize;
         Vector3 localBasePos = new Vector3(-gridSize * info.XCount * 0.5f, -gridSize * info.YCount * 0.5f, 0);
@@ -117,21 +119,6 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(false);
     }
 
-    public int GetGrade()
-    {
-        float totlaRemain = mStageInfo.MoveLimit;
-        float currentRemin = MenuInGame.Inst().RemainLimit;
-        if (totlaRemain < 5)
-            return 3;
-        else if (totlaRemain * 0.4f < currentRemin)
-            return 3;
-        else if (totlaRemain * 0.2f < currentRemin)
-            return 2;
-        else if (0 < currentRemin)
-            return 1;
-
-        return 0;
-    }
 
     public void OnClick(GameObject obj)
     {
@@ -156,14 +143,23 @@ public class InGameManager : MonoBehaviour
             RemoveLimit();
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
-            mIdleCounter = 2;
+            mIsIdle = false;
+
+            StartCoroutine(Utils.CallAfterSeconds(0.3f, () =>
+            {
+                bool isMatched = false;
+                isMatched |= TryMatch(product);
+                isMatched |= TryMatch(targetProduct);
+                mIsIdle = isMatched ? false : true;
+            }));
         }
     }
-    private void OnMatch(List<Product> matches)
+    private bool TryMatch(Product mainProduct)
     {
-        mIdleCounter--;
+        List<Product> matches = new List<Product>();
+        mainProduct.SearchMatchedProducts(matches, mainProduct.mColor);
         if (MatchLock || matches.Count < UserSetting.MatchCount)
-            return;
+            return false;
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
@@ -179,10 +175,9 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Product mainProduct = matches[0];
         List<Product> destroies = isSameColorEnable ? GetSameColorProducts(mainProduct.mColor) : matches;
         int currentCombo = MenuInGame.Inst().CurrentCombo;
-        if(mainProduct.IsFirst && MenuInGame.Inst().NextCombo > 0)
+        if (mainProduct.IsFirst && MenuInGame.Inst().NextCombo > 0)
         {
             currentCombo = MenuInGame.Inst().NextCombo;
             MenuInGame.Inst().NextCombo = 0;
@@ -191,6 +186,7 @@ public class InGameManager : MonoBehaviour
         int preScore = MenuInGame.Inst().Score;
         int addedScore = 0;
         float delay = 0;
+        List<Frame> emptyFrames = new List<Frame>();
         foreach (Product pro in destroies)
         {
             addedScore += currentCombo + 1;
@@ -198,38 +194,29 @@ public class InGameManager : MonoBehaviour
             delay = (pro.transform.position - mainProduct.transform.position).magnitude;
             delay = delay / 7.0f;
             pro.StartDestroy(gameObject, delay);
+            emptyFrames.Add(pro.ParentFrame);
             AddScore(pro);
         }
 
         MenuInGame.Inst().CurrentCombo = currentCombo + 1;
         ReduceTargetScoreCombo(mainProduct, preScore, preScore + addedScore);
-        StartCoroutine("CheckNextMatch2");
-    }
-    IEnumerator CheckNextMatch()
-    {
-        yield return new WaitForSeconds(0.4f);
 
-        for (int x = 0; x < CountX; ++x)
+        StartCoroutine(Utils.CallAfterSeconds(1.0f, () =>
         {
-            if (!mDestroyes.ContainsKey(x))
-                continue;
+            TryMatch(emptyFrames.ToArray());
+        }));
 
-            Frame[] baseFrames = NextBaseFrames(mDestroyes[x]);
-            if (baseFrames.Length <= 0)
-                continue;
+        StartCoroutine(Utils.CallAfterSeconds(1.5f, () =>
+        {
+            CreateNewProducts(emptyFrames.ToArray());
+        }));
 
-            foreach (Frame baseFrame in baseFrames)
-                StartNextProducts(baseFrame);
-
-            mDestroyes.Remove(x);
-        }
+        return true;
     }
-    IEnumerator CheckNextMatch2()
+    private bool TryMatch(Frame[] emptyFrames)
     {
-        yield return new WaitForSeconds(1.0f);
-
         List<Product> aroundProducts = new List<Product>();
-        foreach (Frame frame in mDestroyeses)
+        foreach (Frame frame in emptyFrames)
         {
             Frame[] aroundFrames = frame.GetAroundFrames();
             foreach (Frame sub in aroundFrames)
@@ -240,24 +227,44 @@ public class InGameManager : MonoBehaviour
             }
         }
 
+        bool isMatched = false;
         foreach (Product pro in aroundProducts)
-        {
-            pro.StartMatch();
-            mIdleCounter++;
-        }
+            isMatched |= TryMatch(pro);
 
-        StartCoroutine(CreateNextProducts(mDestroyeses.ToArray()));
-        mDestroyeses.Clear();
+        return isMatched ? true : false;
     }
-    IEnumerator CreateNextProducts(Frame[] next)
+    void CreateNewProducts(Frame[] emptyFrames)
     {
-        yield return new WaitForSeconds(0.5f);
-
-        foreach(Frame frame in next)
+        foreach(Frame frame in emptyFrames)
         {
             Product newProduct = CreateNewProduct(frame);
             newProduct.mAnimation.Play("swap");
         }
+
+        StartCoroutine(Utils.CallAfterSeconds(1.0f, () =>
+        {
+            if (IsAllIdle())
+                mIsIdle = true;
+        }));
+    }
+
+
+
+
+    public int GetGrade()
+    {
+        float totlaRemain = mStageInfo.MoveLimit;
+        float currentRemin = MenuInGame.Inst().RemainLimit;
+        if (totlaRemain < 5)
+            return 3;
+        else if (totlaRemain * 0.4f < currentRemin)
+            return 3;
+        else if (totlaRemain * 0.2f < currentRemin)
+            return 2;
+        else if (0 < currentRemin)
+            return 1;
+
+        return 0;
     }
     private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
     {
@@ -322,70 +329,6 @@ public class InGameManager : MonoBehaviour
 
         mNextSkills.Enqueue(skill);
     }
-    private void OnDestroyProduct(Product pro)
-    {
-        mDestroyeses.Add(pro.ParentFrame);
-
-        int idxX = pro.ParentFrame.IndexX;
-        if (!mDestroyes.ContainsKey(idxX))
-            mDestroyes[idxX] = pro.ParentFrame;
-        else
-        {
-            if (pro.ParentFrame.IndexY < mDestroyes[idxX].IndexY)
-                mDestroyes[idxX] = pro.ParentFrame;
-        }
-    }
-
-    private Frame[] NextBaseFrames(Frame baseFrame)
-    {
-        List<Frame> bases = new List<Frame>();
-        int idxX = baseFrame.IndexX;
-        int curIdxY = baseFrame.IndexY;
-        bool pushed = false;
-        while(curIdxY < CountY)
-        {
-            Frame frame = mFrames[idxX, curIdxY];
-            if (frame.Empty)
-                pushed = false;
-            else if (!pushed && frame.ChildProduct == null)
-            {
-                bases.Add(frame);
-                pushed = true;
-            }
-            curIdxY++;
-        }
-        return bases.ToArray();
-    }
-
-    private void StartNextProducts(Frame baseFrame)
-    {
-        Frame curFrame = baseFrame;
-        Frame validFrame = curFrame;
-        while (curFrame != null)
-        {
-            Product pro = NextUpProductFrom(validFrame);
-            if (pro == null)
-                break;
-
-            validFrame = pro.ParentFrame;
-            pro.StartDropAnimate(curFrame, pro.ParentFrame.IndexY - curFrame.IndexY, true);
-            mIdleCounter++;
-
-            curFrame = curFrame.Up();
-        }
-
-        Frame topFrame = SubTopFrame(curFrame);
-        int emptyCount = topFrame.IndexY - curFrame.IndexY + 1;
-        while (curFrame != null)
-        {
-            Product pro = CreateNewProduct(curFrame, mNextSkills.Count > 0 ? mNextSkills.Dequeue() : ProductSkill.Nothing);
-            pro.StartDropAnimate(curFrame, emptyCount, true);
-            mIdleCounter++;
-
-            curFrame = curFrame.Up();
-        }
-    }
-
     public bool IsAllIdle()
     {
         foreach(Frame frame in mFrames)
@@ -397,45 +340,7 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    private IEnumerator CheckIdle()
-    {
-        while(true)
-        {
-            if(mIdleCounter == 0)
-            {
-                if (IsAllIdle())
-                {
-                    mIdleCounter = -1; //set Idle enable
-                    MenuInGame.Inst().CurrentCombo = 0;
-                    EventOnIdle?.Invoke();
-                }
-            }
-            yield return null;
-        }
-    }
 
-    private IEnumerator CreateNextProducts()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(0.1f);
-
-            for (int x = 0; x < CountX; ++x)
-            {
-                if (!mDestroyes.ContainsKey(x))
-                    continue;
-
-                Frame[] baseFrames = NextBaseFrames(mDestroyes[x]);
-                if (baseFrames.Length <= 0)
-                    continue;
-
-                foreach (Frame baseFrame in baseFrames)
-                    StartNextProducts(baseFrame);
-
-                mDestroyes.Remove(x);
-            }
-        }
-    }
     private void SecondaryInitFrames()
     {
         for(int x = 0; x < CountX; ++x)
@@ -497,8 +402,6 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
-        product.EventMatched = OnMatch;
-        product.EventDestroyed = OnDestroyProduct;
         product.ChangeSkilledProduct(skill);
         return product;
     }
@@ -527,20 +430,8 @@ public class InGameManager : MonoBehaviour
         mFrames = null;
         mStageInfo = null;
         Pause = false;
-        mIdleCounter = -1;
         MatchLock = false;
-    }
-    private Product NextUpProductFrom(Frame frame)
-    {
-        Frame curFrame = frame;
-        while (curFrame != null)
-        {
-            if (curFrame.ChildProduct != null)
-                return curFrame.ChildProduct;
-
-            curFrame = curFrame.Up();
-        }
-        return null;
+        mIsIdle = true;
     }
     public Frame GetFrame(int x, int y)
     {
@@ -554,16 +445,6 @@ public class InGameManager : MonoBehaviour
     {
         BreakItemSkill(product);
         MenuInGame.Inst().AddScore(product);
-
-        //Vector3 pos = product.transform.position;
-        //pos.z -= 1;
-        //pos.y += UserSetting.GridSize * 0.2f;
-        //GameObject obj = GameObject.Instantiate(ComboNumPrefab, pos, Quaternion.identity, product.ParentFrame.transform);
-        //obj.GetComponent<Numbers>().Number = product.Combo;
-        //pos.y += UserSetting.GridSize * 0.5f;
-        //StartCoroutine(Utils.AnimateConvex(obj, pos, 0.7f, ()=>{
-        //    Destroy(obj);
-        //}));
     }
 
     private void RemoveLimit()
