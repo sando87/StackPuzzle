@@ -237,6 +237,9 @@ public class Product : MonoBehaviour
     }
     void CreateComboTextEffect()
     {
+        if (Combo <= 0)
+            return;
+
         Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -1);
         GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, ParentFrame.gameObject.transform);
         obj.GetComponent<Numbers>().Number = Combo;
@@ -263,6 +266,25 @@ public class Product : MonoBehaviour
         Product[] around = GetAroundProducts();
         foreach (Product pro in around)
             pro.SearchMatchedProducts(products, color);
+    }
+    public bool IsMatchable(List<Product> products, ProductColor color)
+    {
+        if (mLocked || mColor != color || IsChocoBlock())
+            return false;
+
+        if (products.Contains(this))
+            return false;
+
+        if (products.Count >= UserSetting.MatchCount)
+            return false;
+
+        products.Add(this);
+
+        Product[] around = GetAroundProducts();
+        foreach (Product pro in around)
+            pro.IsMatchable(products, color);
+
+        return products.Count >= UserSetting.MatchCount;
     }
     public Product Left()
     {

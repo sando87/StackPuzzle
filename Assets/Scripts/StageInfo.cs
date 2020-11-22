@@ -86,6 +86,14 @@ public class StageInfo
         return info;
     }
 
+    public int ComboTypeCount()
+    {
+        if (GoalTypeEnum != StageGoalType.Combo)
+            return 0;
+
+        return int.Parse(GoalType.Replace("Combo", ""));
+    }
+
     private static Dictionary<int, ProductSkill> Parse(string token)
     {
         Dictionary<int, ProductSkill> infos = new Dictionary<int, ProductSkill>();

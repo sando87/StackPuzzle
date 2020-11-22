@@ -44,7 +44,6 @@ public class MenuInGame : MonoBehaviour
 #endif
         UpdateScore();
 
-        CheckFinish();
     }
 
     private void UpdateScore()
@@ -104,22 +103,6 @@ public class MenuInGame : MonoBehaviour
         }
     }
 
-    private void CheckFinish()
-    {
-        if (!InGameManager.Inst.IsIdle)
-            return;
-
-        if (TargetValue.text == "0")
-        {
-            InGameManager.Inst.FinishGame(true);
-            Hide();
-        }
-        else if (Limit.text == "0")
-        {
-            InGameManager.Inst.FinishGame(false);
-            Hide();
-        }
-    }
     private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
     {
         int scorePerBar = UserSetting.ScorePerBar;
@@ -193,15 +176,22 @@ public class MenuInGame : MonoBehaviour
         KeepCombo.text = "0";
         StageLevel.text = info.Num.ToString();
         ComboNumber.Clear();
-    }
 
-    public void AddScore(Product product)
-    {
-        mAddedScore += product.Combo;
+        InGameManager.Inst.EventBreakTarget = (pos, type) => {
+            ReduceGoalValue(pos, type);
+        };
+        InGameManager.Inst.EventDestroyed = (products) => {
+            mAddedScore += products[0].Combo * products.Length;
+        };
+        InGameManager.Inst.EventFinish = (success) =>
+        {
+            if (success) MenuComplete.PopUp(mStageInfo.Num, 0, 0);
+            else MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mStageInfo.GoalTypeImage, 0);
+            Hide();
+        };
     }
 
     public int StarCount { get { return mScoreStars.Count; } }
-
     public int CurrentCombo
     {
         get
@@ -216,7 +206,6 @@ public class MenuInGame : MonoBehaviour
                 ComboNumber.SetNumber(value);
         }
     }
-
     public int NextCombo
     {
         get { return int.Parse(KeepCombo.text); }
@@ -236,6 +225,7 @@ public class MenuInGame : MonoBehaviour
         }
     }
 
+
     public void KeepNextCombo(Product product)
     {
         if (product.mSkill != ProductSkill.KeepCombo)
@@ -250,7 +240,6 @@ public class MenuInGame : MonoBehaviour
             NextCombo = nextCombo;
         }));
     }
-
     public void OneMoreCombo(Product product)
     {
         if (product.mSkill != ProductSkill.OneMore)
@@ -264,7 +253,6 @@ public class MenuInGame : MonoBehaviour
             CurrentCombo++;
         }));
     }
-
     public void ReduceLimit()
     {
         int value = int.Parse(Limit.text) - 1;
@@ -272,6 +260,7 @@ public class MenuInGame : MonoBehaviour
         Limit.text = value.ToString();
         Limit.GetComponent<Animation>().Play("touch");
     }
+
 
     public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)
     {
@@ -314,6 +303,8 @@ public class MenuInGame : MonoBehaviour
         action.Invoke();
         Destroy(obj);
     }
+
+
     IEnumerator SkillMatchedEffect(GameObject obj)
     {
         float duration = Random.Range(0.4f, 0.5f);
@@ -395,7 +386,6 @@ public class MenuInGame : MonoBehaviour
                 if (isOK)
                 {
                     InGameManager.Inst.FinishGame(false);
-                    Hide();
                 }
             });
         }
