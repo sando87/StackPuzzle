@@ -43,4 +43,19 @@ public class InGameBillboard
         + KeepCombo;
         return ret;
     }
+    public int GetGrade(StageInfo info)
+    {
+        float totlaRemain = info.MoveLimit;
+        float currentRemin = info.MoveLimit - MoveCount;
+        if (totlaRemain < 5)
+            return 3;
+        else if (totlaRemain * 0.4f < currentRemin)
+            return 3;
+        else if (totlaRemain * 0.2f < currentRemin)
+            return 2;
+        else if (0 < currentRemin)
+            return 1;
+
+        return 0;
+    }
 }

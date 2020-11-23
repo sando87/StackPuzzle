@@ -23,12 +23,14 @@ public class InGameManager : MonoBehaviour
     public GameObject FramePrefab2;
     public GameObject MaskPrefab;
     public GameObject ComboNumPrefab;
+    public GameObject AttackPointPrefab;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private List<Frame> mEmptyFrames = new List<Frame>();
+    private LinkedList<Header> mNetMessages = new LinkedList<Header>();
     public InGameBillboard Billboard = new InGameBillboard();
 
     public GameFieldType FieldType { get {
@@ -41,12 +43,14 @@ public class InGameManager : MonoBehaviour
     public int CountY { get { return mStageInfo.YCount; } }
     public bool MatchLock { get; set; }
     public bool Pause { get; set; }
+    public AttackPoints AttackPoints { get; set; }
     public InGameBillboard GetBillboard() { return Billboard; }
     
 
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventDestroyed;
     public Action<bool> EventFinish;
+    public Action EventReduceLimit;
     private Action EventEnterIdle;
 
     public void StartGame(StageInfo info)
@@ -65,6 +69,10 @@ public class InGameManager : MonoBehaviour
         GetComponent<SwipeDetector>().EventClick = OnClick;
         EventEnterIdle = CheckTartgetLimit;
 
+        if (FieldType == GameFieldType.pvpOpponent)
+            StartCoroutine(ProcessNetMessages());
+
+
         float gridSize = UserSetting.GridSize;
         Vector3 localBasePos = new Vector3(-gridSize * info.XCount * 0.5f, -gridSize * info.YCount * 0.5f, 0);
         localBasePos.x += gridSize * 0.5f;
@@ -80,8 +88,7 @@ public class InGameManager : MonoBehaviour
                 localFramePos.y = gridSize * y;
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y, info.GetCell(x, y).FrameCoverCount);
-                mFrames[x, y].GetFrame = GetFrame;
+                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount);
                 mFrames[x, y].EventBreakCover = () => {
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(mFrames[x, y].transform.position, StageGoalType.Cover);
@@ -96,29 +103,16 @@ public class InGameManager : MonoBehaviour
         }
 
         SecondaryInitFrames();
+
+        GameObject ap = Instantiate(AttackPointPrefab, transform);
+        ap.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
+        AttackPoints = ap.GetComponent<AttackPoints>();
     }
     public void FinishGame(bool success)
     {
-        if (success)
-        {
-            int starCount = GetGrade();
-            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
-            currentStage.UpdateStarCount(starCount);
+        if (!transform.parent.gameObject.activeSelf)
+            return;
 
-            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
-            if (nextStage != null)
-                nextStage.UnLock();
-
-            SoundPlayer.Inst.Player.Stop();
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-        }
-        else
-        {
-            SoundPlayer.Inst.Player.Stop();
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
-        }
-
-        LOG.echo(SummaryToCSVString(success));
         EventFinish?.Invoke(success);
         ResetGame();
         transform.parent.gameObject.SetActive(false);
@@ -303,24 +297,68 @@ public class InGameManager : MonoBehaviour
 
         return;
     }
-
-
-
-    public int GetGrade()
+    public void HandlerNetworkMessage(Header responseMsg)
     {
-        float totlaRemain = mStageInfo.MoveLimit;
-        float currentRemin = mStageInfo.MoveLimit - Billboard.MoveCount;
-        if (totlaRemain < 5)
-            return 3;
-        else if (totlaRemain * 0.4f < currentRemin)
-            return 3;
-        else if (totlaRemain * 0.2f < currentRemin)
-            return 2;
-        else if (0 < currentRemin)
-            return 1;
+        if (!gameObject.activeInHierarchy)
+            return;
+        if (responseMsg.Ack == 1)
+            return;
 
-        return 0;
+
+        if (responseMsg.Cmd == NetCMD.EndGame)
+        {
+            mNetMessages.AddFirst(responseMsg);
+        }
+        else
+        {
+            mNetMessages.AddLast(responseMsg);
+        }
     }
+    IEnumerator ProcessNetMessages()
+    {
+        while (true)
+        {
+            yield return null;
+
+            if (mNetMessages.Count == 0)
+                continue;
+
+            Header msg = mNetMessages.First.Value;
+            if (msg.Cmd == NetCMD.EndGame)
+            {
+                EndGame res = msg.body as EndGame;
+                FinishGame(!res.win);
+            }
+            else if (msg.Cmd == NetCMD.SendSwipe)
+            {
+                SwipeInfo res = msg.body as SwipeInfo;
+                Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
+                if (res.isClick)
+                    OnClick(pro.gameObject);
+                else
+                    OnSwipe(pro.gameObject, res.dir);
+
+                mNetMessages.RemoveFirst();
+            }
+            else if (msg.Cmd == NetCMD.SendChoco)
+            {
+                ChocoInfo res = msg.body as ChocoInfo;
+                AttackPoints.Pop(res.xIndicies.Length);
+                for (int i = 0; i < res.xIndicies.Length; ++i)
+                {
+                    int idxX = res.xIndicies[i];
+                    int idxY = res.yIndicies[i];
+                    Product pro = GetFrame(idxX, idxY).ChildProduct;
+                    pro.SetChocoBlock(1, true);
+                }
+
+                mNetMessages.RemoveFirst();
+            }
+        }
+    }
+
+
+
     private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
     {
         if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
@@ -504,6 +542,7 @@ public class InGameManager : MonoBehaviour
     private void RemoveLimit()
     {
         Billboard.MoveCount++;
+        EventReduceLimit?.Invoke();
     }
     public string SummaryToCSVString(bool success)
     {

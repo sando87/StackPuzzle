@@ -111,7 +111,7 @@ public class BattleFieldManager : MonoBehaviour
                 localFramePos.y = GridSize * y;
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(x, y, 0);
+                //mFrames[x, y].Initialize(x, y, 0);
                 mFrames[x, y].GetFrame = GetFrame;
                 CreateNewProduct(mFrames[x, y], initColors[x,y]);
             }

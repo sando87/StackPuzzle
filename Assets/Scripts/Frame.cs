@@ -12,6 +12,7 @@ public class Frame : MonoBehaviour
     private bool mIsEmpty;
     private Frame mSubTopFrame;
     private SpriteMask mMask;
+    private InGameManager mGameManager;
 
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
@@ -36,8 +37,9 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(int idxX, int idxY, int coverCount)
+    public void Initialize(InGameManager mgr, int idxX, int idxY, int coverCount)
     {
+        mGameManager = mgr;
         mIndexX = idxX;
         mIndexY = idxY;
 
@@ -88,19 +90,19 @@ public class Frame : MonoBehaviour
 
     public Frame Left()
     {
-        return GetFrame(mIndexX - 1, mIndexY);
+        return mGameManager.GetFrame(mIndexX - 1, mIndexY);
     }
     public Frame Right()
     {
-        return GetFrame(mIndexX + 1, mIndexY);
+        return mGameManager.GetFrame(mIndexX + 1, mIndexY);
     }
     public Frame Down()
     {
-        return GetFrame(mIndexX, mIndexY - 1);
+        return mGameManager.GetFrame(mIndexX, mIndexY - 1);
     }
     public Frame Up()
     {
-        return GetFrame(mIndexX, mIndexY + 1);
+        return mGameManager.GetFrame(mIndexX, mIndexY + 1);
     }
     public Frame[] GetAroundFrames()
     {
