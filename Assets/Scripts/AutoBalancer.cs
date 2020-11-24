@@ -96,32 +96,38 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancer()
     {
-        while(true)
+        InGameManager mgr = null;
+        while (true)
         {
             yield return new WaitForSeconds(2);
-            if (!InGameManager.Inst.gameObject.activeInHierarchy)
+            
+            if (InGameManager.InstStage.gameObject.activeInHierarchy)
+                mgr = InGameManager.InstStage;
+            else if (InGameManager.InstPVP_Player.gameObject.activeInHierarchy)
+                mgr = InGameManager.InstPVP_Player;
+            else
                 continue;
 
-            if (InGameManager.Inst.IsIdle)
+            if (mgr.IsIdle)
             {
                 if (UnityEngine.Random.Range(0, 3) == 0)
-                    AutoSwipeNextProduct();
+                    AutoSwipeNextProduct(mgr);
                 else
-                    AutoClickNextProduct();
+                    AutoClickNextProduct(mgr);
             }
         }
     }
 
-    void AutoSwipeNextProduct()
+    void AutoSwipeNextProduct(InGameManager mgr)
     {
-        int mCntX = InGameManager.Inst.CountX;
-        int mCntY = InGameManager.Inst.CountY;
+        int mCntX = mgr.CountX;
+        int mCntY = mgr.CountY;
         List<AutoBalancerInfo> candidates = new List<AutoBalancerInfo>();
         for (int y = 0; y < mCntY; ++y)
         {
             for (int x = 0; x < mCntX; ++x)
             {
-                Frame frame = InGameManager.Inst.GetFrame(x, y);
+                Frame frame = mgr.GetFrame(x, y);
                 if (frame == null || frame.ChildProduct == null)
                     continue;
 
@@ -136,44 +142,44 @@ public class AutoBalancer : MonoBehaviour
         if (candidates.Count > 0)
         {
             candidates.Sort((lsh, rsh) => { return rsh.maxCount - lsh.maxCount; });
-            InGameManager.Inst.OnSwipe(candidates[0].targetProduct.gameObject, candidates[0].direct);
+            mgr.OnSwipe(candidates[0].targetProduct.gameObject, candidates[0].direct);
         }
         else
         {
             int ranX = UnityEngine.Random.Range(0, mCntX);
             int ranY = UnityEngine.Random.Range(0, mCntY);
-            Frame randomFrame = InGameManager.Inst.GetFrame(ranX, ranY);
+            Frame randomFrame = mgr.GetFrame(ranX, ranY);
             if (randomFrame != null && randomFrame.ChildProduct != null && !randomFrame.ChildProduct.IsChocoBlock())
             {
                 Product randomPro = randomFrame.ChildProduct;
                 if (ranY % 2 == 0)
                 {
                     if (randomPro.Left() != null)
-                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.LEFT);
+                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.LEFT);
                     else if (randomPro.Right() != null)
-                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.RIGHT);
+                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.RIGHT);
                 }
                 else
                 {
                     if (randomPro.Up() != null)
-                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.UP);
+                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.UP);
                     else if (randomPro.Down() != null)
-                        InGameManager.Inst.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
+                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
                 }
             }
         }
     }
-    void AutoClickNextProduct()
+    void AutoClickNextProduct(InGameManager mgr)
     {
-        int mCntX = InGameManager.Inst.CountX;
-        int mCntY = InGameManager.Inst.CountY;
+        int mCntX = mgr.CountX;
+        int mCntY = mgr.CountY;
         List<KeyValuePair< Product, int>> candidates = new List<KeyValuePair<Product, int>>();
         Dictionary<Product, int> scannedProducts = new Dictionary<Product, int>();
         for (int y = 0; y < mCntY; ++y)
         {
             for (int x = 0; x < mCntX; ++x)
             {
-                Frame frame = InGameManager.Inst.GetFrame(x, y);
+                Frame frame = mgr.GetFrame(x, y);
                 if (frame == null || frame.ChildProduct == null)
                     continue;
 
@@ -195,7 +201,7 @@ public class AutoBalancer : MonoBehaviour
         if (candidates.Count > 0)
         {
             candidates.Sort((lsh, rsh) => { return rsh.Value - lsh.Value; });
-            InGameManager.Inst.OnClick(candidates[0].Key.gameObject);
+            mgr.OnClick(candidates[0].Key.gameObject);
         }
     }
 }

@@ -14,7 +14,6 @@ public class MenuPlay : MonoBehaviour
     public Image Star1;
     public Image Star2;
     public Image Star3;
-    public GameObject GameField;
 
     public static void PopUp(StageInfo info)
     {
@@ -65,7 +64,8 @@ public class MenuPlay : MonoBehaviour
 
         SoundPlayer.Inst.Player.Stop();
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
-        GameField.GetComponent<InGameManager>().StartGame(mStageInfo);
+        InGameManager.InstStage.StartGame(mStageInfo, UserSetting.UserInfo);
+        InGameManager.InstStage.InitProducts();
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();
         StageManager.Inst.Activate(false);

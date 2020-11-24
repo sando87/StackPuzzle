@@ -149,18 +149,13 @@ public class MenuWaitMatch : MonoBehaviour
 
     IEnumerator StartCountDown(SearchOpponentInfo matchInfo)
     {
-        InitFieldInfo player = null;
-        InitFieldInfo opponent = null;
+        if (!UserSetting.IsBotPlayer)
+            Purchases.UseHeart();
 
-        InitFieldInfo info = new InitFieldInfo();
-        info.XCount = 5;
-        info.YCount = 9;
-        info.colorCount = matchInfo.colorCount;
-        info.userPk = UserSetting.UserPK;
-        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) => { player = _res as InitFieldInfo; });
-        info.colorCount = matchInfo.oppColorCount;
-        info.userPk = matchInfo.oppUser.userPk;
-        NetClientApp.GetInstance().Request(NetCMD.GetInitField, info, (_res) => { opponent = _res as InitFieldInfo; });
+        StageInfo info = StageInfo.Load(0);
+
+        InGameManager.InstPVP_Opponent.StartGame(info, matchInfo.oppUser);
+        InGameManager.InstPVP_Player.StartGame(info, UserSetting.UserInfo);
 
         mIsSearching = false;
         StopCoroutine("WaitOpponent");
@@ -180,22 +175,9 @@ public class MenuWaitMatch : MonoBehaviour
         CountDown.text = "1";
         yield return new WaitForSeconds(1);
 
-        if (player != null && opponent != null)
-        {
-            if (!UserSetting.IsBotPlayer)
-                Purchases.UseHeart();
+        InGameManager.InstPVP_Player.InitProducts();
 
-            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
-            BattleFieldManager.Me.StartGame(player.userPk, player.XCount, player.YCount, player.products, player.colorCount);
-            BattleFieldManager.Opp.StartGame(opponent.userPk, opponent.XCount, opponent.YCount, opponent.products, opponent.colorCount);
-            gameObject.SetActive(false);
-        }
-        else
-        {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAlarm);
-            ResetMatchUI();
-            MenuMessageBox.PopUp("Match Failed", false, null);
-        }
+        gameObject.SetActive(false);
     }
     private void FailMatch()
     {

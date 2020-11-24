@@ -23,11 +23,11 @@ public class MenuPause : MonoBehaviour
     public void OnQuit()
     {
         gameObject.SetActive(false);
-        GameField.GetComponent<InGameManager>().FinishGame(false);
+        InGameManager.InstStage.FinishGame();
     }
     public void OnResume()
     {
         gameObject.SetActive(false);
-        GameField.GetComponent<InGameManager>().Pause = false;
+        //InGameManager.InstStage.Pause = false;
     }
 }

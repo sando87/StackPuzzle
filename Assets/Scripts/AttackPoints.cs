@@ -12,7 +12,7 @@ public class AttackPoints : MonoBehaviour
     private float InitSize = 1.0f;
     private float mScaleForEffect = 1.0f;
     private AttackPoints OppAttackPoints = null;
-    private BattleFieldManager ParentManager = null;
+    private InGameManager ParentManager = null;
     private List<GameObject> mChilds = new List<GameObject>();
 
     public GameObject BaseSprite;
@@ -25,10 +25,10 @@ public class AttackPoints : MonoBehaviour
     {
         if (OppAttackPoints == null)
         {
-            ParentManager = transform.parent.GetComponent<BattleFieldManager>();
+            ParentManager = transform.parent.GetComponent<InGameManager>();
             OppAttackPoints = ParentManager.Opponent.AttackPoints;
             InitSize = Projectile.transform.localScale.x;
-            mScaleForEffect = ParentManager.IsPlayerField() ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
+            mScaleForEffect = ParentManager.FieldType == GameFieldType.pvpPlayer ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
             mScaleForEffect *= InitSize;
         }
             
@@ -46,7 +46,7 @@ public class AttackPoints : MonoBehaviour
         int imgIndex = Mathf.Abs(point) >= 12 ? 3 : (Mathf.Abs(point) / 3);
         obj.GetComponent<SpriteRenderer>().sprite = Images[imgIndex];
 
-        if (!ParentManager.IsPlayerField() && point > 0)
+        if (ParentManager.FieldType != GameFieldType.pvpPlayer && point > 0)
         {
             StartCoroutine(AnimateThrowSide(obj, transform.position, 1.0f, () =>
             {

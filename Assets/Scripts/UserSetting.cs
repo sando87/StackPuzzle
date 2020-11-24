@@ -194,7 +194,6 @@ public class UserSetting
                         
             mUserInfo = JsonUtility.FromJson<UserInfo>(fileText);
             mIsBotPlayer = true;
-            AutoPlayer.AutoPlay = true;
             AutoBalancer.AutoBalance = true;
             if (mUserInfo.userPk <= 0)
             {
@@ -213,7 +212,6 @@ public class UserSetting
         {
             mUserInfo = LoadUserInfo();
             mIsBotPlayer = false;
-            AutoPlayer.AutoPlay = false;
             AutoBalancer.AutoBalance = false;
         }
     }

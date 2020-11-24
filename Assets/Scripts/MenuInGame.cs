@@ -177,16 +177,16 @@ public class MenuInGame : MonoBehaviour
         StageLevel.text = info.Num.ToString();
         ComboNumber.Clear();
 
-        InGameManager.Inst.EventBreakTarget = (pos, type) => {
+        InGameManager.InstStage.EventBreakTarget = (pos, type) => {
             ReduceGoalValue(pos, type);
         };
-        InGameManager.Inst.EventDestroyed = (products) => {
+        InGameManager.InstStage.EventDestroyed = (products) => {
             mAddedScore += products[0].Combo * products.Length;
         };
-        InGameManager.Inst.EventFinish = (success) => {
+        InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
         };
-        InGameManager.Inst.EventReduceLimit = () => {
+        InGameManager.InstStage.EventReduceLimit = () => {
             ReduceLimit();
         };
     }
@@ -255,7 +255,7 @@ public class MenuInGame : MonoBehaviour
     }
     public void ReduceLimit()
     {
-        int remain = mStageInfo.MoveLimit - InGameManager.Inst.GetBillboard().MoveCount;
+        int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
         remain = Mathf.Max(0, remain);
         Limit.text = remain.ToString();
         Limit.GetComponent<Animation>().Play("touch");
@@ -263,12 +263,9 @@ public class MenuInGame : MonoBehaviour
 
     public void FinishGame(bool success)
     {
-        if (!Inst().gameObject.activeSelf)
-            return;
-
         if (success)
         {
-            int starCount = InGameManager.Inst.GetBillboard().GetGrade(mStageInfo);
+            int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 
@@ -287,9 +284,9 @@ public class MenuInGame : MonoBehaviour
             MenuFailed.PopUp(mStageInfo.Num, mStageInfo.GoalValue, mStageInfo.GoalTypeImage, 0);
         }
 
-        string log = mStageInfo.ToCSVString() + "," + InGameManager.Inst.GetBillboard().ToCSVString();
+        string log = mStageInfo.ToCSVString() + "," + InGameManager.InstStage.GetBillboard().ToCSVString();
         LOG.echo(log);
-        InGameManager.Inst.FinishGame(success);
+        InGameManager.InstStage.FinishGame();
         Hide();
     }
     public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)
@@ -423,7 +420,6 @@ public class MenuInGame : MonoBehaviour
     public void OnLockMatch(bool enableLock)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        GameField.GetComponent<InGameManager>().MatchLock = enableLock;
         Lock.gameObject.SetActive(enableLock);
         UnLock.gameObject.SetActive(!enableLock);
     }

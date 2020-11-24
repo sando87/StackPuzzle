@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class NetClientApp : MonoBehaviour
 {
@@ -23,8 +24,11 @@ public class NetClientApp : MonoBehaviour
     private Int64 mRequestID = 0;
     private List<byte> mRecvBuffer = new List<byte>();
     Dictionary<Int64, Action<object>> mHandlerTable = new Dictionary<Int64, Action<object>>();
-    public Action<Header> EventResponse;
-    
+
+    [Serializable]
+    public class UnityEventClick : UnityEvent<Header> { }
+    public UnityEventClick EventMessage = null;
+
     private void OnDestroy()
     {
         LOG.UnInitialize();
@@ -160,7 +164,7 @@ public class NetClientApp : MonoBehaviour
                     mHandlerTable.Remove(recvMsg.RequestID);
                 }
 
-                EventResponse?.Invoke(recvMsg);
+                EventMessage?.Invoke(recvMsg);
             }
 
             if(mRecvBuffer.Count != 0)

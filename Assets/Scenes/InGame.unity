@@ -23011,7 +23011,6 @@ MonoBehaviour:
   Star1: {fileID: 1600414341}
   Star2: {fileID: 599417405}
   Star3: {fileID: 1975109334}
-  GameField: {fileID: 1050245870}
 --- !u!111 &359125133
 Animation:
   m_ObjectHideFlags: 0
@@ -43322,7 +43321,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 673266190}
-  - component: {fileID: 673266192}
+  - component: {fileID: 673266191}
   m_Layer: 0
   m_Name: GameFieldOpp
   m_TagString: Untagged
@@ -43344,7 +43343,7 @@ Transform:
   m_Father: {fileID: 1802969881}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &673266192
+--- !u!114 &673266191
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43353,7 +43352,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 673266189}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecf8bf3e194e0084c8cf72831d220eca, type: 3}
+  m_Script: {fileID: 11500000, guid: d9c9f397b7489584a882302a477787a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ProductPrefabs:
@@ -43369,11 +43368,10 @@ MonoBehaviour:
     type: 3}
   MaskPrefab: {fileID: 813953013677775612, guid: 82a8ff6278959a647ace0714fa4db3eb,
     type: 3}
-  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
-    type: 3}
   ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
     type: 3}
-  Opponent: {fileID: 1987294860}
+  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
+    type: 3}
 --- !u!1 &673592712
 GameObject:
   m_ObjectHideFlags: 0
@@ -53498,6 +53496,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ServerAddress: sjleeserver.iptime.org
   ServerPort: 9435
+  EventMessage:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 673266191}
+        m_MethodName: HandlerNetworkMessage
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &857068765
 Transform:
   m_ObjectHideFlags: 0
@@ -66243,6 +66255,8 @@ MonoBehaviour:
   MaskPrefab: {fileID: 813953013677775612, guid: 82a8ff6278959a647ace0714fa4db3eb,
     type: 3}
   ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
+    type: 3}
+  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
     type: 3}
 --- !u!1 &1050650062
 GameObject:
@@ -125712,7 +125726,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1987294857}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecf8bf3e194e0084c8cf72831d220eca, type: 3}
+  m_Script: {fileID: 11500000, guid: d9c9f397b7489584a882302a477787a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ProductPrefabs:
@@ -125728,11 +125742,10 @@ MonoBehaviour:
     type: 3}
   MaskPrefab: {fileID: 813953013677775612, guid: 82a8ff6278959a647ace0714fa4db3eb,
     type: 3}
-  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
-    type: 3}
   ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
     type: 3}
-  Opponent: {fileID: 673266192}
+  AttackPointPrefab: {fileID: 3150427325607876282, guid: b3fdacee75dc8c145bf98e86c025cde2,
+    type: 3}
 --- !u!1 &1990720323
 GameObject:
   m_ObjectHideFlags: 0
