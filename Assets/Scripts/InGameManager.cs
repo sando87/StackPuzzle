@@ -430,12 +430,14 @@ public class InGameManager : MonoBehaviour
                 {
                     Frame frame = GetFrame(info.idxX, info.idxY);
                     Product pro = CreateNewProduct(frame, info.color);
+                    pro.GetComponent<BoxCollider2D>().enabled = false;
                     pro.SetChocoBlock(0);
                     pro.EventUnWrapChoco = () => {
                         Billboard.ChocoCount++;
                         EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
                     };
                 }
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.Click)
             {
@@ -459,7 +461,7 @@ public class InGameManager : MonoBehaviour
                 foreach (ProductInfo info in body.products)
                 {
                     Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if(pro != null && !pro.IsLocked())
+                    if(pro != null && !pro.IsLocked() && info.color == pro.mColor)
                         products.Add(pro);
                 }
 
@@ -476,6 +478,7 @@ public class InGameManager : MonoBehaviour
                 {
                     Frame frame = GetFrame(info.idxX, info.idxY);
                     Product newProduct = CreateNewProduct(frame, info.color);
+                    newProduct.GetComponent<BoxCollider2D>().enabled = false;
                     newProduct.mAnimation.Play("swap");
                 }
                 mNetMessages.RemoveFirst();

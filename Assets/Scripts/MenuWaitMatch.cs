@@ -178,6 +178,7 @@ public class MenuWaitMatch : MonoBehaviour
         InGameManager.InstPVP_Player.InitProducts();
 
         gameObject.SetActive(false);
+        MenuBattle.PopUp();
     }
     private void FailMatch()
     {
