@@ -67,11 +67,7 @@ public class NetServerApp : MonoBehaviour
             case NetCMD.AddLog:         body = ProcAddLog(requestMsg.body as LogInfo); break;
             case NetCMD.SearchOpponent: body = ProcSearchOpponent(requestMsg.body as SearchOpponentInfo); break;
             case NetCMD.StopMatching:   body = ProcStopMatching(requestMsg.body as SearchOpponentInfo); break;
-            case NetCMD.GetInitField:   body = ProcGetInitField(requestMsg.body as InitFieldInfo); break;
-            case NetCMD.NextProducts:   body = ProcNextProduct(requestMsg.body as NextProducts); break;
-            case NetCMD.SendSwipe:      body = ProcSendSwipe(requestMsg.body as SwipeInfo); break;
-            case NetCMD.EndGame:        body = ProcEndGame(requestMsg.body as EndGame); break;
-            case NetCMD.SendChoco:      body = ProcSendChoco(requestMsg.body as ChocoInfo); break;
+            case NetCMD.PVP:            body = ProcPVPCommand(requestMsg.body as PVPInfo); break;
             default:                    body = "Undefied Command"; break;
         }
 
@@ -144,26 +140,33 @@ public class NetServerApp : MonoBehaviour
         mMatchingUsers.Remove(requestBody.userPk);
         return requestBody;
     }
-    private InitFieldInfo ProcGetInitField(InitFieldInfo requestBody)
+    private PVPInfo ProcPVPCommand(PVPInfo requestBody)
     {
-        if(mMatchingUsers.ContainsKey(requestBody.userPk))
-            requestBody.products = mMatchingUsers[requestBody.userPk].GetInitField(requestBody.XCount, requestBody.YCount);
-        return requestBody;
-    }
-    private NextProducts ProcNextProduct(NextProducts requestBody)
-    {
-        if (mMatchingUsers.ContainsKey(requestBody.userPk))
-            requestBody.nextProducts = mMatchingUsers[requestBody.userPk].GetNextColors(requestBody.offset, requestBody.requestCount);
-        return requestBody;
-    }
-    private SwipeInfo ProcSendSwipe(SwipeInfo requestBody)
-    {
-        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
+        switch(requestBody.cmd)
         {
-            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
+            case PVPCommand.StartGame:
+            case PVPCommand.Click:
+            case PVPCommand.Swipe:
+            case PVPCommand.Destroy:
+            case PVPCommand.Create:
+            case PVPCommand.FlushAttacks:
+                BypassToOppPlayer(requestBody);
+                break;
+            case PVPCommand.EndGame:
+                EndPVPGame(requestBody);
+                BypassToOppPlayer(requestBody);
+                break;
+        }
+        return requestBody;
+    }
+    private void BypassToOppPlayer(PVPInfo requestBody)
+    {
+        if (mMatchingUsers.ContainsKey(requestBody.oppUserPk))
+        {
+            MySession session = mMatchingUsers[requestBody.oppUserPk].sessionInfo;
 
             Header responseMsg = new Header();
-            responseMsg.Cmd = NetCMD.SendSwipe;
+            responseMsg.Cmd = NetCMD.PVP;
             responseMsg.RequestID = -1;
             responseMsg.Ack = 0;
             responseMsg.UserPk = mRequestMsg.UserPk;
@@ -172,48 +175,11 @@ public class NetServerApp : MonoBehaviour
 
             mServer.SendData(session);
         }
-
-        return requestBody;
     }
-    private ChocoInfo ProcSendChoco(ChocoInfo requestBody)
+    private void EndPVPGame(PVPInfo requestBody)
     {
-        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
-        {
-            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
-
-            Header responseMsg = new Header();
-            responseMsg.Cmd = NetCMD.SendChoco;
-            responseMsg.RequestID = -1;
-            responseMsg.Ack = 0;
-            responseMsg.UserPk = mRequestMsg.UserPk;
-            responseMsg.body = requestBody;
-            session.data = NetProtocol.ToArray(responseMsg);
-
-            mServer.SendData(session);
-        }
-
-        return requestBody;
-    }
-    private EndGame ProcEndGame(EndGame requestBody)
-    {
-        mMatchingUsers.Remove(requestBody.fromUserPk);
+        mMatchingUsers.Remove(requestBody.userInfo.userPk);
         DBManager.Inst().UpdateUserInfo(requestBody.userInfo);
-
-        if (mMatchingUsers.ContainsKey(requestBody.toUserPk))
-        {
-            MySession session = mMatchingUsers[requestBody.toUserPk].sessionInfo;
-
-            Header responseMsg = new Header();
-            responseMsg.Cmd = NetCMD.EndGame;
-            responseMsg.RequestID = -1;
-            responseMsg.Ack = 0;
-            responseMsg.UserPk = mRequestMsg.UserPk;
-            responseMsg.body = requestBody;
-            session.data = NetProtocol.ToArray(responseMsg);
-
-            mServer.SendData(session);
-        }
-        return requestBody;
     }
 
     private IEnumerator SearchMatching(int userPK)

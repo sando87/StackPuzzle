@@ -10,7 +10,11 @@ using UnityEngine;
 public enum NetCMD
 {
     Undef, AddUser, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
-    SearchOpponent, StopMatching, GetInitField, NextProducts, SendSwipe, EndGame, SendChoco
+    SearchOpponent, StopMatching, PVP
+}
+public enum PVPCommand
+{
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame
 }
 
 public class ServerField
@@ -22,42 +26,6 @@ public class ServerField
     public bool skipBotPlayer = false;
     public MySession sessionInfo = null;
     public Header requestMsg = null;
-    public ProductColor[,] initField = null;
-    public List<ProductColor> nextColors = new List<ProductColor>();
-    public ProductColor[,] GetInitField(int xCount, int yCount)
-    {
-        if(initField == null)
-        {
-            initField = new ProductColor[xCount, yCount];
-            for(int y = 0; y < yCount; ++y)
-                for (int x = 0; x < xCount; ++x)
-                    initField[x, y] = (ProductColor)RandomNextColor();
-        }
-
-        return initField;
-    }
-    public ProductColor[] GetNextColors(int offset, int count)
-    {
-        if (nextColors.Count < offset + count)
-        {
-            int n = offset + count - nextColors.Count;
-            for (int i = 0; i < n; ++i)
-                nextColors.Add((ProductColor)RandomNextColor());
-        }
-        return nextColors.GetRange(offset, count).ToArray();
-    }
-    private int RandomNextColor()
-    {
-        int count = (int)(colorCount + 0.99f);
-        float remain = colorCount - (int)colorCount;
-        int idx = UnityEngine.Random.Range(0, count);
-        if(remain > 0 && idx == count - 1)
-        {
-            if(remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
-                idx = UnityEngine.Random.Range(0, count - 1);
-        }
-        return idx + 1;
-    }
 }
 
 public class NetProtocol
@@ -161,6 +129,15 @@ public class UserInfo
 }
 
 [Serializable]
+public class ProductInfo
+{
+    public ProductColor color = ProductColor.None;
+    public int idxX = 0;
+    public int idxY = 0;
+    public ProductInfo(int x, int y, ProductColor c) { idxX = x; idxY = y; color = c; }
+}
+
+[Serializable]
 public class LogInfo
 {
     public int userPk;
@@ -223,4 +200,17 @@ public class ChocoInfo
     public int toUserPk;
     public int[] xIndicies;
     public int[] yIndicies;
+}
+[Serializable]
+public class PVPInfo
+{
+    public PVPCommand cmd;
+    public int oppUserPk;
+    public int XCount;
+    public int YCount;
+    public float colorCount;
+    public bool success;
+    public SwipeDirection dir;
+    public UserInfo userInfo;
+    public ProductInfo[] products;
 }

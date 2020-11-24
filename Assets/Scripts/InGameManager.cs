@@ -27,6 +27,7 @@ public class InGameManager : MonoBehaviour
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
+    private UserInfo mUserInfo = null;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private List<Frame> mEmptyFrames = new List<Frame>();
@@ -43,7 +44,9 @@ public class InGameManager : MonoBehaviour
     public int CountY { get { return mStageInfo.YCount; } }
     public bool MatchLock { get; set; }
     public bool Pause { get; set; }
+    public int UserPk { get { return mUserInfo.userPk; } }
     public AttackPoints AttackPoints { get; set; }
+    public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
     
 
@@ -53,7 +56,12 @@ public class InGameManager : MonoBehaviour
     public Action EventReduceLimit;
     private Action EventEnterIdle;
 
-    public void StartGame(StageInfo info)
+    //MenuInGame Start End
+    //MenuBattle Start End
+    //FinishGame Corotine
+    //FlushCocho Corotine
+
+    public void StartGame(StageInfo info, UserInfo userInfo)
     {
         ResetGame();
         Vector3 pos = transform.position;
@@ -61,6 +69,7 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(true);
         Pause = false;
         mStageInfo = info;
+        mUserInfo = userInfo;
 
         //GameObject mask = Instantiate(MaskPrefab, transform);
         //mask.transform.localScale = new Vector3(info.XCount * 0.97f, info.YCount * 0.97f, 1);
@@ -93,12 +102,6 @@ public class InGameManager : MonoBehaviour
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(mFrames[x, y].transform.position, StageGoalType.Cover);
                 };
-                Product pro = CreateNewProduct(mFrames[x, y]);
-                pro.SetChocoBlock(info.GetCell(x, y).ProductChocoCount);
-                pro.EventUnWrapChoco = () => {
-                    Billboard.ChocoCount++;
-                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
-                };
             }
         }
 
@@ -108,23 +111,46 @@ public class InGameManager : MonoBehaviour
         ap.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
         AttackPoints = ap.GetComponent<AttackPoints>();
     }
+    public void InitProducts()
+    {
+        List<Product> initProducts = new List<Product>();
+        for (int y = 0; y < CountY; y++)
+        {
+            for (int x = 0; x < CountX; x++)
+            {
+                if (mFrames[x, y].Empty)
+                    continue;
+
+                Product pro = CreateNewProduct(mFrames[x, y]);
+                pro.SetChocoBlock(mStageInfo.GetCell(x, y).ProductChocoCount);
+                pro.EventUnWrapChoco = () => {
+                    Billboard.ChocoCount++;
+                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
+                };
+                initProducts.Add(pro);
+            }
+        }
+
+        Network_StartGame(initProducts.ToArray());
+    }
     public void FinishGame(bool success)
     {
         if (!transform.parent.gameObject.activeSelf)
             return;
 
+        Network_EndGame(success);
         EventFinish?.Invoke(success);
         ResetGame();
         transform.parent.gameObject.SetActive(false);
     }
 
 
-    public void OnClick(GameObject obj)
+    public void OnClick(GameObject clickedObj)
     {
         if (!IsIdle)
             return;
 
-        Product pro = obj.GetComponent<Product>();
+        Product pro = clickedObj.GetComponent<Product>();
         List<Product> matches = new List<Product>();
         pro.SearchMatchedProducts(matches, pro.mColor);
         if (matches.Count < UserSetting.MatchCount)
@@ -136,11 +162,12 @@ public class InGameManager : MonoBehaviour
         IsIdle = false;
         DestroyProducts(matches);
         StartCoroutine(TryDestroyAroundEmpty(1.0f));
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
         RemoveLimit();
     }
-    public void OnSwipe(GameObject obj, SwipeDirection dir)
+    public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
-        Product product = obj.GetComponent<Product>();
+        Product product = swipeObj.GetComponent<Product>();
         Product targetProduct = null;
         switch (dir)
         {
@@ -153,6 +180,7 @@ public class InGameManager : MonoBehaviour
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
         {
             RemoveLimit();
+            Network_Swipe(product, dir);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
         }
@@ -160,7 +188,6 @@ public class InGameManager : MonoBehaviour
     private void DestroyProducts(List<Product> matches)
     {
         Product mainProduct = matches[0];
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         int addedScore = 0;
         foreach (Product pro in matches)
@@ -172,11 +199,15 @@ public class InGameManager : MonoBehaviour
             BreakItemSkill(pro);
         }
 
-        ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
+        if (FieldType == GameFieldType.Stage)
+            ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
+        else
+            Attack(addedScore, mainProduct.transform.position);
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Count;
 
+        Network_Destroy(matches.ToArray());
         EventDestroyed?.Invoke(matches.ToArray());
     }
     private IEnumerator TryDestroyAroundEmpty(float delay)
@@ -213,6 +244,7 @@ public class InGameManager : MonoBehaviour
             }
 
             StartCoroutine(TryDestroyAroundEmpty(delay));
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
         }
         else
         {
@@ -226,11 +258,14 @@ public class InGameManager : MonoBehaviour
     }
     void CreateNewProducts(Frame[] emptyFrames)
     {
+        List<Product> newProducts = new List<Product>();
         foreach(Frame frame in emptyFrames)
         {
             Product newProduct = CreateNewProduct(frame);
             newProduct.mAnimation.Play("swap");
+            newProducts.Add(newProduct);
         }
+        Network_Create(newProducts.ToArray());
 
         StartCoroutine(Utils.CallAfterSeconds(1.0f, () =>
         {
@@ -297,15 +332,112 @@ public class InGameManager : MonoBehaviour
 
         return;
     }
+    void CheckPVPFinish()
+    {
+        if(Opponent.AttackPoints.Count > 200)
+        {
+            FinishGame(true);
+            return;
+        }
+
+        Dictionary<ProductColor, int> colorCount = new Dictionary<ProductColor, int>();
+        foreach (Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro == null || pro.IsChocoBlock())
+                continue;
+
+            if (colorCount.ContainsKey(pro.mColor))
+                colorCount[pro.mColor] += 1;
+            else
+                colorCount[pro.mColor] = 1;
+
+            if (colorCount[pro.mColor] >= UserSetting.MatchCount)
+                return;
+        }
+
+        FinishGame(false);
+        return;
+    }
+    private void Attack(int score, Vector3 fromPos)
+    {
+        int point = score / UserSetting.AttackScore;
+        if (point <= 0)
+            return;
+
+        int remainPt = AttackPoints.Count;
+        if (remainPt <= 0)
+        {
+            Opponent.Damaged(point, fromPos);
+        }
+        else
+        {
+            AttackPoints.Add(-point, fromPos);
+        }
+    }
+    private void Damaged(int point, Vector3 fromPos)
+    {
+        AttackPoints.Add(point, fromPos);
+        StartCoroutine("FlushAttacks");
+    }
+    private IEnumerator FlushAttacks()
+    {
+        while (AttackPoints.Count > 0)
+        {
+            if (AttackPoints.IsReady && IsIdle)
+            {
+                int cnt = AttackPoints.Pop(UserSetting.FlushCount);
+                List<Product> products = GetNextFlushTargets(cnt);
+                Network_FlushAttacks(products.ToArray());
+                foreach (Product pro in products)
+                    pro.SetChocoBlock(1, true);
+
+                yield return new WaitForSeconds(2.0f);
+            }
+            else
+                yield return null;
+
+        }
+    }
+    private List<Product> GetNextFlushTargets(int cnt)
+    {
+        float xCenter = (CountX - 1.0f) * 0.5f;
+        float yCenter = (CountY - 1.0f) * 0.5f;
+        List<Product> products = new List<Product>();
+        for (int y = 0; y < CountY; ++y)
+        {
+            for (int x = 0; x < CountX; ++x)
+            {
+                Product pro = mFrames[x, y].ChildProduct;
+                if (pro == null || pro.IsChocoBlock())
+                    continue;
+
+                float distX = Math.Abs(xCenter - x);
+                float distY = Math.Abs(yCenter - y);
+                float max = Math.Max(distX, distY);
+                float weight = max + UnityEngine.Random.Range(-0.4f, 0.4f);
+                pro.Weight = weight;
+                products.Add(pro);
+            }
+        }
+
+        products.Sort((lsb, msb) =>
+        {
+            return lsb.Weight - msb.Weight > 0 ? -1 : 1;
+        });
+        return (products.Count < cnt) ? products : products.GetRange(0, cnt);
+    }
     public void HandlerNetworkMessage(Header responseMsg)
     {
         if (!gameObject.activeInHierarchy)
             return;
         if (responseMsg.Ack == 1)
             return;
+        if (responseMsg.Cmd != NetCMD.PVP)
+            return;
 
-
-        if (responseMsg.Cmd == NetCMD.EndGame)
+        PVPInfo body = (PVPInfo)responseMsg.body;
+        if (body.cmd == PVPCommand.EndGame)
         {
             mNetMessages.AddFirst(responseMsg);
         }
@@ -324,31 +456,73 @@ public class InGameManager : MonoBehaviour
                 continue;
 
             Header msg = mNetMessages.First.Value;
-            if (msg.Cmd == NetCMD.EndGame)
+            PVPInfo body = (PVPInfo)msg.body;
+            if (body.cmd == PVPCommand.EndGame)
             {
-                EndGame res = msg.body as EndGame;
-                FinishGame(!res.win);
+                FinishGame(!body.success);
             }
-            else if (msg.Cmd == NetCMD.SendSwipe)
+            else if(body.cmd == PVPCommand.StartGame)
             {
-                SwipeInfo res = msg.body as SwipeInfo;
-                Product pro = mFrames[res.idxX, res.idxY].ChildProduct;
-                if (res.isClick)
-                    OnClick(pro.gameObject);
-                else
-                    OnSwipe(pro.gameObject, res.dir);
-
+                foreach(ProductInfo info in body.products)
+                {
+                    Frame frame = GetFrame(info.idxX, info.idxY);
+                    Product pro = CreateNewProduct(frame, info.color);
+                    pro.SetChocoBlock(0);
+                    pro.EventUnWrapChoco = () => {
+                        Billboard.ChocoCount++;
+                        EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
+                    };
+                }
+            }
+            else if (body.cmd == PVPCommand.Click)
+            {
+                //if(IsIdle)
+                //{
+                //    Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
+                //    OnClick(pro.gameObject);
+                //    mNetMessages.RemoveFirst();
+                //}
                 mNetMessages.RemoveFirst();
             }
-            else if (msg.Cmd == NetCMD.SendChoco)
+            else if (body.cmd == PVPCommand.Swipe)
             {
-                ChocoInfo res = msg.body as ChocoInfo;
-                AttackPoints.Pop(res.xIndicies.Length);
-                for (int i = 0; i < res.xIndicies.Length; ++i)
+                Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
+                OnSwipe(pro.gameObject, body.dir);
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.Destroy)
+            {
+                List<Product> products = new List<Product>();
+                foreach (ProductInfo info in body.products)
                 {
-                    int idxX = res.xIndicies[i];
-                    int idxY = res.yIndicies[i];
-                    Product pro = GetFrame(idxX, idxY).ChildProduct;
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                    if(pro != null && !pro.IsLocked())
+                        products.Add(pro);
+                }
+
+                if(products.Count == body.products.Length)
+                {
+                    DestroyProducts(products);
+                    mEmptyFrames.Clear();
+                    mNetMessages.RemoveFirst();
+                }
+            }
+            else if (body.cmd == PVPCommand.Create)
+            {
+                foreach (ProductInfo info in body.products)
+                {
+                    Frame frame = GetFrame(info.idxX, info.idxY);
+                    Product newProduct = CreateNewProduct(frame, info.color);
+                    newProduct.mAnimation.Play("swap");
+                }
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.FlushAttacks)
+            {
+                AttackPoints.Pop(body.products.Length);
+                foreach (ProductInfo info in body.products)
+                {
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
                     pro.SetChocoBlock(1, true);
                 }
 
@@ -491,14 +665,13 @@ public class InGameManager : MonoBehaviour
         mask.backSortingOrder = layerOrder;
         return mask;
     }
-    private Product CreateNewProduct(Frame parent, ProductSkill skill = ProductSkill.Nothing)
+    private Product CreateNewProduct(Frame parent, ProductColor color = ProductColor.None)
     {
-        int typeIdx = RandomNextColor();
+        int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
-        product.ChangeSkilledProduct(skill);
         return product;
     }
     private int RandomNextColor()
@@ -520,15 +693,25 @@ public class InGameManager : MonoBehaviour
         for (int i = 0; i < cnt; ++i)
             Destroy(transform.GetChild(i).gameObject);
 
-        mNextSkills.Clear();
-        mEmptyFrames.Clear();
+        EventBreakTarget = null;
+        EventDestroyed = null;
+        EventFinish = null;
+        EventReduceLimit = null;
+        EventEnterIdle = null;
 
-        mFrames = null;
-        mStageInfo = null;
+        AttackPoints = null;
         Pause = false;
         MatchLock = false;
         IsIdle = true;
+
         Billboard.Reset();
+        mNetMessages.Clear();
+        mEmptyFrames.Clear();
+        mNextSkills.Clear();
+
+        mFrames = null;
+        mUserInfo = null;
+        mStageInfo = null;
     }
     public Frame GetFrame(int x, int y)
     {
@@ -564,5 +747,96 @@ public class InGameManager : MonoBehaviour
         return ret;
     }
 
+    ProductInfo[] Serialize(Product[] pros)
+    {
+        List<ProductInfo> list = new List<ProductInfo>();
+        foreach (Product pro in pros)
+            list.Add(new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor));
+        return list.ToArray();
+    }
+    void Network_StartGame(Product[] pros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.StartGame;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.XCount = CountX;
+        req.YCount = CountY;
+        req.colorCount = mStageInfo.ColorCount;
+        req.products = Serialize(pros);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_Click(Product pro)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.Click;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.products = new ProductInfo[1];
+        req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_Swipe(Product pro, SwipeDirection dir)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.Swipe;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.dir = dir;
+        req.products = new ProductInfo[1];
+        req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_Destroy(Product[] pros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.Destroy;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.products = Serialize(pros);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_Create(Product[] pros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.Create;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.products = Serialize(pros);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_FlushAttacks(Product[] pros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.FlushAttacks;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.products = Serialize(pros);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    void Network_EndGame(bool success)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.EndGame;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.success = success;
+        req.userInfo = UserSetting.UserInfo;
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
 
 }
