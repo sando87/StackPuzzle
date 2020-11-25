@@ -13,6 +13,7 @@ namespace ServerApp
     class ClientInfo
     {
         public TcpClient tcpClient = null;
+        public NetworkStream stream = null;
         public string endPoint = "";
         public RingBuffer ringBuffer = null;
         public byte[] recvBuffer = null;
@@ -41,7 +42,10 @@ namespace ServerApp
         public void CloseServer()
         {
             foreach (var each in mClients)
+            {
+                each.Value.stream.Close();
                 each.Value.tcpClient.Close();
+            }
             mClients.Clear();
 
             if (mListener != null)
@@ -58,9 +62,7 @@ namespace ServerApp
             try
             {
                 ClientInfo info = mClients[endPoint];
-                NetworkStream stream = info.tcpClient.GetStream();
-                stream.Write(data, 0, data.Length);
-                stream.Close();
+                info.stream.Write(data, 0, data.Length);
                 return data.Length;
             }
             catch (SocketException ex) { LOG.warn(ex.Message); DisConnectClinet(endPoint); }
@@ -81,14 +83,13 @@ namespace ServerApp
 
                     ClientInfo info = new ClientInfo();
                     info.tcpClient = tc;
+                    info.stream = tc.GetStream();
                     info.endPoint = ((System.Net.IPEndPoint)tc.Client.RemoteEndPoint).Address.ToString();
                     info.ringBuffer = new RingBuffer();
                     info.recvBuffer = new byte[RECV_BUFSIZE];
                     mClients[info.endPoint] = info;
 
-                    NetworkStream stream = tc.GetStream();
-                    stream.BeginRead(info.recvBuffer, 0, info.recvBuffer.Length, new AsyncCallback(HandlerReadData), info);
-                    stream.Close();
+                    info.stream.BeginRead(info.recvBuffer, 0, info.recvBuffer.Length, new AsyncCallback(HandlerReadData), info);
                 }
             }
             catch (SocketException ex) { LOG.warn(ex.Message); }
@@ -99,8 +100,7 @@ namespace ServerApp
             ClientInfo retInfo = (ClientInfo)ar.AsyncState;
             try
             {
-                NetworkStream stream = retInfo.tcpClient.GetStream();
-                int recvBytes = stream.EndRead(ar);
+                int recvBytes = retInfo.stream.EndRead(ar);
                 if (recvBytes <= 0)
                 {
                     DisConnectClinet(retInfo.endPoint);
@@ -115,8 +115,7 @@ namespace ServerApp
                 foreach (byte[] message in messages)
                     EventRecvMsg?.Invoke(message, retInfo.endPoint);
 
-                stream.BeginRead(retInfo.recvBuffer, 0, retInfo.recvBuffer.Length, new AsyncCallback(HandlerReadData), retInfo);
-                stream.Close();
+                retInfo.stream.BeginRead(retInfo.recvBuffer, 0, retInfo.recvBuffer.Length, new AsyncCallback(HandlerReadData), retInfo);
             }
             catch (SocketException ex) { LOG.warn(ex.Message); DisConnectClinet(retInfo.endPoint); }
             catch (Exception ex) { LOG.warn(ex.Message); DisConnectClinet(retInfo.endPoint); }
@@ -128,7 +127,7 @@ namespace ServerApp
 
             ClientInfo info;
             mClients.TryRemove(endPoint, out info);
-            info = mClients[endPoint];
+            info.stream.Close();
             info.tcpClient.Close();
             LOG.warn("Disconnect " + endPoint);
         }
@@ -143,6 +142,9 @@ namespace ServerApp
             while (true)
             {
                 byte[] head = ringBuffer.readSize(headerSize);
+                if (head == null)
+                    break;
+
                 if (!IsValid.Invoke(head))
                 {
                     LOG.warn("ParseToMessages Error");
