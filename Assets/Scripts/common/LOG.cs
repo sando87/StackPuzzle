@@ -69,7 +69,8 @@ class LOG
     }
     static void AddLog(string msg)
     {
-        mQueue.Enqueue(msg);
+        if(mRunFlag)
+            mQueue.Enqueue(msg);
     }
     static void FlushQueue()
     {

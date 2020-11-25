@@ -150,7 +150,7 @@ public class NetClientApp : MonoBehaviour
 
         try
         {
-            List<byte[]> messages = NetProtocol.Split(mRecvBuffer.ToArray());
+            List<byte[]> messages = NetProtocol.SplitBuffer(mRecvBuffer.ToArray());
             foreach (byte[] msg in messages)
             {
                 mRecvBuffer.RemoveRange(0, msg.Length);

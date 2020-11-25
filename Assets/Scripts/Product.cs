@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProductColor { None, Blue, Green, Orange, Purple, Red, Yellow };
 public enum ProductSkill { Nothing, OneMore, KeepCombo, SameColor };
 
 public class Product : MonoBehaviour
@@ -245,7 +244,7 @@ public class Product : MonoBehaviour
         obj.GetComponent<Numbers>().Number = Combo;
 
         Vector3 destPos = startPos + new Vector3(0, UserSetting.GridSize * 0.5f, 0);
-        StartCoroutine(Utils.AnimateConvex(obj, destPos, 0.7f, () => {
+        StartCoroutine(UnityUtils.AnimateConvex(obj, destPos, 0.7f, () => {
             Destroy(obj);
         }));
     }

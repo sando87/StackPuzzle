@@ -146,7 +146,7 @@ public class MenuBattle : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(Utils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
+        StartCoroutine(UnityUtils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
         {
             NextCombo = nextCombo;
             Destroy(obj);
@@ -162,7 +162,7 @@ public class MenuBattle : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
         Image img = obj.GetComponent<Image>();
         img.sprite = product.Renderer.sprite;
-        StartCoroutine(Utils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>
+        StartCoroutine(UnityUtils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>
         {
             CurrentCombo++;
             Destroy(obj);

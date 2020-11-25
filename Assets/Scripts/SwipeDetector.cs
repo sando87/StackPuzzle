@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum SwipeDirection { UP, DOWN, LEFT, RIGHT };
 
 public class SwipeDetector : MonoBehaviour
 {

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using UnityEngine;
 
 
 public enum NetCMD
@@ -16,48 +11,30 @@ public enum PVPCommand
 {
     Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame
 }
-
-public class ServerField
+public enum ProductColor
 {
-    public bool isMatching = false;
-    public int userPK = 0;
-    public UserInfo userInfo = null;
-    public float colorCount = 0;
-    public bool skipBotPlayer = false;
-    public MySession sessionInfo = null;
-    public Header requestMsg = null;
-}
+    None, Blue, Green, Orange, Purple, Red, Yellow
+};
+public enum SwipeDirection
+{
+    UP, DOWN, LEFT, RIGHT
+};
 
 public class NetProtocol
 {
+    public const UInt32 MAGIC = 0x12345678;
     public const int recvBufSize = 1024 * 64;
     static public int HeadSize()
     {
         return 28;
     }
+    static public bool IsValid(byte[] msg, int offset = 0)
+    {
+        return NetProtocol.MAGIC == BitConverter.ToInt32(msg, offset);
+    }
     static public int Length(byte[] msg, int offset = 0)
     {
-        if (offset + HeadSize() > msg.Length)
-            return -1;
-
         return BitConverter.ToInt32(msg, offset + 16);
-    }
-    static public List<byte[]> Split(byte[] recvBuf)
-    {
-        int offset = 0;
-        List<byte[]> messages = new List<byte[]>();
-        while (true)
-        {
-            int length = NetProtocol.Length(recvBuf, offset);
-            if (length <= 0 || offset + length > recvBuf.Length)
-                break;
-
-            byte[] buf = new byte[length];
-            Array.Copy(recvBuf, offset, buf, 0, length);
-            messages.Add(buf);
-            offset += length;
-        }
-        return messages;
     }
     static public byte[] ToArray(Header msg)
     {
@@ -102,12 +79,41 @@ public class NetProtocol
         }
         return msg;
     }
+    static public List<byte[]> SplitBuffer(byte[] buffer)
+    {
+        List<byte[]> messages = new List<byte[]>();
+
+        int headerSize = HeadSize();
+        if (buffer.Length < headerSize)
+            return messages;
+
+        int offset = 0;
+        while (true)
+        {
+            if (IsValid(buffer, offset))
+            {
+                LOG.warn("SplitBuffer Invalid data");
+                break;
+            }
+
+            int len = Length(buffer, offset);
+            if (offset + len > buffer.Length)
+                break;
+
+            byte[] msg = new byte[len];
+            Array.Copy(buffer, offset, msg, 0, len);
+            messages.Add(msg);
+            offset += len;
+        }
+
+        return messages;
+    }
 }
 
 [Serializable]
 public class Header
 {
-    public UInt32 Magic = 0x12345678;
+    public UInt32 Magic = NetProtocol.MAGIC;
     public NetCMD Cmd = NetCMD.Undef;
     public Int64 RequestID = -1;
     public int Length = 0;
@@ -152,6 +158,7 @@ public class SearchOpponentInfo
     public UserInfo oppUser;
     public float oppColorCount;
     public bool isDone;
+    public bool isBotPlayer;
 }
 
 [Serializable]

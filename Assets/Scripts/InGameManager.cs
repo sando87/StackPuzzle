@@ -268,7 +268,7 @@ public class InGameManager : MonoBehaviour
             Billboard.CurrentCombo = 0;
         }
 
-        StartCoroutine(Utils.CallAfterSeconds(0.5f, () =>
+        StartCoroutine(UnityUtils.CallAfterSeconds(0.5f, () =>
         {
             CreateNewProducts(emptyFrames);
         }));
