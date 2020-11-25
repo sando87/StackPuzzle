@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 
 public class Utils
@@ -21,6 +22,23 @@ public class Utils
             LOG.warn(ex.Message);
         }
         return null;
+    }
+    static public byte[] Serialize2(object obj)
+    {
+        var buffer = new byte[Marshal.SizeOf(obj)];
+        var gch = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        var pBuffer = gch.AddrOfPinnedObject();
+        Marshal.StructureToPtr(obj, pBuffer, false);
+        gch.Free();
+
+        return buffer;
+    }
+    static public T Deserialize2<T>(ref byte[] data)
+    {
+        var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
+        T obj = Marshal.PtrToStructure<T>(gch.AddrOfPinnedObject());
+        gch.Free();
+        return obj;
     }
     public static T Deserialize<T>(byte[] byteArray, int off = 0) where T : class
     {

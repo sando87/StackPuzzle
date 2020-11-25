@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Runtime.InteropServices;
 
 public enum NetCMD
 {
@@ -110,7 +110,8 @@ public class NetProtocol
     }
 }
 
-[Serializable]
+//[Serializable]
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class Header
 {
     public UInt32 Magic = NetProtocol.MAGIC;
@@ -122,15 +123,18 @@ public class Header
     public object body = null;
 }
 
-[Serializable]
+//[Serializable]
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class UserInfo
 {
     public int userPk = -1;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public String userName = "No Name";
     public int score = 100;
     public int win = 0;
     public int lose = 0;
     public int total = 0;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public String deviceName = "";
 }
 
@@ -150,7 +154,8 @@ public class LogInfo
     public String message;
 }
 
-[Serializable]
+//[Serializable]
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo
 {
     public int userPk;
