@@ -119,35 +119,35 @@ namespace ServerApp
             requestBody.userPk = usePk;
             return requestBody;
         }
-        private string ProcEditUserName(UserInfo requestBody)
+        private UserInfo ProcEditUserName(UserInfo requestBody)
         {
             DBManager.Inst().EditUserName(requestBody);
-            return "OK";
+            return requestBody;
         }
-        private string ProcDelUser(UserInfo requestBody)
+        private UserInfo ProcDelUser(UserInfo requestBody)
         {
             DBManager.Inst().DeleteUser(requestBody.userPk);
-            return "OK";
+            return requestBody;
         }
         private UserInfo ProcGetUser(UserInfo requestBody)
         {
             requestBody = DBManager.Inst().GetUser(requestBody.userPk);
             return requestBody;
         }
-        private string ProcRenewScore(UserInfo requestBody)
+        private UserInfo ProcRenewScore(UserInfo requestBody)
         {
             DBManager.Inst().RenewUserScore(requestBody.userPk, requestBody.score);
-            return "OK";
+            return requestBody;
         }
         private UserInfo[] ProcGetUsers()
         {
             UserInfo[] users = DBManager.Inst().GetUsers();
             return users;
         }
-        private string ProcAddLog(LogInfo requestBody)
+        private LogInfo ProcAddLog(LogInfo requestBody)
         {
             DBManager.Inst().AddLog(requestBody);
-            return "OK";
+            return requestBody;
         }
 
         private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody)
@@ -224,7 +224,7 @@ namespace ServerApp
                 if (!mMatchingUsers.ContainsKey(userPk))
                     continue;
 
-                float waitSec = (DateTime.Now.Ticks - user.startTick) / 1000.0f;
+                float waitSec = (float) new TimeSpan(DateTime.Now.Ticks - user.startTick).TotalSeconds;
                 if (waitSec > 20)
                 {
                     SendOppoentInfo(user, null);
@@ -268,7 +268,7 @@ namespace ServerApp
             SearchOpponentInfo body = new SearchOpponentInfo();
             body.userPk = user.userPK;
             body.colorCount = user.colorCount;
-            body.oppUser = opponent == null ? null : opponent.userInfo;
+            body.oppUser = opponent == null ? new UserInfo() : opponent.userInfo;
             body.oppColorCount = opponent == null ? -1 : opponent.colorCount;
             body.isDone = true;
             body.isBotPlayer = user.isBotPlayer;
