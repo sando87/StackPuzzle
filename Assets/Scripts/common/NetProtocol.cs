@@ -145,11 +145,11 @@ public class UserInfo
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
-public class ProductInfo
+public struct ProductInfo
 {
-    public ProductColor color = ProductColor.None;
-    public int idxX = 0;
-    public int idxY = 0;
+    public ProductColor color;
+    public int idxX;
+    public int idxY;
     public ProductInfo(int x, int y, ProductColor c) { idxX = x; idxY = y; color = c; }
 }
 

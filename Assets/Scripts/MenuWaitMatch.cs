@@ -133,7 +133,7 @@ public class MenuWaitMatch : MonoBehaviour
             SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
             if (res.isDone && mIsSearching)
             {
-                if (res.oppUser == null)
+                if (res.oppUser.userPk == -1)
                 {
                     FailMatch();
 

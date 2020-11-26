@@ -92,6 +92,7 @@ public class InGameManager : MonoBehaviour
         }
         else if (FieldType == GameFieldType.pvpOpponent)
         {
+            transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
             StartCoroutine(ProcessNetMessages());
         }
 
@@ -339,7 +340,8 @@ public class InGameManager : MonoBehaviour
     private void Damaged(int point, Vector3 fromPos)
     {
         AttackPoints.Add(point, fromPos);
-        StartCoroutine("FlushAttacks");
+        if(FieldType == GameFieldType.pvpPlayer)
+            StartCoroutine("FlushAttacks");
     }
     private IEnumerator FlushAttacks()
     {
@@ -425,8 +427,9 @@ public class InGameManager : MonoBehaviour
             }
             else if(body.cmd == PVPCommand.StartGame)
             {
-                foreach(ProductInfo info in body.products)
+                for (int i = 0; i < body.ArrayCount; ++i)
                 {
+                    ProductInfo info = body.products[i];
                     Frame frame = GetFrame(info.idxX, info.idxY);
                     Product pro = CreateNewProduct(frame, info.color);
                     pro.GetComponent<BoxCollider2D>().enabled = false;
@@ -457,15 +460,15 @@ public class InGameManager : MonoBehaviour
             else if (body.cmd == PVPCommand.Destroy)
             {
                 List<Product> products = new List<Product>();
-                foreach (ProductInfo info in body.products)
+                for (int i = 0; i < body.ArrayCount; ++i)
                 {
+                    ProductInfo info = body.products[i];
                     Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if(pro != null && !pro.IsLocked() && info.color == pro.mColor)
+                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
                         products.Add(pro);
                 }
 
-                
-                if(products.Count == body.products.Length)
+                if (products.Count == body.ArrayCount)
                 {
                     Billboard.CurrentCombo = body.combo;
                     DestroyProducts(products);
@@ -475,8 +478,9 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Create)
             {
-                foreach (ProductInfo info in body.products)
+                for (int i = 0; i < body.ArrayCount; ++i)
                 {
+                    ProductInfo info = body.products[i];
                     Frame frame = GetFrame(info.idxX, info.idxY);
                     Product newProduct = CreateNewProduct(frame, info.color);
                     newProduct.GetComponent<BoxCollider2D>().enabled = false;
@@ -486,9 +490,10 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                AttackPoints.Pop(body.products.Length);
-                foreach (ProductInfo info in body.products)
+                AttackPoints.Pop(body.ArrayCount);
+                for (int i = 0; i < body.ArrayCount; ++i)
                 {
+                    ProductInfo info = body.products[i];
                     Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
                     pro.SetChocoBlock(1, true);
                 }
@@ -776,8 +781,8 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.XCount = CountX;
         req.YCount = CountY;
-        req.combo = pros[0].Combo;
         req.colorCount = mStageInfo.ColorCount;
+        req.combo = 0;
         req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
 
@@ -791,6 +796,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Click;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = pro.Combo;
+        req.ArrayCount = 1;
         req.products = new ProductInfo[1];
         req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
@@ -803,6 +810,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Swipe;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = pro.Combo;
+        req.ArrayCount = 1;
         req.dir = dir;
         req.products = new ProductInfo[1];
         req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
@@ -816,6 +825,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Destroy;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = pros[0].Combo;
+        req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
@@ -827,6 +838,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Create;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = 0;
+        req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
@@ -838,6 +851,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = pros[0].Combo;
+        req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
