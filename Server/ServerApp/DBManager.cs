@@ -37,9 +37,9 @@ namespace ServerApp
                 ";database=" + database +
                 ";username=" + userid +
                 ";password=" + password;
-            mDBSession = new NpgsqlConnection(connectParam);
             try
             {
+                mDBSession = new NpgsqlConnection(connectParam);
                 mDBSession.Open();
             }
             catch (NpgsqlException ex)

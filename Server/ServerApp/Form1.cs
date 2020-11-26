@@ -73,37 +73,39 @@ namespace ServerApp
             KeyValuePair<string, byte[]> pack = new KeyValuePair<string, byte[]>();
             while(mMessages.TryDequeue(out pack))
             {
-                Header requestMsg = NetProtocol.ToMessage(pack.Value);
+                byte[] body = null;
+                Header requestMsg = NetProtocol.ToMessage(pack.Value, out body);
 
                 mCurrentRequestMsg = requestMsg;
                 mCurrentEndPoint = pack.Key;
 
-                object body = null;
+                object resBody = null;
                 switch (requestMsg.Cmd)
                 {
-                    case NetCMD.Undef:          body = "Undefied Command"; break;
-                    case NetCMD.AddUser:        body = ProcAddUser(requestMsg.body as UserInfo); break;
-                    case NetCMD.EditUserName:   body = ProcEditUserName(requestMsg.body as UserInfo); break;
-                    case NetCMD.GetUser:        body = ProcGetUser(requestMsg.body as UserInfo); break;
-                    case NetCMD.DelUser:        body = ProcDelUser(requestMsg.body as UserInfo); break;
-                    case NetCMD.RenewScore:     body = ProcRenewScore(requestMsg.body as UserInfo); break;
-                    case NetCMD.GetScores:      body = ProcGetUsers(); break;
-                    case NetCMD.AddLog:         body = ProcAddLog(requestMsg.body as LogInfo); break;
-                    case NetCMD.SearchOpponent: body = ProcSearchOpponent(requestMsg.body as SearchOpponentInfo); break;
-                    case NetCMD.StopMatching:   body = ProcStopMatching(requestMsg.body as SearchOpponentInfo); break;
-                    case NetCMD.PVP:            body = ProcPVPCommand(requestMsg.body as PVPInfo); break;
-                    default:                    body = "Undefied Command"; break;
+                    case NetCMD.Undef: resBody = "Undefied Command"; break;
+                    case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.GetScores: resBody = ProcGetUsers(); break;
+                    case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
+                    case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                    case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                    case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
+                    default: resBody = "Undefied Command"; break;
                 }
 
-                if(body != null)
+                if (resBody != null)
                 {
                     Header responseMsg = new Header();
                     responseMsg.Cmd = requestMsg.Cmd;
                     responseMsg.RequestID = requestMsg.RequestID;
                     responseMsg.Ack = 1;
                     responseMsg.UserPk = requestMsg.UserPk;
-                    responseMsg.body = body;
-                    mServer.SendData(mCurrentEndPoint, NetProtocol.ToArray(responseMsg));
+
+                    byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
+                    mServer.SendData(mCurrentEndPoint, responseData);
                 }
             }
         }
@@ -198,9 +200,8 @@ namespace ServerApp
                 responseMsg.RequestID = -1;
                 responseMsg.Ack = 0;
                 responseMsg.UserPk = mCurrentRequestMsg.UserPk;
-                responseMsg.body = requestBody;
 
-                byte[] response = NetProtocol.ToArray(responseMsg);
+                byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(requestBody));
                 mServer.SendData(oppEndPoint, response);
             }
         }
@@ -277,9 +278,8 @@ namespace ServerApp
             responseMsg.RequestID = user.requestID;
             responseMsg.Ack = 1;
             responseMsg.UserPk = user.userPK;
-            responseMsg.body = body;
 
-            byte[] response = NetProtocol.ToArray(responseMsg);
+            byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(body));
             mServer.SendData(userEndPoint, response);
         }
     }

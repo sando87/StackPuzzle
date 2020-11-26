@@ -8,6 +8,9 @@ public class Utils
 {
     static public byte[] Serialize(object obj)
     {
+        if (obj == null)
+            return null;
+
         var buffer = new byte[Marshal.SizeOf(obj)];
         var gch = GCHandle.Alloc(buffer, GCHandleType.Pinned);
         var pBuffer = gch.AddrOfPinnedObject();

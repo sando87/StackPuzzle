@@ -36,19 +36,18 @@ public class NetProtocol
     {
         return BitConverter.ToInt32(msg, offset + 16);
     }
-    static public byte[] ToArray(Header msg)
+    static public byte[] ToArray(Header msg, byte[] body)
     {
         try
         {
             List<byte> buf = new List<byte>();
-            if (msg.bodyByteBuffer == null)
+            if (body == null)
             {
                 msg.Length = HeadSize();
                 buf.AddRange(Utils.Serialize(msg));
             }
             else
             {
-                byte[] body = (byte[])msg.bodyByteBuffer;
                 msg.Length = HeadSize() + body.Length;
                 buf.AddRange(Utils.Serialize(msg));
                 buf.AddRange(body);
@@ -62,7 +61,7 @@ public class NetProtocol
         }
         return null;
     }
-    static public Header ToMessage(byte[] buf)
+    static public Header ToMessage(byte[] buf, out byte[] body)
     {
         try
         {
@@ -73,12 +72,11 @@ public class NetProtocol
             int bodyLen = buf.Length - headSize;
             if (bodyLen > 0)
             {
-                byte[] body = new byte[bodyLen];
+                body = new byte[bodyLen];
                 Array.Copy(buf, headSize, body, 0, bodyLen);
-                msg.bodyByteBuffer = body;
             }
             else
-                msg.bodyByteBuffer = null;
+                body = null;
 
             return msg;
         }
@@ -86,6 +84,7 @@ public class NetProtocol
         {
             LOG.warn(ex.Message);
         }
+        body = null;
         return null;
     }
     static public List<byte[]> SplitBuffer(byte[] buffer)
@@ -130,7 +129,6 @@ public class Header
     public int UserPk = -1;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
     public string message = "";
-    public object bodyByteBuffer = null;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

@@ -389,24 +389,23 @@ public class InGameManager : MonoBehaviour
         return (products.Count < cnt) ? products : products.GetRange(0, cnt);
     }
 
-    public void HandlerNetworkMessage(Header responseMsg)
+    public void HandlerNetworkMessage(Header head, byte[] body)
     {
         if (!gameObject.activeInHierarchy)
             return;
-        if (responseMsg.Ack == 1)
+        if (head.Ack == 1)
             return;
-        if (responseMsg.Cmd != NetCMD.PVP)
+        if (head.Cmd != NetCMD.PVP)
             return;
 
-        byte[] msgbody = (byte[])responseMsg.bodyByteBuffer;
-        PVPInfo body = Utils.Deserialize<PVPInfo>(ref msgbody);
-        if (body.cmd == PVPCommand.EndGame)
+        PVPInfo resMsg = Utils.Deserialize<PVPInfo>(ref body);
+        if (resMsg.cmd == PVPCommand.EndGame)
         {
-            mNetMessages.AddFirst(body);
+            mNetMessages.AddFirst(resMsg);
         }
         else
         {
-            mNetMessages.AddLast(body);
+            mNetMessages.AddLast(resMsg);
         }
     }
     IEnumerator ProcessNetMessages()

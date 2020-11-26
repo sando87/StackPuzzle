@@ -26,7 +26,7 @@ public class NetClientApp : MonoBehaviour
     Dictionary<Int64, Action<byte[]>> mHandlerTable = new Dictionary<Int64, Action<byte[]>>();
 
     [Serializable]
-    public class UnityEventClick : UnityEvent<Header> { }
+    public class UnityEventClick : UnityEvent<Header, byte[]> { }
     public UnityEventClick EventMessage = null;
 
     private void OnDestroy()
@@ -60,10 +60,8 @@ public class NetClientApp : MonoBehaviour
             head.RequestID = mRequestID++;
             head.Ack = 0;
             head.UserPk = UserSetting.UserPK;
-            if (body != null)
-                head.bodyByteBuffer = Utils.Serialize(body);
 
-            byte[] data = NetProtocol.ToArray(head);
+            byte[] data = NetProtocol.ToArray(head, Utils.Serialize(body));
 
             mStream.Write(data, 0, data.Length);
 
@@ -156,17 +154,18 @@ public class NetClientApp : MonoBehaviour
             foreach (byte[] msg in messages)
             {
                 mRecvBuffer.RemoveRange(0, msg.Length);
-                Header recvMsg = NetProtocol.ToMessage(msg);
+                byte[] resBody = null;
+                Header recvMsg = NetProtocol.ToMessage(msg, out resBody);
                 if (recvMsg == null || recvMsg.Magic != 0x12345678)
                     continue;
 
                 if (mHandlerTable.ContainsKey(recvMsg.RequestID))
                 {
-                    mHandlerTable[recvMsg.RequestID]?.Invoke((byte[])recvMsg.bodyByteBuffer);
+                    mHandlerTable[recvMsg.RequestID]?.Invoke(resBody);
                     mHandlerTable.Remove(recvMsg.RequestID);
                 }
 
-                EventMessage?.Invoke(recvMsg);
+                EventMessage?.Invoke(recvMsg, resBody);
             }
 
             if(mRecvBuffer.Count != 0)
