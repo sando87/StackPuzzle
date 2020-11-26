@@ -30,10 +30,14 @@ public class NetProtocol
     }
     static public bool IsValid(byte[] msg, int offset = 0)
     {
+        if (offset + 4 > msg.Length)
+            return false;
         return NetProtocol.MAGIC == BitConverter.ToInt32(msg, offset);
     }
     static public int Length(byte[] msg, int offset = 0)
     {
+        if (offset + 16 + 4 > msg.Length)
+            return -1;
         return BitConverter.ToInt32(msg, offset + 16);
     }
     static public byte[] ToArray(Header msg, byte[] body)
@@ -66,9 +70,7 @@ public class NetProtocol
         try
         {
             int headSize = HeadSize();
-            byte[] head = new byte[headSize];
-            Array.Copy(buf, 0, head, 0, headSize);
-            Header msg = Utils.Deserialize<Header>(ref head);
+            Header msg = Utils.Deserialize<Header>(ref buf);
             int bodyLen = buf.Length - headSize;
             if (bodyLen > 0)
             {
@@ -98,14 +100,11 @@ public class NetProtocol
         int offset = 0;
         while (true)
         {
-            if (IsValid(buffer, offset))
-            {
-                LOG.warn("SplitBuffer Invalid data");
+            if (!IsValid(buffer, offset))
                 break;
-            }
 
             int len = Length(buffer, offset);
-            if (offset + len > buffer.Length)
+            if (len < 0 || offset + len > buffer.Length)
                 break;
 
             byte[] msg = new byte[len];

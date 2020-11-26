@@ -150,7 +150,15 @@ public class NetClientApp : MonoBehaviour
 
         try
         {
-            List<byte[]> messages = NetProtocol.SplitBuffer(mRecvBuffer.ToArray());
+            byte[] recvBuf = mRecvBuffer.ToArray();
+            if (!NetProtocol.IsValid(recvBuf))
+            {
+                LOG.warn("SplitBuffer Invalid data");
+                mRecvBuffer.Clear();
+                return;
+            }
+
+            List<byte[]> messages = NetProtocol.SplitBuffer(recvBuf);
             foreach (byte[] msg in messages)
             {
                 mRecvBuffer.RemoveRange(0, msg.Length);
