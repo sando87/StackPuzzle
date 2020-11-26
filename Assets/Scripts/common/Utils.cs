@@ -6,24 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class Utils
 {
-    public static byte[] Serialize(object source)
-    {
-        try
-        {
-            var formatter = new BinaryFormatter();
-            using (var stream = new MemoryStream())
-            {
-                formatter.Serialize(stream, source);
-                return stream.ToArray();
-            }
-        }
-        catch (Exception ex)
-        {
-            LOG.warn(ex.Message);
-        }
-        return null;
-    }
-    static public byte[] Serialize2(object obj)
+    static public byte[] Serialize(object obj)
     {
         var buffer = new byte[Marshal.SizeOf(obj)];
         var gch = GCHandle.Alloc(buffer, GCHandleType.Pinned);
@@ -33,32 +16,49 @@ public class Utils
 
         return buffer;
     }
-    static public T Deserialize2<T>(ref byte[] data)
+    static public T Deserialize<T>(ref byte[] data)
     {
         var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
         T obj = Marshal.PtrToStructure<T>(gch.AddrOfPinnedObject());
         gch.Free();
         return obj;
     }
-    public static T Deserialize<T>(byte[] byteArray, int off = 0) where T : class
-    {
-        try
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(byteArray, off, byteArray.Length - off);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = (T)binForm.Deserialize(memStream);
-                return obj;
-            }
-        }
-        catch (Exception ex)
-        {
-            LOG.warn(ex.Message);
-        }
-        return null;
-    }
+    //public static byte[] Serialize(object source)
+    //{
+    //    try
+    //    {
+    //        var formatter = new BinaryFormatter();
+    //        using (var stream = new MemoryStream())
+    //        {
+    //            formatter.Serialize(stream, source);
+    //            return stream.ToArray();
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        LOG.warn(ex.Message);
+    //    }
+    //    return null;
+    //}
+    //public static T Deserialize<T>(byte[] byteArray, int off = 0) where T : class
+    //{
+    //    try
+    //    {
+    //        using (var memStream = new MemoryStream())
+    //        {
+    //            var binForm = new BinaryFormatter();
+    //            memStream.Write(byteArray, off, byteArray.Length - off);
+    //            memStream.Seek(0, SeekOrigin.Begin);
+    //            var obj = (T)binForm.Deserialize(memStream);
+    //            return obj;
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        LOG.warn(ex.Message);
+    //    }
+    //    return null;
+    //}
     public static byte[] HexStringToByteArray(string hex)
     {
         return Enumerable.Range(0, hex.Length)

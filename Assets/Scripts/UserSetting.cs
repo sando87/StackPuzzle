@@ -103,9 +103,9 @@ public class UserSetting
         mUserInfo = LoadUserInfo();
         if(mUserInfo.userPk <= 0)
         {
-            NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_res) =>
+            NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>
             {
-                UserInfo res = (UserInfo)_res;
+                UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
                 if (res.userPk <= 0)
                     return;
 
@@ -197,9 +197,9 @@ public class UserSetting
             AutoBalancer.AutoBalance = true;
             if (mUserInfo.userPk <= 0)
             {
-                NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_res) =>
+                NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>
                 {
-                    UserInfo res = (UserInfo)_res;
+                    UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
                     if (res.userPk <= 0)
                         return;
 

@@ -126,11 +126,11 @@ public class MenuWaitMatch : MonoBehaviour
         info.userPk = UserSetting.UserPK;
         info.colorCount = 4.2f; // 4~6.0f
         info.oppUser = null;
-        info.oppColorCount = UserSetting.UserInfo.deviceName.Contains("home") ? -1 : 0; //temp skip bot player on/off
+        info.isBotPlayer = UserSetting.UserInfo.deviceName.Contains("home") ? true : false;
         info.isDone = false;
-        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_res) =>
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
         {
-            SearchOpponentInfo res = _res as SearchOpponentInfo;
+            SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
             if (res.isDone && mIsSearching)
             {
                 if (res.oppUser == null)

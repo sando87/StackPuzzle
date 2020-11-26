@@ -23,7 +23,7 @@ public class NetClientApp : MonoBehaviour
     NetworkStream mStream = null;
     private Int64 mRequestID = 0;
     private List<byte> mRecvBuffer = new List<byte>();
-    Dictionary<Int64, Action<object>> mHandlerTable = new Dictionary<Int64, Action<object>>();
+    Dictionary<Int64, Action<byte[]>> mHandlerTable = new Dictionary<Int64, Action<byte[]>>();
 
     [Serializable]
     public class UnityEventClick : UnityEvent<Header> { }
@@ -48,7 +48,7 @@ public class NetClientApp : MonoBehaviour
             mInst = GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
         return mInst;
     }
-    public bool Request(NetCMD cmd, object body, Action<object> response)
+    public bool Request(NetCMD cmd, object body, Action<byte[]> response)
     {
         if (mSession == null)
             return false;
@@ -60,7 +60,9 @@ public class NetClientApp : MonoBehaviour
             head.RequestID = mRequestID++;
             head.Ack = 0;
             head.UserPk = UserSetting.UserPK;
-            head.body = body;
+            if (body != null)
+                head.bodyByteBuffer = Utils.Serialize(body);
+
             byte[] data = NetProtocol.ToArray(head);
 
             mStream.Write(data, 0, data.Length);
@@ -160,7 +162,7 @@ public class NetClientApp : MonoBehaviour
 
                 if (mHandlerTable.ContainsKey(recvMsg.RequestID))
                 {
-                    mHandlerTable[recvMsg.RequestID]?.Invoke(recvMsg.body);
+                    mHandlerTable[recvMsg.RequestID]?.Invoke((byte[])recvMsg.bodyByteBuffer);
                     mHandlerTable.Remove(recvMsg.RequestID);
                 }
 

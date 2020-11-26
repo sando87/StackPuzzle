@@ -32,7 +32,7 @@ public class InGameManager : MonoBehaviour
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private List<Frame> mEmptyFrames = new List<Frame>();
-    private LinkedList<Header> mNetMessages = new LinkedList<Header>();
+    private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
     public InGameBillboard Billboard = new InGameBillboard();
 
     public GameFieldType FieldType { get {
@@ -398,14 +398,15 @@ public class InGameManager : MonoBehaviour
         if (responseMsg.Cmd != NetCMD.PVP)
             return;
 
-        PVPInfo body = (PVPInfo)responseMsg.body;
+        byte[] msgbody = (byte[])responseMsg.bodyByteBuffer;
+        PVPInfo body = Utils.Deserialize<PVPInfo>(ref msgbody);
         if (body.cmd == PVPCommand.EndGame)
         {
-            mNetMessages.AddFirst(responseMsg);
+            mNetMessages.AddFirst(body);
         }
         else
         {
-            mNetMessages.AddLast(responseMsg);
+            mNetMessages.AddLast(body);
         }
     }
     IEnumerator ProcessNetMessages()
@@ -417,8 +418,7 @@ public class InGameManager : MonoBehaviour
             if (mNetMessages.Count == 0)
                 continue;
 
-            Header msg = mNetMessages.First.Value;
-            PVPInfo body = (PVPInfo)msg.body;
+            PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.EndGame)
             {
                 EventFinish?.Invoke(body.success);
@@ -465,8 +465,10 @@ public class InGameManager : MonoBehaviour
                         products.Add(pro);
                 }
 
+                
                 if(products.Count == body.products.Length)
                 {
+                    Billboard.CurrentCombo = body.combo;
                     DestroyProducts(products);
                     mEmptyFrames.Clear();
                     mNetMessages.RemoveFirst();
@@ -775,8 +777,11 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.XCount = CountX;
         req.YCount = CountY;
+        req.combo = pros[0].Combo;
         req.colorCount = mStageInfo.ColorCount;
+        req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
+
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Click(Product pro)
