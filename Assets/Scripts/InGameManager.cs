@@ -191,17 +191,18 @@ public class InGameManager : MonoBehaviour
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), null);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), () => {
                 mIsSwipping = false;
+                TryFinishGame();
             });
         }
     }
 
     #region Utility
-    private IEnumerator DoMatchingCycle(Product[] matchedProducts)
+    private IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
         mIsCycling = true;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        Frame[] emptyFrames = DestroyProducts(matchedProducts);
+        Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
         while (true)
         {
             yield return new WaitForSeconds(1.0f);
@@ -218,7 +219,7 @@ public class InGameManager : MonoBehaviour
             List<Frame> nextEmptyFrames = new List<Frame>();
             foreach (Product[] matches in nextMatches)
             {
-                Frame[] empties = DestroyProducts(matches);
+                Frame[] empties = DestroyProductsWithSkill(matches);
                 nextEmptyFrames.AddRange(empties);
             }
             emptyFrames = nextEmptyFrames.ToArray();
@@ -236,18 +237,17 @@ public class InGameManager : MonoBehaviour
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
             foreach (Product[] pros in matches)
-                DestroyProducts(pros);
+            {
+                Product[] skilledMatches = ApplySkillProducts(pros);
+                DestroyProducts(skilledMatches, ProductSkill.Nothing);
+            }
         }
 
         Billboard.CurrentCombo = 0;
         mIsCycling = false;
-
-        if (FieldType == GameFieldType.Stage)
-            CheckStageFinish();
-        else if (FieldType == GameFieldType.pvpPlayer)
-            CheckPVPFinish();
+        TryFinishGame();
     }
-    private Frame[] DestroyProducts(Product[] matches)
+    private Frame[] DestroyProducts(Product[] matches, ProductSkill makeSkill)
     {
         List<Frame> emptyFrames = new List<Frame>();
         Product mainProduct = matches[0];
@@ -258,8 +258,10 @@ public class InGameManager : MonoBehaviour
             emptyFrames.Add(pro.ParentFrame);
             addedScore += Billboard.CurrentCombo;
             pro.Combo = Billboard.CurrentCombo;
-            pro.StartDestroy(gameObject);
-            BreakItemSkill(pro);
+            if (makeSkill == ProductSkill.Nothing)
+                pro.StartDestroy(gameObject);
+            else
+                pro.StartMerge(mainProduct.ParentFrame, 0.3f, makeSkill);
         }
 
         if (FieldType == GameFieldType.Stage)
@@ -272,6 +274,23 @@ public class InGameManager : MonoBehaviour
 
         Network_Destroy(matches);
         EventDestroyed?.Invoke(matches);
+        return emptyFrames.ToArray();
+    }
+    private Frame[] DestroyProductsWithSkill(Product[] matches)
+    {
+        List<Frame> emptyFrames = new List<Frame>();
+        Product[] skilledMatches = ApplySkillProducts(matches);
+        if (skilledMatches.Length != matches.Length)
+        {
+            Frame[] empties = DestroyProducts(skilledMatches, ProductSkill.Nothing);
+            emptyFrames.AddRange(empties);
+        }
+        else
+        {
+            ProductSkill nextSkill = TryMakeSkillProduct(matches);
+            Frame[] empties = DestroyProducts(matches, nextSkill);
+            emptyFrames.AddRange(empties);
+        }
         return emptyFrames.ToArray();
     }
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
@@ -439,6 +458,13 @@ public class InGameManager : MonoBehaviour
 
         }
     }
+    private void TryFinishGame()
+    {
+        if (FieldType == GameFieldType.Stage)
+            CheckStageFinish();
+        else if (FieldType == GameFieldType.pvpPlayer)
+            CheckPVPFinish();
+    }
     private void CheckStageFinish()
     {
         bool isSuccess = false;
@@ -519,6 +545,53 @@ public class InGameManager : MonoBehaviour
         FinishGame();
         return;
     }
+    private Product[] ApplySkillProducts(Product[] matches)
+    {
+        List<Product> result = new List<Product>();
+        foreach(Product pro in matches)
+        {
+            result.Add(pro);
+            if (pro.mSkill == ProductSkill.Nothing)
+                continue;
+            else if (pro.mSkill == ProductSkill.OneMore)
+                FindSameRowProducts(pro, result);
+            else if (pro.mSkill == ProductSkill.KeepCombo)
+                FindSameColumnProducts(pro, result);
+            else if (pro.mSkill == ProductSkill.SameColor)
+                FindSameColorProducts(pro, result);
+        }
+        return result.ToArray();
+    }
+    private void FindSameRowProducts(Product target, List<Product> result)
+    {
+        int idxY = target.ParentFrame.IndexY;
+        for(int x = 0; x < CountX; ++x)
+        {
+            Product pro = GetFrame(x, idxY).ChildProduct;
+            if (pro != null && !pro.IsLocked() && !result.Contains(pro))
+                result.Add(pro);
+        }
+    }
+    private void FindSameColumnProducts(Product target, List<Product> result)
+    {
+        int idxX = target.ParentFrame.IndexX;
+        for (int y = 0; y < CountY; ++y)
+        {
+            Product pro = GetFrame(idxX, y).ChildProduct;
+            if (pro != null && !pro.IsLocked() && !result.Contains(pro))
+                result.Add(pro);
+        }
+    }
+    private void FindSameColorProducts(Product target, List<Product> result)
+    {
+        ProductColor color = target.mColor;
+        foreach (Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro != null && pro.mColor == color && !pro.IsLocked() && !result.Contains(pro))
+                result.Add(pro);
+        }
+    }
     private List<Product> GetNextFlushTargets(int cnt)
     {
         float xCenter = (CountX - 1.0f) * 0.5f;
@@ -565,24 +638,27 @@ public class InGameManager : MonoBehaviour
                 EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Combo);
         }
     }
-    private void BreakItemSkill(Product product)
+    private ProductSkill TryMakeSkillProduct(Product[] matches)
     {
-        if (product.mSkill == ProductSkill.OneMore)
+        bool isHori = true;
+        bool isVerti = true;
+        foreach (Product pro in matches)
         {
-            Billboard.ItemOneMoreCount++;
-            EventBreakTarget?.Invoke(product.transform.position, StageGoalType.ItemOneMore);
+            if (pro.mSkill != ProductSkill.Nothing)
+                return ProductSkill.Nothing;
+
+            isHori &= (matches[0].ParentFrame.IndexY == pro.ParentFrame.IndexY);
+            isVerti &= (matches[0].ParentFrame.IndexX == pro.ParentFrame.IndexX);
         }
-        else if (product.mSkill == ProductSkill.KeepCombo)
-        {
-            Billboard.KeepCombo = Math.Max(product.Combo, Billboard.KeepCombo);
-            Billboard.ItemKeepComboCount++;
-            EventBreakTarget?.Invoke(product.transform.position, StageGoalType.ItemKeepCombo);
-        }
-        else if (product.mSkill == ProductSkill.SameColor)
-        {
-            Billboard.ItemSameColorCount++;
-            EventBreakTarget?.Invoke(product.transform.position, StageGoalType.ItemSameColor);
-        }
+
+        if (matches.Length == 4 && isHori)
+            return ProductSkill.OneMore;
+        else if (matches.Length == 4 && isVerti)
+            return ProductSkill.KeepCombo;
+        else if (matches.Length == 5)
+            return ProductSkill.SameColor;
+
+        return ProductSkill.Nothing;
     }
     private List<Product> GetSameColorProducts(ProductColor color)
     {
@@ -838,7 +914,9 @@ public class InGameManager : MonoBehaviour
                 if (products.Count == body.ArrayCount)
                 {
                     Billboard.CurrentCombo = body.combo;
-                    DestroyProducts(products.ToArray());
+                    Product[] matches = products.ToArray();
+                    ProductSkill nextSkill = TryMakeSkillProduct(matches);
+                    DestroyProducts(products.ToArray(), nextSkill);
                     mNetMessages.RemoveFirst();
                 }
             }

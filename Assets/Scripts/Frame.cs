@@ -17,6 +17,7 @@ public class Frame : MonoBehaviour
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
 
+    public InGameManager GameManager { get { return mGameManager; } }
     public bool Empty { get { return mIsEmpty; } }
     public ProductSkill SkillBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }

@@ -99,12 +99,18 @@ public class Product : MonoBehaviour
         return matchList.Count >= UserSetting.MatchCount;
     }
 
-    public void StartMerge(Frame frame, float duration)
+    public void StartMerge(Frame frame, float duration, ProductSkill skill)
     {
-        ParentFrame = frame;
+        transform.SetParent(frame.GameManager.transform);
         StartCoroutine(AnimateFlash(0, 1.3f));
         StartCoroutine(AnimateMove(frame.transform.position, duration, () => {
-            Destroy(gameObject);
+            if (ParentFrame == frame)
+            {
+                ParentFrame = frame;
+                ChangeSkilledProduct(skill);
+            }
+            else
+                Destroy(gameObject);
         }));
     }
     IEnumerator AnimateMove(Vector2 destPos, float duration, Action EventMoveEnd)
@@ -351,6 +357,7 @@ public class Product : MonoBehaviour
     public void ChangeSkilledProduct(ProductSkill skill)
     {
         mSkill = skill;
+        mAnimation.Play("swap");
         switch (skill)
         {
             case ProductSkill.OneMore:      Renderer.sprite = ImgOneMore; break;
