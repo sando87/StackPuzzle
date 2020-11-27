@@ -29,11 +29,13 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo = null;
     private UserInfo mUserInfo = null;
     private bool mMoveLock = false;
+    private bool mIsCycling = false;
+    private bool mIsSwipping = false;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
-    private List<Frame> mEmptyFrames = new List<Frame>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
     public InGameBillboard Billboard = new InGameBillboard();
+    private List<Frame[]> mFrameDropGroup = new List<Frame[]>();
 
     public GameFieldType FieldType { get {
             return this == mInstStage ? GameFieldType.Stage :
@@ -48,7 +50,7 @@ public class InGameManager : MonoBehaviour
             return null;
         return mFrames[x, y];
     }
-    public bool IsIdle { get; private set; }
+    public bool IsIdle { get { return !mIsCycling && !mIsSwipping; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
@@ -62,7 +64,6 @@ public class InGameManager : MonoBehaviour
     public Action<Product[]> EventDestroyed;
     public Action<bool> EventFinish;
     public Action EventReduceLimit;
-    private Action EventEnterIdle;
 
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
@@ -78,17 +79,11 @@ public class InGameManager : MonoBehaviour
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            EventEnterIdle += CheckStageFinish;
         }
         else if (FieldType == GameFieldType.pvpPlayer)
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            EventEnterIdle += () =>
-            {
-                StartCoroutine("FlushAttacks");
-                CheckPVPFinish();
-            };
         }
         else if (FieldType == GameFieldType.pvpOpponent)
         {
@@ -121,6 +116,7 @@ public class InGameManager : MonoBehaviour
         }
 
         SecondaryInitFrames();
+        InitDropGroupFrames();
 
         GameObject ap = Instantiate(AttackPointPrefab, transform);
         ap.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
@@ -156,26 +152,21 @@ public class InGameManager : MonoBehaviour
         transform.parent.gameObject.SetActive(false);
     }
 
-
     public void OnClick(GameObject clickedObj)
     {
         if (!IsIdle || mMoveLock)
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
-        List<Product> matches = new List<Product>();
-        pro.SearchMatchedProducts(matches, pro.mColor);
-        if (matches.Count < UserSetting.MatchCount)
+        List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+        if (matches.Count <= 0)
         {
             pro.mAnimation.Play("swap");
             return;
         }
 
-        IsIdle = false;
-        DestroyProducts(matches);
-        StartCoroutine(TryDestroyAroundEmpty(1.0f));
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
         RemoveLimit();
+        StartCoroutine(DoMatchingCycle(matches[0]));
     }
     public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
@@ -194,26 +185,80 @@ public class InGameManager : MonoBehaviour
 
         if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
         {
+            mIsSwipping = true;
             RemoveLimit();
             Network_Swipe(product, dir);
-            product.StartSwipe(targetProduct.GetComponentInParent<Frame>());
-            targetProduct.StartSwipe(product.GetComponentInParent<Frame>());
-
-            IsIdle = false;
-            StartCoroutine("CheckIdle", 0.1f);
+            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), null);
+            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), () => {
+                mIsSwipping = false;
+            });
         }
     }
-    private void DestroyProducts(List<Product> matches)
+
+    #region Utility
+    private IEnumerator DoMatchingCycle(Product[] matchedProducts)
     {
+        mIsCycling = true;
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+        Frame[] emptyFrames = DestroyProducts(matchedProducts);
+        while (true)
+        {
+            yield return new WaitForSeconds(1.0f);
+            List<Product> aroundProducts = FindAroundProducts(emptyFrames);
+            List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
+            if (nextMatches.Count <= 0)
+                break;
+
+            Billboard.CurrentCombo++;
+            Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
+            Billboard.ComboCounter[Billboard.CurrentCombo]++;
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+            List<Frame> nextEmptyFrames = new List<Frame>();
+            foreach (Product[] matches in nextMatches)
+            {
+                Frame[] empties = DestroyProducts(matches);
+                nextEmptyFrames.AddRange(empties);
+            }
+            emptyFrames = nextEmptyFrames.ToArray();
+        }
+
+        while (true)
+        {
+            yield return new WaitForSeconds(1.0f);
+            Product[] droppedProducts = StartToDropAndCreate();
+            yield return new WaitForSeconds(1.0f);
+            List<Product[]> matches = FindMatchedProducts(droppedProducts);
+            if (matches.Count <= 0)
+                break;
+
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+            foreach (Product[] pros in matches)
+                DestroyProducts(pros);
+        }
+
+        Billboard.CurrentCombo = 0;
+        mIsCycling = false;
+
+        if (FieldType == GameFieldType.Stage)
+            CheckStageFinish();
+        else if (FieldType == GameFieldType.pvpPlayer)
+            CheckPVPFinish();
+    }
+    private Frame[] DestroyProducts(Product[] matches)
+    {
+        List<Frame> emptyFrames = new List<Frame>();
         Product mainProduct = matches[0];
 
         int addedScore = 0;
         foreach (Product pro in matches)
         {
+            emptyFrames.Add(pro.ParentFrame);
             addedScore += Billboard.CurrentCombo;
             pro.Combo = Billboard.CurrentCombo;
             pro.StartDestroy(gameObject);
-            mEmptyFrames.Add(pro.ParentFrame);
             BreakItemSkill(pro);
         }
 
@@ -223,18 +268,46 @@ public class InGameManager : MonoBehaviour
             Attack(addedScore, mainProduct.transform.position);
 
         Billboard.CurrentScore += addedScore;
-        Billboard.DestroyCount += matches.Count;
+        Billboard.DestroyCount += matches.Length;
 
-        Network_Destroy(matches.ToArray());
-        EventDestroyed?.Invoke(matches.ToArray());
+        Network_Destroy(matches);
+        EventDestroyed?.Invoke(matches);
+        return emptyFrames.ToArray();
     }
-    private IEnumerator TryDestroyAroundEmpty(float delay)
+    private Queue<Product> FindAliveProducts(Frame[] subFrames)
     {
-        yield return new WaitForSeconds(delay);
-        Frame[] emptyFrames = mEmptyFrames.ToArray();
-        mEmptyFrames.Clear();
+        Queue<Product> aliveProducts = new Queue<Product>();
+        foreach (Frame frame in subFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro != null)
+                aliveProducts.Enqueue(pro);
+        }
+        return aliveProducts;
+    }
+    private List<Product[]> FindMatchedProducts(Product[] targetProducts)
+    {
+        Dictionary<Product, int> matchedPro = new Dictionary<Product, int>();
+        List<Product[]> list = new List<Product[]>();
+        foreach (Product pro in targetProducts)
+        {
+            if (matchedPro.ContainsKey(pro))
+                continue;
 
-        List<Product> aroundProducts = new List<Product>();
+            List<Product> matches = new List<Product>();
+            pro.SearchMatchedProducts(matches, pro.mColor);
+            if (matches.Count >= UserSetting.MatchCount)
+            {
+                list.Add(matches.ToArray());
+                foreach (Product sub in matches)
+                    matchedPro[sub] = 1;
+            }
+        }
+        return list;
+    }
+    private List<Product> FindAroundProducts(Frame[] emptyFrames)
+    {
+        Dictionary<Product, int> aroundProducts = new Dictionary<Product, int>();
         foreach (Frame frame in emptyFrames)
         {
             Frame[] aroundFrames = frame.GetAroundFrames();
@@ -242,85 +315,86 @@ public class InGameManager : MonoBehaviour
             {
                 Product pro = sub.ChildProduct;
                 if (pro != null && !pro.IsLocked())
-                    aroundProducts.Add(pro);
+                    aroundProducts[pro] = 1;
             }
         }
-
-        if (IsMatched(aroundProducts))
-        {
-            Billboard.CurrentCombo++;
-            Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
-            Billboard.ComboCounter[Billboard.CurrentCombo]++;
-
-            List<Product> matches = new List<Product>();
-            foreach (Product pro in aroundProducts)
-            {
-                matches.Clear();
-                pro.SearchMatchedProducts(matches, pro.mColor);
-                if (matches.Count >= UserSetting.MatchCount)
-                    DestroyProducts(matches);
-            }
-
-            StartCoroutine(TryDestroyAroundEmpty(delay));
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-        }
-        else
-        {
-            Billboard.CurrentCombo = 0;
-        }
-
-        StartCoroutine(UnityUtils.CallAfterSeconds(0.5f, () =>
-        {
-            CreateNewProducts(emptyFrames);
-        }));
+        return new List<Product>(aroundProducts.Keys);
     }
-    private void CreateNewProducts(Frame[] emptyFrames)
+    private Product[] StartToDropAndCreate()
     {
+        List<Product> droppedProducts = new List<Product>();
         List<Product> newProducts = new List<Product>();
-        foreach(Frame frame in emptyFrames)
+        foreach (Frame[] frames in mFrameDropGroup)
         {
-            Product newProduct = CreateNewProduct(frame);
-            newProduct.mAnimation.Play("swap");
-            newProducts.Add(newProduct);
+            Queue<Product> alivePros = FindAliveProducts(frames);
+            int diffCount = frames.Length - alivePros.Count;
+            if (diffCount <= 0)
+                continue;
+
+            foreach (Frame frame in frames)
+            {
+                if (alivePros.Count > 0)
+                {
+                    Product pro = alivePros.Dequeue();
+                    if (frame.ChildProduct != pro)
+                    {
+                        pro.StartDropAnimate(frame);
+                        droppedProducts.Add(pro);
+                    }
+                }
+                else
+                {
+                    Product pro = CreateNewProduct(frame);
+                    float height = UserSetting.GridSize * diffCount;
+                    pro.transform.localPosition = new Vector3(0, height, -1);
+                    pro.StartDropAnimate(frame);
+                    droppedProducts.Add(pro);
+                    newProducts.Add(pro);
+                }
+            }
         }
+
         Network_Create(newProducts.ToArray());
 
-        StartCoroutine("CheckIdle", 1.0f);
+        return droppedProducts.ToArray();
     }
-    IEnumerator CheckIdle(float delay)
+    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, Product> newProducts)
     {
-        yield return new WaitForSeconds(delay);
-        while (true)
+        List<Product> droppedProducts = new List<Product>();
+        foreach (Frame[] frames in mFrameDropGroup)
         {
-            if(IsAllIdle())
+            Queue<Product> alivePros = FindAliveProducts(frames);
+            int diffCount = frames.Length - alivePros.Count;
+            if (diffCount <= 0)
+                continue;
+
+            foreach (Frame frame in frames)
             {
-                IsIdle = true;
-                EventEnterIdle?.Invoke();
-                break;
+                if (alivePros.Count > 0)
+                {
+                    Product pro = alivePros.Dequeue();
+                    if (frame.ChildProduct != pro)
+                    {
+                        pro.StartDropAnimate(frame);
+                        droppedProducts.Add(pro);
+                    }
+                }
+                else
+                {
+                    if (!newProducts.ContainsKey(frame))
+                        LOG.warn("Not Found Remote New Product");
+
+                    Product pro = newProducts[frame];
+                    float height = UserSetting.GridSize * diffCount;
+                    pro.transform.localPosition = new Vector3(0, height, -1);
+                    pro.StartDropAnimate(frame);
+                    droppedProducts.Add(pro);
+                }
             }
-            yield return new WaitForSeconds(0.1f);
         }
+
+        return droppedProducts.ToArray();
     }
-
-    private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
-    {
-        if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
-        {
-            int newStarCount = nextScore / UserSetting.ScorePerBar - preScore / UserSetting.ScorePerBar;
-            for (int i = 0; i < newStarCount; ++i)
-                EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Score);
-
-        }
-        else if (mStageInfo.GoalTypeEnum == StageGoalType.Combo)
-        {
-            string goalType = mStageInfo.GoalType;
-            int targetCombo = int.Parse(goalType[goalType.Length - 1].ToString());
-            int curCombo = Billboard.CurrentCombo;
-            if (targetCombo == curCombo)
-                EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Combo);
-        }
-    }
-
     private void Attack(int score, Vector3 fromPos)
     {
         int point = score / UserSetting.AttackScore;
@@ -341,7 +415,10 @@ public class InGameManager : MonoBehaviour
     {
         AttackPoints.Add(point, fromPos);
         if(FieldType == GameFieldType.pvpPlayer)
+        {
+            StopCoroutine("FlushAttacks");
             StartCoroutine("FlushAttacks");
+        }
     }
     private IEnumerator FlushAttacks()
     {
@@ -362,148 +439,6 @@ public class InGameManager : MonoBehaviour
 
         }
     }
-    private List<Product> GetNextFlushTargets(int cnt)
-    {
-        float xCenter = (CountX - 1.0f) * 0.5f;
-        float yCenter = (CountY - 1.0f) * 0.5f;
-        List<Product> products = new List<Product>();
-        for (int y = 0; y < CountY; ++y)
-        {
-            for (int x = 0; x < CountX; ++x)
-            {
-                Product pro = mFrames[x, y].ChildProduct;
-                if (pro == null || pro.IsChocoBlock())
-                    continue;
-
-                float distX = Math.Abs(xCenter - x);
-                float distY = Math.Abs(yCenter - y);
-                float max = Math.Max(distX, distY);
-                float weight = max + UnityEngine.Random.Range(-0.4f, 0.4f);
-                pro.Weight = weight;
-                products.Add(pro);
-            }
-        }
-
-        products.Sort((lsb, msb) =>
-        {
-            return lsb.Weight - msb.Weight > 0 ? -1 : 1;
-        });
-        return (products.Count < cnt) ? products : products.GetRange(0, cnt);
-    }
-
-    public void HandlerNetworkMessage(Header head, byte[] body)
-    {
-        if (!gameObject.activeInHierarchy)
-            return;
-        if (head.Ack == 1)
-            return;
-        if (head.Cmd != NetCMD.PVP)
-            return;
-
-        PVPInfo resMsg = Utils.Deserialize<PVPInfo>(ref body);
-        if (resMsg.cmd == PVPCommand.EndGame)
-        {
-            mNetMessages.AddFirst(resMsg);
-        }
-        else
-        {
-            mNetMessages.AddLast(resMsg);
-        }
-    }
-    IEnumerator ProcessNetMessages()
-    {
-        while (true)
-        {
-            yield return null;
-
-            if (mNetMessages.Count == 0)
-                continue;
-
-            PVPInfo body = mNetMessages.First.Value;
-            if (body.cmd == PVPCommand.EndGame)
-            {
-                EventFinish?.Invoke(body.success);
-                FinishGame();
-            }
-            else if(body.cmd == PVPCommand.StartGame)
-            {
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = GetFrame(info.idxX, info.idxY);
-                    Product pro = CreateNewProduct(frame, info.color);
-                    pro.GetComponent<BoxCollider2D>().enabled = false;
-                    pro.SetChocoBlock(0);
-                    pro.EventUnWrapChoco = () => {
-                        Billboard.ChocoCount++;
-                        EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
-                    };
-                }
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.Click)
-            {
-                //if(IsIdle)
-                //{
-                //    Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
-                //    OnClick(pro.gameObject);
-                //    mNetMessages.RemoveFirst();
-                //}
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.Swipe)
-            {
-                Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
-                OnSwipe(pro.gameObject, body.dir);
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.Destroy)
-            {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
-                {
-                    Billboard.CurrentCombo = body.combo;
-                    DestroyProducts(products);
-                    mEmptyFrames.Clear();
-                    mNetMessages.RemoveFirst();
-                }
-            }
-            else if (body.cmd == PVPCommand.Create)
-            {
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = GetFrame(info.idxX, info.idxY);
-                    Product newProduct = CreateNewProduct(frame, info.color);
-                    newProduct.GetComponent<BoxCollider2D>().enabled = false;
-                    newProduct.mAnimation.Play("swap");
-                }
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.FlushAttacks)
-            {
-                AttackPoints.Pop(body.ArrayCount);
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    pro.SetChocoBlock(1, true);
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-        }
-    }
-
-
     private void CheckStageFinish()
     {
         bool isSuccess = false;
@@ -584,9 +519,52 @@ public class InGameManager : MonoBehaviour
         FinishGame();
         return;
     }
+    private List<Product> GetNextFlushTargets(int cnt)
+    {
+        float xCenter = (CountX - 1.0f) * 0.5f;
+        float yCenter = (CountY - 1.0f) * 0.5f;
+        List<Product> products = new List<Product>();
+        for (int y = 0; y < CountY; ++y)
+        {
+            for (int x = 0; x < CountX; ++x)
+            {
+                Product pro = mFrames[x, y].ChildProduct;
+                if (pro == null || pro.IsChocoBlock())
+                    continue;
 
+                float distX = Math.Abs(xCenter - x);
+                float distY = Math.Abs(yCenter - y);
+                float max = Math.Max(distX, distY);
+                float weight = max + UnityEngine.Random.Range(-0.4f, 0.4f);
+                pro.Weight = weight;
+                products.Add(pro);
+            }
+        }
 
+        products.Sort((lsb, msb) =>
+        {
+            return lsb.Weight - msb.Weight > 0 ? -1 : 1;
+        });
+        return (products.Count < cnt) ? products : products.GetRange(0, cnt);
+    }
+    private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
+    {
+        if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
+        {
+            int newStarCount = nextScore / UserSetting.ScorePerBar - preScore / UserSetting.ScorePerBar;
+            for (int i = 0; i < newStarCount; ++i)
+                EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Score);
 
+        }
+        else if (mStageInfo.GoalTypeEnum == StageGoalType.Combo)
+        {
+            string goalType = mStageInfo.GoalType;
+            int targetCombo = int.Parse(goalType[goalType.Length - 1].ToString());
+            int curCombo = Billboard.CurrentCombo;
+            if (targetCombo == curCombo)
+                EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Combo);
+        }
+    }
     private void BreakItemSkill(Product product)
     {
         if (product.mSkill == ProductSkill.OneMore)
@@ -646,17 +624,6 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    private bool IsMatched(List<Product> products)
-    {
-        List<Product> matches = new List<Product>();
-        foreach (Product pro in products)
-        {
-            matches.Clear();
-            if (pro.IsMatchable(matches, pro.mColor))
-                return true;
-        }
-        return false;
-    }
     private void SecondaryInitFrames()
     {
         for(int x = 0; x < CountX; ++x)
@@ -684,6 +651,31 @@ public class InGameManager : MonoBehaviour
                 if (curFrame.Right() == null) curFrame.ShowBorder(1);
                 if (curFrame.Up() == null) curFrame.ShowBorder(2);
                 if (curFrame.Down() == null) curFrame.ShowBorder(3);
+            }
+        }
+    }
+    private void InitDropGroupFrames()
+    {
+        List<Frame> frames = new List<Frame>();
+        for (int x = 0; x < CountX; ++x)
+        {
+            for (int y = 0; y < CountY; ++y)
+            {
+                Frame curFrame = mFrames[x, y];
+                if (curFrame.Empty)
+                    continue;
+
+                Frame up = curFrame.Up();
+                if (up == null || up.Empty)
+                {
+                    frames.Add(curFrame);
+                    mFrameDropGroup.Add(frames.ToArray());
+                    frames.Clear();
+                }
+                else
+                {
+                    frames.Add(curFrame);
+                }
             }
         }
     }
@@ -742,15 +734,15 @@ public class InGameManager : MonoBehaviour
         EventDestroyed = null;
         EventFinish = null;
         EventReduceLimit = null;
-        EventEnterIdle = null;
 
         AttackPoints = null;
         mMoveLock = false;
-        IsIdle = true;
+        mIsCycling = false;
+        mIsSwipping = false;
 
         Billboard.Reset();
         mNetMessages.Clear();
-        mEmptyFrames.Clear();
+        mFrameDropGroup.Clear();
         mNextSkills.Clear();
 
         mFrames = null;
@@ -763,7 +755,122 @@ public class InGameManager : MonoBehaviour
         mMoveLock = Billboard.MoveCount >= mStageInfo.MoveLimit;
         EventReduceLimit?.Invoke();
     }
+    #endregion
 
+    #region Network
+    public void HandlerNetworkMessage(Header head, byte[] body)
+    {
+        if (!gameObject.activeInHierarchy)
+            return;
+        if (head.Ack == 1)
+            return;
+        if (head.Cmd != NetCMD.PVP)
+            return;
+
+        PVPInfo resMsg = Utils.Deserialize<PVPInfo>(ref body);
+        if (resMsg.cmd == PVPCommand.EndGame)
+        {
+            mNetMessages.AddFirst(resMsg);
+        }
+        else
+        {
+            mNetMessages.AddLast(resMsg);
+        }
+    }
+    IEnumerator ProcessNetMessages()
+    {
+        while (true)
+        {
+            yield return null;
+
+            if (mNetMessages.Count == 0)
+                continue;
+
+            PVPInfo body = mNetMessages.First.Value;
+            if (body.cmd == PVPCommand.EndGame)
+            {
+                EventFinish?.Invoke(body.success);
+                FinishGame();
+            }
+            else if (body.cmd == PVPCommand.StartGame)
+            {
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Frame frame = GetFrame(info.idxX, info.idxY);
+                    Product pro = CreateNewProduct(frame, info.color);
+                    pro.GetComponent<BoxCollider2D>().enabled = false;
+                    pro.SetChocoBlock(0);
+                    pro.EventUnWrapChoco = () => {
+                        Billboard.ChocoCount++;
+                        EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
+                    };
+                }
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.Click)
+            {
+                //if(IsIdle)
+                //{
+                //    Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
+                //    OnClick(pro.gameObject);
+                //    mNetMessages.RemoveFirst();
+                //}
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.Swipe)
+            {
+                Product pro = GetFrame(body.products[0].idxX, body.products[0].idxY).ChildProduct;
+                OnSwipe(pro.gameObject, body.dir);
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.Destroy)
+            {
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
+                        products.Add(pro);
+                }
+
+                if (products.Count == body.ArrayCount)
+                {
+                    Billboard.CurrentCombo = body.combo;
+                    DestroyProducts(products.ToArray());
+                    mNetMessages.RemoveFirst();
+                }
+            }
+            else if (body.cmd == PVPCommand.Create)
+            {
+                Dictionary<Frame, Product> newProducts = new Dictionary<Frame, Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Frame frame = GetFrame(info.idxX, info.idxY);
+                    Product newProduct = CreateNewProduct(frame, info.color);
+                    newProduct.GetComponent<BoxCollider2D>().enabled = false;
+                    newProducts[frame] = newProduct;
+                }
+
+                StartToDropAndCreateRemote(newProducts);
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.FlushAttacks)
+            {
+                AttackPoints.Pop(body.ArrayCount);
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                    pro.SetChocoBlock(1, true);
+                }
+
+                mNetMessages.RemoveFirst();
+            }
+        }
+    }
     private ProductInfo[] Serialize(Product[] pros)
     {
         List<ProductInfo> list = new List<ProductInfo>();
@@ -856,5 +963,5 @@ public class InGameManager : MonoBehaviour
         req.products = Serialize(pros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-
+    #endregion
 }

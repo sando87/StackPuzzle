@@ -49,7 +49,7 @@ public class Product : MonoBehaviour
     public Action EventUnWrapChoco;
 
     #region MatchCycle
-    public void StartSwipe(Frame target)
+    public void StartSwipe(Frame target, Action EventSwipeEnd)
     {
         if (mLocked)
             return;
@@ -57,10 +57,12 @@ public class Product : MonoBehaviour
         mLocked = true;
         IsFirst = true;
         mAnimation.Play("swap");
-        StartCoroutine(AnimateSwipe(target));
+        StartCoroutine(AnimateSwipe(target, EventSwipeEnd));
     }
-    IEnumerator AnimateSwipe(Frame target)
+    IEnumerator AnimateSwipe(Frame target, Action EventSwipeEnd)
     {
+        yield return null;
+        ParentFrame = target;
         float duration = 0.3f;
         Vector3 start = transform.position;
         Vector3 dest = target.transform.position;
@@ -75,13 +77,8 @@ public class Product : MonoBehaviour
             yield return null;
         }
         transform.position = dest;
-        EndSwipe(target);
-    }
-    void EndSwipe(Frame target)
-    {
-        ParentFrame = target;
         mLocked = false;
-        //StartCoroutine(DoMatch());
+        EventSwipeEnd?.Invoke();
     }
     IEnumerator DoMatch()
     {
@@ -130,17 +127,13 @@ public class Product : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void StartDropAnimate(Frame parent, int emptyCount, bool isComboable)
+    public void StartDropAnimate(Frame parent)
     {
         mLocked = true;
         ParentFrame = parent;
-        float height = UserSetting.GridSize * emptyCount;
-        transform.localPosition = new Vector3(0, height, -1);
-        StartCoroutine(AnimateDrop(isComboable));
-        //if(isComboable)
-        //    StartCoroutine(StartHighLight());
+        StartCoroutine(AnimateDrop());
     }
-    IEnumerator AnimateDrop(bool isComboable)
+    IEnumerator AnimateDrop()
     {
         Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
         Renderer.sortingOrder = ParentFrame.MaskLayerOrder;
@@ -172,11 +165,6 @@ public class Product : MonoBehaviour
 
         Renderer.sortingLayerName = "Default";
         Renderer.maskInteraction = SpriteMaskInteraction.None;
-
-        if (isComboable)
-        {
-            StartCoroutine(DoMatch());
-        }
     }
 
     public void StartFlash(List<Product> matchedPros)
@@ -265,25 +253,6 @@ public class Product : MonoBehaviour
         Product[] around = GetAroundProducts();
         foreach (Product pro in around)
             pro.SearchMatchedProducts(products, color);
-    }
-    public bool IsMatchable(List<Product> products, ProductColor color)
-    {
-        if (mLocked || mColor != color || IsChocoBlock())
-            return false;
-
-        if (products.Contains(this))
-            return false;
-
-        if (products.Count >= UserSetting.MatchCount)
-            return false;
-
-        products.Add(this);
-
-        Product[] around = GetAroundProducts();
-        foreach (Product pro in around)
-            pro.IsMatchable(products, color);
-
-        return products.Count >= UserSetting.MatchCount;
     }
     public Product Left()
     {
