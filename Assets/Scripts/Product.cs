@@ -99,13 +99,41 @@ public class Product : MonoBehaviour
         return matchList.Count >= UserSetting.MatchCount;
     }
 
+    public void StartMerge(Frame frame, float duration)
+    {
+        ParentFrame = frame;
+        StartCoroutine(AnimateFlash(0, 1.3f));
+        StartCoroutine(AnimateMove(frame.transform.position, duration, () => {
+            Destroy(gameObject);
+        }));
+    }
+    IEnumerator AnimateMove(Vector2 destPos, float duration, Action EventMoveEnd)
+    {
+        mLocked = true;
+        Vector3 start = transform.position;
+        Vector3 dest = new Vector3(destPos.x, destPos.y, start.z);
+        Vector3 vel = (dest - start) / duration;
+        Vector3 offset = Vector3.zero;
+        float time = 0;
+        while (time < duration)
+        {
+            transform.position = start + (vel * time);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        transform.position = dest;
+        mLocked = false;
+        EventMoveEnd?.Invoke();
+    }
     public void StartDestroy(GameObject mgr, float delay = 0)
     {
         mLocked = true;
         EventDestroyed?.Invoke(this);
         transform.localPosition = new Vector3(0, 0, -1);
         transform.SetParent(mgr.transform);
-        StartCoroutine(FlashProduct(delay, 1.3f));
+        mAnimation.Play("destroy");
+        CreateComboTextEffect();
+        StartCoroutine(AnimateFlash(delay, 1.3f));
     }
     void StartSpriteAnim()
     {
@@ -167,26 +195,9 @@ public class Product : MonoBehaviour
         Renderer.maskInteraction = SpriteMaskInteraction.None;
     }
 
-    public void StartFlash(List<Product> matchedPros)
-    {
-        StartCoroutine(StartFlashing(matchedPros));
-    }
-    IEnumerator StartFlashing(List<Product> matchedPros)
-    {
-        yield return null;
-        foreach (Product pro in matchedPros)
-        {
-            float dist = (pro.transform.position - transform.position).magnitude;
-            float delay_sec = dist / 7.0f; //0 ~ 1.0f ~;
-            float intensity = 1.3f;// 1 - (dist / 5.0f); //1.0f ~ 0 ~;
-            StartCoroutine(pro.FlashProduct(delay_sec, intensity));
-        }
-    }
-    IEnumerator FlashProduct(float delay_sec, float intensity)
+    IEnumerator AnimateFlash(float delay_sec, float intensity)
     {
         yield return new WaitForSeconds(delay_sec);
-        mAnimation.Play("destroy");
-        CreateComboTextEffect();
 
         float halfTime = 0.12f;
         float k = -intensity / (halfTime * halfTime);
@@ -202,7 +213,7 @@ public class Product : MonoBehaviour
         }
         Renderer.material.color = new Color(0, 0, 0, 0);
     }
-    IEnumerator StartHighLight()
+    IEnumerator AnimateTwinkle()
     {
         Vector3 scale = transform.localScale;
         Vector3 pos = transform.localPosition;
