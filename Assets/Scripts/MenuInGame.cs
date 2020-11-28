@@ -102,7 +102,6 @@ public class MenuInGame : MonoBehaviour
             mScoreStars.Add(obj);
         }
     }
-
     private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
     {
         int scorePerBar = UserSetting.ScorePerBar;
@@ -189,6 +188,9 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventReduceLimit = () => {
             ReduceLimit();
         };
+        InGameManager.InstStage.EventCombo = (combo) => {
+            CurrentCombo = combo;
+        };
     }
 
     public int StarCount { get { return mScoreStars.Count; } }
@@ -200,7 +202,7 @@ public class MenuInGame : MonoBehaviour
         }
         set
         {
-            if (value == 0)
+            if (value <= 0)
                 ComboNumber.BreakCombo();
             else
                 ComboNumber.SetNumber(value);

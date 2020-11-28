@@ -1,7 +1,7 @@
 GoalType,Choco
 GoalValue,24
 MoveLimit,25
-ColorCount,4
+ColorCount,5
 XCount,8
 YCount,8
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0

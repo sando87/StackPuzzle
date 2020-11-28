@@ -25,7 +25,10 @@ public class NumbersUI : MonoBehaviour
     public void SetNumber(int num)
     {
         if (Number == num)
+        {
+            Anim.Play("comboUI");
             return;
+        }
 
         if (num >= 1000)
             Number = 999;

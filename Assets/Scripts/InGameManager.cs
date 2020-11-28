@@ -18,6 +18,11 @@ public class InGameManager : MonoBehaviour
     public static InGameManager InstPVP_Opponent
     { get { if (mInstPVP_Opponent == null) mInstPVP_Opponent = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldOpp").GetComponent<InGameManager>(); return mInstPVP_Opponent; } }
 
+    private const float durationDrop = 0.6f;
+    private const float intervalMatch = 0.5f;
+    private const float intervalDrop = 0.1f;
+    private const float durationMerge = intervalMatch + intervalDrop;
+
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -63,7 +68,9 @@ public class InGameManager : MonoBehaviour
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventDestroyed;
     public Action<bool> EventFinish;
+    public Action<int> EventCombo;
     public Action EventReduceLimit;
+    
 
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
@@ -200,12 +207,14 @@ public class InGameManager : MonoBehaviour
     private IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
         mIsCycling = true;
+        Billboard.CurrentCombo = 1;
+        EventCombo?.Invoke(Billboard.CurrentCombo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
         while (true)
         {
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(intervalMatch);
             List<Product> aroundProducts = FindAroundProducts(emptyFrames);
             List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
             if (nextMatches.Count <= 0)
@@ -214,6 +223,7 @@ public class InGameManager : MonoBehaviour
             Billboard.CurrentCombo++;
             Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
             Billboard.ComboCounter[Billboard.CurrentCombo]++;
+            EventCombo?.Invoke(Billboard.CurrentCombo);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
             List<Frame> nextEmptyFrames = new List<Frame>();
@@ -227,13 +237,14 @@ public class InGameManager : MonoBehaviour
 
         while (true)
         {
-            yield return new WaitForSeconds(1.0f);
-            Product[] droppedProducts = StartToDropAndCreate();
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(intervalDrop);
+            Product[] droppedProducts = StartToDropAndCreate(durationDrop);
+            yield return new WaitForSeconds(durationDrop);
             List<Product[]> matches = FindMatchedProducts(droppedProducts);
             if (matches.Count <= 0)
                 break;
 
+            EventCombo?.Invoke(Billboard.CurrentCombo);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
             foreach (Product[] pros in matches)
@@ -243,7 +254,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Billboard.CurrentCombo = 0;
+        EventCombo?.Invoke(0);
         mIsCycling = false;
         TryFinishGame();
     }
@@ -261,7 +272,7 @@ public class InGameManager : MonoBehaviour
             if (makeSkill == ProductSkill.Nothing)
                 pro.StartDestroy(gameObject);
             else
-                pro.StartMerge(mainProduct.ParentFrame, 0.3f, makeSkill);
+                pro.StartMerge(mainProduct.ParentFrame, durationMerge, makeSkill);
         }
 
         if (FieldType == GameFieldType.Stage)
@@ -339,7 +350,7 @@ public class InGameManager : MonoBehaviour
         }
         return new List<Product>(aroundProducts.Keys);
     }
-    private Product[] StartToDropAndCreate()
+    private Product[] StartToDropAndCreate(float duration)
     {
         List<Product> droppedProducts = new List<Product>();
         List<Product> newProducts = new List<Product>();
@@ -357,7 +368,7 @@ public class InGameManager : MonoBehaviour
                     Product pro = alivePros.Dequeue();
                     if (frame.ChildProduct != pro)
                     {
-                        pro.StartDropAnimate(frame);
+                        pro.StartDropAnimate(frame, duration);
                         droppedProducts.Add(pro);
                     }
                 }
@@ -366,7 +377,7 @@ public class InGameManager : MonoBehaviour
                     Product pro = CreateNewProduct(frame);
                     float height = UserSetting.GridSize * diffCount;
                     pro.transform.localPosition = new Vector3(0, height, -1);
-                    pro.StartDropAnimate(frame);
+                    pro.StartDropAnimate(frame, duration);
                     droppedProducts.Add(pro);
                     newProducts.Add(pro);
                 }
@@ -377,7 +388,7 @@ public class InGameManager : MonoBehaviour
 
         return droppedProducts.ToArray();
     }
-    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, Product> newProducts)
+    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, Product> newProducts, float duration)
     {
         List<Product> droppedProducts = new List<Product>();
         foreach (Frame[] frames in mFrameDropGroup)
@@ -394,7 +405,7 @@ public class InGameManager : MonoBehaviour
                     Product pro = alivePros.Dequeue();
                     if (frame.ChildProduct != pro)
                     {
-                        pro.StartDropAnimate(frame);
+                        pro.StartDropAnimate(frame, duration);
                         droppedProducts.Add(pro);
                     }
                 }
@@ -406,7 +417,7 @@ public class InGameManager : MonoBehaviour
                     Product pro = newProducts[frame];
                     float height = UserSetting.GridSize * diffCount;
                     pro.transform.localPosition = new Vector3(0, height, -1);
-                    pro.StartDropAnimate(frame);
+                    pro.StartDropAnimate(frame, duration);
                     droppedProducts.Add(pro);
                 }
             }
@@ -548,9 +559,9 @@ public class InGameManager : MonoBehaviour
     private Product[] ApplySkillProducts(Product[] matches)
     {
         List<Product> result = new List<Product>();
-        foreach(Product pro in matches)
+        result.AddRange(matches);
+        foreach (Product pro in matches)
         {
-            result.Add(pro);
             if (pro.mSkill == ProductSkill.Nothing)
                 continue;
             else if (pro.mSkill == ProductSkill.OneMore)
@@ -932,7 +943,7 @@ public class InGameManager : MonoBehaviour
                     newProducts[frame] = newProduct;
                 }
 
-                StartToDropAndCreateRemote(newProducts);
+                StartToDropAndCreateRemote(newProducts, durationDrop);
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.FlushAttacks)

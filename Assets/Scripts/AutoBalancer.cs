@@ -27,6 +27,7 @@ public class AutoBalancerInfo
             {
                 targetProduct = cenPro;
                 direct = SwipeDirection.LEFT;
+                maxCount = sameColorCount;
             }
         }
 
@@ -43,6 +44,7 @@ public class AutoBalancerInfo
             {
                 targetProduct = cenPro;
                 direct = SwipeDirection.RIGHT;
+                maxCount = sameColorCount;
             }
         }
 
@@ -59,6 +61,7 @@ public class AutoBalancerInfo
             {
                 targetProduct = cenPro;
                 direct = SwipeDirection.UP;
+                maxCount = sameColorCount;
             }
         }
 
@@ -75,6 +78,7 @@ public class AutoBalancerInfo
             {
                 targetProduct = cenPro;
                 direct = SwipeDirection.DOWN;
+                maxCount = sameColorCount;
             }
         }
         return true;
