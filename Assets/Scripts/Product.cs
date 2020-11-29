@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProductSkill { Nothing, OneMore, KeepCombo, SameColor };
-
 public class Product : MonoBehaviour
 {
     private bool mLocked = false;
@@ -56,7 +54,9 @@ public class Product : MonoBehaviour
     public void StartMerge(Frame frame, float duration, ProductSkill skill)
     {
         mLocked = true;
-        transform.SetParent(frame.GameManager.transform);
+        bool isMergeTarget = ParentFrame == frame;
+        if (!isMergeTarget)
+            transform.SetParent(frame.GameManager.transform);
 
         CreateComboTextEffect();
         StartCoroutine(AnimateFlash(1.3f));
@@ -64,11 +64,9 @@ public class Product : MonoBehaviour
 
         StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => {
             StartCoroutine(AnimateMove(frame.transform.position, duration - 0.3f, () => {
-                if (ParentFrame == frame)
-                {
-                    ParentFrame = frame;
+                mLocked = false;
+                if (isMergeTarget)
                     ChangeSkilledProduct(skill);
-                }
                 else
                     Destroy(gameObject);
             }));

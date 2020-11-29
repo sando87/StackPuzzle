@@ -19,6 +19,10 @@ public enum SwipeDirection
 {
     UP, DOWN, LEFT, RIGHT
 };
+public enum ProductSkill
+{
+    Nothing, OneMore, KeepCombo, SameColor
+};
 
 public class NetProtocol
 {
@@ -182,6 +186,7 @@ public class PVPInfo
     public int combo;
     public float colorCount;
     public bool success;
+    public ProductSkill skill;
     public SwipeDirection dir;
     public UserInfo userInfo;
     public int ArrayCount;

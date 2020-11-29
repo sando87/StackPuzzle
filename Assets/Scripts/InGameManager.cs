@@ -211,7 +211,8 @@ public class InGameManager : MonoBehaviour
         EventCombo?.Invoke(Billboard.CurrentCombo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
+        //Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
+        Frame[] emptyFrames = DestroyProducts(firstMatches, ProductSkill.Nothing);
         while (true)
         {
             yield return new WaitForSeconds(intervalMatch);
@@ -229,7 +230,8 @@ public class InGameManager : MonoBehaviour
             List<Frame> nextEmptyFrames = new List<Frame>();
             foreach (Product[] matches in nextMatches)
             {
-                Frame[] empties = DestroyProductsWithSkill(matches);
+                //Frame[] empties = DestroyProductsWithSkill(matches);
+                Frame[] empties = DestroyProducts(matches, ProductSkill.Nothing);
                 nextEmptyFrames.AddRange(empties);
             }
             emptyFrames = nextEmptyFrames.ToArray();
@@ -249,8 +251,9 @@ public class InGameManager : MonoBehaviour
 
             foreach (Product[] pros in matches)
             {
-                Product[] skilledMatches = ApplySkillProducts(pros);
-                DestroyProducts(skilledMatches, ProductSkill.Nothing);
+                //Product[] skilledMatches = ApplySkillProducts(pros);
+                //DestroyProducts(skilledMatches, ProductSkill.Nothing);
+                DestroyProducts(pros, ProductSkill.Nothing);
             }
         }
 
@@ -283,7 +286,7 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
 
-        Network_Destroy(matches);
+        Network_Destroy(matches, makeSkill);
         EventDestroyed?.Invoke(matches);
         return emptyFrames.ToArray();
     }
@@ -388,7 +391,7 @@ public class InGameManager : MonoBehaviour
 
         return droppedProducts.ToArray();
     }
-    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, Product> newProducts, float duration)
+    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, ProductColor> newProducts, float duration)
     {
         List<Product> droppedProducts = new List<Product>();
         foreach (Frame[] frames in mFrameDropGroup)
@@ -414,9 +417,11 @@ public class InGameManager : MonoBehaviour
                     if (!newProducts.ContainsKey(frame))
                         LOG.warn("Not Found Remote New Product");
 
-                    Product pro = newProducts[frame];
+                    ProductColor proColor = newProducts[frame];
+                    Product pro = CreateNewProduct(frame, proColor);
                     float height = UserSetting.GridSize * diffCount;
                     pro.transform.localPosition = new Vector3(0, height, -1);
+                    pro.GetComponent<BoxCollider2D>().enabled = false;
                     pro.StartDropAnimate(frame, duration);
                     droppedProducts.Add(pro);
                 }
@@ -424,6 +429,28 @@ public class InGameManager : MonoBehaviour
         }
 
         return droppedProducts.ToArray();
+    }
+    private bool IsReadyToNextDrop(Dictionary<Frame, ProductColor> newProducts)
+    {
+        int validCount = 0;
+        foreach (Frame[] frames in mFrameDropGroup)
+        {
+            Queue<Product> alivePros = FindAliveProducts(frames);
+            int diffCount = frames.Length - alivePros.Count;
+            if (diffCount <= 0)
+                continue;
+
+            int x = frames[0].IndexX;
+            for(int y = 0; y < diffCount; ++y)
+            {
+                Frame frame = frames[frames.Length - 1 - y];
+                if (newProducts.ContainsKey(frame))
+                    validCount++;
+                else
+                    return false;
+            }
+        }
+        return validCount == newProducts.Count;
     }
     private void Attack(int score, Vector3 fromPos)
     {
@@ -922,29 +949,30 @@ public class InGameManager : MonoBehaviour
                         products.Add(pro);
                 }
 
-                if (products.Count == body.ArrayCount)
+                if (products.Count != body.ArrayCount)
+                    LOG.warn("Not Sync Destroy Products");
+                else
                 {
                     Billboard.CurrentCombo = body.combo;
-                    Product[] matches = products.ToArray();
-                    ProductSkill nextSkill = TryMakeSkillProduct(matches);
-                    DestroyProducts(products.ToArray(), nextSkill);
+                    DestroyProducts(products.ToArray(), body.skill);
                     mNetMessages.RemoveFirst();
                 }
             }
             else if (body.cmd == PVPCommand.Create)
             {
-                Dictionary<Frame, Product> newProducts = new Dictionary<Frame, Product>();
+                Dictionary<Frame, ProductColor> newProducts = new Dictionary<Frame, ProductColor>();
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
                     ProductInfo info = body.products[i];
                     Frame frame = GetFrame(info.idxX, info.idxY);
-                    Product newProduct = CreateNewProduct(frame, info.color);
-                    newProduct.GetComponent<BoxCollider2D>().enabled = false;
-                    newProducts[frame] = newProduct;
+                    newProducts[frame] = info.color;
                 }
 
-                StartToDropAndCreateRemote(newProducts, durationDrop);
-                mNetMessages.RemoveFirst();
+                if(IsReadyToNextDrop(newProducts))
+                {
+                    StartToDropAndCreateRemote(newProducts, durationDrop);
+                    mNetMessages.RemoveFirst();
+                }
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
@@ -1013,7 +1041,7 @@ public class InGameManager : MonoBehaviour
         req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Destroy(Product[] pros)
+    private void Network_Destroy(Product[] pros, ProductSkill skill)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -1022,6 +1050,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.Destroy;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = pros[0].Combo;
+        req.skill = skill;
         req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);

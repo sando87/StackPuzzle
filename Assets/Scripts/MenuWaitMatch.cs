@@ -64,17 +64,17 @@ public class MenuWaitMatch : MonoBehaviour
         }
 
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-        if (UserSetting.StageIsLocked(16))
-        {
-            MenuMessageBox.PopUp("Required\n15 Stages", false, null);
-            return;
-        }
-
-        if (Purchases.CountHeart() <= 0)
-        {
-            MenuMessageBox.PopUp("No Life", false, null);
-            return;
-        }
+        //if (UserSetting.StageIsLocked(16))
+        //{
+        //    MenuMessageBox.PopUp("Required\n15 Stages", false, null);
+        //    return;
+        //}
+        //
+        //if (Purchases.CountHeart() <= 0)
+        //{
+        //    MenuMessageBox.PopUp("No Life", false, null);
+        //    return;
+        //}
 #endif
 
         UserInfo userInfo = UserSetting.LoadUserInfo();

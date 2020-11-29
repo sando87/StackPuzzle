@@ -80,11 +80,12 @@ namespace ServerApp
                 while (true)
                 {
                     TcpClient tc = mListener.AcceptTcpClient();
+                    IPEndPoint endPoint = (System.Net.IPEndPoint)tc.Client.RemoteEndPoint;
 
                     ClientInfo info = new ClientInfo();
                     info.tcpClient = tc;
                     info.stream = tc.GetStream();
-                    info.endPoint = ((System.Net.IPEndPoint)tc.Client.RemoteEndPoint).Address.ToString();
+                    info.endPoint = endPoint.Address.ToString() + ":" + endPoint.Port;
                     info.ringBuffer = new RingBuffer();
                     info.recvBuffer = new byte[RECV_BUFSIZE];
                     mClients[info.endPoint] = info;
