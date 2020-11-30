@@ -11,20 +11,23 @@ public class Utils
         if (obj == null)
             return null;
 
-        var buffer = new byte[Marshal.SizeOf(obj)];
-        var gch = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-        var pBuffer = gch.AddrOfPinnedObject();
-        Marshal.StructureToPtr(obj, pBuffer, false);
-        gch.Free();
-
-        return buffer;
+        int size = Marshal.SizeOf(obj);
+        byte[] arr = new byte[size];
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(obj, ptr, true);
+        Marshal.Copy(ptr, arr, 0, size);
+        Marshal.FreeHGlobal(ptr);
+        return arr;
     }
-    static public T Deserialize<T>(ref byte[] data)
+    static public T Deserialize<T>(ref byte[] data) where T : new()
     {
-        var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
-        T obj = Marshal.PtrToStructure<T>(gch.AddrOfPinnedObject());
-        gch.Free();
-        return obj;
+        T str = new T();
+        int size = Marshal.SizeOf(str);
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+        Marshal.Copy(data, 0, ptr, size);
+        str = (T)Marshal.PtrToStructure(ptr, str.GetType());
+        Marshal.FreeHGlobal(ptr);
+        return str;
     }
     //public static byte[] Serialize(object source)
     //{

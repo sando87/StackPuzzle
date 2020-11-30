@@ -24,6 +24,7 @@ public class StageInfo
     public Sprite GoalTypeImage;
     public StageGoalType GoalTypeEnum;
     public int MoveLimit;
+    public int TimeLimit;
     public float ColorCount;
     public int XCount;
     public int YCount;
@@ -72,6 +73,7 @@ public class StageInfo
                 case "GoalType": info.GoalType = tokens[1]; break;
                 case "GoalValue": info.GoalValue = int.Parse(tokens[1]); break;
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
+                case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
@@ -183,6 +185,7 @@ public class StageInfo
             + GoalType + ","
             + GoalValue + ","
             + MoveLimit + ","
+            + TimeLimit + ","
             + ColorCount + ","
             + XCount + ","
             + YCount + ","

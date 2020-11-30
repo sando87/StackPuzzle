@@ -191,6 +191,9 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventCombo = (combo) => {
             CurrentCombo = combo;
         };
+        InGameManager.InstStage.EventRemainTime = (remainSec) => {
+            Limit.text = remainSec.ToString();
+        };
     }
 
     public int StarCount { get { return mScoreStars.Count; } }

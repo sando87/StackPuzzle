@@ -36,6 +36,7 @@ public class InGameManager : MonoBehaviour
     private bool mMoveLock = false;
     private bool mIsCycling = false;
     private bool mIsSwipping = false;
+    private DateTime mStartTime = DateTime.Now;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
@@ -69,8 +70,9 @@ public class InGameManager : MonoBehaviour
     public Action<Product[]> EventDestroyed;
     public Action<bool> EventFinish;
     public Action<int> EventCombo;
+    public Action<int> EventRemainTime;
     public Action EventReduceLimit;
-    
+
 
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
@@ -81,16 +83,19 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mStageInfo = info;
         mUserInfo = userInfo;
+        mStartTime = DateTime.Now;
 
         if (FieldType == GameFieldType.Stage)
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
+            StartCoroutine(CheckFinishGame());
         }
         else if (FieldType == GameFieldType.pvpPlayer)
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
+            StartCoroutine(CheckFinishGame());
         }
         else if (FieldType == GameFieldType.pvpOpponent)
         {
@@ -153,7 +158,6 @@ public class InGameManager : MonoBehaviour
     }
     public void FinishGame()
     {
-        StopAllCoroutines();
         ResetGame();
         gameObject.SetActive(false);
         transform.parent.gameObject.SetActive(false);
@@ -198,7 +202,6 @@ public class InGameManager : MonoBehaviour
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), null);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), () => {
                 mIsSwipping = false;
-                TryFinishGame();
             });
         }
     }
@@ -259,7 +262,6 @@ public class InGameManager : MonoBehaviour
 
         EventCombo?.Invoke(0);
         mIsCycling = false;
-        TryFinishGame();
     }
     private Frame[] DestroyProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -496,12 +498,43 @@ public class InGameManager : MonoBehaviour
 
         }
     }
-    private void TryFinishGame()
+    private IEnumerator CheckFinishGame()
     {
-        if (FieldType == GameFieldType.Stage)
-            CheckStageFinish();
-        else if (FieldType == GameFieldType.pvpPlayer)
-            CheckPVPFinish();
+        int preRemainSec = 0;
+        while(true)
+        {
+            if (FieldType == GameFieldType.Stage)
+                CheckStageFinish();
+            else if (FieldType == GameFieldType.pvpPlayer)
+                CheckPVPFinish();
+
+            if (mStageInfo.TimeLimit > 0)
+            {
+                int currentPlaySec = (int)new TimeSpan((DateTime.Now - mStartTime).Ticks).TotalSeconds;
+                int remainSec = mStageInfo.TimeLimit - currentPlaySec;
+                if (remainSec != preRemainSec && remainSec >= 0)
+                {
+                    preRemainSec = remainSec;
+                    EventRemainTime?.Invoke(remainSec);
+                }
+
+                if(remainSec < 0 && IsIdle)
+                {
+                    EventFinish?.Invoke(false);
+                    FinishGame();
+                }
+            }
+            else if(mStageInfo.MoveLimit > 0)
+            {
+                if (Billboard.MoveCount >= mStageInfo.MoveLimit && IsIdle)
+                {
+                    EventFinish?.Invoke(false);
+                    FinishGame();
+                }
+            }
+
+            yield return null;
+        }
     }
     private void CheckStageFinish()
     {
@@ -544,11 +577,6 @@ public class InGameManager : MonoBehaviour
         if (isSuccess)
         {
             EventFinish?.Invoke(true);
-            FinishGame();
-        }
-        else if (Billboard.MoveCount >= mStageInfo.MoveLimit)
-        {
-            EventFinish?.Invoke(false);
             FinishGame();
         }
 
@@ -862,12 +890,17 @@ public class InGameManager : MonoBehaviour
         mFrames = null;
         mUserInfo = null;
         mStageInfo = null;
+
+        StopAllCoroutines();
     }
     private void RemoveLimit()
     {
-        Billboard.MoveCount++;
-        mMoveLock = Billboard.MoveCount >= mStageInfo.MoveLimit;
-        EventReduceLimit?.Invoke();
+        if(mStageInfo.MoveLimit > 0)
+        {
+            Billboard.MoveCount++;
+            mMoveLock = Billboard.MoveCount >= mStageInfo.MoveLimit;
+            EventReduceLimit?.Invoke();
+        }
     }
     #endregion
 
