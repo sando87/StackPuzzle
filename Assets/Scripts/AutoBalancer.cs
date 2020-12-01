@@ -26,11 +26,12 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancer()
     {
-        Product prevSwippedProduct = null;
         InGameManager mgr = null;
+        int counter = 0;
+        int counterLimit = 5;
         while (true)
         {
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1);
             
             if (InGameManager.InstStage.gameObject.activeInHierarchy)
                 mgr = InGameManager.InstStage;
@@ -41,29 +42,40 @@ public class AutoBalancer : MonoBehaviour
 
             if (mgr.IsIdle)
             {
-                prevSwippedProduct = AutoSwipeNextProduct(mgr, prevSwippedProduct);
-                if(prevSwippedProduct == null)
+                counter++;
+                if (counter > counterLimit)
+                {
+                    counter = 0;
+                    counterLimit = UnityEngine.Random.Range(3, 7);
                     AutoClickNextProduct(mgr);
+                }
+                else
+                {
+                    AutoSwipeNextProduct(mgr);
+                }
             }
         }
     }
 
-    Product AutoSwipeNextProduct(InGameManager mgr, Product prevSwippedProduct)
+    bool AutoSwipeNextProduct(InGameManager mgr)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        List<AutoBalancerInfo> candidates = new List<AutoBalancerInfo>();
+        int yOff = UnityEngine.Random.Range(0, mCntY);
         for (int y = 0; y < mCntY; ++y)
         {
+            int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Frame frame = mgr.GetFrame(x, y);
-                if (frame == null || frame.ChildProduct == null)
+                Frame frame = mgr.GetFrame(x, fixedY);
+                if (frame == null)
                     continue;
 
                 Product cenPro = frame.ChildProduct;
-                AutoBalancerInfo info = new AutoBalancerInfo();
+                if (cenPro == null || cenPro.IsLocked() || cenPro.IsChocoBlock())
+                    continue;
 
+                AutoBalancerInfo info = new AutoBalancerInfo();
                 List<Product> matches = new List<Product>();
                 cenPro.SearchMatchedProducts(matches, cenPro.mColor);
                 if (matches.Count >= UserSetting.MatchCount)
@@ -99,23 +111,15 @@ public class AutoBalancer : MonoBehaviour
                     info.targetProduct = cenPro.Down();
                 }
 
-                if(info.maxCount > 0)
-                    candidates.Add(info);
+                if(info.maxCount > 1)
+                {
+                    mgr.OnSwipe(cenPro.gameObject, info.direct);
+                    return true;
+                }
             }
         }
 
-        if (candidates.Count > 0)
-        {
-            candidates.Sort((lsh, rsh) => { return rsh.maxCount - lsh.maxCount; });
-            Product nextSwipeProduct = candidates[0].targetProduct;
-            if(nextSwipeProduct != prevSwippedProduct)
-            {
-                mgr.OnSwipe(nextSwipeProduct.gameObject, candidates[0].direct);
-                return nextSwipeProduct;
-            }
-        }
-
-        return null;
+        return false;
     }
     void AutoClickNextProduct(InGameManager mgr)
     {

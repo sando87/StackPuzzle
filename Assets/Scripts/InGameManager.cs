@@ -505,11 +505,6 @@ public class InGameManager : MonoBehaviour
         {
             yield return null;
 
-            if (FieldType == GameFieldType.Stage)
-                CheckStageFinish();
-            else if (FieldType == GameFieldType.pvpPlayer)
-                CheckPVPFinish();
-
             if (mStageInfo.TimeLimit > 0)
             {
                 int currentPlaySec = (int)new TimeSpan((DateTime.Now - mStartTime).Ticks).TotalSeconds;
@@ -524,6 +519,7 @@ public class InGameManager : MonoBehaviour
                 {
                     EventFinish?.Invoke(false);
                     FinishGame();
+                    break;
                 }
             }
             else if(mStageInfo.MoveLimit > 0)
@@ -532,8 +528,14 @@ public class InGameManager : MonoBehaviour
                 {
                     EventFinish?.Invoke(false);
                     FinishGame();
+                    break;
                 }
             }
+
+            if (FieldType == GameFieldType.Stage)
+                CheckStageFinish();
+            else if (FieldType == GameFieldType.pvpPlayer)
+                CheckPVPFinish();
         }
     }
     private void CheckStageFinish()

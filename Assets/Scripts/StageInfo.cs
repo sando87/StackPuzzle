@@ -18,18 +18,18 @@ public class StageInfoCell
 public class StageInfo
 {
     public const int Version = 3;
-    public int Num;
-    public string GoalType;
-    public int GoalValue;
-    public Sprite GoalTypeImage;
-    public StageGoalType GoalTypeEnum;
-    public int MoveLimit;
-    public int TimeLimit;
-    public float ColorCount;
-    public int XCount;
-    public int YCount;
+    public int Num = 0;
+    public string GoalType = "";
+    public int GoalValue = 0;
+    public Sprite GoalTypeImage = null;
+    public StageGoalType GoalTypeEnum = StageGoalType.None;
+    public int MoveLimit = 0;
+    public int TimeLimit = 0;
+    public float ColorCount = 0;
+    public int XCount = 0;
+    public int YCount = 0;
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
-    public StageInfoCell[,] Field;
+    public StageInfoCell[,] Field = null;
 
     public static StageInfo Load(int stageNum)
     {
