@@ -503,6 +503,8 @@ public class InGameManager : MonoBehaviour
         int preRemainSec = 0;
         while(true)
         {
+            yield return null;
+
             if (FieldType == GameFieldType.Stage)
                 CheckStageFinish();
             else if (FieldType == GameFieldType.pvpPlayer)
@@ -532,8 +534,6 @@ public class InGameManager : MonoBehaviour
                     FinishGame();
                 }
             }
-
-            yield return null;
         }
     }
     private void CheckStageFinish()
@@ -591,24 +591,24 @@ public class InGameManager : MonoBehaviour
             return;
         }
 
-        Dictionary<ProductColor, int> colorCount = new Dictionary<ProductColor, int>();
+        int counter = 0;
         foreach (Frame frame in mFrames)
         {
-            Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsChocoBlock())
+            if (frame.Empty)
                 continue;
 
-            if (colorCount.ContainsKey(pro.mColor))
-                colorCount[pro.mColor] += 1;
-            else
-                colorCount[pro.mColor] = 1;
-
-            if (colorCount[pro.mColor] >= UserSetting.MatchCount)
-                return;
+            counter++;
+            Product pro = frame.ChildProduct;
+            if (pro != null && pro.IsChocoBlock())
+                counter--;
         }
 
-        EventFinish?.Invoke(false);
-        FinishGame();
+        if(counter == 0)
+        {
+            EventFinish?.Invoke(false);
+            FinishGame();
+        }
+        
         return;
     }
     private Product[] ApplySkillProducts(Product[] matches)
@@ -1023,10 +1023,14 @@ public class InGameManager : MonoBehaviour
     }
     private ProductInfo[] Serialize(Product[] pros)
     {
-        List<ProductInfo> list = new List<ProductInfo>();
-        foreach (Product pro in pros)
-            list.Add(new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor));
-        return list.ToArray();
+        ProductInfo[] infos = new ProductInfo[100];
+        for (int i = 0; i < pros.Length; ++i)
+        {
+            infos[i].idxX = pros[i].ParentFrame.IndexX;
+            infos[i].idxY = pros[i].ParentFrame.IndexY;
+            infos[i].color = pros[i].mColor;
+        }
+        return infos;
     }
     private void Network_StartGame(Product[] pros)
     {
@@ -1055,8 +1059,9 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = pro.Combo;
         req.ArrayCount = 1;
-        req.products = new ProductInfo[1];
-        req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
+        req.products[0].idxX = pro.ParentFrame.IndexX;
+        req.products[0].idxY = pro.ParentFrame.IndexY;
+        req.products[0].color = pro.mColor;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
@@ -1070,8 +1075,9 @@ public class InGameManager : MonoBehaviour
         req.combo = pro.Combo;
         req.ArrayCount = 1;
         req.dir = dir;
-        req.products = new ProductInfo[1];
-        req.products[0] = new ProductInfo(pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.mColor);
+        req.products[0].idxX = pro.ParentFrame.IndexX;
+        req.products[0].idxY = pro.ParentFrame.IndexY;
+        req.products[0].color = pro.mColor;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Destroy(Product[] pros, ProductSkill skill)

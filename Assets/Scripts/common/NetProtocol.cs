@@ -154,7 +154,6 @@ public struct ProductInfo
     public ProductColor color;
     public int idxX;
     public int idxY;
-    public ProductInfo(int x, int y, ProductColor c) { idxX = x; idxY = y; color = c; }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
@@ -191,5 +190,5 @@ public class PVPInfo
     public UserInfo userInfo;
     public int ArrayCount;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
-    public ProductInfo[] products;
+    public ProductInfo[] products = new ProductInfo[100];
 }
