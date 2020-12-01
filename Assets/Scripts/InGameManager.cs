@@ -902,6 +902,23 @@ public class InGameManager : MonoBehaviour
             EventReduceLimit?.Invoke();
         }
     }
+    public int NextMatchCount(Product pro, SwipeDirection dir)
+    {
+        Product target = pro.Dir(dir);
+        if (target == null || target.mColor == pro.mColor)
+            return 0;
+
+        List<Product> matches = new List<Product>();
+        Product[] pros = target.GetAroundProducts();
+        foreach(Product each in pros)
+        {
+            if (each == pro)
+                continue;
+
+            each.SearchMatchedProducts(matches, pro.mColor);
+        }
+        return matches.Count;
+    }
     #endregion
 
     #region Network

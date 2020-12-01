@@ -24,6 +24,17 @@ public class Product : MonoBehaviour
     public Sprite ImgCombo;
     public GameObject ComboNumPrefab;
 
+    public Product Dir(SwipeDirection dir)
+    {
+        switch(dir)
+        {
+            case SwipeDirection.LEFT: return Left();
+            case SwipeDirection.RIGHT: return Right();
+            case SwipeDirection.UP: return Up();
+            case SwipeDirection.DOWN: return Down();
+        }
+        return null;
+    }
     public float Weight { get; set; }
     public int Combo { get; set; }
     public bool IsLocked() { return mLocked; }

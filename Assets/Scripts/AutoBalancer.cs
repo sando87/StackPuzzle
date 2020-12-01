@@ -9,80 +9,6 @@ public class AutoBalancerInfo
     public Product targetProduct = null;
     public int maxCount = 0;
     public SwipeDirection direct = SwipeDirection.LEFT;
-    public bool DecideDirection(Product cenPro)
-    {
-        if (cenPro.IsChocoBlock())
-            return false;
-
-        if (cenPro.Left() != null)
-        {
-            Product pro = cenPro.Left();
-            Product[] aroundPros = pro.GetAroundProducts();
-            int sameColorCount = 0;
-            foreach (Product item in aroundPros)
-                if (cenPro.mColor == item.mColor)
-                    sameColorCount++;
-
-            if(sameColorCount > maxCount)
-            {
-                targetProduct = cenPro;
-                direct = SwipeDirection.LEFT;
-                maxCount = sameColorCount;
-            }
-        }
-
-        if (cenPro.Right() != null)
-        {
-            Product pro = cenPro.Right();
-            Product[] aroundPros = pro.GetAroundProducts();
-            int sameColorCount = 0;
-            foreach (Product item in aroundPros)
-                if (cenPro.mColor == item.mColor)
-                    sameColorCount++;
-
-            if (sameColorCount > maxCount)
-            {
-                targetProduct = cenPro;
-                direct = SwipeDirection.RIGHT;
-                maxCount = sameColorCount;
-            }
-        }
-
-        if (cenPro.Up() != null)
-        {
-            Product pro = cenPro.Up();
-            Product[] aroundPros = pro.GetAroundProducts();
-            int sameColorCount = 0;
-            foreach (Product item in aroundPros)
-                if (cenPro.mColor == item.mColor)
-                    sameColorCount++;
-
-            if (sameColorCount > maxCount)
-            {
-                targetProduct = cenPro;
-                direct = SwipeDirection.UP;
-                maxCount = sameColorCount;
-            }
-        }
-
-        if (cenPro.Down() != null)
-        {
-            Product pro = cenPro.Down();
-            Product[] aroundPros = pro.GetAroundProducts();
-            int sameColorCount = 0;
-            foreach (Product item in aroundPros)
-                if (cenPro.mColor == item.mColor)
-                    sameColorCount++;
-
-            if (sameColorCount > maxCount)
-            {
-                targetProduct = cenPro;
-                direct = SwipeDirection.DOWN;
-                maxCount = sameColorCount;
-            }
-        }
-        return true;
-    }
 }
 
 public class AutoBalancer : MonoBehaviour
@@ -100,10 +26,11 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancer()
     {
+        Product prevSwippedProduct = null;
         InGameManager mgr = null;
         while (true)
         {
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(1.5f);
             
             if (InGameManager.InstStage.gameObject.activeInHierarchy)
                 mgr = InGameManager.InstStage;
@@ -114,15 +41,14 @@ public class AutoBalancer : MonoBehaviour
 
             if (mgr.IsIdle)
             {
-                if (UnityEngine.Random.Range(0, 3) == 0)
-                    AutoSwipeNextProduct(mgr);
-                else
+                prevSwippedProduct = AutoSwipeNextProduct(mgr, prevSwippedProduct);
+                if(prevSwippedProduct == null)
                     AutoClickNextProduct(mgr);
             }
         }
     }
 
-    void AutoSwipeNextProduct(InGameManager mgr)
+    Product AutoSwipeNextProduct(InGameManager mgr, Product prevSwippedProduct)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
@@ -135,77 +61,84 @@ public class AutoBalancer : MonoBehaviour
                 if (frame == null || frame.ChildProduct == null)
                     continue;
 
+                Product cenPro = frame.ChildProduct;
                 AutoBalancerInfo info = new AutoBalancerInfo();
-                info.DecideDirection(frame.ChildProduct);
-                if(info.targetProduct != null)
+
+                List<Product> matches = new List<Product>();
+                cenPro.SearchMatchedProducts(matches, cenPro.mColor);
+                if (matches.Count >= UserSetting.MatchCount)
+                    continue;
+
+
+                int leftMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.LEFT);
+                if(leftMatchCount > info.maxCount)
+                {
+                    info.maxCount = leftMatchCount;
+                    info.direct = SwipeDirection.LEFT;
+                    info.targetProduct = cenPro.Left();
+                }
+                int rightMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.RIGHT);
+                if (rightMatchCount > info.maxCount)
+                {
+                    info.maxCount = rightMatchCount;
+                    info.direct = SwipeDirection.RIGHT;
+                    info.targetProduct = cenPro.Right();
+                }
+                int upMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.UP);
+                if (upMatchCount > info.maxCount)
+                {
+                    info.maxCount = upMatchCount;
+                    info.direct = SwipeDirection.UP;
+                    info.targetProduct = cenPro.Up();
+                }
+                int downMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.DOWN);
+                if (downMatchCount > info.maxCount)
+                {
+                    info.maxCount = downMatchCount;
+                    info.direct = SwipeDirection.DOWN;
+                    info.targetProduct = cenPro.Down();
+                }
+
+                if(info.maxCount > 0)
                     candidates.Add(info);
             }
         }
 
-        
         if (candidates.Count > 0)
         {
             candidates.Sort((lsh, rsh) => { return rsh.maxCount - lsh.maxCount; });
-            mgr.OnSwipe(candidates[0].targetProduct.gameObject, candidates[0].direct);
-        }
-        else
-        {
-            int ranX = UnityEngine.Random.Range(0, mCntX);
-            int ranY = UnityEngine.Random.Range(0, mCntY);
-            Frame randomFrame = mgr.GetFrame(ranX, ranY);
-            if (randomFrame != null && randomFrame.ChildProduct != null && !randomFrame.ChildProduct.IsChocoBlock())
+            Product nextSwipeProduct = candidates[0].targetProduct;
+            if(nextSwipeProduct != prevSwippedProduct)
             {
-                Product randomPro = randomFrame.ChildProduct;
-                if (ranY % 2 == 0)
-                {
-                    if (randomPro.Left() != null)
-                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.LEFT);
-                    else if (randomPro.Right() != null)
-                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.RIGHT);
-                }
-                else
-                {
-                    if (randomPro.Up() != null)
-                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.UP);
-                    else if (randomPro.Down() != null)
-                        mgr.OnSwipe(randomPro.gameObject, SwipeDirection.DOWN);
-                }
+                mgr.OnSwipe(nextSwipeProduct.gameObject, candidates[0].direct);
+                return nextSwipeProduct;
             }
         }
+
+        return null;
     }
     void AutoClickNextProduct(InGameManager mgr)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        List<KeyValuePair< Product, int>> candidates = new List<KeyValuePair<Product, int>>();
-        Dictionary<Product, int> scannedProducts = new Dictionary<Product, int>();
+        int yOff = UnityEngine.Random.Range(0, mCntY);
         for (int y = 0; y < mCntY; ++y)
         {
+            int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Frame frame = mgr.GetFrame(x, y);
-                if (frame == null || frame.ChildProduct == null)
-                    continue;
-
-                Product pro = frame.ChildProduct;
-                if (scannedProducts.ContainsKey(pro))
+                Product pro = mgr.GetFrame(x, fixedY).ChildProduct;
+                if (pro == null || pro.IsLocked())
                     continue;
 
                 List<Product> matchedList = new List<Product>();
                 pro.SearchMatchedProducts(matchedList, pro.mColor);
-                foreach (Product tmp in matchedList)
-                    scannedProducts[tmp] = 1;
-
                 if (matchedList.Count >= UserSetting.MatchCount)
-                    candidates.Add(new KeyValuePair<Product, int>(pro, matchedList.Count));
+                {
+                    mgr.OnClick(pro.gameObject);
+                    return;
+                }
             }
-        }
-
-
-        if (candidates.Count > 0)
-        {
-            candidates.Sort((lsh, rsh) => { return rsh.Value - lsh.Value; });
-            mgr.OnClick(candidates[0].Key.gameObject);
         }
     }
 }
