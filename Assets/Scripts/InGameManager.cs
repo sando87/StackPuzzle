@@ -214,7 +214,6 @@ public class InGameManager : MonoBehaviour
         EventCombo?.Invoke(Billboard.CurrentCombo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        //Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
         List<Product> skilledProducts = new List<Product>();
         ProductSkill nextSkill = CheckSkillable(firstMatches, skilledProducts);
         Frame[] emptyFrames = DestroyProducts(firstMatches, nextSkill);
@@ -267,17 +266,21 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            foreach(Product skillProduct in skilledProducts)
+            int proIdx = 0;
+            while (true)
             {
                 yield return new WaitForSeconds(intervalDrop);
                 Product[] droppedProducts = StartToDropAndCreate(durationDrop);
                 yield return new WaitForSeconds(durationDrop);
-
-                Product[] skillEffectPros = ScanProducts(skillProduct);
-                DestroyProducts(skillEffectPros, ProductSkill.Nothing);
+                if (proIdx >= skilledProducts.Count)
+                    break;
 
                 EventCombo?.Invoke(Billboard.CurrentCombo);
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+                Product[] skillEffectPros = ScanProducts(skilledProducts[proIdx]);
+                DestroyProducts(skillEffectPros, ProductSkill.Nothing);
+                proIdx++;
             }
         }
 
@@ -781,21 +784,22 @@ public class InGameManager : MonoBehaviour
         if (matches.Length <= UserSetting.MatchCount)
             return ProductSkill.Nothing;
 
-        bool isHori = true;
-        bool isVerti = true;
-        foreach (Product pro in matches)
-        {
-            if (pro.mSkill != ProductSkill.Nothing)
-                return ProductSkill.Nothing;
-        
-            isHori &= (matches[0].ParentFrame.IndexY == pro.ParentFrame.IndexY);
-            isVerti &= (matches[0].ParentFrame.IndexX == pro.ParentFrame.IndexX);
-        }
+        //bool isHori = true;
+        //bool isVerti = true;
+        //foreach (Product pro in matches)
+        //{
+        //    if (pro.mSkill != ProductSkill.Nothing)
+        //        return ProductSkill.Nothing;
+        //
+        //    isHori &= (matches[0].ParentFrame.IndexY == pro.ParentFrame.IndexY);
+        //    isVerti &= (matches[0].ParentFrame.IndexX == pro.ParentFrame.IndexX);
+        //}
 
         ProductSkill skill = ProductSkill.Nothing;
-        if (isHori)
+        int ran = UnityEngine.Random.Range(0, 3);
+        if (ran == 0)
             skill = ProductSkill.OneMore;
-        else if (isVerti)
+        else if (ran == 1)
             skill = ProductSkill.KeepCombo;
         else
             skill = ProductSkill.SameColor;
@@ -1103,15 +1107,18 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                AttackPoints.Pop(body.ArrayCount);
-                for (int i = 0; i < body.ArrayCount; ++i)
+                if(IsAllIdle())
                 {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    pro.SetChocoBlock(1, true);
-                }
+                    AttackPoints.Pop(body.ArrayCount);
+                    for (int i = 0; i < body.ArrayCount; ++i)
+                    {
+                        ProductInfo info = body.products[i];
+                        Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                        pro.SetChocoBlock(1, true);
+                    }
 
-                mNetMessages.RemoveFirst();
+                    mNetMessages.RemoveFirst();
+                }
             }
         }
     }

@@ -65,7 +65,6 @@ public class Product : MonoBehaviour
     public void StartMerge(Frame frame, float duration)
     {
         mLocked = true;
-        //transform.localPosition = new Vector3(0, 0, -1);
         transform.SetParent(frame.GameManager.transform);
 
         CreateComboTextEffect();
@@ -83,7 +82,6 @@ public class Product : MonoBehaviour
     {
         mLocked = true;
         mSkill = skill;
-        transform.SetParent(ParentFrame.GameManager.transform);
 
         CreateComboTextEffect();
         StartCoroutine(AnimateFlash(1.3f));
@@ -96,7 +94,6 @@ public class Product : MonoBehaviour
     public void StartDestroy(GameObject mgr)
     {
         mLocked = true;
-        //transform.localPosition = new Vector3(0, 0, -1);
         transform.SetParent(mgr.transform);
 
         CreateComboTextEffect();

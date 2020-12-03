@@ -153,7 +153,7 @@ public class NetClientApp : MonoBehaviour
             byte[] recvBuf = mRecvBuffer.ToArray();
             if (!NetProtocol.IsValid(recvBuf))
             {
-                LOG.warn("SplitBuffer Invalid data");
+                LOG.warn("Invalid data detected : Clear RecvBuffer");
                 mRecvBuffer.Clear();
                 return;
             }
@@ -175,9 +175,6 @@ public class NetClientApp : MonoBehaviour
 
                 EventMessage?.Invoke(recvMsg, resBody);
             }
-
-            if(mRecvBuffer.Count != 0)
-                LOG.warn("UnKnown Network Packet : " + mRecvBuffer.Count);
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
