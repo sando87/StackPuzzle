@@ -59,17 +59,17 @@ public class MenuBattle : MonoBehaviour
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
     private void OnApplicationPause(bool pause)
     {
-        FinishGame(false);
+        //FinishGame(false);
     }
 
     private void OnApplicationFocus(bool focus)
     {
-        FinishGame(false);
+        //FinishGame(false);
     }
 
     private void OnApplicationQuit()
     {
-        FinishGame(false);
+        //FinishGame(false);
     }
 #endif
 

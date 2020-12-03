@@ -243,7 +243,7 @@ public class InGameManager : MonoBehaviour
             emptyFrames = nextEmptyFrames.ToArray();
         }
 
-        if (skilledProducts.Count > 5)
+        if (skilledProducts.Count >= 4)
         {
             yield return new WaitForSeconds(intervalDrop + durationDrop);
             DestroyProducts(skilledProducts.ToArray(), ProductSkill.Nothing);
@@ -311,7 +311,7 @@ public class InGameManager : MonoBehaviour
                 if (frame == null)
                     continue;
                 Product pro = frame.ChildProduct;
-                if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
                     results.Add(pro);
             }
         }
@@ -323,7 +323,7 @@ public class InGameManager : MonoBehaviour
                 if (frame == null)
                     continue;
                 Product pro = frame.ChildProduct;
-                if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
                     results.Add(pro);
             }
         }
@@ -339,7 +339,7 @@ public class InGameManager : MonoBehaviour
                     if (frame == null)
                         continue;
                     Product pro = frame.ChildProduct;
-                    if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                    if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
                         results.Add(pro);
                 }
             }
@@ -735,31 +735,24 @@ public class InGameManager : MonoBehaviour
     }
     private List<Product> GetNextFlushTargets(int cnt)
     {
-        float xCenter = (CountX - 1.0f) * 0.5f;
-        float yCenter = (CountY - 1.0f) * 0.5f;
         List<Product> products = new List<Product>();
-        for (int y = 0; y < CountY; ++y)
+        for(int y = 0; y < CountY; ++y)
         {
             for (int x = 0; x < CountX; ++x)
             {
-                Product pro = mFrames[x, y].ChildProduct;
+                Frame frame = mFrames[x, y];
+                if (frame.Empty)
+                    continue;
+                Product pro = frame.ChildProduct;
                 if (pro == null || pro.IsChocoBlock())
                     continue;
 
-                float distX = Math.Abs(xCenter - x);
-                float distY = Math.Abs(yCenter - y);
-                float max = Math.Max(distX, distY);
-                float weight = max + UnityEngine.Random.Range(-0.4f, 0.4f);
-                pro.Weight = weight;
                 products.Add(pro);
+                if (products.Count >= cnt)
+                    return products;
             }
         }
-
-        products.Sort((lsb, msb) =>
-        {
-            return lsb.Weight - msb.Weight > 0 ? -1 : 1;
-        });
-        return (products.Count < cnt) ? products : products.GetRange(0, cnt);
+        return products;
     }
     private void ReduceTargetScoreCombo(Product pro, int preScore, int nextScore)
     {
