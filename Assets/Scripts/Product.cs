@@ -62,32 +62,41 @@ public class Product : MonoBehaviour
         mAnimation.Play("swap");
         StartCoroutine(AnimateSwipe(target, EventSwipeEnd));
     }
-    public void StartMerge(Frame frame, float duration, ProductSkill skill)
+    public void StartMerge(Frame frame, float duration)
     {
         mLocked = true;
-        bool isMergeTarget = ParentFrame == frame;
-        if (!isMergeTarget)
-            transform.SetParent(frame.GameManager.transform);
+        //transform.localPosition = new Vector3(0, 0, -1);
+        transform.SetParent(frame.GameManager.transform);
 
         CreateComboTextEffect();
         StartCoroutine(AnimateFlash(1.3f));
 
-
         StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => {
             StartCoroutine(AnimateMove(frame.transform.position, duration - 0.3f, () => {
                 mLocked = false;
-                if (isMergeTarget)
-                    ChangeSkilledProduct(skill);
-                else
-                    Destroy(gameObject);
+                Destroy(gameObject);
             }));
 
+        }));
+    }
+    public void StartMakeSkill(float duration, ProductSkill skill)
+    {
+        mLocked = true;
+        mSkill = skill;
+        transform.SetParent(ParentFrame.GameManager.transform);
+
+        CreateComboTextEffect();
+        StartCoroutine(AnimateFlash(1.3f));
+
+        StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
+            mLocked = false;
+            ChangeProductImage(skill);
         }));
     }
     public void StartDestroy(GameObject mgr)
     {
         mLocked = true;
-        transform.localPosition = new Vector3(0, 0, -1);
+        //transform.localPosition = new Vector3(0, 0, -1);
         transform.SetParent(mgr.transform);
 
         CreateComboTextEffect();
@@ -251,7 +260,7 @@ public class Product : MonoBehaviour
 
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (mLocked || mColor != color || IsChocoBlock())
+        if (mLocked || mColor != color || IsChocoBlock() || mSkill != ProductSkill.Nothing)
             return;
 
         if (products.Contains(this))
@@ -347,9 +356,8 @@ public class Product : MonoBehaviour
         }
         return idleFrames;
     }
-    public void ChangeSkilledProduct(ProductSkill skill)
+    public void ChangeProductImage(ProductSkill skill)
     {
-        mSkill = skill;
         mAnimation.Play("swap");
         switch (skill)
         {

@@ -215,7 +215,10 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         //Frame[] emptyFrames = DestroyProductsWithSkill(firstMatches);
-        Frame[] emptyFrames = DestroyProducts(firstMatches, ProductSkill.Nothing);
+        List<Product> skilledProducts = new List<Product>();
+        ProductSkill nextSkill = CheckSkillable(firstMatches, skilledProducts);
+        Frame[] emptyFrames = DestroyProducts(firstMatches, nextSkill);
+        
         while (true)
         {
             yield return new WaitForSeconds(intervalMatch);
@@ -234,34 +237,112 @@ public class InGameManager : MonoBehaviour
             foreach (Product[] matches in nextMatches)
             {
                 //Frame[] empties = DestroyProductsWithSkill(matches);
-                Frame[] empties = DestroyProducts(matches, ProductSkill.Nothing);
+                nextSkill = CheckSkillable(matches, skilledProducts);
+                Frame[] empties = DestroyProducts(matches, nextSkill);
                 nextEmptyFrames.AddRange(empties);
             }
             emptyFrames = nextEmptyFrames.ToArray();
         }
 
-        while (true)
+        if (skilledProducts.Count > 5)
         {
-            yield return new WaitForSeconds(intervalDrop);
-            Product[] droppedProducts = StartToDropAndCreate(durationDrop);
-            yield return new WaitForSeconds(durationDrop);
-            List<Product[]> matches = FindMatchedProducts(droppedProducts);
-            if (matches.Count <= 0)
-                break;
-
-            EventCombo?.Invoke(Billboard.CurrentCombo);
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-            foreach (Product[] pros in matches)
+            yield return new WaitForSeconds(intervalDrop + durationDrop);
+            DestroyProducts(skilledProducts.ToArray(), ProductSkill.Nothing);
+            yield return new WaitForSeconds(intervalDrop + durationDrop);
+            while (true)
             {
-                //Product[] skilledMatches = ApplySkillProducts(pros);
-                //DestroyProducts(skilledMatches, ProductSkill.Nothing);
-                DestroyProducts(pros, ProductSkill.Nothing);
+                yield return new WaitForSeconds(intervalDrop);
+                Product[] droppedProducts = StartToDropAndCreate(durationDrop);
+                yield return new WaitForSeconds(durationDrop);
+                List<Product[]> matches = FindMatchedProducts(droppedProducts);
+                if (matches.Count <= 0)
+                    break;
+
+                EventCombo?.Invoke(Billboard.CurrentCombo);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+
+                foreach (Product[] pros in matches)
+                    DestroyProducts(pros, ProductSkill.Nothing);
+            }
+        }
+        else
+        {
+            foreach(Product skillProduct in skilledProducts)
+            {
+                yield return new WaitForSeconds(intervalDrop);
+                Product[] droppedProducts = StartToDropAndCreate(durationDrop);
+                yield return new WaitForSeconds(durationDrop);
+
+                Product[] skillEffectPros = ScanProducts(skillProduct);
+                DestroyProducts(skillEffectPros, ProductSkill.Nothing);
+
+                EventCombo?.Invoke(Billboard.CurrentCombo);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
             }
         }
 
         EventCombo?.Invoke(0);
         mIsCycling = false;
+    }
+    private Product[] FindSkilledProducts()
+    {
+        List<Product> pros = new List<Product>();
+        foreach(Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro != null && pro.mSkill != ProductSkill.Nothing)
+                pros.Add(pro);
+        }
+        return pros.ToArray();
+    }
+    private Product[] ScanProducts(Product skilledProduct)
+    {
+        List<Product> results = new List<Product>();
+        results.Add(skilledProduct);
+
+        if (skilledProduct.mSkill == ProductSkill.OneMore) //hori
+        {
+            for(int i = 0; i < CountX; ++i)
+            {
+                Frame frame = GetFrame(i, skilledProduct.ParentFrame.IndexY);
+                if (frame == null)
+                    continue;
+                Product pro = frame.ChildProduct;
+                if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                    results.Add(pro);
+            }
+        }
+        else if (skilledProduct.mSkill == ProductSkill.KeepCombo) //vert
+        {
+            for (int i = 0; i < CountY; ++i)
+            {
+                Frame frame = GetFrame(skilledProduct.ParentFrame.IndexX, i);
+                if (frame == null)
+                    continue;
+                Product pro = frame.ChildProduct;
+                if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                    results.Add(pro);
+            }
+        }
+        else if (skilledProduct.mSkill == ProductSkill.SameColor) //bomb
+        {
+            int idxX = skilledProduct.ParentFrame.IndexX;
+            int idxY = skilledProduct.ParentFrame.IndexY;
+            for (int y = idxY - 1; y < idxY + 2; ++y)
+            {
+                for (int x = idxX - 1; x < idxX + 2; ++x)
+                {
+                    Frame frame = GetFrame(x, y);
+                    if (frame == null)
+                        continue;
+                    Product pro = frame.ChildProduct;
+                    if (pro != null && pro.mSkill == ProductSkill.Nothing)
+                        results.Add(pro);
+                }
+            }
+        }
+
+        return results.ToArray();
     }
     private Frame[] DestroyProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -277,7 +358,13 @@ public class InGameManager : MonoBehaviour
             if (makeSkill == ProductSkill.Nothing)
                 pro.StartDestroy(gameObject);
             else
-                pro.StartMerge(mainProduct.ParentFrame, durationMerge, makeSkill);
+            {
+                if (pro == mainProduct)
+                    pro.StartMakeSkill(durationMerge, makeSkill);
+                else
+                    pro.StartMerge(mainProduct.ParentFrame, durationMerge);
+            }
+                
         }
 
         if (FieldType == GameFieldType.Stage)
@@ -290,23 +377,6 @@ public class InGameManager : MonoBehaviour
 
         Network_Destroy(matches, makeSkill);
         EventDestroyed?.Invoke(matches);
-        return emptyFrames.ToArray();
-    }
-    private Frame[] DestroyProductsWithSkill(Product[] matches)
-    {
-        List<Frame> emptyFrames = new List<Frame>();
-        Product[] skilledMatches = ApplySkillProducts(matches);
-        if (skilledMatches.Length != matches.Length)
-        {
-            Frame[] empties = DestroyProducts(skilledMatches, ProductSkill.Nothing);
-            emptyFrames.AddRange(empties);
-        }
-        else
-        {
-            ProductSkill nextSkill = TryMakeSkillProduct(matches);
-            Frame[] empties = DestroyProducts(matches, nextSkill);
-            emptyFrames.AddRange(empties);
-        }
         return emptyFrames.ToArray();
     }
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
@@ -706,27 +776,32 @@ public class InGameManager : MonoBehaviour
                 EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Combo);
         }
     }
-    private ProductSkill TryMakeSkillProduct(Product[] matches)
+    private ProductSkill CheckSkillable(Product[] matches, List<Product> skilledProducts)
     {
+        if (matches.Length <= UserSetting.MatchCount)
+            return ProductSkill.Nothing;
+
         bool isHori = true;
         bool isVerti = true;
         foreach (Product pro in matches)
         {
             if (pro.mSkill != ProductSkill.Nothing)
                 return ProductSkill.Nothing;
-
+        
             isHori &= (matches[0].ParentFrame.IndexY == pro.ParentFrame.IndexY);
             isVerti &= (matches[0].ParentFrame.IndexX == pro.ParentFrame.IndexX);
         }
 
-        if (matches.Length == 4 && isHori)
-            return ProductSkill.OneMore;
-        else if (matches.Length == 4 && isVerti)
-            return ProductSkill.KeepCombo;
-        else if (matches.Length == 5)
-            return ProductSkill.SameColor;
+        ProductSkill skill = ProductSkill.Nothing;
+        if (isHori)
+            skill = ProductSkill.OneMore;
+        else if (isVerti)
+            skill = ProductSkill.KeepCombo;
+        else
+            skill = ProductSkill.SameColor;
 
-        return ProductSkill.Nothing;
+        skilledProducts.Add(matches[0]);
+        return skill;
     }
     private List<Product> GetSameColorProducts(ProductColor color)
     {
