@@ -993,6 +993,29 @@ public class InGameManager : MonoBehaviour
         }
         return matches.Count;
     }
+    private Frame[] GetRandomIdleFrames(int count)
+    {
+        Dictionary<int, Frame> rets = new Dictionary<int, Frame>();
+        int totalCount = CountX * CountY;
+        int loopCount = 0;
+        while(rets.Count < count && loopCount < totalCount)
+        {
+            int ranIdx = UnityEngine.Random.Range(0, totalCount);
+            if (rets.ContainsKey(ranIdx))
+                continue;
+
+            int idxX = ranIdx % CountX;
+            int idxY = ranIdx / CountX;
+            Product pro = mFrames[idxX, idxY].ChildProduct;
+            if (pro == null || pro.IsLocked())
+                continue;
+
+            rets[ranIdx] = pro.ParentFrame;
+            loopCount++;
+        }
+
+        return new List<Frame>(rets.Values).ToArray();
+    }
     #endregion
 
     #region Network

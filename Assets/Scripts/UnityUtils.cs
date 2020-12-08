@@ -72,4 +72,20 @@ public class UnityUtils
 
         action?.Invoke();
     }
+    public static float AccelPlus(float time, float duration)
+    {
+        return time * time / (duration * duration);
+    }
+    public static float AccelMinus(float time, float duration)
+    {
+        return 1 - AccelPlus(time, duration);
+    }
+    public static float DecelPlus(float time, float duration)
+    {
+        return 1 - DecelMinus(time, duration);
+    }
+    public static float DecelMinus(float time, float duration)
+    {
+        return (time - duration) * (time - duration) / (duration * duration);
+    }
 }
