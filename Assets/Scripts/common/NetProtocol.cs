@@ -9,7 +9,8 @@ public enum NetCMD
 }
 public enum PVPCommand
 {
-    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame,
+    SkillBomb, SkillBombRes, SkillIce, SkillIceRes
 }
 public enum ProductColor
 {
@@ -189,6 +190,9 @@ public class PVPInfo
     public SwipeDirection dir;
     public UserInfo userInfo;
     public int ArrayCount;
+    public float x;
+    public float y;
+    public float z;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
     public ProductInfo[] products = new ProductInfo[100];
 }

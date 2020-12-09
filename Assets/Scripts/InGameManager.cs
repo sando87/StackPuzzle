@@ -29,6 +29,7 @@ public class InGameManager : MonoBehaviour
     public GameObject MaskPrefab;
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
+    public GameObject EffectLaserPrefab;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -1016,6 +1017,21 @@ public class InGameManager : MonoBehaviour
 
         return new List<Frame>(rets.Values).ToArray();
     }
+    void CastSkillBomb(Product[] matches)
+    {
+        Vector3 pos = matches[0].transform.position;
+        Frame[] targetFrames = GetRandomIdleFrames(3);
+        foreach(Frame frame in targetFrames)
+            CreateLaserEffect(pos, frame.transform.position);
+
+        Network_SkillBomb(targetFrames, pos);
+    }
+    void CreateLaserEffect(Vector3 startPos, Vector3 destPos)
+    {
+        GameObject laserObj = GameObject.Instantiate(EffectLaserPrefab, startPos, Quaternion.identity, transform);
+        EffectLaser laser = laserObj.GetComponent<EffectLaser>();
+        laser.Burst(destPos, 0.5f);
+    }
     #endregion
 
     #region Network
@@ -1136,6 +1152,41 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.SkillBombRes)
+            {
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
+                        products.Add(pro);
+                }
+
+                DestroyProducts(products.ToArray(), ProductSkill.Nothing);
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.SkillBomb)
+            {
+                Vector3 startPos;
+                startPos.x = body.x;
+                startPos.y = body.y;
+                startPos.z = body.z;
+                List<Product> rets = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Frame frame = GetFrame(info.idxX, info.idxY);
+                    CreateLaserEffect(startPos, frame.transform.position);
+                    Product pro = frame.ChildProduct;
+                    if (pro != null && !pro.IsLocked())
+                        rets.Add(pro);
+                }
+
+                DestroyProducts(rets.ToArray(), ProductSkill.Nothing);
+                Network_SkillBombRes(rets.ToArray());
+                mNetMessages.RemoveFirst();
+            }
         }
     }
     private ProductInfo[] Serialize(Product[] pros)
@@ -1146,6 +1197,17 @@ public class InGameManager : MonoBehaviour
             infos[i].idxX = pros[i].ParentFrame.IndexX;
             infos[i].idxY = pros[i].ParentFrame.IndexY;
             infos[i].color = pros[i].mColor;
+        }
+        return infos;
+    }
+    private ProductInfo[] Serialize(Frame[] frames)
+    {
+        ProductInfo[] infos = new ProductInfo[100];
+        for (int i = 0; i < frames.Length; ++i)
+        {
+            infos[i].idxX = frames[i].IndexX;
+            infos[i].idxY = frames[i].IndexY;
+            infos[i].color = frames[i].ChildProduct.mColor;
         }
         return infos;
     }
@@ -1235,6 +1297,33 @@ public class InGameManager : MonoBehaviour
         req.combo = pros[0].Combo;
         req.ArrayCount = pros.Length;
         req.products = Serialize(pros);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    private void Network_SkillBomb(Frame[] frames, Vector3 startPos)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.SkillBomb;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.ArrayCount = frames.Length;
+        req.products = Serialize(frames);
+        req.x = startPos.x;
+        req.y = startPos.y;
+        req.z = startPos.z;
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    private void Network_SkillBombRes(Product[] bombedPros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.SkillBombRes;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.ArrayCount = bombedPros.Length;
+        req.products = Serialize(bombedPros);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     #endregion
