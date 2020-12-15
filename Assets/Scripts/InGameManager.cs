@@ -231,7 +231,7 @@ public class InGameManager : MonoBehaviour
         {
             mIsSwipping = true;
             RemoveLimit();
-            Network_Swipe(product, fixedDir);
+            Network_Swipe(product, dir);
             targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), null);
             product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), () => {
                 mIsSwipping = false;
@@ -305,21 +305,20 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            int proIdx = 0;
             while (true)
             {
                 yield return new WaitForSeconds(intervalDrop);
                 Product[] droppedProducts = StartToDropAndCreate(durationDrop);
                 yield return new WaitForSeconds(durationDrop);
-                if (proIdx >= skilledProducts.Count)
+                List<Product[]> matches = FindMatchedProducts(droppedProducts);
+                if (matches.Count <= 0)
                     break;
 
                 EventCombo?.Invoke(Billboard.CurrentCombo);
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-                Product[] skillEffectPros = ScanProducts(skilledProducts[proIdx]);
-                DestroyProducts(skillEffectPros, ProductSkill.Nothing);
-                proIdx++;
+                foreach (Product[] pros in matches)
+                    DestroyProducts(pros, ProductSkill.Nothing);
             }
         }
 
@@ -1096,11 +1095,11 @@ public class InGameManager : MonoBehaviour
             else if (pros[0].mColor == ProductColor.Green)
                 CastSkillScoreBuff(pros);
             else if (pros[0].mColor == ProductColor.Blue)
-                CastSkillice(pros);
+                CastSkillCloud(pros);
             else if (pros[0].mColor == ProductColor.Orange)
-                CastSkillChangeProducts(pros);
+                CastSkillUpsideDown(pros);
             else if (pros[0].mColor == ProductColor.Purple)
-                CastSkillShield(pros);
+                CastSkillRemoveBadEffects(pros);
         }
     }
     void CastSkillice(Product[] matches)
@@ -1414,7 +1413,7 @@ public class InGameManager : MonoBehaviour
                     if (!Opponent.mIsCycling)
                         Opponent.StartCoroutine(Opponent.DoDropCycle());
 
-                    Network_Skill(PVPCommand.SkillBombRes, Serialize(rets.ToArray()));
+                    //Network_Skill(PVPCommand.SkillBombRes, Serialize(rets.ToArray()));
                 }
 
                 mNetMessages.RemoveFirst();
@@ -1465,6 +1464,8 @@ public class InGameManager : MonoBehaviour
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
                 CreateLaserEffect(startPos, mShieldObject.transform.position);
                 mShieldObject.SetActive(true);
+
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillScoreBuff)
             {
@@ -1475,6 +1476,8 @@ public class InGameManager : MonoBehaviour
                 {
                     mScoreBuffObject.SetActive(false);
                 }));
+
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillChangeProducts)
             {
@@ -1571,25 +1574,29 @@ public class InGameManager : MonoBehaviour
     }
     private ProductInfo[] Serialize(Product[] pros)
     {
-        ProductInfo[] infos = new ProductInfo[100];
+        List<ProductInfo> infos = new List<ProductInfo>();
         for (int i = 0; i < pros.Length; ++i)
         {
-            infos[i].idxX = pros[i].ParentFrame.IndexX;
-            infos[i].idxY = pros[i].ParentFrame.IndexY;
-            infos[i].color = pros[i].mColor;
+            ProductInfo info = new ProductInfo();
+            info.idxX = pros[i].ParentFrame.IndexX;
+            info.idxY = pros[i].ParentFrame.IndexY;
+            info.color = pros[i].mColor;
+            infos.Add(info);
         }
-        return infos;
+        return infos.ToArray();
     }
     private ProductInfo[] Serialize(Frame[] frames)
     {
-        ProductInfo[] infos = new ProductInfo[100];
+        List<ProductInfo> infos = new List<ProductInfo>();
         for (int i = 0; i < frames.Length; ++i)
         {
-            infos[i].idxX = frames[i].IndexX;
-            infos[i].idxY = frames[i].IndexY;
-            infos[i].color = (ProductColor)UnityEngine.Random.Range(1, 6);
+            ProductInfo info = new ProductInfo();
+            info.idxX = frames[i].IndexX;
+            info.idxY = frames[i].IndexY;
+            info.color = (ProductColor)UnityEngine.Random.Range(1, 6);
+            infos.Add(info);
         }
-        return infos;
+        return infos.ToArray();
     }
     private void Network_StartGame(Product[] pros)
     {
@@ -1681,14 +1688,11 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_Skill(PVPCommand skill, ProductInfo[] infos, Frame startFrame = null)
     {
-        if (FieldType != GameFieldType.pvpPlayer)
-            return;
-
         PVPInfo req = new PVPInfo();
-        req.cmd = PVPCommand.SkillBomb;
+        req.cmd = skill;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.ArrayCount = infos.Length;
-        req.products = infos;
+        Array.Copy(infos, req.products, infos.Length);
         req.idxX = startFrame == null ? 0 : startFrame.IndexX;
         req.idxY = startFrame == null ? 0 : startFrame.IndexY;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
