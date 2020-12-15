@@ -387,6 +387,11 @@ public class Product : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         mAnimation.Play("swap");
     }
+    public void ChangeColor(ProductColor color)
+    {
+        mColor = color;
+        mAnimation.Play("swap");
+    }
     public void SetChocoBlock(int level, bool anim = false)
     {
         if (level <= 0)

@@ -180,10 +180,17 @@ namespace ServerApp
                 case PVPCommand.Destroy:
                 case PVPCommand.Create:
                 case PVPCommand.FlushAttacks:
+                case PVPCommand.SkillBomb:
+                case PVPCommand.SkillBombRes:
+                case PVPCommand.SkillIce:
+                case PVPCommand.SkillIceRes:
                     BypassToOppPlayer(requestBody);
                     break;
                 case PVPCommand.EndGame:
                     EndPVPGame(requestBody);
+                    BypassToOppPlayer(requestBody);
+                    break;
+                default:
                     BypassToOppPlayer(requestBody);
                     break;
             }
