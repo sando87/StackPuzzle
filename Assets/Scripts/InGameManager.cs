@@ -49,9 +49,10 @@ public class InGameManager : MonoBehaviour
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
-    public InGameBillboard Billboard = new InGameBillboard();
     private List<Frame[]> mFrameDropGroup = new List<Frame[]>();
 
+    public Dictionary<ProductColor, PVPCommand> SkillMap = new Dictionary<ProductColor, PVPCommand>();
+    public InGameBillboard Billboard = new InGameBillboard();
     public GameFieldType FieldType { get {
             return this == mInstStage ? GameFieldType.Stage :
                 (this == mInstPVP_Player ? GameFieldType.pvpPlayer :
@@ -639,6 +640,8 @@ public class InGameManager : MonoBehaviour
     }
     private IEnumerator CheckFinishGame()
     {
+        EventRemainTime?.Invoke(mStageInfo.TimeLimit);
+
         int preRemainSec = 0;
         while(true)
         {
@@ -656,7 +659,8 @@ public class InGameManager : MonoBehaviour
 
                 if(remainSec < 0 && IsIdle)
                 {
-                    EventFinish?.Invoke(false);
+                    bool isWin = Billboard.CurrentScore > Opponent.Billboard.CurrentScore;
+                    EventFinish?.Invoke(isWin);
                     FinishGame();
                     break;
                 }
@@ -1090,16 +1094,22 @@ public class InGameManager : MonoBehaviour
 
         foreach(Product[] pros in nextProducts)
         {
-            if (pros[0].mColor == ProductColor.Red)
-                CastSkillBomb(pros);
-            else if (pros[0].mColor == ProductColor.Green)
-                CastSkillScoreBuff(pros);
-            else if (pros[0].mColor == ProductColor.Blue)
-                CastSkillCloud(pros);
-            else if (pros[0].mColor == ProductColor.Orange)
-                CastSkillUpsideDown(pros);
-            else if (pros[0].mColor == ProductColor.Purple)
-                CastSkillRemoveBadEffects(pros);
+            ProductColor color = pros[0].mColor;
+            if (!SkillMap.ContainsKey(color))
+                continue;
+
+            PVPCommand skill = SkillMap[color];
+            switch(skill)
+            {
+                case PVPCommand.SkillBomb: CastSkillBomb(pros); break;
+                case PVPCommand.SkillIce: CastSkillice(pros); break;
+                case PVPCommand.SkillShield: CastSkillShield(pros); break;
+                case PVPCommand.SkillScoreBuff: CastSkillScoreBuff(pros); break;
+                case PVPCommand.SkillCloud: CastSkillCloud(pros); break;
+                case PVPCommand.SkillUpsideDown: CastSkillUpsideDown(pros); break;
+                case PVPCommand.SkillRemoveBadEffects: CastSkillRemoveBadEffects(pros); break;
+                default: break;
+            }
         }
     }
     void CastSkillice(Product[] matches)

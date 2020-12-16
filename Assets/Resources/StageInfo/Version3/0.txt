@@ -1,6 +1,6 @@
 GoalType,Score
 GoalValue,9999
-MoveLimit,0
+TimeLimit,60
 ColorCount,5
 XCount,5
 YCount,9

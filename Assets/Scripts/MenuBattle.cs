@@ -14,6 +14,7 @@ public class MenuBattle : MonoBehaviour
     public Image ScoreBar2;
     public Text CurrentScore;
     public Text KeepCombo;
+    public Text RemainSecond;
     public Image MatchLock;
     public Image MatchUnLock;
     public GameObject EffectParent;
@@ -85,6 +86,7 @@ public class MenuBattle : MonoBehaviour
         mCurrentScore = 0;
         CurrentScore.text = "0";
         KeepCombo.text = "0";
+        RemainSecond.text = "0";
         //Lock(false);
         ScoreBar1.fillAmount = 0;
         ScoreBar2.gameObject.SetActive(false);
@@ -98,6 +100,9 @@ public class MenuBattle : MonoBehaviour
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) => {
             FinishGame(!success);
+        };
+        InGameManager.InstPVP_Player.EventRemainTime = (sec) => {
+            RemainSecond.text = sec.ToString();
         };
     }
 
