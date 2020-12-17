@@ -14,6 +14,9 @@ public class Product : MonoBehaviour
     public ProductSkill mSkill;
     public Animation mAnimation;
 
+    public GameObject IceCover;
+    public GameObject SkillObject;
+
     public SpriteRenderer Renderer;
     public Sprite[] Images;
     public Sprite[] Chocos;
@@ -257,7 +260,7 @@ public class Product : MonoBehaviour
 
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (mLocked || mColor != color || IsChocoBlock() || mSkill != ProductSkill.Nothing)
+        if (mLocked || mColor != color || IsChocoBlock() || mSkill != ProductSkill.Nothing || IsIced)
             return;
 
         if (products.Contains(this))
@@ -422,6 +425,11 @@ public class Product : MonoBehaviour
         Product[] around = GetAroundProducts();
         foreach(Product pro in around)
             pro.BreakChocoBlock(combo);
+    }
+    public bool IsIced { get { return IceCover.activeSelf; } }
+    public void SetIce(bool ice)
+    {
+        IceCover.SetActive(ice);
     }
     #endregion
 }

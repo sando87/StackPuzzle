@@ -162,6 +162,7 @@ namespace ServerApp
             info.endPoint = mCurrentEndPoint;
             info.startTick = DateTime.Now.Ticks;
             info.requestID = mCurrentRequestMsg.RequestID;
+            info.requestBody = requestBody;
             mMatchingUsers[requestBody.userPk] = info;
             return null;
         }
@@ -181,7 +182,6 @@ namespace ServerApp
                 case PVPCommand.Create:
                 case PVPCommand.FlushAttacks:
                 case PVPCommand.SkillBomb:
-                case PVPCommand.SkillBombRes:
                 case PVPCommand.SkillIce:
                 case PVPCommand.SkillIceRes:
                     BypassToOppPlayer(requestBody);
@@ -273,12 +273,27 @@ namespace ServerApp
             string userEndPoint = user.endPoint;
 
             SearchOpponentInfo body = new SearchOpponentInfo();
-            body.userPk = user.userPK;
-            body.colorCount = user.colorCount;
-            body.oppUser = opponent == null ? new UserInfo() : opponent.userInfo;
-            body.oppColorCount = opponent == null ? -1 : opponent.colorCount;
-            body.isDone = true;
-            body.isBotPlayer = user.isBotPlayer;
+            if (opponent == null)
+            {
+                body.userPk = -1;
+                body.UserInfo = null;
+                body.isDone = true;
+            }
+            else
+            {
+                SearchOpponentInfo oppBody = opponent.requestBody;
+                body.userPk = oppBody.userPk;
+                body.colorCount = oppBody.colorCount;
+                body.UserInfo = oppBody.UserInfo;
+                body.isBotPlayer = oppBody.isBotPlayer;
+                body.skillBlue = oppBody.skillBlue;
+                body.skillGreen = oppBody.skillGreen;
+                body.skillOrange = oppBody.skillOrange;
+                body.skillPurple = oppBody.skillPurple;
+                body.skillRed = oppBody.skillRed;
+                body.skillYellow = oppBody.skillYellow;
+                body.isDone = true;
+            }
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SearchOpponent;
@@ -302,5 +317,6 @@ namespace ServerApp
         public string endPoint = "";
         public long startTick = 0;
         public Int64 requestID = -1;
+        public SearchOpponentInfo requestBody = null;
     }
 }

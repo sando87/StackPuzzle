@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
+
 public class MenuWaitMatch : MonoBehaviour
 {
     private const string UIObjName = "CanvasPopUp/MenuWaitMatch";
     private bool mIsSearching = false;
+    private ProductColor mCurrentProductColor = ProductColor.None;
 
     public Text HeartTimer;
     public Text HeartCount;
@@ -17,6 +20,14 @@ public class MenuWaitMatch : MonoBehaviour
     public GameObject BtnClose;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
+
+    public GameObject SkillSelector;
+    public Image ProductBlueForSkill;
+    public Image ProductGreenForSkill;
+    public Image ProductOrangeForSkill;
+    public Image ProductPurpleForSkill;
+    public Image ProductRedForSkill;
+    public Sprite[] Skillimages;
 
     public static void PopUp(bool autoPlay = false)
     {
@@ -123,18 +134,26 @@ public class MenuWaitMatch : MonoBehaviour
 
     private void RequestMatch()
     {
+        SkillPair[] skillMap = InGameManager.InstPVP_Player.SkillMapping;
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
         info.colorCount = 4.2f; // 4~6.0f
-        info.oppUser = null;
+        info.UserInfo = UserSetting.UserInfo;
         info.isBotPlayer = UserSetting.UserInfo.deviceName.Contains("home") ? true : false;
         info.isDone = false;
+        info.skillBlue = skillMap[(int)ProductColor.Blue].Item1;
+        info.skillGreen = skillMap[(int)ProductColor.Green].Item1;
+        info.skillOrange = skillMap[(int)ProductColor.Orange].Item1;
+        info.skillPurple = skillMap[(int)ProductColor.Purple].Item1;
+        info.skillRed = skillMap[(int)ProductColor.Red].Item1;
+        info.skillYellow = PVPCommand.Undef;
+
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
         {
             SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
             if (res.isDone && mIsSearching)
             {
-                if (res.oppUser.userPk == -1)
+                if (res.userPk == -1 || res.userPk == UserSetting.UserPK)
                 {
                     FailMatch();
 
@@ -148,19 +167,27 @@ public class MenuWaitMatch : MonoBehaviour
         });
     }
 
-    IEnumerator StartCountDown(SearchOpponentInfo matchInfo)
+    IEnumerator StartCountDown(SearchOpponentInfo opponentInfo)
     {
         if (!UserSetting.IsBotPlayer)
             Purchases.UseHeart();
 
         StageInfo info = StageInfo.Load(0);
 
-        InGameManager.InstPVP_Opponent.StartGame(info, matchInfo.oppUser);
+        SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;
+        oppSkillMap[(int)ProductColor.Blue] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillBlue, GetSkillimage(opponentInfo.skillBlue));
+        oppSkillMap[(int)ProductColor.Green] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillGreen, GetSkillimage(opponentInfo.skillGreen));
+        oppSkillMap[(int)ProductColor.Orange] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillOrange, GetSkillimage(opponentInfo.skillOrange));
+        oppSkillMap[(int)ProductColor.Purple] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillPurple, GetSkillimage(opponentInfo.skillPurple));
+        oppSkillMap[(int)ProductColor.Red] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillRed, GetSkillimage(opponentInfo.skillRed));
+        oppSkillMap[(int)ProductColor.Yellow] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillYellow, GetSkillimage(opponentInfo.skillYellow));
+
+        InGameManager.InstPVP_Opponent.StartGame(info, opponentInfo.UserInfo);
         InGameManager.InstPVP_Player.StartGame(info, UserSetting.UserInfo);
 
         mIsSearching = false;
         StopCoroutine("WaitOpponent");
-        UpdateUserInfo(matchInfo.oppUser);
+        UpdateUserInfo(opponentInfo.UserInfo);
         BtnClose.SetActive(false);
         BtnMatch.SetActive(false);
         BtnCancle.SetActive(false);
@@ -193,6 +220,7 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void ResetMatchUI()
     {
+        mCurrentProductColor = ProductColor.None;
         mIsSearching = false;
         BtnCancle.SetActive(false);
         BtnMatch.SetActive(true);
@@ -204,6 +232,7 @@ public class MenuWaitMatch : MonoBehaviour
         StopCoroutine("WaitOpponent");
         StopCoroutine("UpdateHeartTimer");
         StartCoroutine("UpdateHeartTimer");
+        UpdateSkillPanel();
     }
     private void UpdateUserInfo(UserInfo info)
     {
@@ -239,5 +268,45 @@ public class MenuWaitMatch : MonoBehaviour
             }
             yield return new WaitForSeconds(1);
         }
+    }
+    public void OnSelectProduct(ProductColor color)
+    {
+        mCurrentProductColor = color;
+        SkillSelector.SetActive(true);
+    }
+    public void OnSelectSkill(PVPCommand skill)
+    {
+        InGameManager.InstPVP_Player.SkillMapping[(int)mCurrentProductColor] = new Tuple<PVPCommand, Sprite>(skill, GetSkillimage(skill));
+
+        UpdateSkillPanel();
+        SkillSelector.SetActive(false);
+        mCurrentProductColor = ProductColor.None;
+    }
+
+    private void UpdateSkillPanel()
+    {
+        SkillPair[] map = InGameManager.InstPVP_Player.SkillMapping;
+
+        ProductBlueForSkill.sprite = GetSkillimage(map[(int)ProductColor.Blue].Item1);
+        ProductGreenForSkill.sprite = GetSkillimage(map[(int)ProductColor.Green].Item1);
+        ProductOrangeForSkill.sprite = GetSkillimage(map[(int)ProductColor.Orange].Item1);
+        ProductPurpleForSkill.sprite = GetSkillimage(map[(int)ProductColor.Purple].Item1);
+        ProductRedForSkill.sprite = GetSkillimage(map[(int)ProductColor.Red].Item1);
+    }
+    private Sprite GetSkillimage(PVPCommand skill)
+    {
+        Sprite sprite = null;
+        switch (skill)
+        {
+            case PVPCommand.SkillBomb: sprite = Skillimages[1]; break;
+            case PVPCommand.SkillIce: sprite = Skillimages[2]; break;
+            case PVPCommand.SkillShield: sprite = Skillimages[3]; break;
+            case PVPCommand.SkillScoreBuff: sprite = Skillimages[4]; break;
+            case PVPCommand.SkillCloud: sprite = Skillimages[5]; break;
+            case PVPCommand.SkillUpsideDown: sprite = Skillimages[6]; break;
+            case PVPCommand.SkillRemoveBadEffects: sprite = Skillimages[7]; break;
+            case PVPCommand.Undef: sprite = Skillimages[0]; break;
+        }
+        return null;
     }
 }

@@ -10,7 +10,7 @@ public enum NetCMD
 public enum PVPCommand
 {
     Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame,
-    SkillBomb, SkillBombRes, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillChangeProductsRes, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
+    SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
 }
 public enum ProductColor
 {
@@ -170,10 +170,15 @@ public class SearchOpponentInfo
 {
     public int userPk;
     public float colorCount;
-    public UserInfo oppUser;
-    public float oppColorCount;
+    public UserInfo UserInfo;
     public bool isDone;
     public bool isBotPlayer;
+    public PVPCommand skillBlue;
+    public PVPCommand skillGreen;
+    public PVPCommand skillOrange;
+    public PVPCommand skillPurple;
+    public PVPCommand skillRed;
+    public PVPCommand skillYellow;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

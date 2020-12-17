@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
+
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
 public class InGameManager : MonoBehaviour
@@ -29,11 +31,16 @@ public class InGameManager : MonoBehaviour
     public GameObject MaskPrefab;
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
-    public GameObject EffectLaserPrefab;
-    public GameObject ShieldPrefab;
-    public GameObject ScoreBuffPrefab;
+
+    public GameObject LaserParticle;
+    public GameObject BombParticle;
+    public GameObject ShieldParticle;
+    public GameObject ScoreBuffParticle;
     public GameObject CloudPrefab;
-    public GameObject UpsideDownPrefab;
+    public GameObject UpsideDownParticle;
+    public GameObject RemoveBadEffectParticle;
+
+    public GameObject[] SkillSlots;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -42,16 +49,23 @@ public class InGameManager : MonoBehaviour
     private bool mIsCycling = false;
     private bool mIsSwipping = false;
     private DateTime mStartTime = DateTime.Now;
-    private GameObject mShieldObject;
-    private GameObject mScoreBuffObject;
-    private GameObject mUpsideDownObject;
     private bool mRemoveBadEffectsCoolTime = false;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
     private List<Frame[]> mFrameDropGroup = new List<Frame[]>();
 
-    public Dictionary<ProductColor, PVPCommand> SkillMap = new Dictionary<ProductColor, PVPCommand>();
+
+    public SkillPair[] SkillMapping = new SkillPair[7]
+    {
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null),
+        new SkillPair(PVPCommand.Undef, null)
+    };
     public InGameBillboard Billboard = new InGameBillboard();
     public GameFieldType FieldType { get {
             return this == mInstStage ? GameFieldType.Stage :
@@ -66,6 +80,10 @@ public class InGameManager : MonoBehaviour
             return null;
         return mFrames[x, y];
     }
+    public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
+    public GameObject ShieldSlot { get { return SkillSlots[0]; } }
+    public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
+    public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
     public bool IsIdle { get { return !mIsCycling && !mIsSwipping; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
@@ -143,18 +161,6 @@ public class InGameManager : MonoBehaviour
         GameObject ap = Instantiate(AttackPointPrefab, transform);
         ap.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
         AttackPoints = ap.GetComponent<AttackPoints>();
-
-        mShieldObject = Instantiate(ShieldPrefab, transform);
-        mShieldObject.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
-        mShieldObject.SetActive(false);
-
-        mScoreBuffObject = Instantiate(ScoreBuffPrefab, transform);
-        mScoreBuffObject.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f + gridSize, gridSize * CountY - 0.1f, 0);
-        mScoreBuffObject.SetActive(false);
-
-        mUpsideDownObject = Instantiate(UpsideDownPrefab, transform);
-        mUpsideDownObject.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f + gridSize + gridSize, gridSize * CountY - 0.1f, 0);
-        mUpsideDownObject.SetActive(false);
     }
     public void InitProducts()
     {
@@ -207,7 +213,7 @@ public class InGameManager : MonoBehaviour
             return;
 
         SwipeDirection fixedDir = dir;
-        if (mUpsideDownObject.activeSelf)
+        if (UpsideDownSlot.activeSelf)
         {
             switch (dir)
             {
@@ -228,7 +234,7 @@ public class InGameManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked())
+        if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsIced && !targetProduct.IsIced)
         {
             mIsSwipping = true;
             RemoveLimit();
@@ -439,7 +445,7 @@ public class InGameManager : MonoBehaviour
         //else
         //    Attack(addedScore, mainProduct.transform.position);
 
-        if (mScoreBuffObject.activeSelf)
+        if (ScoreBuffSlot.activeSelf)
             addedScore = (int)(addedScore * 1.2f);
 
         Billboard.CurrentScore += addedScore;
@@ -997,6 +1003,11 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.ParentFrame = parent;
+
+        SkillPair skill = SkillMapping[(int)product.mColor];
+        product.SkillObject.SetActive(skill.Item1 != PVPCommand.Undef);
+        product.SkillObject.GetComponent<SpriteRenderer>().sprite = skill.Item2;
+
         return product;
     }
     private int RandomNextColor()
@@ -1017,6 +1028,9 @@ public class InGameManager : MonoBehaviour
         for (int i = 0; i < cnt; ++i)
             Destroy(transform.GetChild(i).gameObject);
 
+        foreach (GameObject skill in SkillSlots)
+            skill.SetActive(false);
+
         EventBreakTarget = null;
         EventDestroyed = null;
         EventFinish = null;
@@ -1026,6 +1040,7 @@ public class InGameManager : MonoBehaviour
         mMoveLock = false;
         mIsCycling = false;
         mIsSwipping = false;
+        mRemoveBadEffectsCoolTime = false;
 
         Billboard.Reset();
         mNetMessages.Clear();
@@ -1094,11 +1109,11 @@ public class InGameManager : MonoBehaviour
 
         foreach(Product[] pros in nextProducts)
         {
-            ProductColor color = pros[0].mColor;
-            if (!SkillMap.ContainsKey(color))
+            SkillPair skillPair = SkillMapping[(int)pros[0].mColor];
+            PVPCommand skill = skillPair.Item1;
+            if (skill == PVPCommand.Undef)
                 continue;
 
-            PVPCommand skill = SkillMap[color];
             switch(skill)
             {
                 case PVPCommand.SkillBomb: CastSkillBomb(pros); break;
@@ -1112,54 +1127,78 @@ public class InGameManager : MonoBehaviour
             }
         }
     }
+    void CastSkillBomb(Product[] matches)
+    {
+        Vector3 startPos = matches[0].transform.position;
+        Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
+        foreach (Frame frame in targetFrames)
+            CreateLaserEffect(startPos, frame.transform.position);
+
+        if (!Opponent.DefenseShield(targetFrames))
+        {
+            foreach (Frame frame in targetFrames)
+                CreateParticle(BombParticle, frame.transform.position);
+        }
+
+        Network_Skill(PVPCommand.SkillBomb, Serialize(targetFrames), matches[0].ParentFrame);
+    }
     void CastSkillice(Product[] matches)
     {
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
         Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(pos, frame.transform.position);
 
-        Network_Skill(PVPCommand.SkillIce, Serialize(targetFrames), matches[0].ParentFrame);
-        if (Opponent.mShieldObject.activeSelf)
-            Opponent.mShieldObject.SetActive(false);
-    }
-    void CastSkillBomb(Product[] matches)
-    {
-        Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
-        Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
-        foreach(Frame frame in targetFrames)
-            CreateLaserEffect(pos, frame.transform.position);
+        Opponent.DefenseShield(targetFrames);
 
-        Network_Skill(PVPCommand.SkillBomb, Serialize(targetFrames), matches[0].ParentFrame);
-        if (Opponent.mShieldObject.activeSelf)
-            Opponent.mShieldObject.SetActive(false);
+        Network_Skill(PVPCommand.SkillIce, Serialize(targetFrames), matches[0].ParentFrame);
     }
     void CastSkillShield(Product[] matches)
     {
-        if (mShieldObject.activeSelf)
+        if (ShieldSlot.activeSelf)
             return;
 
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
-        CreateLaserEffect(pos, mShieldObject.transform.position);
-        mShieldObject.SetActive(true);
+        CreateLaserEffect(pos, ShieldSlot.transform.position);
+        CreateParticle(ShieldParticle, pos);
+        ShieldSlot.SetActive(true);
 
         Network_Skill(PVPCommand.SkillShield, Serialize(new List<Product>().ToArray()), matches[0].ParentFrame);
     }
+    bool DefenseShield(Frame[] frames)
+    {
+        if (!ShieldSlot.activeSelf)
+            return false;
+
+        ShieldSlot.SetActive(false);
+        foreach (Frame frame in frames)
+            CreateParticle(ShieldParticle, frame.transform.position);
+
+        return true;
+    }
+    bool DefenseShield(Product[] pros)
+    {
+        if (!ShieldSlot.activeSelf)
+            return false;
+
+        ShieldSlot.SetActive(false);
+        foreach (Product pro in pros)
+            CreateParticle(ShieldParticle, pro.transform.position);
+
+        return true;
+    }
     void CastSkillScoreBuff(Product[] matches)
     {
-        if (mScoreBuffObject.activeSelf)
+        if (ScoreBuffSlot.activeSelf)
             return;
 
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
-        CreateLaserEffect(pos, mScoreBuffObject.transform.position);
-        mScoreBuffObject.SetActive(true);
+        CreateLaserEffect(pos, ScoreBuffSlot.transform.position);
+        CreateParticle(ScoreBuffParticle, pos);
+        ScoreBuffSlot.SetActive(true);
         StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
         {
-            mScoreBuffObject.SetActive(false);
+            ScoreBuffSlot.SetActive(false);
         }));
 
         Network_Skill(PVPCommand.SkillScoreBuff, Serialize(new List<Product>().ToArray()), matches[0].ParentFrame);
@@ -1167,31 +1206,25 @@ public class InGameManager : MonoBehaviour
     void CastSkillChangeProducts(Product[] matches)
     {
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
         Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(pos, frame.transform.position);
 
         Network_Skill(PVPCommand.SkillChangeProducts, Serialize(targetFrames), matches[0].ParentFrame);
-        if (Opponent.mShieldObject.activeSelf)
-            Opponent.mShieldObject.SetActive(false);
     }
     void CastSkillCloud(Product[] matches)
     {
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
         Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
-        foreach (Frame frame in targetFrames)
-            CreateLaserEffect(pos, frame.transform.position);
+        for(int i = 0; i < targetFrames.Length; ++i)
+        {
+            targetFrames[i] = mFrames[0, targetFrames[i].IndexY];
+            CreateLaserEffect(pos, targetFrames[i].transform.position);
+        }
 
-        if (Opponent.mShieldObject.activeSelf)
-        {
-            Opponent.mShieldObject.SetActive(false);
-        }
-        else
-        {
+        if(!Opponent.DefenseShield(targetFrames))
             Opponent.CreateCloud(targetFrames);
-        }
+
         Network_Skill(PVPCommand.SkillCloud, Serialize(targetFrames), matches[0].ParentFrame);
     }
     void CreateCloud(Frame[] frames)
@@ -1206,23 +1239,20 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillUpsideDown(Product[] matches)
     {
-        if (Opponent.mUpsideDownObject.activeSelf)
+        if (Opponent.UpsideDownSlot.activeSelf)
             return;
 
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
-        CreateLaserEffect(pos, Opponent.mUpsideDownObject.transform.position);
+        Frame destFrame = Opponent.CenterFrame;
+        CreateLaserEffect(pos, destFrame.transform.position);
         
-        if (Opponent.mShieldObject.activeSelf)
+        if (!Opponent.DefenseShield(new Frame[1] { destFrame }))
         {
-            Opponent.mShieldObject.SetActive(false);
-        }
-        else
-        {
-            Opponent.mUpsideDownObject.SetActive(true);
+            CreateParticle(UpsideDownParticle, destFrame.transform.position);
+            Opponent.UpsideDownSlot.SetActive(true);
             Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(8.0f, () =>
             {
-                Opponent.mUpsideDownObject.SetActive(false);
+                Opponent.UpsideDownSlot.SetActive(false);
             }));
         }
 
@@ -1234,8 +1264,9 @@ public class InGameManager : MonoBehaviour
             return;
 
         Vector3 pos = matches[0].transform.position;
-        pos.z -= 1;
+        CreateParticle(RemoveBadEffectParticle, pos);
         RemoveBadEffects(pos);
+
         mRemoveBadEffectsCoolTime = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(8.0f, () =>
         {
@@ -1250,20 +1281,36 @@ public class InGameManager : MonoBehaviour
         {
             Product pro = frame.ChildProduct;
             if (pro != null && pro.IsChocoBlock())
+            {
+                CreateLaserEffect(startPos, pro.ParentFrame.transform.position);
                 pro.BreakChocoBlock(100);
+            }
         }
 
         EffectCloud[] clouds = GetComponentsInChildren<EffectCloud>();
         foreach (EffectCloud cloud in clouds)
+        {
+            CreateLaserEffect(startPos, cloud.transform.position);
             Destroy(cloud.gameObject);
+        }
 
-        mUpsideDownObject.SetActive(false);
+        if(UpsideDownSlot.activeSelf)
+        {
+            CreateLaserEffect(startPos, UpsideDownSlot.transform.position);
+            UpsideDownSlot.SetActive(false);
+        }
     }
     void CreateLaserEffect(Vector3 startPos, Vector3 destPos)
     {
-        GameObject laserObj = GameObject.Instantiate(EffectLaserPrefab, startPos, Quaternion.identity, transform);
+        startPos.z -= 1;
+        GameObject laserObj = GameObject.Instantiate(LaserParticle, startPos, Quaternion.identity, transform);
         EffectLaser laser = laserObj.GetComponent<EffectLaser>();
         laser.Burst(destPos, 0.5f);
+    }
+    void CreateParticle(GameObject prefab, Vector3 worldPos)
+    {
+        worldPos.z -= 1;
+        Instantiate(prefab, worldPos, Quaternion.identity, transform);
     }
     #endregion
 
@@ -1385,20 +1432,6 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
-            else if (body.cmd == PVPCommand.SkillBombRes)
-            {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                        products.Add(pro);
-                }
-
-                DestroyProducts(products.ToArray(), ProductSkill.Nothing);
-                mNetMessages.RemoveFirst();
-            }
             else if (body.cmd == PVPCommand.SkillBomb)
             {
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
@@ -1413,17 +1446,14 @@ public class InGameManager : MonoBehaviour
                         rets.Add(pro);
                 }
 
-                if (Opponent.mShieldObject.activeSelf)
+                if (!Opponent.DefenseShield(rets.ToArray()))
                 {
-                    Opponent.mShieldObject.SetActive(false);
-                }
-                else
-                {
+                    foreach(Product pro in rets)
+                        CreateParticle(BombParticle, pro.transform.position);
+
                     Opponent.DestroyProducts(rets.ToArray(), ProductSkill.Nothing);
                     if (!Opponent.mIsCycling)
                         Opponent.StartCoroutine(Opponent.DoDropCycle());
-
-                    //Network_Skill(PVPCommand.SkillBombRes, Serialize(rets.ToArray()));
                 }
 
                 mNetMessages.RemoveFirst();
@@ -1442,15 +1472,15 @@ public class InGameManager : MonoBehaviour
                         rets.Add(pro);
                 }
 
-
-                if (Opponent.mShieldObject.activeSelf)
-                {
-                    Opponent.mShieldObject.SetActive(false);
-                }
-                else
+                if (!Opponent.DefenseShield(rets.ToArray()))
                 {
                     foreach (Product pro in rets)
-                        pro.SetChocoBlock(1, true);
+                    {
+                        pro.SetIce(true);
+                        pro.StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () => {
+                            pro.SetIce(false);
+                        }));
+                    }
 
                     Network_Skill(PVPCommand.SkillIceRes, Serialize(rets.ToArray()));
                 }
@@ -1464,7 +1494,12 @@ public class InGameManager : MonoBehaviour
                     ProductInfo info = body.products[i];
                     Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
                     if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                        pro.SetChocoBlock(1, true);
+                    {
+                        pro.SetIce(true);
+                        pro.StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () => {
+                            pro.SetIce(false);
+                        }));
+                    }
                 }
 
                 mNetMessages.RemoveFirst();
@@ -1472,62 +1507,27 @@ public class InGameManager : MonoBehaviour
             else if (body.cmd == PVPCommand.SkillShield)
             {
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateLaserEffect(startPos, mShieldObject.transform.position);
-                mShieldObject.SetActive(true);
+                CreateLaserEffect(startPos, ShieldSlot.transform.position);
+                CreateParticle(ShieldParticle, startPos);
+                ShieldSlot.SetActive(true);
 
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillScoreBuff)
             {
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateLaserEffect(startPos, mScoreBuffObject.transform.position);
-                mScoreBuffObject.SetActive(true);
+                CreateLaserEffect(startPos, ScoreBuffSlot.transform.position);
+                CreateParticle(ScoreBuffParticle, startPos);
+                ScoreBuffSlot.SetActive(true);
                 StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
                 {
-                    mScoreBuffObject.SetActive(false);
+                    ScoreBuffSlot.SetActive(false);
                 }));
 
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillChangeProducts)
             {
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                List<Product> rets = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
-                    CreateLaserEffect(startPos, frame.transform.position);
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && !pro.IsLocked() && !Opponent.mShieldObject.activeSelf)
-                    {
-                        pro.ChangeColor(info.color);
-                        rets.Add(pro);
-                    }
-                        
-                }
-
-                if (Opponent.mShieldObject.activeSelf)
-                {
-                    Opponent.mShieldObject.SetActive(false);
-                }
-                else
-                {
-                    Network_Skill(PVPCommand.SkillChangeProductsRes, Serialize(rets.ToArray()));
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillChangeProductsRes)
-            {
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if (pro != null && !pro.IsLocked())
-                        pro.ChangeColor(info.color);
-                }
-
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillCloud)
@@ -1542,11 +1542,7 @@ public class InGameManager : MonoBehaviour
                     frames.Add(frame);
                 }
 
-                if (Opponent.mShieldObject.activeSelf)
-                {
-                    Opponent.mShieldObject.SetActive(false);
-                }
-                else
+                if (!Opponent.DefenseShield(frames.ToArray()))
                 {
                     Opponent.CreateCloud(frames.ToArray());
                 }
@@ -1556,18 +1552,16 @@ public class InGameManager : MonoBehaviour
             else if (body.cmd == PVPCommand.SkillUpsideDown)
             {
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateLaserEffect(startPos, Opponent.mUpsideDownObject.transform.position);
+                Frame destFrame = Opponent.CenterFrame;
+                CreateLaserEffect(startPos, destFrame.transform.position);
 
-                if (Opponent.mShieldObject.activeSelf)
+                if (!Opponent.DefenseShield(new Frame[1] { destFrame }))
                 {
-                    Opponent.mShieldObject.SetActive(false);
-                }
-                else
-                {
-                    Opponent.mUpsideDownObject.SetActive(true);
+                    CreateParticle(UpsideDownParticle, destFrame.transform.position);
+                    Opponent.UpsideDownSlot.SetActive(true);
                     Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(8.0f, () =>
                     {
-                        Opponent.mUpsideDownObject.SetActive(false);
+                        Opponent.UpsideDownSlot.SetActive(false);
                     }));
                 }
 
@@ -1576,7 +1570,7 @@ public class InGameManager : MonoBehaviour
             else if (body.cmd == PVPCommand.SkillRemoveBadEffects)
             {
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                startPos.z -= 1;
+                CreateParticle(RemoveBadEffectParticle, startPos);
                 RemoveBadEffects(startPos);
                 mNetMessages.RemoveFirst();
             }
@@ -1603,7 +1597,7 @@ public class InGameManager : MonoBehaviour
             ProductInfo info = new ProductInfo();
             info.idxX = frames[i].IndexX;
             info.idxY = frames[i].IndexY;
-            info.color = (ProductColor)UnityEngine.Random.Range(1, 6);
+            info.color = ProductColor.None;
             infos.Add(info);
         }
         return infos.ToArray();
