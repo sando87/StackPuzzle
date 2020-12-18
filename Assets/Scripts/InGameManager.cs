@@ -1304,8 +1304,7 @@ public class InGameManager : MonoBehaviour
     {
         startPos.z -= 1;
         GameObject laserObj = GameObject.Instantiate(LaserParticle, startPos, Quaternion.identity, transform);
-        EffectLaser laser = laserObj.GetComponent<EffectLaser>();
-        laser.Burst(destPos, 0.5f);
+        laserObj.GetComponent<EffectLaser>().SetDestination(destPos);
     }
     void CreateParticle(GameObject prefab, Vector3 worldPos)
     {
