@@ -1218,7 +1218,7 @@ public class InGameManager : MonoBehaviour
         Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
         for(int i = 0; i < targetFrames.Length; ++i)
         {
-            targetFrames[i] = mFrames[0, targetFrames[i].IndexY];
+            targetFrames[i] = Opponent.mFrames[0, targetFrames[i].IndexY];
             CreateLaserEffect(pos, targetFrames[i].transform.position);
         }
 
@@ -1232,9 +1232,9 @@ public class InGameManager : MonoBehaviour
         foreach(Frame frame in frames)
         {
             Vector3 pos = frame.transform.position;
-            pos.z -= 1;
+            pos.z -= 2;
             GameObject cloudObj = Instantiate(CloudPrefab, pos, Quaternion.identity, transform);
-            cloudObj.GetComponent<EffectCloud>().LimitWorldPosX = mFrames[CountX - 1, 0].transform.position.x + UserSetting.GridSize;
+            cloudObj.GetComponent<EffectCloud>().LimitWorldPosX = mFrames[CountX - 1, 0].transform.position.x;
         }
     }
     void CastSkillUpsideDown(Product[] matches)

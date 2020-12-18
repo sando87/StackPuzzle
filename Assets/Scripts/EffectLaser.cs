@@ -19,6 +19,8 @@ public class EffectLaser : MonoBehaviour
 
         float scale = dist / length;
         transform.localScale = new Vector3(1, scale, 1);
+
+        Destroy(gameObject, 1.0f);
     }
 
 

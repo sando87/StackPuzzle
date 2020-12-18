@@ -7,7 +7,7 @@ using UnityEngine;
 public class EffectCloud : MonoBehaviour
 {
     public float LimitWorldPosX = 0;
-    private Vector3 vel = new Vector3(1.0f, 0, 0);
+    private Vector3 vel = new Vector3(0.5f, 0, 0);
 
     private void Update()
     {

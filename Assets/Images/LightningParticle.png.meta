@@ -26,6 +26,9 @@ TextureImporter:
   - first:
       213: 1134396254431993311
     second: LightningEffect_7
+  - first:
+      213: -8206598855590346413
+    second: LightningParticle_0
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -130,8 +133,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -151,8 +154,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -172,8 +175,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -193,8 +196,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -214,8 +217,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -235,8 +238,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -256,8 +259,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -277,8 +280,8 @@ TextureImporter:
         y: 0
         width: 64
         height: 256
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 1}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -286,6 +289,27 @@ TextureImporter:
       bones: []
       spriteID: fddd3f3126f2ebf00800000000000000
       internalID: 1134396254431993311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningParticle_0
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 66
+        width: 344
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 351096e32dd4c1e80800000000000000
+      internalID: -8206598855590346413
       vertices: []
       indices: 
       edges: []

@@ -337,6 +337,6 @@ public class MenuWaitMatch : MonoBehaviour
             case PVPCommand.SkillRemoveBadEffects: sprite = Skillimages[7]; break;
             case PVPCommand.Undef: sprite = Skillimages[0]; break;
         }
-        return null;
+        return sprite;
     }
 }
