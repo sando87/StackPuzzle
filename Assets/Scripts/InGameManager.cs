@@ -1005,8 +1005,8 @@ public class InGameManager : MonoBehaviour
         product.ParentFrame = parent;
 
         SkillPair skill = SkillMapping[(int)product.mColor];
-        product.SkillObject.SetActive(skill.Item1 != PVPCommand.Undef);
-        product.SkillObject.GetComponent<SpriteRenderer>().sprite = skill.Item2;
+        if(skill.Item1 != PVPCommand.Undef)
+            product.Renderer.sprite = skill.Item2;
 
         return product;
     }
@@ -1130,7 +1130,7 @@ public class InGameManager : MonoBehaviour
     void CastSkillBomb(Product[] matches)
     {
         Vector3 startPos = matches[0].transform.position;
-        Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
+        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(startPos, frame.transform.position);
 
@@ -1145,7 +1145,7 @@ public class InGameManager : MonoBehaviour
     void CastSkillice(Product[] matches)
     {
         Vector3 pos = matches[0].transform.position;
-        Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
+        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo * 3);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(pos, frame.transform.position);
 
@@ -1155,7 +1155,7 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillShield(Product[] matches)
     {
-        if (ShieldSlot.activeSelf)
+        if (ShieldSlot.activeSelf || Billboard.CurrentCombo < 2)
             return;
 
         Vector3 pos = matches[0].transform.position;
@@ -1196,7 +1196,7 @@ public class InGameManager : MonoBehaviour
         CreateLaserEffect(pos, ScoreBuffSlot.transform.position);
         CreateParticle(ScoreBuffParticle, pos);
         ScoreBuffSlot.SetActive(true);
-        StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
+        StartCoroutine(UnityUtils.CallAfterSeconds(Billboard.CurrentCombo * 4, () =>
         {
             ScoreBuffSlot.SetActive(false);
         }));
@@ -1223,17 +1223,18 @@ public class InGameManager : MonoBehaviour
         }
 
         if(!Opponent.DefenseShield(targetFrames))
-            Opponent.CreateCloud(targetFrames);
+            Opponent.CreateCloud(targetFrames, Billboard.CurrentCombo);
 
         Network_Skill(PVPCommand.SkillCloud, Serialize(targetFrames), matches[0].ParentFrame);
     }
-    void CreateCloud(Frame[] frames)
+    void CreateCloud(Frame[] frames, float size)
     {
         foreach(Frame frame in frames)
         {
             Vector3 pos = frame.transform.position;
             pos.z -= 2;
             GameObject cloudObj = Instantiate(CloudPrefab, pos, Quaternion.identity, transform);
+            cloudObj.transform.localScale = new Vector3(size, size, 1);
             cloudObj.GetComponent<EffectCloud>().LimitWorldPosX = mFrames[CountX - 1, 0].transform.position.x;
         }
     }
@@ -1250,7 +1251,7 @@ public class InGameManager : MonoBehaviour
         {
             CreateParticle(UpsideDownParticle, destFrame.transform.position);
             Opponent.UpsideDownSlot.SetActive(true);
-            Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(8.0f, () =>
+            Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(Billboard.CurrentCombo * 4, () =>
             {
                 Opponent.UpsideDownSlot.SetActive(false);
             }));
@@ -1260,7 +1261,7 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillRemoveBadEffects(Product[] matches)
     {
-        if (mRemoveBadEffectsCoolTime)
+        if (mRemoveBadEffectsCoolTime || Billboard.CurrentCombo < 2)
             return;
 
         Vector3 pos = matches[0].transform.position;
@@ -1518,7 +1519,7 @@ public class InGameManager : MonoBehaviour
                 CreateLaserEffect(startPos, ScoreBuffSlot.transform.position);
                 CreateParticle(ScoreBuffParticle, startPos);
                 ScoreBuffSlot.SetActive(true);
-                StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
+                StartCoroutine(UnityUtils.CallAfterSeconds(body.combo * 4, () =>
                 {
                     ScoreBuffSlot.SetActive(false);
                 }));
@@ -1543,7 +1544,7 @@ public class InGameManager : MonoBehaviour
 
                 if (!Opponent.DefenseShield(frames.ToArray()))
                 {
-                    Opponent.CreateCloud(frames.ToArray());
+                    Opponent.CreateCloud(frames.ToArray(), body.combo);
                 }
 
                 mNetMessages.RemoveFirst();
@@ -1558,7 +1559,7 @@ public class InGameManager : MonoBehaviour
                 {
                     CreateParticle(UpsideDownParticle, destFrame.transform.position);
                     Opponent.UpsideDownSlot.SetActive(true);
-                    Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(8.0f, () =>
+                    Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(body.combo * 4, () =>
                     {
                         Opponent.UpsideDownSlot.SetActive(false);
                     }));
@@ -1695,6 +1696,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = skill;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.ArrayCount = infos.Length;
+        req.combo = Billboard.CurrentCombo;
         Array.Copy(infos, req.products, infos.Length);
         req.idxX = startFrame == null ? 0 : startFrame.IndexX;
         req.idxY = startFrame == null ? 0 : startFrame.IndexY;
