@@ -182,7 +182,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Network_StartGame(initProducts.ToArray());
+        Network_StartGame(Serialize(initProducts.ToArray()));
     }
     public void FinishGame()
     {
@@ -451,7 +451,7 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
 
-        Network_Destroy(matches, makeSkill);
+        Network_Destroy(Serialize(matches), makeSkill);
         EventDestroyed?.Invoke(matches);
         return emptyFrames.ToArray();
     }
@@ -535,7 +535,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Network_Create(newProducts.ToArray());
+        Network_Create(Serialize(newProducts.ToArray()));
 
         return droppedProducts.ToArray();
     }
@@ -633,7 +633,7 @@ public class InGameManager : MonoBehaviour
             {
                 int cnt = AttackPoints.Pop(UserSetting.FlushCount);
                 List<Product> products = GetNextFlushTargets(cnt);
-                Network_FlushAttacks(products.ToArray());
+                Network_FlushAttacks(Serialize(products.ToArray()));
                 foreach (Product pro in products)
                     pro.SetChocoBlock(1, true);
 
@@ -1086,6 +1086,7 @@ public class InGameManager : MonoBehaviour
         int loopCount = 0;
         while(rets.Count < count && loopCount < totalCount)
         {
+            loopCount++;
             int ranIdx = UnityEngine.Random.Range(0, totalCount);
             if (rets.ContainsKey(ranIdx))
                 continue;
@@ -1097,7 +1098,6 @@ public class InGameManager : MonoBehaviour
                 continue;
 
             rets[ranIdx] = pro.ParentFrame;
-            loopCount++;
         }
 
         return new List<Frame>(rets.Values).ToArray();
@@ -1129,8 +1129,10 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillBomb(Product[] matches)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+
         Vector3 startPos = matches[0].transform.position;
-        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo);
+        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo * 2);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(startPos, frame.transform.position);
 
@@ -1144,8 +1146,10 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillice(Product[] matches)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+
         Vector3 pos = matches[0].transform.position;
-        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo * 3);
+        Frame[] targetFrames = Opponent.GetRandomIdleFrames(Billboard.CurrentCombo * 2);
         foreach (Frame frame in targetFrames)
             CreateLaserEffect(pos, frame.transform.position);
 
@@ -1155,8 +1159,10 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillShield(Product[] matches)
     {
-        if (ShieldSlot.activeSelf || Billboard.CurrentCombo < 2)
+        if (ShieldSlot.activeSelf)
             return;
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
 
         Vector3 pos = matches[0].transform.position;
         CreateLaserEffect(pos, ShieldSlot.transform.position);
@@ -1170,6 +1176,8 @@ public class InGameManager : MonoBehaviour
         if (!ShieldSlot.activeSelf)
             return false;
 
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGoodEffect);
+
         ShieldSlot.SetActive(false);
         foreach (Frame frame in frames)
             CreateParticle(ShieldParticle, frame.transform.position);
@@ -1181,6 +1189,8 @@ public class InGameManager : MonoBehaviour
         if (!ShieldSlot.activeSelf)
             return false;
 
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGoodEffect);
+
         ShieldSlot.SetActive(false);
         foreach (Product pro in pros)
             CreateParticle(ShieldParticle, pro.transform.position);
@@ -1191,6 +1201,8 @@ public class InGameManager : MonoBehaviour
     {
         if (ScoreBuffSlot.activeSelf)
             return;
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGoodEffect);
 
         Vector3 pos = matches[0].transform.position;
         CreateLaserEffect(pos, ScoreBuffSlot.transform.position);
@@ -1214,6 +1226,8 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillCloud(Product[] matches)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+
         Vector3 pos = matches[0].transform.position;
         Frame[] targetFrames = Opponent.GetRandomIdleFrames(3);
         for(int i = 0; i < targetFrames.Length; ++i)
@@ -1241,7 +1255,12 @@ public class InGameManager : MonoBehaviour
     void CastSkillUpsideDown(Product[] matches)
     {
         if (Opponent.UpsideDownSlot.activeSelf)
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
             return;
+        }
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
 
         Vector3 pos = matches[0].transform.position;
         Frame destFrame = Opponent.CenterFrame;
@@ -1251,7 +1270,7 @@ public class InGameManager : MonoBehaviour
         {
             CreateParticle(UpsideDownParticle, destFrame.transform.position);
             Opponent.UpsideDownSlot.SetActive(true);
-            Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(Billboard.CurrentCombo * 4, () =>
+            Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(Billboard.CurrentCombo * 3, () =>
             {
                 Opponent.UpsideDownSlot.SetActive(false);
             }));
@@ -1261,8 +1280,13 @@ public class InGameManager : MonoBehaviour
     }
     void CastSkillRemoveBadEffects(Product[] matches)
     {
-        if (mRemoveBadEffectsCoolTime || Billboard.CurrentCombo < 2)
+        if (mRemoveBadEffectsCoolTime)
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
             return;
+        }
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGoodEffect);
 
         Vector3 pos = matches[0].transform.position;
         CreateParticle(RemoveBadEffectParticle, pos);
@@ -1434,6 +1458,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.SkillBomb)
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
                 List<Product> rets = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
@@ -1460,6 +1485,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.SkillIce)
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
                 List<Product> rets = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
@@ -1532,6 +1558,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.SkillCloud)
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
                 List<Frame> frames = new List<Frame>();
                 for (int i = 0; i < body.ArrayCount; ++i)
@@ -1551,6 +1578,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.SkillUpsideDown)
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
                 Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
                 Frame destFrame = Opponent.CenterFrame;
                 CreateLaserEffect(startPos, destFrame.transform.position);
@@ -1602,7 +1630,7 @@ public class InGameManager : MonoBehaviour
         }
         return infos.ToArray();
     }
-    private void Network_StartGame(Product[] pros)
+    private void Network_StartGame(ProductInfo[] pros)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -1615,7 +1643,7 @@ public class InGameManager : MonoBehaviour
         req.colorCount = mStageInfo.ColorCount;
         req.combo = 0;
         req.ArrayCount = pros.Length;
-        req.products = Serialize(pros);
+        Array.Copy(pros, req.products, pros.Length);
 
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
@@ -1650,7 +1678,7 @@ public class InGameManager : MonoBehaviour
         req.products[0].color = pro.mColor;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Destroy(Product[] pros, ProductSkill skill)
+    private void Network_Destroy(ProductInfo[] pros, ProductSkill skill)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -1658,13 +1686,13 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Destroy;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = pros[0].Combo;
+        req.combo = Billboard.CurrentCombo;
         req.skill = skill;
         req.ArrayCount = pros.Length;
-        req.products = Serialize(pros);
+        Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Create(Product[] pros)
+    private void Network_Create(ProductInfo[] pros)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -1674,10 +1702,10 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = 0;
         req.ArrayCount = pros.Length;
-        req.products = Serialize(pros);
+        Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_FlushAttacks(Product[] pros)
+    private void Network_FlushAttacks(ProductInfo[] pros)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -1685,9 +1713,9 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = pros[0].Combo;
+        req.combo = Billboard.CurrentCombo;
         req.ArrayCount = pros.Length;
-        req.products = Serialize(pros);
+        Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Skill(PVPCommand skill, ProductInfo[] infos, Frame startFrame = null)
