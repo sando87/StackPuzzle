@@ -17,12 +17,13 @@ public class Frame : MonoBehaviour
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
 
+    public VerticalFrames VertFrames { get; set; }
     public InGameManager GameManager { get { return mGameManager; } }
     public bool Empty { get { return mIsEmpty; } }
     public ProductSkill SkillBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
-    public Product ChildProduct { get { return GetComponentInChildren<Product>(); } }
+    public Product ChildProduct { get; set; }
     public SpriteRenderer CoverRenderer;
     public Func<int, int, Frame> GetFrame;
     public Action EventBreakCover;

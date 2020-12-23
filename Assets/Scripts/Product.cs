@@ -40,18 +40,123 @@ public class Product : MonoBehaviour
     }
     public float Weight { get; set; }
     public int Combo { get; set; }
+    public bool IsMoving { get; private set; }
+    public bool IsDropping { get; private set; }
     public bool IsLocked() { return mLocked; }
-    public Frame ParentFrame
+    public Frame ParentFrame { get { return mParentFrame; } }
+    public void AttachTo(Frame parentFrame)
     {
-        get
+        parentFrame.ChildProduct = this;
+        mParentFrame = parentFrame;
+        transform.SetParent(parentFrame.transform);
+    }
+    public Frame Detach()
+    {
+        Frame frame = mParentFrame;
+        frame.ChildProduct = null;
+        InGameManager mgr = frame.GameManager;
+        transform.SetParent(mgr.transform);
+        mParentFrame = null;
+        return frame;
+    }
+    public void Swipe(Product targetProduct, Action EventSwipeEnd)
+    {
+        Frame myFrame = Detach();
+        Frame targetFrame = targetProduct.Detach();
+
+        AttachTo(targetFrame);
+        targetProduct.AttachTo(myFrame);
+
+        mAnimation.Play("swap");
+        targetProduct.mAnimation.Play("swap");
+
+        targetProduct.StartCoroutine(AnimateMove(myFrame.transform.position, 0.3f, null));
+        StartCoroutine(AnimateMove(targetFrame.transform.position, 0.3f, EventSwipeEnd));
+    }
+    public void Drop(Action EventEndDrop)
+    {
+        Frame frame = Detach();
+        StartCoroutine(AnimateDrop(frame.GameManager, EventEndDrop));
+    }
+
+    private IEnumerator AnimateDrop(InGameManager mgr, Action EventEndDrop)
+    {
+        IsDropping = true;
+        Vector3 vel = new Vector3(0, -2, 0);
+        Vector3 nextPos = Vector3.zero;
+        
+        while (true)
         {
-            return mParentFrame;
+            nextPos = transform.position + (vel * Time.deltaTime);
+            Frame frame = mgr.GetFrame(nextPos.x, nextPos.y - mgr.GridSize * 0.5f - 0.01f);
+
+            if (frame == null || frame.ChildProduct != null)
+            {
+                frame = mgr.GetFrame(nextPos.x, nextPos.y);
+                if(frame != null) //In case of crashed with under product
+                {
+                    AttachTo(frame);
+                    transform.localPosition = new Vector3(0, 0, -1);
+                    break;
+                }
+                else //In case of Top of Top Frame
+                {
+                    yield return null;
+                }
+            }
+            else//keep dropping..
+            {
+                transform.position = nextPos;
+                yield return null;
+            }
         }
-        set
+
+        IsDropping = false;
+        EventEndDrop?.Invoke();
+    }
+
+    private IEnumerator AnimateDrop(InGameManager mgr, Product underProduct, Action EventEndDrop)
+    {
+        IsDropping = true;
+        Vector3 vel = new Vector3(0, -2, 0);
+        Vector3 nextPos = Vector3.zero;
+
+        while (true)
         {
-            transform.SetParent(value.transform);
-            mParentFrame = value;
+            nextPos = transform.position + (vel * Time.deltaTime);
+            float myMin = nextPos.y - mgr.GridSize * 0.5f;
+            float underMax = underProduct.transform.position.y + mgr.GridSize * 0.5f;
+
+            if (myMin < underMax) //대상 블록과 충돌시
+            {
+                Frame frame = mgr.GetFrame(nextPos.x, nextPos.y);
+                if (frame == null) //현재 블록이 예비 영역에 있을 경우
+                {
+                    yield return null;
+                }
+                else
+                {
+                    if (underProduct.IsDropping) //다음 블록과 충돌을 했지만 다음 블록이 아직 멈추지 않은 상태(속도가 위에것이 더 빨리 떨어지는 경우)
+                    {
+                        yield return null;
+                    }
+                    else
+                    {
+                        AttachTo(frame);
+                        transform.localPosition = new Vector3(0, 0, -1);
+                        break;
+                    }
+                }
+            }
+            else //대상 블록과 비충돌시
+            {
+                transform.position = nextPos;
+                yield return null;
+            }
         }
+
+        IsDropping = false;
+        EventEndDrop?.Invoke();
     }
 
     public Action EventUnWrapChoco;
@@ -136,6 +241,7 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateMove(Vector2 destPos, float duration, Action EventMoveEnd)
     {
+        IsMoving = true;
         Vector3 start = transform.position;
         Vector3 dest = new Vector3(destPos.x, destPos.y, start.z);
         Vector3 vel = (dest - start) / duration;
@@ -148,7 +254,7 @@ public class Product : MonoBehaviour
             yield return null;
         }
         transform.position = dest;
-        mLocked = false;
+        IsMoving = false;
         EventMoveEnd?.Invoke();
     }
     IEnumerator AnimateDestroy()

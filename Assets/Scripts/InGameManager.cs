@@ -6,6 +6,12 @@ using UnityEngine.UI;
 
 using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 
+public class VerticalFrames
+{
+    public Frame[] Frames;
+    public LinkedList<Product> NewProducts = new LinkedList<Product>();
+}
+
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
 public class InGameManager : MonoBehaviour
@@ -53,7 +59,7 @@ public class InGameManager : MonoBehaviour
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
-    private List<Frame[]> mFrameDropGroup = new List<Frame[]>();
+    private VerticalFrames[] mFrameDropGroup = null;
 
 
     public SkillPair[] SkillMapping = new SkillPair[7]
@@ -92,7 +98,15 @@ public class InGameManager : MonoBehaviour
     public AttackPoints AttackPoints { get; set; }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
-    
+    public float GridSize { get { return UserSetting.GridSize * transform.localScale.x; } }
+    public Rect FieldWorldRect    {
+        get {
+            Rect rect = new Rect(Vector2.zero, new Vector2(GridSize * CountX, GridSize * CountY));
+            rect.center = transform.position;
+            return rect;
+        }
+    }
+
 
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventDestroyed;
@@ -239,8 +253,7 @@ public class InGameManager : MonoBehaviour
             mIsSwipping = true;
             RemoveLimit();
             Network_Swipe(product, dir);
-            targetProduct.StartSwipe(product.GetComponentInParent<Frame>(), null);
-            product.StartSwipe(targetProduct.GetComponentInParent<Frame>(), () => {
+            product.Swipe(targetProduct, () => {
                 mIsSwipping = false;
             });
         }
@@ -500,6 +513,16 @@ public class InGameManager : MonoBehaviour
             }
         }
         return new List<Product>(aroundProducts.Keys);
+    }
+    public Frame GetFrame(float worldPosX, float worldPosY)
+    {
+        Rect worldRect = FieldWorldRect;
+        if (worldPosX < worldRect.xMin || worldPosY < worldRect.yMin || worldRect.xMax < worldPosX || worldRect.yMax < worldPosY)
+            return null;
+
+        float idxX = (worldPosX - worldRect.xMin) / GridSize;
+        float idxY = (worldPosY - worldRect.yMin) / GridSize;
+        return mFrames[(int)idxX, (int)idxY];
     }
     private Product[] StartToDropAndCreate(float duration)
     {
@@ -949,9 +972,11 @@ public class InGameManager : MonoBehaviour
     }
     private void InitDropGroupFrames()
     {
-        List<Frame> frames = new List<Frame>();
+        List<VerticalFrames> groups = new List<VerticalFrames>();
+        VerticalFrames group = new VerticalFrames();
         for (int x = 0; x < CountX; ++x)
         {
+            List<Frame> frames = new List<Frame>();
             for (int y = 0; y < CountY; ++y)
             {
                 Frame curFrame = mFrames[x, y];
@@ -961,16 +986,23 @@ public class InGameManager : MonoBehaviour
                 Frame up = curFrame.Up();
                 if (up == null || up.Empty)
                 {
+                    curFrame.VertFrames = group;
                     frames.Add(curFrame);
-                    mFrameDropGroup.Add(frames.ToArray());
+
+                    group.Frames = frames.ToArray();
+                    groups.Add(group);
                     frames.Clear();
+                    group = new VerticalFrames();
                 }
                 else
                 {
+                    curFrame.VertFrames = group;
                     frames.Add(curFrame);
                 }
             }
         }
+
+        mFrameDropGroup = groups.ToArray();
     }
     private Frame SubTopFrame(Frame baseFrame)
     {
