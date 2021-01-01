@@ -9,7 +9,7 @@ using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 public class VerticalFrames
 {
     public Frame[] Frames;
-    public LinkedList<Product> NewProducts = new LinkedList<Product>();
+    public List<Product> NewProducts = new List<Product>();
 }
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
@@ -25,6 +25,8 @@ public class InGameManager : MonoBehaviour
     { get { if (mInstPVP_Player == null) mInstPVP_Player = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldMe").GetComponent<InGameManager>(); return mInstPVP_Player; } }
     public static InGameManager InstPVP_Opponent
     { get { if (mInstPVP_Opponent == null) mInstPVP_Opponent = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldOpp").GetComponent<InGameManager>(); return mInstPVP_Opponent; } }
+    public static InGameManager InstCurrent
+    { get { if (mInstStage != null && mInstStage.gameObject.activeSelf) return mInstStage; else return mInstPVP_Player; } }
 
     private const float durationDrop = 0.6f;
     private const float intervalMatch = 0.5f;
@@ -56,10 +58,10 @@ public class InGameManager : MonoBehaviour
     private bool mIsSwipping = false;
     private DateTime mStartTime = DateTime.Now;
     private bool mRemoveBadEffectsCoolTime = false;
+    private VerticalFrames[] mFrameDropGroup = null;
 
     private Queue<ProductSkill> mNextSkills = new Queue<ProductSkill>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
-    private VerticalFrames[] mFrameDropGroup = null;
 
 
     public SkillPair[] SkillMapping = new SkillPair[7]
@@ -109,13 +111,20 @@ public class InGameManager : MonoBehaviour
 
 
     public Action<Vector3, StageGoalType> EventBreakTarget;
-    public Action<Product[]> EventDestroyed;
+    public Action<Product[]> EventMatched;
     public Action<bool> EventFinish;
     public Action<int> EventCombo;
     public Action<int> EventRemainTime;
     public Action EventReduceLimit;
 
-
+    private void Update()
+    {
+        if(!mIsCycling)
+        {
+            foreach (var group in mFrameDropGroup)
+                StartToDropVerticalFrames(group);
+        }
+    }
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
         ResetGame();
@@ -211,15 +220,23 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
-        List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
-        if (matches.Count <= 0)
+        if(pro.mSkill != ProductSkill.Nothing)
         {
-            pro.mAnimation.Play("swap");
-            return;
+            DestroyProducts(new Product[1] { pro });
         }
-
-        RemoveLimit();
-        StartCoroutine(DoMatchingCycle(matches[0]));
+        else
+        {
+            List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+            if (matches.Count <= 0)
+            {
+                pro.mAnimation.Play("swap");
+            }
+            else
+            {
+                RemoveLimit();
+                StartCoroutine(DoMatchingCycle(matches[0]));
+            }
+        }
     }
     public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
@@ -239,6 +256,9 @@ public class InGameManager : MonoBehaviour
         }
 
         Product product = swipeObj.GetComponent<Product>();
+        if (product.IsLocked() || product.IsIced)
+            return;
+
         Product targetProduct = null;
         switch (fixedDir)
         {
@@ -248,15 +268,17 @@ public class InGameManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct != null && !product.IsLocked() && !targetProduct.IsLocked() && !product.IsIced && !targetProduct.IsIced)
-        {
-            mIsSwipping = true;
-            RemoveLimit();
-            Network_Swipe(product, dir);
-            product.Swipe(targetProduct, () => {
-                mIsSwipping = false;
-            });
-        }
+        if (targetProduct == null || targetProduct.IsLocked() || targetProduct.IsIced)
+            return;
+
+        mIsSwipping = true;
+        RemoveLimit();
+        Network_Swipe(product, dir);
+        product.Swipe(targetProduct, () => {
+            mIsSwipping = false;
+            if (product.mSkill != ProductSkill.Nothing && targetProduct.mSkill != ProductSkill.Nothing)
+                SwipeSkilledProducts(product, targetProduct);
+        });
     }
 
     #region Utility
@@ -267,19 +289,22 @@ public class InGameManager : MonoBehaviour
         EventCombo?.Invoke(Billboard.CurrentCombo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-        List<Product> skilledProducts = new List<Product>();
-        ProductSkill nextSkill = CheckSkillable(firstMatches, skilledProducts);
-        Frame[] emptyFrames = DestroyProducts(firstMatches, nextSkill);
+        List<Frame> nextScanFrames = new List<Frame>();
+        nextScanFrames.AddRange(ToFrames(firstMatches));
+        ProductSkill nextSkill = CheckSkillable(firstMatches);
+        if (nextSkill == ProductSkill.Nothing)
+            DestroyProducts(firstMatches);
+        else
+            MergeProducts(firstMatches, nextSkill);
 
-        List<Product[]> matchedProductsGroup = new List<Product[]>();
-        matchedProductsGroup.Add(firstMatches);
         while (true)
         {
-            yield return new WaitForSeconds(intervalMatch);
-            List<Product> aroundProducts = FindAroundProducts(emptyFrames);
+            List<Product> aroundProducts = FindAroundProducts(nextScanFrames.ToArray());
             List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
             if (nextMatches.Count <= 0)
                 break;
+
+            yield return new WaitForSeconds(intervalMatch);
 
             Billboard.CurrentCombo++;
             Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
@@ -287,170 +312,53 @@ public class InGameManager : MonoBehaviour
             EventCombo?.Invoke(Billboard.CurrentCombo);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
-            matchedProductsGroup.Clear();
-            List<Frame> nextEmptyFrames = new List<Frame>();
+            nextScanFrames.Clear();
             foreach (Product[] matches in nextMatches)
             {
-                //Frame[] empties = DestroyProductsWithSkill(matches);
-                nextSkill = CheckSkillable(matches, skilledProducts);
-                Frame[] empties = DestroyProducts(matches, nextSkill);
-                matchedProductsGroup.Add(matches);
-                nextEmptyFrames.AddRange(empties);
-            }
-            emptyFrames = nextEmptyFrames.ToArray();
-        }
-
-        CastSkill(matchedProductsGroup);
-
-        if (skilledProducts.Count >= 4)
-        {
-            yield return new WaitForSeconds(intervalDrop + durationDrop);
-            DestroyProducts(skilledProducts.ToArray(), ProductSkill.Nothing);
-            yield return new WaitForSeconds(intervalDrop + durationDrop);
-            while (true)
-            {
-                yield return new WaitForSeconds(intervalDrop);
-                Product[] droppedProducts = StartToDropAndCreate(durationDrop);
-                yield return new WaitForSeconds(durationDrop);
-                List<Product[]> matches = FindMatchedProducts(droppedProducts);
-                if (matches.Count <= 0)
-                    break;
-
-                EventCombo?.Invoke(Billboard.CurrentCombo);
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-                foreach (Product[] pros in matches)
-                    DestroyProducts(pros, ProductSkill.Nothing);
-            }
-        }
-        else
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(intervalDrop);
-                Product[] droppedProducts = StartToDropAndCreate(durationDrop);
-                yield return new WaitForSeconds(durationDrop);
-                List<Product[]> matches = FindMatchedProducts(droppedProducts);
-                if (matches.Count <= 0)
-                    break;
-
-                EventCombo?.Invoke(Billboard.CurrentCombo);
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-                foreach (Product[] pros in matches)
-                    DestroyProducts(pros, ProductSkill.Nothing);
+                nextScanFrames.AddRange(ToFrames(matches));
+                nextSkill = CheckSkillable(matches);
+                if (nextSkill == ProductSkill.Nothing)
+                    DestroyProducts(matches);
+                else
+                    MergeProducts(matches, nextSkill);
             }
         }
 
         EventCombo?.Invoke(0);
         mIsCycling = false;
     }
-    private IEnumerator DoDropCycle()
+    private Product[] ToProducts(Frame[] frames)
     {
-        mIsCycling = true;
-        Billboard.CurrentCombo = 1;
-        EventCombo?.Invoke(Billboard.CurrentCombo);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-        while (true)
-        {
-            yield return new WaitForSeconds(intervalDrop);
-            Product[] droppedProducts = StartToDropAndCreate(durationDrop);
-            yield return new WaitForSeconds(durationDrop);
-            List<Product[]> matches = FindMatchedProducts(droppedProducts);
-            if (matches.Count <= 0)
-                break;
-
-            EventCombo?.Invoke(Billboard.CurrentCombo);
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
-
-            foreach (Product[] pros in matches)
-                DestroyProducts(pros, ProductSkill.Nothing);
-        }
-
-        EventCombo?.Invoke(0);
-        mIsCycling = false;
+        List<Product> products = new List<Product>();
+        foreach (Frame frame in frames)
+            if(frame.ChildProduct != null)
+                products.Add(frame.ChildProduct);
+        return products.ToArray();
     }
-    private Product[] FindSkilledProducts()
+    private Frame[] ToFrames(Product[] products)
     {
-        List<Product> pros = new List<Product>();
-        foreach(Frame frame in mFrames)
-        {
-            Product pro = frame.ChildProduct;
-            if (pro != null && pro.mSkill != ProductSkill.Nothing)
-                pros.Add(pro);
-        }
-        return pros.ToArray();
+        List<Frame> frames = new List<Frame>();
+        foreach (Product pro in products)
+            frames.Add(pro.ParentFrame);
+        return frames.ToArray();
     }
-    private Product[] ScanProducts(Product skilledProduct)
+    private void DestroyProducts(Product[] matches)
     {
-        List<Product> results = new List<Product>();
-        results.Add(skilledProduct);
+        if (matches == null || matches.Length <= 0)
+            return;
 
-        if (skilledProduct.mSkill == ProductSkill.OneMore) //hori
-        {
-            for(int i = 0; i < CountX; ++i)
-            {
-                Frame frame = GetFrame(i, skilledProduct.ParentFrame.IndexY);
-                if (frame == null)
-                    continue;
-                Product pro = frame.ChildProduct;
-                if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
-                    results.Add(pro);
-            }
-        }
-        else if (skilledProduct.mSkill == ProductSkill.KeepCombo) //vert
-        {
-            for (int i = 0; i < CountY; ++i)
-            {
-                Frame frame = GetFrame(skilledProduct.ParentFrame.IndexX, i);
-                if (frame == null)
-                    continue;
-                Product pro = frame.ChildProduct;
-                if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
-                    results.Add(pro);
-            }
-        }
-        else if (skilledProduct.mSkill == ProductSkill.SameColor) //bomb
-        {
-            int idxX = skilledProduct.ParentFrame.IndexX;
-            int idxY = skilledProduct.ParentFrame.IndexY;
-            for (int y = idxY - 1; y < idxY + 2; ++y)
-            {
-                for (int x = idxX - 1; x < idxX + 2; ++x)
-                {
-                    Frame frame = GetFrame(x, y);
-                    if (frame == null)
-                        continue;
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && pro.mSkill == ProductSkill.Nothing && !pro.IsChocoBlock())
-                        results.Add(pro);
-                }
-            }
-        }
-
-        return results.ToArray();
-    }
-    private Frame[] DestroyProducts(Product[] matches, ProductSkill makeSkill)
-    {
-        List<Frame> emptyFrames = new List<Frame>();
-        Product mainProduct = matches[0];
+        List<ProductInfo> nextProducts = new List<ProductInfo>();
 
         int addedScore = 0;
         foreach (Product pro in matches)
         {
-            emptyFrames.Add(pro.ParentFrame);
+            Frame curFrame = pro.ParentFrame;
             addedScore += Billboard.CurrentCombo;
             pro.Combo = Billboard.CurrentCombo;
-            if (makeSkill == ProductSkill.Nothing)
-                pro.StartDestroy(gameObject);
-            else
-            {
-                if (pro == mainProduct)
-                    pro.StartMakeSkill(durationMerge, makeSkill);
-                else
-                    pro.StartMerge(mainProduct.ParentFrame, durationMerge);
-            }
+            pro.StartDestroy(1.3f, 0.4f);
+
+            Product newPro = InstanceNewProduct(curFrame);
+            nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
         }
 
         //if (FieldType == GameFieldType.Stage)
@@ -458,16 +366,387 @@ public class InGameManager : MonoBehaviour
         //else
         //    Attack(addedScore, mainProduct.transform.position);
 
-        if (ScoreBuffSlot.activeSelf)
-            addedScore = (int)(addedScore * 1.2f);
+        Billboard.CurrentScore += addedScore;
+        Billboard.DestroyCount += matches.Length;
+
+        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing);
+        EventMatched?.Invoke(matches);
+    }
+    private void MergeProducts(Product[] matches, ProductSkill makeSkill)
+    {
+        List<ProductInfo> nextProducts = new List<ProductInfo>();
+        Frame mainFrame = matches[0].ParentFrame;
+
+        int addedScore = 0;
+        foreach (Product pro in matches)
+        {
+            Frame curFrame = pro.ParentFrame;
+            addedScore += Billboard.CurrentCombo;
+            pro.Combo = Billboard.CurrentCombo;
+            if (curFrame == mainFrame)
+            {
+                pro.StartToChangeSkilledProduct(durationMerge, makeSkill);
+                continue;
+            }
+
+            pro.StartMergeTo(matches[0], durationMerge);
+            Product newPro = InstanceNewProduct(curFrame);
+            nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
+        }
+
+        //if (FieldType == GameFieldType.Stage)
+        //    ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
+        //else
+        //    Attack(addedScore, mainProduct.transform.position);
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
 
-        Network_Destroy(Serialize(matches), makeSkill);
-        EventDestroyed?.Invoke(matches);
-        return emptyFrames.ToArray();
+        Network_Destroy(nextProducts.ToArray(), makeSkill);
+        EventMatched?.Invoke(matches);
     }
+    private Product InstanceNewProduct(Frame emptyFrame)
+    {
+        Frame[] verties = emptyFrame.VertFrames.Frames;
+        Product pro = CreateNewProduct();
+
+        Vector3 pos = verties[verties.Length - 1].transform.position;
+        pro.transform.position = pos + new Vector3(0, GridSize, -1);
+
+        emptyFrame.VertFrames.NewProducts.Add(pro);
+        return pro;
+    }
+    private void StartToDropVerticalFrames(VerticalFrames group)
+    {
+        if (group.NewProducts.Count <= 0)
+            return;
+
+        foreach (Frame frame in group.Frames)
+        {
+            if (frame.ChildProduct == null || frame.ChildProduct.IsLocked())
+                continue;
+
+            Frame downFrame = frame.Down();
+            if (downFrame == null || downFrame.ChildProduct != null)
+                continue;
+
+            frame.ChildProduct.Drop(null);
+        }
+
+        Product prvPro = null;
+        foreach (Product newProduct in group.NewProducts)
+        {
+            if (prvPro == null)
+            {
+                if (!newProduct.IsDropping)
+                    newProduct.Drop(() => { group.NewProducts.Remove(newProduct); });
+            }
+            else
+            {
+                if (!newProduct.IsDropping)
+                    newProduct.Drop(prvPro, () => { group.NewProducts.Remove(newProduct); });
+            }
+            prvPro = newProduct;
+        }
+    }
+    private Product[] ScanSkill(Product mainProduct)
+    {
+        List<Product> rets = new List<Product>();
+
+        if(mainProduct.mSkill == ProductSkill.OneMore)
+        {
+            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
+            int idxY = frameOf.IndexY;
+            for(int x = 0; x < CountX; ++x)
+            {
+                Product pro = mFrames[x, idxY].ChildProduct;
+                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                {
+                    pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
+                    rets.Add(pro);
+                }
+            }
+        }
+        else if (mainProduct.mSkill == ProductSkill.KeepCombo)
+        {
+            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
+            int idxX = frameOf.IndexX;
+            for (int y = 0; y < CountY; ++y)
+            {
+                Product pro = mFrames[idxX, y].ChildProduct;
+                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                {
+                    pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
+                    rets.Add(pro);
+                }
+            }
+        }
+        else if (mainProduct.mSkill == ProductSkill.SameColor)
+        {
+            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
+            int idxX = frameOf.IndexX;
+            int idxY = frameOf.IndexY;
+            for (int y = idxY - 1; y < idxY + 2; ++y)
+            {
+                for (int x = idxX - 1; x < idxX + 2; ++x)
+                {
+                    Frame frame = GetFrame(x, y);
+                    if (frame == null)
+                        continue;
+
+                    Product pro = frame.ChildProduct;
+                    if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                    {
+                        pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
+                        rets.Add(pro);
+                    }
+                }
+            }
+        }
+
+        rets.Sort((left, right) => { return left.Weight > right.Weight ? 1 : -1; });
+
+
+        return rets.ToArray();
+    }
+    private Product[] ScanHorizenProducts(Product target)
+    {
+        if (target == null)
+            return null;
+
+        List<Product> rets = new List<Product>();
+        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        int idxY = frameOf.IndexY;
+        for (int x = 0; x < CountX; ++x)
+        {
+            Product pro = mFrames[x, idxY].ChildProduct;
+            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
+    private Product[] ScanVerticalProducts(Product target)
+    {
+        if (target == null)
+            return null;
+
+        List<Product> rets = new List<Product>();
+        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        int idxX = frameOf.IndexX;
+        for (int y = 0; y < CountY; ++y)
+        {
+            Product pro = mFrames[idxX, y].ChildProduct;
+            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
+    private Product[] ScanAroundProducts(Product target, int round)
+    {
+        if (target == null)
+            return null;
+
+        List<Product> rets = new List<Product>();
+        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        int idxX = frameOf.IndexX;
+        int idxY = frameOf.IndexY;
+        for (int y = idxY - round; y < idxY + round + 1; ++y)
+        {
+            for (int x = idxX - round; x < idxX + round + 1; ++x)
+            {
+                Frame frame = GetFrame(x, y);
+                if (frame == null)
+                    continue;
+
+                Product pro = frame.ChildProduct;
+                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                    rets.Add(pro);
+            }
+        }
+        return rets.ToArray();
+    }
+    public void BreakSkiiledProduct(Product skilledProduct)
+    {
+        if (skilledProduct.mSkill == ProductSkill.OneMore)
+        {
+            Product[] destroyes = ScanHorizenProducts(skilledProduct);
+            int idxY = skilledProduct.ParentFrame.IndexY;
+            Vector3 startPos = mFrames[0, idxY].transform.position;
+            Vector3 destPos = mFrames[CountX - 1, idxY].transform.position;
+            CreateLaserEffect(startPos, destPos);
+            DestroyProducts(destroyes);
+        }
+        else if (skilledProduct.mSkill == ProductSkill.KeepCombo)
+        {
+            Product[] destroyes = ScanVerticalProducts(skilledProduct);
+            int idxX = skilledProduct.ParentFrame.IndexX;
+            Vector3 startPos = mFrames[idxX, 0].transform.position;
+            Vector3 destPos = mFrames[idxX, CountY - 1].transform.position;
+            CreateLaserEffect(startPos, destPos);
+            DestroyProducts(destroyes);
+        }
+        else if (skilledProduct.mSkill == ProductSkill.SameColor)
+        {
+            Product[] destroyes = ScanAroundProducts(skilledProduct, 1);
+            DestroyProducts(destroyes);
+        }
+        //else if (skilledProduct.mSkill == ProductSkill.SameColor)
+        //{
+        //    Vector3 startPos = skilledProduct.transform.position;
+        //    foreach (Frame frame in mFrames)
+        //    {
+        //        Product pro = frame.ChildProduct;
+        //        if (pro == null || pro.IsLocked())
+        //            continue;
+        //
+        //        List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+        //        if (matches.Count > 0)
+        //        {
+        //            Vector3 destPos = matches[0][0].transform.position;
+        //            CreateLaserEffect(startPos, destPos);
+        //            DestroyProducts(matches[0]);
+        //        }
+        //    }
+        //    DestroyProducts(new Product[1] { skilledProduct });
+        //}
+    }
+    IEnumerator ReadyToDestroy(Product main, Product[] destroyes, float duration)
+    {
+        float step = duration / destroyes.Length;
+        foreach(Product product in destroyes)
+        {
+            product.StartFlash(1.3f);
+            if (main != product && product.mSkill != ProductSkill.Nothing)
+                BreakSkiiledProduct(product);
+            yield return new WaitForSeconds(step);
+        }
+    }
+    private Product[] ScanRandomProducts(int step)
+    {
+        List<Product> rets = new List<Product>();
+        int totalCount = CountX * CountY;
+        int curIdx = -1;
+        while(true)
+        {
+            curIdx++;
+            curIdx = UnityEngine.Random.Range(curIdx, curIdx + step);
+            if (curIdx >= totalCount)
+                break;
+
+            int idxX = curIdx % CountX;
+            int idxY = curIdx / CountX;
+            Product pro = mFrames[idxX, idxY].ChildProduct;
+            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
+    IEnumerator LoopBreakSkillProducts(Product[] skilledProducts)
+    {
+        while(true)
+        {
+            int doneCount = 0;
+            foreach(Product pro in skilledProducts)
+            {
+                if(pro == null)
+                {
+                    doneCount++;
+                }
+                else if(!pro.IsLocked())
+                {
+                    DestroyProducts(new Product[1] { pro });
+                    yield return new WaitForSeconds(0.3f);
+                }
+            }
+
+            if (doneCount == skilledProducts.Length)
+                break;
+
+            yield return null;
+        }
+    }
+    public void BreakSkiiledProduct(Product productA, Product productB)
+    {
+        if(productA.mSkill == ProductSkill.SameColor)
+        {
+
+            if (productB.mSkill == ProductSkill.OneMore || productB.mSkill == ProductSkill.KeepCombo)
+            {
+                Product[] randomProducts = ScanRandomProducts(5);
+                foreach(Product pro in randomProducts)
+                {
+                    CreateLaserEffect(productA.transform.position, pro.transform.position);
+                    pro.ChangeProductImage(UnityEngine.Random.Range(0, 1) == 0 ? ProductSkill.OneMore : ProductSkill.KeepCombo);
+                }
+                StartCoroutine(LoopBreakSkillProducts(randomProducts));
+            }
+            else if (productB.mSkill == ProductSkill.SameColor)
+            {
+                Product[] randomProducts = ScanRandomProducts(5);
+                foreach (Product pro in randomProducts)
+                {
+                    CreateLaserEffect(productA.transform.position, pro.transform.position);
+                    pro.ChangeProductImage(ProductSkill.SameColor);
+                }
+                StartCoroutine(LoopBreakSkillProducts(randomProducts));
+            }
+            else if (productB.mSkill == ProductSkill.ASDF)
+            {
+            }
+            DestroyProducts(new Product[2] { productA, productB });
+        }
+        else if (productA.mSkill == ProductSkill.SameColor)
+        {
+            Product[] rets = null;
+            if (productB.mSkill == ProductSkill.OneMore)
+            {
+                rets = ScanHorizenProducts(productA.Up());
+                DestroyProducts(rets);
+                rets = ScanHorizenProducts(productA);
+                DestroyProducts(rets);
+                rets = ScanHorizenProducts(productA.Down());
+                DestroyProducts(rets);
+            }
+            else if (productB.mSkill == ProductSkill.KeepCombo)
+            {
+                rets = ScanVerticalProducts(productA.Left());
+                DestroyProducts(rets);
+                rets = ScanVerticalProducts(productA);
+                DestroyProducts(rets);
+                rets = ScanVerticalProducts(productA.Right());
+                DestroyProducts(rets);
+            }
+            else if (productB.mSkill == ProductSkill.SameColor)
+            {
+                rets = ScanAroundProducts(productA, 2);
+                DestroyProducts(rets);
+            }
+        }
+        else if(productA.mSkill == ProductSkill.OneMore || productA.mSkill == ProductSkill.KeepCombo)
+        {
+            Product[] rets = null;
+            rets = ScanHorizenProducts(productA);
+            DestroyProducts(rets);
+            rets = ScanVerticalProducts(productA);
+            DestroyProducts(rets);
+            rets = ScanHorizenProducts(productB);
+            DestroyProducts(rets);
+            rets = ScanVerticalProducts(productB);
+            DestroyProducts(rets);
+        }
+    }
+    private void SwipeSkilledProducts(Product main, Product sub)
+    {
+        switch (sub.mSkill)
+        {
+            case ProductSkill.OneMore: BreakSkiiledProduct(main, sub); break;
+            case ProductSkill.KeepCombo: BreakSkiiledProduct(main, sub); break;
+            case ProductSkill.SameColor: BreakSkiiledProduct(sub, main); break;
+        }
+    }
+
+
+
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
     {
         Queue<Product> aliveProducts = new Queue<Product>();
@@ -523,105 +802,6 @@ public class InGameManager : MonoBehaviour
         float idxX = (worldPosX - worldRect.xMin) / GridSize;
         float idxY = (worldPosY - worldRect.yMin) / GridSize;
         return mFrames[(int)idxX, (int)idxY];
-    }
-    private Product[] StartToDropAndCreate(float duration)
-    {
-        List<Product> droppedProducts = new List<Product>();
-        List<Product> newProducts = new List<Product>();
-        foreach (Frame[] frames in mFrameDropGroup)
-        {
-            Queue<Product> alivePros = FindAliveProducts(frames);
-            int diffCount = frames.Length - alivePros.Count;
-            if (diffCount <= 0)
-                continue;
-
-            foreach (Frame frame in frames)
-            {
-                if (alivePros.Count > 0)
-                {
-                    Product pro = alivePros.Dequeue();
-                    if (frame.ChildProduct != pro)
-                    {
-                        pro.StartDropAnimate(frame, duration);
-                        droppedProducts.Add(pro);
-                    }
-                }
-                else
-                {
-                    Product pro = CreateNewProduct(frame);
-                    float height = UserSetting.GridSize * diffCount;
-                    pro.transform.localPosition = new Vector3(0, height, -1);
-                    pro.StartDropAnimate(frame, duration);
-                    droppedProducts.Add(pro);
-                    newProducts.Add(pro);
-                }
-            }
-        }
-
-        Network_Create(Serialize(newProducts.ToArray()));
-
-        return droppedProducts.ToArray();
-    }
-    private Product[] StartToDropAndCreateRemote(Dictionary<Frame, ProductColor> newProducts, float duration)
-    {
-        List<Product> droppedProducts = new List<Product>();
-        foreach (Frame[] frames in mFrameDropGroup)
-        {
-            Queue<Product> alivePros = FindAliveProducts(frames);
-            int diffCount = frames.Length - alivePros.Count;
-            if (diffCount <= 0)
-                continue;
-
-            foreach (Frame frame in frames)
-            {
-                if (alivePros.Count > 0)
-                {
-                    Product pro = alivePros.Dequeue();
-                    if (frame.ChildProduct != pro)
-                    {
-                        pro.StartDropAnimate(frame, duration);
-                        droppedProducts.Add(pro);
-                    }
-                }
-                else
-                {
-                    if (!newProducts.ContainsKey(frame))
-                        LOG.warn("Not Found Remote New Product");
-
-                    ProductColor proColor = newProducts[frame];
-                    Product pro = CreateNewProduct(frame, proColor);
-                    float height = UserSetting.GridSize * diffCount;
-                    pro.transform.localPosition = new Vector3(0, height, -1);
-                    pro.GetComponent<BoxCollider2D>().enabled = false;
-                    pro.StartDropAnimate(frame, duration);
-                    droppedProducts.Add(pro);
-                }
-            }
-        }
-
-        return droppedProducts.ToArray();
-    }
-    private bool IsReadyToNextDrop(Dictionary<Frame, ProductColor> newProducts)
-    {
-        int validCount = 0;
-        foreach (Frame[] frames in mFrameDropGroup)
-        {
-            Queue<Product> alivePros = FindAliveProducts(frames);
-            int diffCount = frames.Length - alivePros.Count;
-            if (diffCount <= 0)
-                continue;
-
-            int x = frames[0].IndexX;
-            for(int y = 0; y < diffCount; ++y)
-            {
-                Frame frame = frames[frames.Length - 1 - y];
-                if (newProducts.ContainsKey(frame))
-                    validCount++;
-                else
-                    return false;
-            }
-        }
-        return validCount == newProducts.Count;
     }
     private void Attack(int score, Vector3 fromPos)
     {
@@ -785,53 +965,6 @@ public class InGameManager : MonoBehaviour
         
         return;
     }
-    private Product[] ApplySkillProducts(Product[] matches)
-    {
-        List<Product> result = new List<Product>();
-        result.AddRange(matches);
-        foreach (Product pro in matches)
-        {
-            if (pro.mSkill == ProductSkill.Nothing)
-                continue;
-            else if (pro.mSkill == ProductSkill.OneMore)
-                FindSameRowProducts(pro, result);
-            else if (pro.mSkill == ProductSkill.KeepCombo)
-                FindSameColumnProducts(pro, result);
-            else if (pro.mSkill == ProductSkill.SameColor)
-                FindSameColorProducts(pro, result);
-        }
-        return result.ToArray();
-    }
-    private void FindSameRowProducts(Product target, List<Product> result)
-    {
-        int idxY = target.ParentFrame.IndexY;
-        for(int x = 0; x < CountX; ++x)
-        {
-            Product pro = GetFrame(x, idxY).ChildProduct;
-            if (pro != null && !pro.IsLocked() && !result.Contains(pro))
-                result.Add(pro);
-        }
-    }
-    private void FindSameColumnProducts(Product target, List<Product> result)
-    {
-        int idxX = target.ParentFrame.IndexX;
-        for (int y = 0; y < CountY; ++y)
-        {
-            Product pro = GetFrame(idxX, y).ChildProduct;
-            if (pro != null && !pro.IsLocked() && !result.Contains(pro))
-                result.Add(pro);
-        }
-    }
-    private void FindSameColorProducts(Product target, List<Product> result)
-    {
-        ProductColor color = target.mColor;
-        foreach (Frame frame in mFrames)
-        {
-            Product pro = frame.ChildProduct;
-            if (pro != null && pro.mColor == color && !pro.IsLocked() && !result.Contains(pro))
-                result.Add(pro);
-        }
-    }
     private List<Product> GetNextFlushTargets(int cnt)
     {
         List<Product> products = new List<Product>();
@@ -871,9 +1004,8 @@ public class InGameManager : MonoBehaviour
                 EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Combo);
         }
     }
-    private ProductSkill CheckSkillable(Product[] matches, List<Product> skilledProducts)
+    private ProductSkill CheckSkillable(Product[] matches)
     {
-        return ProductSkill.Nothing;
         if (matches.Length <= UserSetting.MatchCount)
             return ProductSkill.Nothing;
 
@@ -897,7 +1029,6 @@ public class InGameManager : MonoBehaviour
         else
             skill = ProductSkill.SameColor;
 
-        skilledProducts.Add(matches[0]);
         return skill;
     }
     private List<Product> GetSameColorProducts(ProductColor color)
@@ -1034,12 +1165,14 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
-        product.ParentFrame = parent;
-
-        SkillPair skill = SkillMapping[(int)product.mColor];
-        if(skill.Item1 != PVPCommand.Undef)
-            product.Renderer.sprite = skill.Item2;
-
+        product.AttachTo(parent);
+        return product;
+    }
+    private Product CreateNewProduct(ProductColor color = ProductColor.None)
+    {
+        int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
+        GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
+        Product product = obj.GetComponent<Product>();
         return product;
     }
     private int RandomNextColor()
@@ -1064,7 +1197,7 @@ public class InGameManager : MonoBehaviour
             skill.SetActive(false);
 
         EventBreakTarget = null;
-        EventDestroyed = null;
+        EventMatched = null;
         EventFinish = null;
         EventReduceLimit = null;
 
@@ -1076,9 +1209,9 @@ public class InGameManager : MonoBehaviour
 
         Billboard.Reset();
         mNetMessages.Clear();
-        mFrameDropGroup.Clear();
         mNextSkills.Clear();
 
+        mFrameDropGroup = null;
         mFrames = null;
         mUserInfo = null;
         mStageInfo = null;
@@ -1101,7 +1234,7 @@ public class InGameManager : MonoBehaviour
             return 0;
 
         List<Product> matches = new List<Product>();
-        Product[] pros = target.GetAroundProducts();
+        Product[] pros = target.GetAroundProducts(target.ParentFrame);
         foreach(Product each in pros)
         {
             if (each == pro)
@@ -1357,11 +1490,13 @@ public class InGameManager : MonoBehaviour
             UpsideDownSlot.SetActive(false);
         }
     }
-    void CreateLaserEffect(Vector3 startPos, Vector3 destPos)
+    void CreateLaserEffect(Vector2 startPos, Vector2 destPos)
     {
-        startPos.z -= 1;
-        GameObject laserObj = GameObject.Instantiate(LaserParticle, startPos, Quaternion.identity, transform);
-        laserObj.GetComponent<EffectLaser>().SetDestination(destPos);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
+        GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
+        laserObj.GetComponent<EffectLaser>().SetDestination(dest);
     }
     void CreateParticle(GameObject prefab, Vector3 worldPos)
     {
@@ -1439,39 +1574,39 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Destroy)
             {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count != body.ArrayCount)
-                    LOG.warn("Not Sync Destroy Products");
-                else
-                {
-                    Billboard.CurrentCombo = body.combo;
-                    DestroyProducts(products.ToArray(), body.skill);
-                    mNetMessages.RemoveFirst();
-                }
+                //List<Product> products = new List<Product>();
+                //for (int i = 0; i < body.ArrayCount; ++i)
+                //{
+                //    ProductInfo info = body.products[i];
+                //    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                //    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
+                //        products.Add(pro);
+                //}
+                //
+                //if (products.Count != body.ArrayCount)
+                //    LOG.warn("Not Sync Destroy Products");
+                //else
+                //{
+                //    Billboard.CurrentCombo = body.combo;
+                //    DestroyProducts(products.ToArray(), body.skill);
+                //    mNetMessages.RemoveFirst();
+                //}
             }
             else if (body.cmd == PVPCommand.Create)
             {
-                Dictionary<Frame, ProductColor> newProducts = new Dictionary<Frame, ProductColor>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = GetFrame(info.idxX, info.idxY);
-                    newProducts[frame] = info.color;
-                }
-
-                if(IsReadyToNextDrop(newProducts))
-                {
-                    StartToDropAndCreateRemote(newProducts, durationDrop);
-                    mNetMessages.RemoveFirst();
-                }
+                //Dictionary<Frame, ProductColor> newProducts = new Dictionary<Frame, ProductColor>();
+                //for (int i = 0; i < body.ArrayCount; ++i)
+                //{
+                //    ProductInfo info = body.products[i];
+                //    Frame frame = GetFrame(info.idxX, info.idxY);
+                //    newProducts[frame] = info.color;
+                //}
+                //
+                //if(IsReadyToNextDrop(newProducts))
+                //{
+                //    StartToDropAndCreateRemote(newProducts, durationDrop);
+                //    mNetMessages.RemoveFirst();
+                //}
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
@@ -1490,30 +1625,30 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.SkillBomb)
             {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                List<Product> rets = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
-                    CreateLaserEffect(startPos, frame.transform.position);
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && !pro.IsLocked())
-                        rets.Add(pro);
-                }
-
-                if (!Opponent.DefenseShield(rets.ToArray()))
-                {
-                    foreach(Product pro in rets)
-                        CreateParticle(BombParticle, pro.transform.position);
-
-                    Opponent.DestroyProducts(rets.ToArray(), ProductSkill.Nothing);
-                    if (!Opponent.mIsCycling)
-                        Opponent.StartCoroutine(Opponent.DoDropCycle());
-                }
-
-                mNetMessages.RemoveFirst();
+                //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+                //Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
+                //List<Product> rets = new List<Product>();
+                //for (int i = 0; i < body.ArrayCount; ++i)
+                //{
+                //    ProductInfo info = body.products[i];
+                //    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
+                //    CreateLaserEffect(startPos, frame.transform.position);
+                //    Product pro = frame.ChildProduct;
+                //    if (pro != null && !pro.IsLocked())
+                //        rets.Add(pro);
+                //}
+                //
+                //if (!Opponent.DefenseShield(rets.ToArray()))
+                //{
+                //    foreach(Product pro in rets)
+                //        CreateParticle(BombParticle, pro.transform.position);
+                //
+                //    Opponent.DestroyProducts(rets.ToArray(), ProductSkill.Nothing);
+                //    if (!Opponent.mIsCycling)
+                //        Opponent.StartCoroutine(Opponent.DoDropCycle());
+                //}
+                //
+                //mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.SkillIce)
             {

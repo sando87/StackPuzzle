@@ -179,7 +179,7 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventBreakTarget = (pos, type) => {
             ReduceGoalValue(pos, type);
         };
-        InGameManager.InstStage.EventDestroyed = (products) => {
+        InGameManager.InstStage.EventMatched = (products) => {
             mAddedScore += products[0].Combo * products.Length;
         };
         InGameManager.InstStage.EventFinish = (success) => {

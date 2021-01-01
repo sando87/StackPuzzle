@@ -92,7 +92,7 @@ public class MenuBattle : MonoBehaviour
         ScoreBar2.gameObject.SetActive(false);
         ComboNumber.Clear();
 
-        InGameManager.InstPVP_Player.EventDestroyed = (products) => {
+        InGameManager.InstPVP_Player.EventMatched = (products) => {
             mAddedScore += products[0].Combo * products.Length;
         };
         InGameManager.InstPVP_Player.EventFinish = (success) => {

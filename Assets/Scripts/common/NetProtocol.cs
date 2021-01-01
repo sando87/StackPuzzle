@@ -22,7 +22,7 @@ public enum SwipeDirection
 };
 public enum ProductSkill
 {
-    Nothing, OneMore, KeepCombo, SameColor
+    Nothing, OneMore, KeepCombo, SameColor, ASDF
 };
 
 public class NetProtocol
@@ -155,6 +155,7 @@ public struct ProductInfo
     public ProductColor color;
     public int idxX;
     public int idxY;
+    public ProductInfo(ProductColor color, int idxX, int idxY) { this.color = color; this.idxX = idxX; this.idxY = idxY; }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

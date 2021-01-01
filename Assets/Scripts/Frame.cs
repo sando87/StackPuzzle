@@ -23,6 +23,8 @@ public class Frame : MonoBehaviour
     public ProductSkill SkillBackupSpace { get; set; }
     public int IndexX { get { return mIndexX; } }
     public int IndexY { get { return mIndexY; } }
+    public bool IsBottom { get { return mIndexY == 0; } }
+    public bool IsTop { get { return mIndexY == GameManager.CountY - 1; } }
     public Product ChildProduct { get; set; }
     public SpriteRenderer CoverRenderer;
     public Func<int, int, Frame> GetFrame;
