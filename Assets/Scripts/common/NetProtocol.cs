@@ -22,7 +22,7 @@ public enum SwipeDirection
 };
 public enum ProductSkill
 {
-    Nothing, OneMore, KeepCombo, SameColor, ASDF
+    Nothing, Horizontal, Vertical, Bomb, SameColor
 };
 
 public class NetProtocol

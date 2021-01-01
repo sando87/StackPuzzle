@@ -231,33 +231,6 @@ public class MenuInGame : MonoBehaviour
     }
 
 
-    public void KeepNextCombo(Product product)
-    {
-        if (product.mSkill != ProductSkill.KeepCombo)
-            return;
-
-        int nextCombo = product.Combo;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
-        Image img = obj.GetComponent<Image>();
-        img.sprite = product.Renderer.sprite;
-        StartCoroutine(AnimateItem(obj, KeepCombo.transform.position, () =>
-        {
-            NextCombo = nextCombo;
-        }));
-    }
-    public void OneMoreCombo(Product product)
-    {
-        if (product.mSkill != ProductSkill.OneMore)
-            return;
-
-        GameObject obj = GameObject.Instantiate(ItemPrefab, product.transform.position, Quaternion.identity, EffectParent.transform);
-        Image img = obj.GetComponent<Image>();
-        img.sprite = product.Renderer.sprite;
-        StartCoroutine(AnimateItem(obj, ComboNumber.transform.position, () =>
-        {
-            CurrentCombo++;
-        }));
-    }
     public void ReduceLimit()
     {
         int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;

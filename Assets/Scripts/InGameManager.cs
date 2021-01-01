@@ -449,66 +449,6 @@ public class InGameManager : MonoBehaviour
             prvPro = newProduct;
         }
     }
-    private Product[] ScanSkill(Product mainProduct)
-    {
-        List<Product> rets = new List<Product>();
-
-        if(mainProduct.mSkill == ProductSkill.OneMore)
-        {
-            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
-            int idxY = frameOf.IndexY;
-            for(int x = 0; x < CountX; ++x)
-            {
-                Product pro = mFrames[x, idxY].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
-                {
-                    pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
-                    rets.Add(pro);
-                }
-            }
-        }
-        else if (mainProduct.mSkill == ProductSkill.KeepCombo)
-        {
-            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
-            int idxX = frameOf.IndexX;
-            for (int y = 0; y < CountY; ++y)
-            {
-                Product pro = mFrames[idxX, y].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
-                {
-                    pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
-                    rets.Add(pro);
-                }
-            }
-        }
-        else if (mainProduct.mSkill == ProductSkill.SameColor)
-        {
-            Frame frameOf = GetFrame(mainProduct.transform.position.x, mainProduct.transform.position.y);
-            int idxX = frameOf.IndexX;
-            int idxY = frameOf.IndexY;
-            for (int y = idxY - 1; y < idxY + 2; ++y)
-            {
-                for (int x = idxX - 1; x < idxX + 2; ++x)
-                {
-                    Frame frame = GetFrame(x, y);
-                    if (frame == null)
-                        continue;
-
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
-                    {
-                        pro.Weight = (mainProduct.transform.position - pro.transform.position).magnitude;
-                        rets.Add(pro);
-                    }
-                }
-            }
-        }
-
-        rets.Sort((left, right) => { return left.Weight > right.Weight ? 1 : -1; });
-
-
-        return rets.ToArray();
-    }
     private Product[] ScanHorizenProducts(Product target)
     {
         if (target == null)
@@ -567,7 +507,7 @@ public class InGameManager : MonoBehaviour
     }
     public void BreakSkiiledProduct(Product skilledProduct)
     {
-        if (skilledProduct.mSkill == ProductSkill.OneMore)
+        if (skilledProduct.mSkill == ProductSkill.Horizontal)
         {
             Product[] destroyes = ScanHorizenProducts(skilledProduct);
             int idxY = skilledProduct.ParentFrame.IndexY;
@@ -576,7 +516,7 @@ public class InGameManager : MonoBehaviour
             CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
         }
-        else if (skilledProduct.mSkill == ProductSkill.KeepCombo)
+        else if (skilledProduct.mSkill == ProductSkill.Vertical)
         {
             Product[] destroyes = ScanVerticalProducts(skilledProduct);
             int idxX = skilledProduct.ParentFrame.IndexX;
@@ -585,30 +525,30 @@ public class InGameManager : MonoBehaviour
             CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
         }
-        else if (skilledProduct.mSkill == ProductSkill.SameColor)
+        else if (skilledProduct.mSkill == ProductSkill.Bomb)
         {
             Product[] destroyes = ScanAroundProducts(skilledProduct, 1);
             DestroyProducts(destroyes);
         }
-        //else if (skilledProduct.mSkill == ProductSkill.SameColor)
-        //{
-        //    Vector3 startPos = skilledProduct.transform.position;
-        //    foreach (Frame frame in mFrames)
-        //    {
-        //        Product pro = frame.ChildProduct;
-        //        if (pro == null || pro.IsLocked())
-        //            continue;
-        //
-        //        List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
-        //        if (matches.Count > 0)
-        //        {
-        //            Vector3 destPos = matches[0][0].transform.position;
-        //            CreateLaserEffect(startPos, destPos);
-        //            DestroyProducts(matches[0]);
-        //        }
-        //    }
-        //    DestroyProducts(new Product[1] { skilledProduct });
-        //}
+        else if (skilledProduct.mSkill == ProductSkill.SameColor)
+        {
+            Vector3 startPos = skilledProduct.transform.position;
+            foreach (Frame frame in mFrames)
+            {
+                Product pro = frame.ChildProduct;
+                if (pro == null || pro.IsLocked())
+                    continue;
+        
+                List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+                if (matches.Count > 0)
+                {
+                    Vector3 destPos = matches[0][0].transform.position;
+                    CreateLaserEffect(startPos, destPos);
+                    DestroyProducts(matches[0]);
+                }
+            }
+            DestroyProducts(new Product[1] { skilledProduct });
+        }
     }
     IEnumerator ReadyToDestroy(Product main, Product[] destroyes, float duration)
     {
@@ -665,40 +605,68 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    public void BreakSkiiledProduct(Product productA, Product productB)
+    IEnumerator LoopSameColorSkill(Vector3 startPos)
+    {
+        while (true)
+        {
+            bool keep = false;
+            foreach (Frame frame in mFrames)
+            {
+                Product pro = frame.ChildProduct;
+                if (pro == null || pro.IsLocked())
+                    continue;
+
+                List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+                if (matches.Count > 0)
+                {
+                    Vector3 destPos = matches[0][0].transform.position;
+                    CreateLaserEffect(startPos, destPos);
+                    DestroyProducts(matches[0]);
+                    keep = true;
+                }
+            }
+
+            if (keep)
+                yield return new WaitForSeconds(1.5f);
+            else
+                break;
+        }
+    }
+    public void BreakSkilledProduct(Product productA, Product productB)
     {
         if(productA.mSkill == ProductSkill.SameColor)
         {
 
-            if (productB.mSkill == ProductSkill.OneMore || productB.mSkill == ProductSkill.KeepCombo)
+            if (productB.mSkill == ProductSkill.Horizontal || productB.mSkill == ProductSkill.Vertical)
             {
                 Product[] randomProducts = ScanRandomProducts(5);
                 foreach(Product pro in randomProducts)
                 {
                     CreateLaserEffect(productA.transform.position, pro.transform.position);
-                    pro.ChangeProductImage(UnityEngine.Random.Range(0, 1) == 0 ? ProductSkill.OneMore : ProductSkill.KeepCombo);
+                    pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
                 }
                 StartCoroutine(LoopBreakSkillProducts(randomProducts));
             }
-            else if (productB.mSkill == ProductSkill.SameColor)
+            else if (productB.mSkill == ProductSkill.Bomb)
             {
                 Product[] randomProducts = ScanRandomProducts(5);
                 foreach (Product pro in randomProducts)
                 {
                     CreateLaserEffect(productA.transform.position, pro.transform.position);
-                    pro.ChangeProductImage(ProductSkill.SameColor);
+                    pro.ChangeProductImage(ProductSkill.Bomb);
                 }
                 StartCoroutine(LoopBreakSkillProducts(randomProducts));
             }
-            else if (productB.mSkill == ProductSkill.ASDF)
+            else if (productB.mSkill == ProductSkill.SameColor)
             {
+                StartCoroutine(LoopSameColorSkill(productA.transform.position));
             }
             DestroyProducts(new Product[2] { productA, productB });
         }
-        else if (productA.mSkill == ProductSkill.SameColor)
+        else if (productA.mSkill == ProductSkill.Bomb)
         {
             Product[] rets = null;
-            if (productB.mSkill == ProductSkill.OneMore)
+            if (productB.mSkill == ProductSkill.Horizontal)
             {
                 rets = ScanHorizenProducts(productA.Up());
                 DestroyProducts(rets);
@@ -707,7 +675,7 @@ public class InGameManager : MonoBehaviour
                 rets = ScanHorizenProducts(productA.Down());
                 DestroyProducts(rets);
             }
-            else if (productB.mSkill == ProductSkill.KeepCombo)
+            else if (productB.mSkill == ProductSkill.Vertical)
             {
                 rets = ScanVerticalProducts(productA.Left());
                 DestroyProducts(rets);
@@ -716,13 +684,13 @@ public class InGameManager : MonoBehaviour
                 rets = ScanVerticalProducts(productA.Right());
                 DestroyProducts(rets);
             }
-            else if (productB.mSkill == ProductSkill.SameColor)
+            else if (productB.mSkill == ProductSkill.Bomb)
             {
                 rets = ScanAroundProducts(productA, 2);
                 DestroyProducts(rets);
             }
         }
-        else if(productA.mSkill == ProductSkill.OneMore || productA.mSkill == ProductSkill.KeepCombo)
+        else if(productA.mSkill == ProductSkill.Horizontal || productA.mSkill == ProductSkill.Vertical)
         {
             Product[] rets = null;
             rets = ScanHorizenProducts(productA);
@@ -737,11 +705,22 @@ public class InGameManager : MonoBehaviour
     }
     private void SwipeSkilledProducts(Product main, Product sub)
     {
-        switch (sub.mSkill)
+        if (main.mSkill == ProductSkill.SameColor)
         {
-            case ProductSkill.OneMore: BreakSkiiledProduct(main, sub); break;
-            case ProductSkill.KeepCombo: BreakSkiiledProduct(main, sub); break;
-            case ProductSkill.SameColor: BreakSkiiledProduct(sub, main); break;
+            BreakSkilledProduct(main, sub);
+        }
+        else if (sub.mSkill == ProductSkill.SameColor)
+        {
+            BreakSkilledProduct(sub, main);
+        }
+        else
+        {
+            switch (sub.mSkill)
+            {
+                case ProductSkill.Horizontal: BreakSkilledProduct(main, sub); break;
+                case ProductSkill.Vertical: BreakSkilledProduct(main, sub); break;
+                case ProductSkill.Bomb: BreakSkilledProduct(sub, main); break;
+            }
         }
     }
 
@@ -1009,25 +988,17 @@ public class InGameManager : MonoBehaviour
         if (matches.Length <= UserSetting.MatchCount)
             return ProductSkill.Nothing;
 
-        //bool isHori = true;
-        //bool isVerti = true;
-        //foreach (Product pro in matches)
-        //{
-        //    if (pro.mSkill != ProductSkill.Nothing)
-        //        return ProductSkill.Nothing;
-        //
-        //    isHori &= (matches[0].ParentFrame.IndexY == pro.ParentFrame.IndexY);
-        //    isVerti &= (matches[0].ParentFrame.IndexX == pro.ParentFrame.IndexX);
-        //}
+        if (matches.Length >= 5)
+            return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
         int ran = UnityEngine.Random.Range(0, 3);
         if (ran == 0)
-            skill = ProductSkill.OneMore;
+            skill = ProductSkill.Horizontal;
         else if (ran == 1)
-            skill = ProductSkill.KeepCombo;
+            skill = ProductSkill.Vertical;
         else
-            skill = ProductSkill.SameColor;
+            skill = ProductSkill.Bomb;
 
         return skill;
     }

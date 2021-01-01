@@ -20,10 +20,10 @@ public class Product : MonoBehaviour
     public SpriteRenderer Renderer;
     public Sprite[] Images;
     public Sprite[] Chocos;
-    public Sprite ImgOneMore;
+    public Sprite ImgHorizontal;
+    public Sprite ImgVertical;
+    public Sprite ImgBomb;
     public Sprite ImgSameColor;
-    public Sprite ImgKeepCombo;
-    public Sprite ImgReduceColor;
     public Sprite ImgCombo;
     public GameObject ComboNumPrefab;
 
@@ -493,8 +493,9 @@ public class Product : MonoBehaviour
         mSkill = skill;
         switch (skill)
         {
-            case ProductSkill.OneMore:      Renderer.sprite = ImgOneMore; break;
-            case ProductSkill.KeepCombo:    Renderer.sprite = ImgKeepCombo; break;
+            case ProductSkill.Horizontal:   Renderer.sprite = ImgHorizontal; break;
+            case ProductSkill.Vertical:     Renderer.sprite = ImgVertical; break;
+            case ProductSkill.Bomb:         Renderer.sprite = ImgBomb; break;
             case ProductSkill.SameColor:    Renderer.sprite = ImgSameColor; break;
             default: break;
         }

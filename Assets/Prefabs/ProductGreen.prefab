@@ -381,10 +381,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 448ca790034a0fb489a247283a877511, type: 3}
   - {fileID: 21300000, guid: ab3fadc94da61a543bfa53567ccaafd7, type: 3}
   - {fileID: 21300000, guid: 90c44fb153cb1744f89dab28c7a7518b, type: 3}
-  ImgOneMore: {fileID: 21300000, guid: 0eac1e8cd039ed84f9691ad0bcb0ce1b, type: 3}
+  ImgHorizontal: {fileID: 21300000, guid: 0eac1e8cd039ed84f9691ad0bcb0ce1b, type: 3}
+  ImgVertical: {fileID: 21300000, guid: b758d2b22e44b7640b246b6f337cf703, type: 3}
+  ImgBomb: {fileID: 21300000, guid: ea519e8719addad44a8340247cd0a72f, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 1ef8c6073aa03dc4eb73f3faf2de4798, type: 3}
-  ImgKeepCombo: {fileID: 21300000, guid: b758d2b22e44b7640b246b6f337cf703, type: 3}
-  ImgReduceColor: {fileID: 21300000, guid: 629ca9ed87baabb45ab8795e19756ef5, type: 3}
   ImgCombo: {fileID: 21300000, guid: 8e23cc6a33dd9c347a6d521685498ec0, type: 3}
   ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
     type: 3}

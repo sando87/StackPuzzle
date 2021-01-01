@@ -140,39 +140,6 @@ public class MenuBattle : MonoBehaviour
             }
         }
     }
-    public void KeepNextCombo(Product product)
-    {
-        if (product.mSkill != ProductSkill.KeepCombo)
-            return;
-
-        int nextCombo = product.Combo;
-        Vector3 pos = product.transform.position;
-        pos.z = 0;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
-        Image img = obj.GetComponent<Image>();
-        img.sprite = product.Renderer.sprite;
-        StartCoroutine(UnityUtils.AnimateConvex(obj, KeepCombo.transform.position, 1.0f, () =>
-        {
-            NextCombo = nextCombo;
-            Destroy(obj);
-        }));
-    }
-    public void OneMoreCombo(Product product)
-    {
-        if (product.mSkill != ProductSkill.OneMore)
-            return;
-
-        Vector3 pos = product.transform.position;
-        pos.z = 0;
-        GameObject obj = GameObject.Instantiate(ItemPrefab, pos, Quaternion.identity, EffectParent.transform);
-        Image img = obj.GetComponent<Image>();
-        img.sprite = product.Renderer.sprite;
-        StartCoroutine(UnityUtils.AnimateConvex(obj, ComboNumber.transform.position, 1.0f, () =>
-        {
-            CurrentCombo++;
-            Destroy(obj);
-        }));
-    }
     private void UpdateScore()
     {
         if (mAddedScore <= 0)
