@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class EffectLaser : MonoBehaviour
 {
-    private const float length = 2.56f;
+    private const float length = 2.0f;
 
     public void SetDestination(Vector3 worldPos)
     {

@@ -1,34 +1,31 @@
 fileFormatVersion: 2
-guid: 7c46ae3abf37a084e8b90c89b927d72b
+guid: 8fbc40ed4d94f6c4ab54e2965d5dbc4a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3990867382008751699
-    second: LightningEffect_0
+      213: 869432562561504013
+    second: LightningHori_0
   - first:
-      213: -383448099949969785
-    second: LightningEffect_1
+      213: -6150747747253504016
+    second: LightningHori_1
   - first:
-      213: -4180183747161733719
-    second: LightningEffect_2
+      213: 9079102779657623679
+    second: LightningHori_2
   - first:
-      213: 1036609945976456190
-    second: LightningEffect_3
+      213: 5551179593455478528
+    second: LightningHori_3
   - first:
-      213: 4054432977817172626
-    second: LightningEffect_4
+      213: 5717006991326616100
+    second: LightningHori_4
   - first:
-      213: -1424020761708173274
-    second: LightningEffect_5
+      213: 1344221979648770631
+    second: LightningHori_5
   - first:
-      213: -5190013240953196110
-    second: LightningEffect_6
+      213: -2227659368158812681
+    second: LightningHori_6
   - first:
-      213: 1134396254431993311
-    second: LightningEffect_7
-  - first:
-      213: -8206598855590346413
-    second: LightningParticle_0
+      213: -553078679141105633
+    second: LightningHori_7
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -126,190 +123,169 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: LightningEffect_0
+      name: LightningHori_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 448
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d03d2a72f48d01c00800000000000000
+      internalID: 869432562561504013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f7bbed038724aaa0800000000000000
+      internalID: -6150747747253504016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_2
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 320
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7811ccffd37ffd70800000000000000
+      internalID: 9079102779657623679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 007af48cd60c90d40800000000000000
+      internalID: 5551179593455478528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 192
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42a92709193e65f40800000000000000
+      internalID: 5717006991326616100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 742cc3cb4c2a7a210800000000000000
+      internalID: 1344221979648770631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 128
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f5a2587b93c511e0800000000000000
+      internalID: -2227659368158812681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LightningHori_7
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 356235a4db8626730800000000000000
-      internalID: 3990867382008751699
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_1
-      rect:
-        serializedVersion: 2
-        x: 64
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 78efea41cf7bdaaf0800000000000000
-      internalID: -383448099949969785
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_2
-      rect:
-        serializedVersion: 2
-        x: 128
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 9a5409e87010df5c0800000000000000
-      internalID: -4180183747161733719
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_3
-      rect:
-        serializedVersion: 2
-        x: 192
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: ef34090f047c26e00800000000000000
-      internalID: 1036609945976456190
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_4
-      rect:
-        serializedVersion: 2
-        x: 256
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 29afb60ef4d344830800000000000000
-      internalID: 4054432977817172626
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_5
-      rect:
-        serializedVersion: 2
-        x: 320
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 6286a9979acdc3ce0800000000000000
-      internalID: -1424020761708173274
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_6
-      rect:
-        serializedVersion: 2
-        x: 384
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 2b13969847e59f7b0800000000000000
-      internalID: -5190013240953196110
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningEffect_7
-      rect:
-        serializedVersion: 2
-        x: 448
-        y: 0
-        width: 64
-        height: 256
-      alignment: 9
-      pivot: {x: 0.5, y: 0.9}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: fddd3f3126f2ebf00800000000000000
-      internalID: 1134396254431993311
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: LightningParticle_0
-      rect:
-        serializedVersion: 2
-        x: 154
-        y: 66
-        width: 344
-        height: 190
+        width: 128
+        height: 64
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 351096e32dd4c1e80800000000000000
-      internalID: -8206598855590346413
+      spriteID: f10c3f42fd11358f0800000000000000
+      internalID: -553078679141105633
       vertices: []
       indices: 
       edges: []
