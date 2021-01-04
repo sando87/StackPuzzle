@@ -459,6 +459,9 @@ public class InGameManager : MonoBehaviour
         int idxY = frameOf.IndexY;
         for (int x = 0; x < CountX; ++x)
         {
+            if (mFrames[x, idxY] == frameOf)
+                continue;
+
             Product pro = mFrames[x, idxY].ChildProduct;
             if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
                 rets.Add(pro);
@@ -475,6 +478,9 @@ public class InGameManager : MonoBehaviour
         int idxX = frameOf.IndexX;
         for (int y = 0; y < CountY; ++y)
         {
+            if (mFrames[idxX, y] == frameOf)
+                continue;
+
             Product pro = mFrames[idxX, y].ChildProduct;
             if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
                 rets.Add(pro);
@@ -495,7 +501,7 @@ public class InGameManager : MonoBehaviour
             for (int x = idxX - round; x < idxX + round + 1; ++x)
             {
                 Frame frame = GetFrame(x, y);
-                if (frame == null)
+                if (frame == null || frame == frameOf)
                     continue;
 
                 Product pro = frame.ChildProduct;
@@ -515,6 +521,16 @@ public class InGameManager : MonoBehaviour
             Vector3 destPos = mFrames[CountX - 1, idxY].transform.position;
             CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
+
+            foreach(Product pro in destroyes)
+            {
+                if(pro.mSkill != ProductSkill.Nothing)
+                {
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                }
+            }
+
+            DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.Vertical)
         {
@@ -524,11 +540,31 @@ public class InGameManager : MonoBehaviour
             Vector3 destPos = mFrames[idxX, CountY - 1].transform.position;
             CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
+
+            foreach (Product pro in destroyes)
+            {
+                if (pro.mSkill != ProductSkill.Nothing)
+                {
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                }
+            }
+
+            DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.Bomb)
         {
             Product[] destroyes = ScanAroundProducts(skilledProduct, 1);
             DestroyProducts(destroyes);
+
+            foreach (Product pro in destroyes)
+            {
+                if (pro.mSkill != ProductSkill.Nothing)
+                {
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                }
+            }
+
+            DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.SameColor)
         {

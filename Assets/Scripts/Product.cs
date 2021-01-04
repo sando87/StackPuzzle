@@ -233,9 +233,6 @@ public class Product : MonoBehaviour
 
         StartCoroutine(UnityUtils.CallAfterSeconds(delay, () => {
 
-            if (mSkill != ProductSkill.Nothing)
-                InGameManager.InstCurrent.BreakSkiiledProduct(this);
-
             Frame prvFrame = Detach();
             UnWrapChocoBlocksAroundFrame(prvFrame, Combo);
             prvFrame.BreakCover(Combo);
