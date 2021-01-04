@@ -40,6 +40,9 @@ public class InGameManager : MonoBehaviour
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
 
+    public GameObject MergeParticle;
+    public GameObject StripeParticle;
+    public GameObject SparkParticle;
     public GameObject LaserParticle;
     public GameObject BombParticle;
     public GameObject ShieldParticle;
@@ -222,7 +225,9 @@ public class InGameManager : MonoBehaviour
         Product pro = clickedObj.GetComponent<Product>();
         if(pro.mSkill != ProductSkill.Nothing)
         {
-            DestroyProducts(new Product[1] { pro });
+            pro.mAnimation.Play("swap");
+            CreateSparkEffect(pro.transform.position);
+            StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => { BreakSkiiledProduct(pro); }));
         }
         else
         {
@@ -271,14 +276,23 @@ public class InGameManager : MonoBehaviour
         if (targetProduct == null || targetProduct.IsLocked() || targetProduct.IsIced)
             return;
 
-        mIsSwipping = true;
         RemoveLimit();
-        Network_Swipe(product, dir);
-        product.Swipe(targetProduct, () => {
-            mIsSwipping = false;
-            if (product.mSkill != ProductSkill.Nothing && targetProduct.mSkill != ProductSkill.Nothing)
+
+        if (product.mSkill != ProductSkill.Nothing && targetProduct.mSkill != ProductSkill.Nothing)
+        {
+            CreateMergeEffect(product, targetProduct);
+            product.SkillMerge(targetProduct, () => {
                 SwipeSkilledProducts(product, targetProduct);
-        });
+            });
+        }
+        else
+        {
+            mIsSwipping = true;
+            Network_Swipe(product, dir);
+            product.Swipe(targetProduct, () => {
+                mIsSwipping = false;
+            });
+        }
     }
 
     #region Utility
@@ -355,7 +369,7 @@ public class InGameManager : MonoBehaviour
             Frame curFrame = pro.ParentFrame;
             addedScore += Billboard.CurrentCombo;
             pro.Combo = Billboard.CurrentCombo;
-            pro.StartDestroy(1.3f, 0.4f);
+            pro.StartDestroy(1.3f, 0.2f);
 
             Product newPro = InstanceNewProduct(curFrame);
             nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
@@ -385,11 +399,11 @@ public class InGameManager : MonoBehaviour
             pro.Combo = Billboard.CurrentCombo;
             if (curFrame == mainFrame)
             {
-                pro.StartToChangeSkilledProduct(durationMerge, makeSkill);
+                pro.StartToChangeSkilledProduct(0.2f, makeSkill);
                 continue;
             }
 
-            pro.StartMergeTo(matches[0], durationMerge);
+            pro.StartMergeTo(matches[0], 0.2f);
             Product newPro = InstanceNewProduct(curFrame);
             nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
         }
@@ -515,41 +529,39 @@ public class InGameManager : MonoBehaviour
     {
         if (skilledProduct.mSkill == ProductSkill.Horizontal)
         {
+            CreateStripeEffect(skilledProduct.transform.position, false);
+
             Product[] destroyes = ScanHorizenProducts(skilledProduct);
-            int idxY = skilledProduct.ParentFrame.IndexY;
-            Vector3 startPos = mFrames[0, idxY].transform.position;
-            Vector3 destPos = mFrames[CountX - 1, idxY].transform.position;
-            CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
 
             foreach(Product pro in destroyes)
             {
                 if(pro.mSkill != ProductSkill.Nothing)
                 {
-                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => { BreakSkiiledProduct(pro); }));
                 }
             }
 
-            DestroyProducts(new Product[1] { skilledProduct });
+            if(!skilledProduct.IsDestroying)
+                DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.Vertical)
         {
+            CreateStripeEffect(skilledProduct.transform.position, true);
+
             Product[] destroyes = ScanVerticalProducts(skilledProduct);
-            int idxX = skilledProduct.ParentFrame.IndexX;
-            Vector3 startPos = mFrames[idxX, 0].transform.position;
-            Vector3 destPos = mFrames[idxX, CountY - 1].transform.position;
-            CreateLaserEffect(startPos, destPos);
             DestroyProducts(destroyes);
 
             foreach (Product pro in destroyes)
             {
                 if (pro.mSkill != ProductSkill.Nothing)
                 {
-                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => { BreakSkiiledProduct(pro); }));
                 }
             }
 
-            DestroyProducts(new Product[1] { skilledProduct });
+            if (!skilledProduct.IsDestroying)
+                DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.Bomb)
         {
@@ -560,11 +572,12 @@ public class InGameManager : MonoBehaviour
             {
                 if (pro.mSkill != ProductSkill.Nothing)
                 {
-                    StartCoroutine(UnityUtils.CallAfterSeconds(0.2f, () => { BreakSkiiledProduct(pro); }));
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => { BreakSkiiledProduct(pro); }));
                 }
             }
 
-            DestroyProducts(new Product[1] { skilledProduct });
+            if (!skilledProduct.IsDestroying)
+                DestroyProducts(new Product[1] { skilledProduct });
         }
         else if (skilledProduct.mSkill == ProductSkill.SameColor)
         {
@@ -583,7 +596,9 @@ public class InGameManager : MonoBehaviour
                     DestroyProducts(matches[0]);
                 }
             }
-            DestroyProducts(new Product[1] { skilledProduct });
+
+            if (!skilledProduct.IsDestroying)
+                DestroyProducts(new Product[1] { skilledProduct });
         }
     }
     IEnumerator ReadyToDestroy(Product main, Product[] destroyes, float duration)
@@ -1504,6 +1519,28 @@ public class InGameManager : MonoBehaviour
         Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
         GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
         laserObj.GetComponent<EffectLaser>().SetDestination(dest);
+    }
+    void CreateSparkEffect(Vector2 startPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(SparkParticle, start, Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    void CreateStripeEffect(Vector2 startPos, bool isVertical)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(StripeParticle, start, isVertical ? Quaternion.Euler(0, 0, 90) : Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    void CreateMergeEffect(Product productA, Product productB)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 pos = (productA.transform.position + productB.transform.position) * 0.5f;
+        pos.z = -4.0f;
+        GameObject obj = GameObject.Instantiate(MergeParticle, pos, Quaternion.identity, transform);
+        obj.GetComponent<EffectMerge>().SetProucts(productA, productB);
     }
     void CreateParticle(GameObject prefab, Vector3 worldPos)
     {

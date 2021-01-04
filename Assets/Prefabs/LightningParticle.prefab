@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5338790561536886298}
   - component: {fileID: 3596277420155247412}
   - component: {fileID: 1005973614361892254}
-  - component: {fileID: 6067466254169152736}
+  - component: {fileID: 2694666702568816059}
   m_Layer: 0
   m_Name: LightningParticle
   m_TagString: Untagged
@@ -103,7 +103,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &6067466254169152736
+--- !u!114 &2694666702568816059
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -112,6 +112,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 3942962343302958454}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 572bb18a2e983ef4399455638923930e, type: 3}
+  m_Script: {fileID: 11500000, guid: c44266581daa115489d54b783c358bf6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

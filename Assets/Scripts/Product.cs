@@ -66,6 +66,13 @@ public class Product : MonoBehaviour
         mParentFrame = null;
         return frame;
     }
+    public void SkillMerge(Product targetProduct, Action EventMergeEnd)
+    {
+        Vector3 center = (transform.position + targetProduct.transform.position) *0.5f;
+
+        targetProduct.StartCoroutine(targetProduct.AnimateMove(center, 0.2f, null));
+        StartCoroutine(AnimateMove(center, 0.2f, EventMergeEnd));
+    }
     public void Swipe(Product targetProduct, Action EventSwipeEnd)
     {
         Frame myFrame = Detach();
@@ -202,9 +209,9 @@ public class Product : MonoBehaviour
 
         StartCoroutine(AnimateFlash(1.3f));
 
-        StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () => {
+        StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
             Detach();
-            StartCoroutine(AnimateMoveTo(destProduct, duration - 0.3f, () => {
+            StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Destroy(gameObject);
             }));
 
