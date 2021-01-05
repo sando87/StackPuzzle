@@ -230,8 +230,12 @@ public class Product : MonoBehaviour
             ChangeProductImage(skill);
         }));
     }
-    public void StartDestroy(float flashIntesity, float delay)
+    public Frame StartDestroy(float flashIntesity, float delay, int combo)
     {
+        if (IsDestroying)
+            return null;
+
+        Combo = combo;
         IsDestroying = true;
         CreateComboTextEffect();
 
@@ -246,6 +250,7 @@ public class Product : MonoBehaviour
 
             StartCoroutine(AnimateDestroy());
         }));
+        return ParentFrame;
     }
     public void StartFlash(float flashIntesity)
     {
