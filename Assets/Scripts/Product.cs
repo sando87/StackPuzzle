@@ -40,12 +40,13 @@ public class Product : MonoBehaviour
     }
     public Action EventUnWrapChoco;
 
+    public float DropSpeed { get; set; }
     public float Weight { get; set; }
     public int Combo { get; set; }
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
-    public bool IsDropping { get; private set; }
+    public bool IsDropping { get; set; }
     public bool IsLocked() { return mLocked || IsDestroying || IsMerging || IsMoving || IsDropping; }
     public Frame ParentFrame { get { return mParentFrame; } }
     public void AttachTo(Frame parentFrame)

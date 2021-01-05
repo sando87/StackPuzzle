@@ -10,6 +10,50 @@ public class VerticalFrames
 {
     public Frame[] Frames;
     public List<Product> NewProducts = new List<Product>();
+    public List<Product> DroppingProducts = new List<Product>();
+    public void StartDrop()
+    {
+        float height = InGameManager.InstCurrent.GridSize;
+        Vector3 topPos = DroppingProducts.Count > 0 ? DroppingProducts[DroppingProducts.Count - 1].transform.position : Frames[Frames.Length - 1].transform.position;
+        topPos.z = Frames[0].transform.position.z - 1;
+        float dropSpeed = DroppingProducts.Count > 0 ? DroppingProducts[DroppingProducts.Count - 1].DropSpeed : 0;
+        foreach (Product newPro in NewProducts)
+        {
+            topPos.y += height;
+            newPro.transform.position = topPos;
+            newPro.IsDropping = true;
+            newPro.DropSpeed = dropSpeed;
+            newPro.gameObject.SetActive(true);
+            DroppingProducts.Add(newPro);
+        }
+
+        bool findEmptyFrame = false;
+        foreach (Frame frame in Frames)
+        {
+            if(findEmptyFrame)
+            {
+                if(frame.ChildProduct != null)
+                {
+                    Product target = frame.ChildProduct;
+                    target.IsDropping = true;
+                    target.Detach();
+                    DroppingProducts.Add(target);
+                }
+            }
+            else if (frame.ChildProduct == null)
+                findEmptyFrame = true;
+        }
+
+        DroppingProducts.Sort((lhs, rhs) => { return lhs.transform.position.y > rhs.transform.position.y ? 1 : -1; });
+        NewProducts.Clear();
+    }
+    public void UpdateDrop()
+    {
+        foreach(Product dropProduct in DroppingProducts)
+        {
+
+        }
+    }
 }
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
@@ -126,7 +170,13 @@ public class InGameManager : MonoBehaviour
         if(!mIsCycling)
         {
             foreach (var group in mFrameDropGroup)
-                StartToDropVerticalFrames(group);
+            {
+                if (group.NewProducts.Count > 0)
+                    group.StartDrop();
+
+                if (group.DroppingProducts.Count > 0)
+                    group.UpdateDrop();
+            }
         }
     }
     public void StartGame(StageInfo info, UserInfo userInfo)
@@ -430,12 +480,8 @@ public class InGameManager : MonoBehaviour
     }
     private Product InstanceNewProduct(Frame emptyFrame)
     {
-        Frame[] verties = emptyFrame.VertFrames.Frames;
         Product pro = CreateNewProduct();
-
-        Vector3 pos = verties[verties.Length - 1].transform.position;
-        pro.transform.position = pos + new Vector3(0, GridSize, -1);
-
+        pro.gameObject.SetActive(false);
         emptyFrame.VertFrames.NewProducts.Add(pro);
         return pro;
     }
