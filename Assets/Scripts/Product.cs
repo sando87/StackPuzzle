@@ -219,14 +219,12 @@ public class Product : MonoBehaviour
     }
     public void StartToChangeSkilledProduct(float duration, ProductSkill skill)
     {
-        IsMerging = true;
         mSkill = skill;
 
         CreateComboTextEffect();
         StartCoroutine(AnimateFlash(1.3f));
 
         StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
-            IsMerging = false;
             ChangeProductImage(skill);
         }));
     }

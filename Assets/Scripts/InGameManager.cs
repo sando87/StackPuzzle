@@ -40,6 +40,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
 
+    public GameObject ExplosionParticle;
     public GameObject MergeParticle;
     public GameObject StripeParticle;
     public GameObject SparkParticle;
@@ -228,7 +229,7 @@ public class InGameManager : MonoBehaviour
             pro.mAnimation.Play("swap");
             CreateSparkEffect(pro.transform.position);
             StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => {
-                StartCoroutine(LoopBreakSkill(pro, null));
+                StartCoroutine(LoopBreakSkill(new Product[1] { pro }, null));
             }));
         }
         else
@@ -340,6 +341,8 @@ public class InGameManager : MonoBehaviour
             }
         }
 
+        yield return new WaitForSeconds(0.2f);
+
         EventCombo?.Invoke(0);
         mIsCycling = false;
     }
@@ -361,7 +364,7 @@ public class InGameManager : MonoBehaviour
     private Product[] DestroyProducts(Product[] matches)
     {
         if (matches == null || matches.Length <= 0)
-            return null;
+            return matches;
 
         List<ProductInfo> nextProducts = new List<ProductInfo>();
         List<Product> rets = new List<Product>();
@@ -475,7 +478,7 @@ public class InGameManager : MonoBehaviour
             return null;
 
         List<Product> rets = new List<Product>();
-        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        Frame frameOf = target.ParentFrame != null ? target.ParentFrame : GetFrame(target.transform.position.x, target.transform.position.y);
         int idxY = frameOf.IndexY;
         for (int x = 0; x < CountX; ++x)
         {
@@ -484,7 +487,7 @@ public class InGameManager : MonoBehaviour
                 rets.Add(pro);
         }
 
-        if (range == 1 && frameOf.IndexY + 1 < CountY)
+        if (range >= 1 && frameOf.IndexY + 1 < CountY)
         {
             int idxYUp = frameOf.IndexY + 1;
             for (int x = 0; x < CountX; ++x)
@@ -495,7 +498,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        if (range == 2 && frameOf.IndexY - 1 >= 0)
+        if (range >= 2 && frameOf.IndexY - 1 >= 0)
         {
             int idxYDown = frameOf.IndexY - 1;
             for (int x = 0; x < CountX; ++x)
@@ -514,7 +517,7 @@ public class InGameManager : MonoBehaviour
             return null;
 
         List<Product> rets = new List<Product>();
-        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        Frame frameOf = target.ParentFrame != null ? target.ParentFrame : GetFrame(target.transform.position.x, target.transform.position.y);
         int idxX = frameOf.IndexX;
         for (int y = 0; y < CountY; ++y)
         {
@@ -553,7 +556,7 @@ public class InGameManager : MonoBehaviour
             return null;
 
         List<Product> rets = new List<Product>();
-        Frame frameOf = GetFrame(target.transform.position.x, target.transform.position.y);
+        Frame frameOf = target.ParentFrame != null ? target.ParentFrame : GetFrame(target.transform.position.x, target.transform.position.y);
         int idxX = frameOf.IndexX;
         int idxY = frameOf.IndexY;
         for (int y = idxY - round; y < idxY + round + 1; ++y)
@@ -592,6 +595,7 @@ public class InGameManager : MonoBehaviour
         }
         else if (skilledProduct.mSkill == ProductSkill.Bomb)
         {
+            CreateExplosionEffect(skilledProduct.transform.position);
             Product[] destroyes = ScanAroundProducts(skilledProduct, 1);
             DestroyProducts(destroyes);
             return destroyes;
@@ -624,11 +628,11 @@ public class InGameManager : MonoBehaviour
         }
         return null;
     }
-    IEnumerator LoopBreakSkill(Product skilledProduct, Action EventLoopEnd)
+    IEnumerator LoopBreakSkill(Product[] skillProducts, Action EventLoopEnd)
     {
         mIsCycling = true;
         List<Product> skilledProducts = new List<Product>();
-        skilledProducts.Add(skilledProduct);
+        skilledProducts.AddRange(skillProducts);
 
         while (true)
         {
@@ -646,15 +650,15 @@ public class InGameManager : MonoBehaviour
             if (skilledProducts.Count <= 0)
                 break;
 
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.4f);
         }
 
         yield return new WaitForSeconds(0.2f);
 
         EventLoopEnd?.Invoke();
-        mIsCycling = true;
+        mIsCycling = false;
     }
-    public Product[] BreakSkilledProducts(Product productA, Product productB)
+    public Product[] BreakSkilledProductBoth(Product productA, Product productB)
     {
         DestroyProducts(new Product[2] { productA, productB });
 
@@ -696,48 +700,10 @@ public class InGameManager : MonoBehaviour
         }
         return null;
     }
-    IEnumerator LoopBreakSkill(Product productA, Product productB, Action EventLoopEnd)
-    {
-        mIsCycling = true;
-
-        List<Product> destroies = new List<Product>();
-        List<Product> skilledProducts = new List<Product>();
-
-        destroies.AddRange(BreakSkilledProducts(productA, productB));
-
-        while (true)
-        {
-            foreach (Product pro in destroies)
-            {
-                if (pro.mSkill != ProductSkill.Nothing)
-                    skilledProducts.Add(pro);
-            }
-
-            if (skilledProducts.Count <= 0)
-                break;
-
-            yield return new WaitForSeconds(0.3f);
-
-            destroies.Clear();
-            foreach (Product pro in skilledProducts)
-                destroies.AddRange(BreakSkilledProduct(pro));
-        }
-
-        yield return new WaitForSeconds(0.2f);
-
-        EventLoopEnd?.Invoke();
-        mIsCycling = true;
-    }
     IEnumerator LoopBreakAllSkill()
     {
         while (true)
         {
-            if (mIsCycling)
-            {
-                yield return null;
-                continue;
-            }
-
             for(int y = CountY - 1; y >= 0; --y)
             {
                 for (int x = 0; x < CountX; ++x)
@@ -746,57 +712,53 @@ public class InGameManager : MonoBehaviour
                     Product pro = frame.ChildProduct;
                     if (pro != null && pro.mSkill != ProductSkill.Nothing && !pro.IsLocked())
                     {
-                        StartCoroutine(LoopBreakSkill(pro, null));
-                        goto BreakLoop;
+                        BreakSkilledProduct(pro);
+                        //StartCoroutine(LoopBreakSkill(new Product[1] { pro }, null));
+                        goto KeepLoop;
                     }
                 }
             }
 
-            BreakLoop:
-            if (!mIsCycling)
-                break;
+            break;
+
+        KeepLoop:
+            yield return new WaitForSeconds(0.4f);
         }
     }
     IEnumerator LoopSameColorSkill(Vector3 startPos)
     {
         while (true)
         {
-            int frameCount = 0;
-            int idleProductCount = 0;
-
-
-            for (int y = CountY - 1; y >= 0; --y)
+            if (!IsDropFinish())
             {
-                for (int x = 0; x < CountX; ++x)
-                {
-                    Frame frame = mFrames[x, y];
-                    if (frame.Empty)
-                        continue;
-                    else
-                        frameCount++;
+                yield return null;
+                continue;
+            }
 
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && !pro.IsLocked())
+            bool end = true;
+            foreach (Frame frame in mFrames)
+            {
+                if (frame.Empty)
+                    continue;
+
+                Product pro = frame.ChildProduct;
+                if (pro != null && !pro.IsLocked())
+                {
+                    List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+                    if (matches.Count > 0)
                     {
-                        List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
-                        if (matches.Count > 0)
-                        {
-                            Vector3 destPos = matches[0][0].transform.position;
-                            CreateLaserEffect(startPos, destPos);
-                            DestroyProducts(matches[0]);
-                            goto BreakLoop;
-                        }
-                        else
-                            idleProductCount++;
+                        Vector3 destPos = matches[0][0].transform.position;
+                        CreateLaserEffect(startPos, destPos);
+                        DestroyProducts(matches[0]);
+                        end = false;
                     }
                 }
             }
 
-            BreakLoop:
-            if (frameCount == idleProductCount)
+            if (end)
                 break;
             else
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(0.3f);
         }
     }
 
@@ -820,7 +782,7 @@ public class InGameManager : MonoBehaviour
         }
         return rets.ToArray();
     }
-    public void BreakSkilledProduct(Product productA, Product productB)
+    public void BreakSameColorBoth(Product productA, Product productB)
     {
         DestroyProducts(new Product[2] { productA, productB });
 
@@ -856,23 +818,35 @@ public class InGameManager : MonoBehaviour
     {
         if (main.mSkill == ProductSkill.SameColor)
         {
-            BreakSkilledProduct(main, sub);
+            BreakSameColorBoth(main, sub);
         }
         else if (sub.mSkill == ProductSkill.SameColor)
         {
-            BreakSkilledProduct(sub, main);
+            BreakSameColorBoth(sub, main);
         }
         else
         {
+            Product[] destroies = null;
             switch (sub.mSkill)
             {
-                case ProductSkill.Horizontal: BreakSkilledProduct(main, sub); break;
-                case ProductSkill.Vertical: BreakSkilledProduct(main, sub); break;
-                case ProductSkill.Bomb: BreakSkilledProduct(sub, main); break;
+                case ProductSkill.Horizontal:   destroies = BreakSkilledProductBoth(main, sub); break;
+                case ProductSkill.Vertical:     destroies = BreakSkilledProductBoth(main, sub); break;
+                case ProductSkill.Bomb:         destroies = BreakSkilledProductBoth(sub, main); break;
             }
+
+            List<Product> skillProducts = new List<Product>();
+            foreach (Product pro in destroies)
+            {
+                if (pro.mSkill != ProductSkill.Nothing)
+                    skillProducts.Add(pro);
+            }
+
+            StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+            {
+                StartCoroutine(LoopBreakSkill(skillProducts.ToArray(), null));
+            }));
         }
     }
-
 
 
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
@@ -1179,6 +1153,18 @@ public class InGameManager : MonoBehaviour
             return;
 
         mNextSkills.Enqueue(skill);
+    }
+    private bool IsDropFinish()
+    {
+        for (int x = 0; x < CountX; ++x)
+        {
+            Frame frame = mFrames[x, CountY - 1];
+            if (frame.Empty)
+                continue;
+            if (frame.ChildProduct == null)
+                return false;
+        }
+        return true;
     }
     private bool IsAllIdle()
     {
@@ -1639,6 +1625,13 @@ public class InGameManager : MonoBehaviour
         pos.z = -4.0f;
         GameObject obj = GameObject.Instantiate(MergeParticle, pos, Quaternion.identity, transform);
         obj.GetComponent<EffectMerge>().SetProucts(productA, productB);
+    }
+    void CreateExplosionEffect(Vector2 startPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
     }
     void CreateParticle(GameObject prefab, Vector3 worldPos)
     {
