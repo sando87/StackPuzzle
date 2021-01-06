@@ -11,6 +11,10 @@ public class VerticalFrames
     public Frame[] Frames;
     public List<Product> NewProducts = new List<Product>();
     public List<Product> VerticalProducts = new List<Product>();
+    public Frame TopFrame()
+    {
+        return Frames[Frames.Length - 1];
+    }
     public void AddNewProduct(Product newPro)
     {
         newPro.IsDropping = false;
@@ -186,6 +190,7 @@ public class InGameManager : MonoBehaviour
     public GameObject MaskPrefab;
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
+    public GameObject ObstaclePrefab;
 
     public GameObject ExplosionParticle;
     public GameObject MergeParticle;
@@ -272,11 +277,15 @@ public class InGameManager : MonoBehaviour
     {
         if(!mIsCycling)
         {
+            if(FieldType != GameFieldType.pvpOpponent)
+            {
+                int cnt = StartToDropNewProducts();
+                if (cnt > 0)
+                    Network_Drop(cnt);
+            }
+
             foreach (var group in mFrameDropGroup)
             {
-                if (group.NewProducts.Count > 0)
-                    group.StartDrop();
-
                 if (group.VerticalProducts.Count > 0)
                     group.UpdateDrop();
             }
@@ -514,55 +523,78 @@ public class InGameManager : MonoBehaviour
             frames.Add(pro.ParentFrame);
         return frames.ToArray();
     }
-    IEnumerator DestroyProductDelay(Product product, Product nextProduct, float delay)
+    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay)
     {
-        Frame parentFrame = product.ParentFrame;
         yield return new WaitForSeconds(delay);
-        product.DestroyImmediately();
-        parentFrame.VertFrames.AddNewProduct(nextProduct);
+
+        List<ProductInfo> nextProducts = new List<ProductInfo>();
+        foreach (Product pro in destroyedProducts)
+        {
+            Frame parentFrame = pro.ParentFrame;
+            pro.DestroyImmediately();
+            Product newPro = CreateNewProduct();
+            parentFrame.VertFrames.AddNewProduct(newPro);
+            nextProducts.Add(new ProductInfo(newPro.mColor, parentFrame.IndexX, parentFrame.IndexY));
+        }
+        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing);
     }
     private Product[] DestroyProducts(Product[] matches)
     {
         if (matches == null || matches.Length <= 0)
             return matches;
 
-        List<ProductInfo> nextProducts = new List<ProductInfo>();
         List<Product> rets = new List<Product>();
 
         int addedScore = 0;
         foreach (Product pro in matches)
         {
-            if (!pro.ReadyForDestroy(Billboard.CurrentCombo))
-                continue;
-
-            addedScore += Billboard.CurrentCombo;
-            rets.Add(pro);
-
-            Frame curFrame = pro.ParentFrame;
-            Product nextPro = CreateNewProduct();
-            nextPro.gameObject.SetActive(false);
-            StartCoroutine(DestroyProductDelay(pro, nextPro, 0.2f));
-            nextProducts.Add(new ProductInfo(nextPro.mColor, curFrame.IndexX, curFrame.IndexY));
+            if (pro.ReadyForDestroy(Billboard.CurrentCombo))
+            {
+                addedScore += Billboard.CurrentCombo;
+                rets.Add(pro);
+            }
         }
 
+        Product[] validProducts = rets.ToArray();
+        if (validProducts.Length <= 0)
+            return validProducts;
+
+        StartCoroutine(DestroyProductDelay(validProducts, 0.2f));
+
+        Attack(addedScore, validProducts[0].transform.position);
         //if (FieldType == GameFieldType.Stage)
         //    ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
         //else
         //    Attack(addedScore, mainProduct.transform.position);
 
         Billboard.CurrentScore += addedScore;
-        Billboard.DestroyCount += matches.Length;
+        Billboard.DestroyCount += validProducts.Length;
 
-        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing);
-        EventMatched?.Invoke(matches);
-        return rets.ToArray();
+        EventMatched?.Invoke(validProducts);
+        return validProducts;
     }
-    IEnumerator MergeProductDelay(Product product, Product destProduct, Product nextProduct, float delay)
+    IEnumerator MergeProductDelay(Product[] mergeProducts, float delay, ProductSkill skill)
     {
-        Frame parentFrame = product.ParentFrame;
         yield return new WaitForSeconds(delay);
-        product.MergeImImmediately(destProduct);
-        parentFrame.VertFrames.AddNewProduct(nextProduct);
+
+        List<ProductInfo> nextProducts = new List<ProductInfo>();
+        foreach (Product pro in mergeProducts)
+        {
+            Frame parentFrame = pro.ParentFrame;
+            pro.MergeImImmediately(mergeProducts[0], skill);
+
+            if(pro == mergeProducts[0])
+            {
+                nextProducts.Add(new ProductInfo(ProductColor.None, parentFrame.IndexX, parentFrame.IndexY));
+            }
+            else
+            {
+                Product newPro = CreateNewProduct();
+                parentFrame.VertFrames.AddNewProduct(newPro);
+                nextProducts.Add(new ProductInfo(newPro.mColor, parentFrame.IndexX, parentFrame.IndexY));
+            }
+        }
+        Network_Destroy(nextProducts.ToArray(), skill);
     }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -573,25 +605,13 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in matches)
         {
             Frame curFrame = pro.ParentFrame;
-            if (curFrame == mainFrame)
-            {
-                addedScore += Billboard.CurrentCombo;
-                pro.StartToChangeSkilledProduct(0.2f, makeSkill);
-            }
-            else
-            {
-                if(pro.ReadyForMerge(Billboard.CurrentCombo))
-                {
-                    addedScore += Billboard.CurrentCombo;
-
-                    Product nextPro = CreateNewProduct();
-                    nextPro.gameObject.SetActive(false);
-                    StartCoroutine(MergeProductDelay(pro, matches[0], nextPro, 0.2f));
-                    nextProducts.Add(new ProductInfo(nextPro.mColor, curFrame.IndexX, curFrame.IndexY));
-                }
-            }
+            pro.ReadyForMerge(Billboard.CurrentCombo);
+            addedScore += Billboard.CurrentCombo;
         }
 
+        StartCoroutine(MergeProductDelay(matches, 0.2f, makeSkill));
+
+        Attack(addedScore, matches[0].transform.position);
         //if (FieldType == GameFieldType.Stage)
         //    ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
         //else
@@ -600,41 +620,20 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
 
-        Network_Destroy(nextProducts.ToArray(), makeSkill);
         EventMatched?.Invoke(matches);
     }
-    private void StartToDropVerticalFrames(VerticalFrames group)
+    private int StartToDropNewProducts()
     {
-        if (group.NewProducts.Count <= 0)
-            return;
-
-        foreach (Frame frame in group.Frames)
+        int newProductCount = 0;
+        foreach (var group in mFrameDropGroup)
         {
-            if (frame.ChildProduct == null || frame.ChildProduct.IsLocked())
-                continue;
-
-            Frame downFrame = frame.Down();
-            if (downFrame == null || downFrame.ChildProduct != null)
-                continue;
-
-            frame.ChildProduct.Drop(null);
-        }
-
-        Product prvPro = null;
-        foreach (Product newProduct in group.NewProducts)
-        {
-            if (prvPro == null)
+            if (group.NewProducts.Count > 0)
             {
-                if (!newProduct.IsDropping)
-                    newProduct.Drop(() => { group.NewProducts.Remove(newProduct); });
+                newProductCount += group.NewProducts.Count;
+                group.StartDrop();
             }
-            else
-            {
-                if (!newProduct.IsDropping)
-                    newProduct.Drop(prvPro, () => { group.NewProducts.Remove(newProduct); });
-            }
-            prvPro = newProduct;
         }
+        return newProductCount;
     }
     private Product[] ScanHorizenProducts(Product target, int range = 0)
     {
@@ -1071,6 +1070,9 @@ public class InGameManager : MonoBehaviour
     }
     private void Attack(int score, Vector3 fromPos)
     {
+        if (FieldType == GameFieldType.Stage)
+            return;
+
         int point = score / UserSetting.AttackScore;
         if (point <= 0)
             return;
@@ -1444,6 +1446,46 @@ public class InGameManager : MonoBehaviour
         GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
         Product product = obj.GetComponent<Product>();
         return product;
+    }
+    IEnumerator FlushObstacles(Product[] targets)
+    {
+        List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
+        foreach (Product target in targets)
+        {
+            Vector3 startPos = target.ParentFrame.VertFrames.TopFrame().transform.position;
+            startPos.y += GridSize;
+            GameObject obj = Instantiate(ObstaclePrefab, startPos, Quaternion.identity, transform);
+            obstacles.Add(new Tuple<GameObject, Product>(obj, target));
+        }
+
+        float vel = 0;
+        while (true)
+        {
+            vel += 0.1f;
+            foreach (var each in obstacles)
+            {
+                GameObject obstacle = each.Item1;
+                Product destProduct = each.Item2;
+
+                float deltaY = vel * Time.deltaTime;
+                if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
+                {
+                    //destProduct.SetIce(true);
+                    obstacle.transform.SetParent(destProduct.transform);
+                    obstacle.transform.localPosition = Vector3.zero;
+                    obstacles.Remove(each);
+                }
+                else
+                {
+                    obstacle.transform.position -= new Vector3(0, deltaY, 0);
+                }
+            }
+
+            if (obstacles.Count <= 0)
+                break;
+            else
+                yield return null;
+        }
     }
     private int RandomNextColor()
     {
@@ -1873,39 +1915,61 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Destroy)
             {
-                //List<Product> products = new List<Product>();
-                //for (int i = 0; i < body.ArrayCount; ++i)
-                //{
-                //    ProductInfo info = body.products[i];
-                //    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                //    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                //        products.Add(pro);
-                //}
-                //
-                //if (products.Count != body.ArrayCount)
-                //    LOG.warn("Not Sync Destroy Products");
-                //else
-                //{
-                //    Billboard.CurrentCombo = body.combo;
-                //    DestroyProducts(products.ToArray(), body.skill);
-                //    mNetMessages.RemoveFirst();
-                //}
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
+                    if (pro != null && !pro.IsLocked())
+                        products.Add(pro);
+                }
+                
+                if (products.Count != body.ArrayCount)
+                    LOG.warn("Not Sync Destroy Products");
+                else
+                {
+                    Billboard.CurrentCombo = body.combo;
+
+                    int score = body.combo * body.ArrayCount;
+                    Billboard.CurrentScore += score;
+                    Billboard.DestroyCount += body.ArrayCount;
+
+                    Attack(score, products[0].transform.position);
+
+                    if (body.skill == ProductSkill.Nothing)
+                    {
+                        for (int idx = 0; idx < body.ArrayCount; ++idx)
+                        {
+                            Frame parentFrame = products[idx].ParentFrame;
+                            products[idx].DestroyImmediately();
+                            Product newPro = CreateNewProduct(body.products[idx].color);
+                            parentFrame.VertFrames.AddNewProduct(newPro);
+                        }
+                    }
+                    else
+                    {
+                        for (int idx = 0; idx < body.ArrayCount; ++idx)
+                        {
+                            Frame parentFrame = products[idx].ParentFrame;
+                            products[idx].MergeImImmediately(products[0], body.skill);
+                            if (idx != 0)
+                            {
+                                Product newPro = CreateNewProduct(body.products[idx].color);
+                                parentFrame.VertFrames.AddNewProduct(newPro);
+                            }
+                        }
+                    }
+
+                    mNetMessages.RemoveFirst();
+                }
             }
-            else if (body.cmd == PVPCommand.Create)
+            else if (body.cmd == PVPCommand.Drop)
             {
-                //Dictionary<Frame, ProductColor> newProducts = new Dictionary<Frame, ProductColor>();
-                //for (int i = 0; i < body.ArrayCount; ++i)
-                //{
-                //    ProductInfo info = body.products[i];
-                //    Frame frame = GetFrame(info.idxX, info.idxY);
-                //    newProducts[frame] = info.color;
-                //}
-                //
-                //if(IsReadyToNextDrop(newProducts))
-                //{
-                //    StartToDropAndCreateRemote(newProducts, durationDrop);
-                //    mNetMessages.RemoveFirst();
-                //}
+                int cnt = StartToDropNewProducts();
+                if (cnt != body.newDropCount)
+                    LOG.warn("miss-matched new drop count!!");
+
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
@@ -1921,152 +1985,6 @@ public class InGameManager : MonoBehaviour
 
                     mNetMessages.RemoveFirst();
                 }
-            }
-            else if (body.cmd == PVPCommand.SkillBomb)
-            {
-                //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-                //Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                //List<Product> rets = new List<Product>();
-                //for (int i = 0; i < body.ArrayCount; ++i)
-                //{
-                //    ProductInfo info = body.products[i];
-                //    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
-                //    CreateLaserEffect(startPos, frame.transform.position);
-                //    Product pro = frame.ChildProduct;
-                //    if (pro != null && !pro.IsLocked())
-                //        rets.Add(pro);
-                //}
-                //
-                //if (!Opponent.DefenseShield(rets.ToArray()))
-                //{
-                //    foreach(Product pro in rets)
-                //        CreateParticle(BombParticle, pro.transform.position);
-                //
-                //    Opponent.DestroyProducts(rets.ToArray(), ProductSkill.Nothing);
-                //    if (!Opponent.mIsCycling)
-                //        Opponent.StartCoroutine(Opponent.DoDropCycle());
-                //}
-                //
-                //mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillIce)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                List<Product> rets = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
-                    CreateLaserEffect(startPos, frame.transform.position);
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && !pro.IsLocked())
-                        rets.Add(pro);
-                }
-
-                if (!Opponent.DefenseShield(rets.ToArray()))
-                {
-                    foreach (Product pro in rets)
-                    {
-                        pro.SetIce(true);
-                        pro.StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () => {
-                            pro.SetIce(false);
-                        }));
-                    }
-
-                    Network_Skill(PVPCommand.SkillIceRes, Serialize(rets.ToArray()));
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillIceRes)
-            {
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = GetFrame(info.idxX, info.idxY).ChildProduct;
-                    if (pro != null && !pro.IsLocked() && info.color == pro.mColor)
-                    {
-                        pro.SetIce(true);
-                        pro.StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () => {
-                            pro.SetIce(false);
-                        }));
-                    }
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillShield)
-            {
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateLaserEffect(startPos, ShieldSlot.transform.position);
-                CreateParticle(ShieldParticle, startPos);
-                ShieldSlot.SetActive(true);
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillScoreBuff)
-            {
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateLaserEffect(startPos, ScoreBuffSlot.transform.position);
-                CreateParticle(ScoreBuffParticle, startPos);
-                ScoreBuffSlot.SetActive(true);
-                StartCoroutine(UnityUtils.CallAfterSeconds(body.combo * 4, () =>
-                {
-                    ScoreBuffSlot.SetActive(false);
-                }));
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillChangeProducts)
-            {
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillCloud)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                List<Frame> frames = new List<Frame>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Frame frame = Opponent.GetFrame(info.idxX, info.idxY);
-                    CreateLaserEffect(startPos, frame.transform.position);
-                    frames.Add(frame);
-                }
-
-                if (!Opponent.DefenseShield(frames.ToArray()))
-                {
-                    Opponent.CreateCloud(frames.ToArray(), body.combo);
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillUpsideDown)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                Frame destFrame = Opponent.CenterFrame;
-                CreateLaserEffect(startPos, destFrame.transform.position);
-
-                if (!Opponent.DefenseShield(new Frame[1] { destFrame }))
-                {
-                    CreateParticle(UpsideDownParticle, destFrame.transform.position);
-                    Opponent.UpsideDownSlot.SetActive(true);
-                    Opponent.StartCoroutine(UnityUtils.CallAfterSeconds(body.combo * 4, () =>
-                    {
-                        Opponent.UpsideDownSlot.SetActive(false);
-                    }));
-                }
-
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.SkillRemoveBadEffects)
-            {
-                Vector3 startPos = GetFrame(body.idxX, body.idxY).transform.position;
-                CreateParticle(RemoveBadEffectParticle, startPos);
-                RemoveBadEffects(startPos);
-                mNetMessages.RemoveFirst();
             }
         }
     }
@@ -2156,6 +2074,16 @@ public class InGameManager : MonoBehaviour
         req.skill = skill;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    private void Network_Drop(int count)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.Drop;
+        req.newDropCount = count;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Create(ProductInfo[] pros)

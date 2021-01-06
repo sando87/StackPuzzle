@@ -205,9 +205,6 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForMerge(int combo)
     {
-        if (IsMoving)
-            return false;
-
         IsMerging = true;
         Combo = combo;
         CreateComboTextEffect();
@@ -215,12 +212,20 @@ public class Product : MonoBehaviour
         StartCoroutine(AnimateFlash(1.3f));
         return true;
     }
-    public void MergeImImmediately(Product destProduct)
+    public void MergeImImmediately(Product destProduct, ProductSkill skill)
     {
-        Detach();
-        StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
-            Destroy(gameObject);
-        }));
+        if (destProduct == this)
+        {
+            ChangeProductImage(skill);
+            IsMerging = false;
+        }
+        else
+        {
+            Detach();
+            StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
+                Destroy(gameObject);
+            }));
+        }
     }
     public void StartMergeTo(Product destProduct, float duration)
     {

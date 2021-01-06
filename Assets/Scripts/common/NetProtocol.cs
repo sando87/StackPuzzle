@@ -9,7 +9,7 @@ public enum NetCMD
 }
 public enum PVPCommand
 {
-    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame,
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, Drop,
     SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
 }
 public enum ProductColor
@@ -192,6 +192,7 @@ public class PVPInfo
     public int combo;
     public int idxX;
     public int idxY;
+    public int newDropCount;
     public float colorCount;
     public bool success;
     public ProductSkill skill;
