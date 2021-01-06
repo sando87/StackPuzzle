@@ -203,6 +203,25 @@ public class Product : MonoBehaviour
         IsDropping = false;
         EventEndDrop?.Invoke();
     }
+    public bool ReadyForMerge(int combo)
+    {
+        if (IsMoving)
+            return false;
+
+        IsMerging = true;
+        Combo = combo;
+        CreateComboTextEffect();
+
+        StartCoroutine(AnimateFlash(1.3f));
+        return true;
+    }
+    public void MergeImImmediately(Product destProduct)
+    {
+        Detach();
+        StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
+            Destroy(gameObject);
+        }));
+    }
     public void StartMergeTo(Product destProduct, float duration)
     {
         IsMerging = true;
@@ -228,6 +247,31 @@ public class Product : MonoBehaviour
         StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
             ChangeProductImage(skill);
         }));
+    }
+    public bool ReadyForDestroy(int combo)
+    {
+        if (IsDestroying)
+            return false;
+
+        IsDestroying = true;
+        Combo = combo;
+        CreateComboTextEffect();
+        StartCoroutine(AnimateFlash(1.3f));
+
+        return true;
+    }
+    public Frame DestroyImmediately()
+    {
+        if (ParentFrame == null)
+            return null;
+
+        IsDestroying = true;
+        Frame parent = Detach();
+        UnWrapChocoBlocksAroundFrame(parent, Combo);
+        parent.BreakCover(Combo);
+        StartCoroutine(AnimateDestroy());
+
+        return parent;
     }
     public Frame StartDestroy(float flashIntesity, float delay, int combo)
     {

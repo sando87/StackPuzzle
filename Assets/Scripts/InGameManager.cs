@@ -10,49 +10,152 @@ public class VerticalFrames
 {
     public Frame[] Frames;
     public List<Product> NewProducts = new List<Product>();
-    public List<Product> DroppingProducts = new List<Product>();
+    public List<Product> VerticalProducts = new List<Product>();
+    public void AddNewProduct(Product newPro)
+    {
+        newPro.IsDropping = false;
+        newPro.gameObject.SetActive(false);
+        NewProducts.Add(newPro);
+    }
     public void StartDrop()
     {
+        List<Product> newVertList = new List<Product>();
+        foreach (Product dropProduct in VerticalProducts)
+        {
+            if (dropProduct.IsDropping)
+                newVertList.Add(dropProduct);
+        }
+
         float height = InGameManager.InstCurrent.GridSize;
-        Vector3 topPos = DroppingProducts.Count > 0 ? DroppingProducts[DroppingProducts.Count - 1].transform.position : Frames[Frames.Length - 1].transform.position;
+        Vector3 topPos = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].transform.position : Frames[Frames.Length - 1].transform.position;
         topPos.z = Frames[0].transform.position.z - 1;
-        float dropSpeed = DroppingProducts.Count > 0 ? DroppingProducts[DroppingProducts.Count - 1].DropSpeed : 0;
+        float dropSpeed = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].DropSpeed : 0;
         foreach (Product newPro in NewProducts)
         {
             topPos.y += height;
-            newPro.transform.position = topPos;
             newPro.IsDropping = true;
+            newPro.transform.position = topPos;
             newPro.DropSpeed = dropSpeed;
             newPro.gameObject.SetActive(true);
-            DroppingProducts.Add(newPro);
+            newVertList.Add(newPro);
         }
 
-        bool findEmptyFrame = false;
+        bool droppable = false;
         foreach (Frame frame in Frames)
         {
-            if(findEmptyFrame)
+            Product target = frame.ChildProduct;
+            if(target == null)
             {
-                if(frame.ChildProduct != null)
+                droppable = true;
+            }
+            else
+            {
+                newVertList.Add(target);
+                if (target.IsLocked())
                 {
-                    Product target = frame.ChildProduct;
-                    target.IsDropping = true;
-                    target.Detach();
-                    DroppingProducts.Add(target);
+                    droppable = false;
+                }
+                else
+                {
+                    if (droppable)
+                    {
+                        target.IsDropping = true;
+                        target.Detach();
+                    }
                 }
             }
-            else if (frame.ChildProduct == null)
-                findEmptyFrame = true;
         }
 
-        DroppingProducts.Sort((lhs, rhs) => { return lhs.transform.position.y > rhs.transform.position.y ? 1 : -1; });
+        newVertList.Sort((lhs, rhs) => { return lhs.transform.position.y > rhs.transform.position.y ? 1 : -1; });
         NewProducts.Clear();
+        VerticalProducts = newVertList;
     }
     public void UpdateDrop()
     {
-        foreach(Product dropProduct in DroppingProducts)
-        {
+        bool isAllFinish = true;
 
+        float acc = 10.0f * Time.deltaTime;
+        float delta = Time.deltaTime;
+        float gridSizeHalf = InGameManager.InstCurrent.GridSize * 0.5f;
+        Vector3 basePos = VerticalProducts[0].transform.position;
+        Product prvProduct = null;
+
+        foreach (Product dropProduct in VerticalProducts)
+        {
+            if(dropProduct.IsDropping)
+            {
+                float nextVel = dropProduct.DropSpeed + acc;
+                float nextPos = dropProduct.transform.position.y - (nextVel * delta);
+
+                if (prvProduct == null)
+                {
+                    if(nextPos - gridSizeHalf <= InGameManager.InstCurrent.FieldWorldRect.yMin)
+                    {
+                        Frame targetFrame = Frames[0];
+                        basePos.y = targetFrame.transform.position.y;
+                        dropProduct.transform.position = basePos;
+                        dropProduct.IsDropping = false;
+                        dropProduct.DropSpeed = 0;
+                        dropProduct.AttachTo(targetFrame);
+                    }
+                    else
+                    {
+                        basePos.y = nextPos;
+                        dropProduct.DropSpeed = nextVel;
+                        dropProduct.transform.position = basePos;
+                    }
+                }
+                else
+                {
+                    if (nextPos - gridSizeHalf < prvProduct.transform.position.y + gridSizeHalf)
+                    {
+                        if (prvProduct.IsDropping)
+                        {
+                            basePos.y = prvProduct.transform.position.y + (gridSizeHalf * 2);
+                            dropProduct.transform.position = basePos;
+                            dropProduct.IsDropping = true;
+                            dropProduct.DropSpeed = 0;
+                        }
+                        else
+                        {
+                            Frame targetFrame = prvProduct.ParentFrame.Up();
+                            if (targetFrame == null)
+                            {
+                                basePos.y = prvProduct.transform.position.y + (gridSizeHalf * 2);
+                                dropProduct.transform.position = basePos;
+                                dropProduct.IsDropping = true;
+                                dropProduct.DropSpeed = 0;
+                            }
+                            else
+                            {
+                                basePos.y = targetFrame.transform.position.y;
+                                dropProduct.transform.position = basePos;
+                                dropProduct.IsDropping = false;
+                                dropProduct.DropSpeed = 0;
+                                dropProduct.AttachTo(targetFrame);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        basePos.y = nextPos;
+                        dropProduct.IsDropping = true;
+                        dropProduct.DropSpeed = nextVel;
+                        dropProduct.transform.position = basePos;
+                    }
+                }
+
+                prvProduct = dropProduct;
+                isAllFinish = false;
+            }
+            else
+            {
+                prvProduct = dropProduct;
+            }
         }
+
+        if (isAllFinish)
+            VerticalProducts.Clear();
     }
 }
 
@@ -174,7 +277,7 @@ public class InGameManager : MonoBehaviour
                 if (group.NewProducts.Count > 0)
                     group.StartDrop();
 
-                if (group.DroppingProducts.Count > 0)
+                if (group.VerticalProducts.Count > 0)
                     group.UpdateDrop();
             }
         }
@@ -411,6 +514,13 @@ public class InGameManager : MonoBehaviour
             frames.Add(pro.ParentFrame);
         return frames.ToArray();
     }
+    IEnumerator DestroyProductDelay(Product product, Product nextProduct, float delay)
+    {
+        Frame parentFrame = product.ParentFrame;
+        yield return new WaitForSeconds(delay);
+        product.DestroyImmediately();
+        parentFrame.VertFrames.AddNewProduct(nextProduct);
+    }
     private Product[] DestroyProducts(Product[] matches)
     {
         if (matches == null || matches.Length <= 0)
@@ -422,15 +532,17 @@ public class InGameManager : MonoBehaviour
         int addedScore = 0;
         foreach (Product pro in matches)
         {
-            Frame curFrame = pro.StartDestroy(1.3f, 0.2f, Billboard.CurrentCombo);
-            if (curFrame == null)
+            if (!pro.ReadyForDestroy(Billboard.CurrentCombo))
                 continue;
 
             addedScore += Billboard.CurrentCombo;
             rets.Add(pro);
 
-            Product newPro = InstanceNewProduct(curFrame);
-            nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
+            Frame curFrame = pro.ParentFrame;
+            Product nextPro = CreateNewProduct();
+            nextPro.gameObject.SetActive(false);
+            StartCoroutine(DestroyProductDelay(pro, nextPro, 0.2f));
+            nextProducts.Add(new ProductInfo(nextPro.mColor, curFrame.IndexX, curFrame.IndexY));
         }
 
         //if (FieldType == GameFieldType.Stage)
@@ -445,6 +557,13 @@ public class InGameManager : MonoBehaviour
         EventMatched?.Invoke(matches);
         return rets.ToArray();
     }
+    IEnumerator MergeProductDelay(Product product, Product destProduct, Product nextProduct, float delay)
+    {
+        Frame parentFrame = product.ParentFrame;
+        yield return new WaitForSeconds(delay);
+        product.MergeImImmediately(destProduct);
+        parentFrame.VertFrames.AddNewProduct(nextProduct);
+    }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
         List<ProductInfo> nextProducts = new List<ProductInfo>();
@@ -454,17 +573,23 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in matches)
         {
             Frame curFrame = pro.ParentFrame;
-            addedScore += Billboard.CurrentCombo;
-            pro.Combo = Billboard.CurrentCombo;
             if (curFrame == mainFrame)
             {
+                addedScore += Billboard.CurrentCombo;
                 pro.StartToChangeSkilledProduct(0.2f, makeSkill);
-                continue;
             }
+            else
+            {
+                if(pro.ReadyForMerge(Billboard.CurrentCombo))
+                {
+                    addedScore += Billboard.CurrentCombo;
 
-            pro.StartMergeTo(matches[0], 0.2f);
-            Product newPro = InstanceNewProduct(curFrame);
-            nextProducts.Add(new ProductInfo(newPro.mColor, curFrame.IndexX, curFrame.IndexY));
+                    Product nextPro = CreateNewProduct();
+                    nextPro.gameObject.SetActive(false);
+                    StartCoroutine(MergeProductDelay(pro, matches[0], nextPro, 0.2f));
+                    nextProducts.Add(new ProductInfo(nextPro.mColor, curFrame.IndexX, curFrame.IndexY));
+                }
+            }
         }
 
         //if (FieldType == GameFieldType.Stage)
@@ -477,13 +602,6 @@ public class InGameManager : MonoBehaviour
 
         Network_Destroy(nextProducts.ToArray(), makeSkill);
         EventMatched?.Invoke(matches);
-    }
-    private Product InstanceNewProduct(Frame emptyFrame)
-    {
-        Product pro = CreateNewProduct();
-        pro.gameObject.SetActive(false);
-        emptyFrame.VertFrames.NewProducts.Add(pro);
-        return pro;
     }
     private void StartToDropVerticalFrames(VerticalFrames group)
     {
