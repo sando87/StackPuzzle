@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1120493df21afd648ab4b2e3009ffbe4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Color: 0
+  Color: 1
   ChocoBlock: {fileID: 6470911661429955018}
   Animation: {fileID: 2859214841169769124}
   Renderer: {fileID: 1825208520085279932}

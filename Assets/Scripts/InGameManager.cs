@@ -190,11 +190,19 @@ public class InGameManager : MonoBehaviour
         if (mStopDropping)
             return;
 
-        if(FieldType != GameFieldType.pvpOpponent)
+        if (FieldType != GameFieldType.pvpOpponent)
         {
             int cnt = StartToDropNewProducts();
             if (cnt > 0)
                 Network_Drop(cnt);
+        }
+        else
+        {
+            foreach (var group in mFrameDropGroup)
+            {
+                if (group.NewProducts.Count > 0)
+                    return;
+            }
         }
 
         mIsDropping = false;
