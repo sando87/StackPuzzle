@@ -194,6 +194,7 @@ public class PVPInfo
     public int idxY;
     public int newDropCount;
     public float colorCount;
+    public bool withLaserEffect;
     public bool success;
     public ProductSkill skill;
     public SwipeDirection dir;

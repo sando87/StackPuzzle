@@ -55,7 +55,7 @@ public class VerticalFrames
             else
             {
                 newVertList.Add(target);
-                if (target.IsLocked())
+                if (target.IsLocked)
                 {
                     droppable = false;
                 }
@@ -302,10 +302,10 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
-        if(pro.mSkill != ProductSkill.Nothing)
+        if(pro.Skill != ProductSkill.Nothing)
         {
             mStopDropping = true;
-            pro.mAnimation.Play("swap");
+            pro.Animation.Play("swap");
             CreateSparkEffect(pro.transform.position);
             StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => {
                 StartCoroutine(LoopBreakSkill(new Product[1] { pro }));
@@ -316,7 +316,7 @@ public class InGameManager : MonoBehaviour
             List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
             if (matches.Count <= 0)
             {
-                pro.mAnimation.Play("swap");
+                pro.Animation.Play("swap");
             }
             else
             {
@@ -343,7 +343,7 @@ public class InGameManager : MonoBehaviour
         }
 
         Product product = swipeObj.GetComponent<Product>();
-        if (product.IsLocked() || product.IsIced)
+        if (product.IsLocked || product.IsChocoBlock)
             return;
 
         Product targetProduct = null;
@@ -355,12 +355,12 @@ public class InGameManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct == null || targetProduct.IsLocked() || targetProduct.IsIced)
+        if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock)
             return;
 
         RemoveLimit();
 
-        if (product.mSkill != ProductSkill.Nothing && targetProduct.mSkill != ProductSkill.Nothing)
+        if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
             mStopDropping = true;
             CreateMergeEffect(product, targetProduct);
@@ -441,7 +441,7 @@ public class InGameManager : MonoBehaviour
             frames.Add(pro.ParentFrame);
         return frames.ToArray();
     }
-    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay)
+    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect)
     {
         yield return new WaitForSeconds(delay);
 
@@ -452,11 +452,11 @@ public class InGameManager : MonoBehaviour
             pro.DestroyImmediately();
             Product newPro = CreateNewProduct();
             parentFrame.VertFrames.AddNewProduct(newPro);
-            nextProducts.Add(new ProductInfo(newPro.mColor, parentFrame.IndexX, parentFrame.IndexY));
+            nextProducts.Add(new ProductInfo(newPro.Color, parentFrame.IndexX, parentFrame.IndexY));
         }
-        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing);
+        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect);
     }
-    private Product[] DestroyProducts(Product[] matches)
+    private Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
     {
         if (matches == null || matches.Length <= 0)
             return matches;
@@ -477,7 +477,7 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
-        StartCoroutine(DestroyProductDelay(validProducts, 0.2f));
+        StartCoroutine(DestroyProductDelay(validProducts, 0.2f, withLaserEffect));
 
         Attack(addedScore, validProducts[0].transform.position);
         //if (FieldType == GameFieldType.Stage)
@@ -509,10 +509,10 @@ public class InGameManager : MonoBehaviour
             {
                 Product newPro = CreateNewProduct();
                 parentFrame.VertFrames.AddNewProduct(newPro);
-                nextProducts.Add(new ProductInfo(newPro.mColor, parentFrame.IndexX, parentFrame.IndexY));
+                nextProducts.Add(new ProductInfo(newPro.Color, parentFrame.IndexX, parentFrame.IndexY));
             }
         }
-        Network_Destroy(nextProducts.ToArray(), skill);
+        Network_Destroy(nextProducts.ToArray(), skill, false);
     }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -555,8 +555,6 @@ public class InGameManager : MonoBehaviour
     }
     private void UpdateDropProducts(VerticalFrames group)
     {
-        bool isAllFinish = true;
-
         float acc = 2;
         float delta = Time.deltaTime;
         float gridSizeHalf = GridSize * 0.5f;
@@ -629,15 +627,21 @@ public class InGameManager : MonoBehaviour
                 }
 
                 prvProduct = dropProduct;
-                isAllFinish = false;
             }
             else
             {
                 prvProduct = dropProduct;
+                Frame downFrame = dropProduct.ParentFrame.Down();
+                if (downFrame != null && downFrame.ChildProduct == null && !dropProduct.IsLocked)
+                {
+                    dropProduct.IsDropping = true;
+                    dropProduct.Detach();
+                }
             }
         }
 
-        if (isAllFinish)
+        int count = group.VerticalProducts.Count;
+        if (group.VerticalProducts[count - 1].ParentFrame != null)
             group.VerticalProducts.Clear();
     }
     private Product[] ScanHorizenProducts(Product target, int range = 0)
@@ -651,7 +655,7 @@ public class InGameManager : MonoBehaviour
         for (int x = 0; x < CountX; ++x)
         {
             Product pro = mFrames[x, idxY].ChildProduct;
-            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                 rets.Add(pro);
         }
 
@@ -661,7 +665,7 @@ public class InGameManager : MonoBehaviour
             for (int x = 0; x < CountX; ++x)
             {
                 Product pro = mFrames[x, idxYUp].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                     rets.Add(pro);
             }
         }
@@ -672,7 +676,7 @@ public class InGameManager : MonoBehaviour
             for (int x = 0; x < CountX; ++x)
             {
                 Product pro = mFrames[x, idxYDown].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                     rets.Add(pro);
             }
         }
@@ -690,7 +694,7 @@ public class InGameManager : MonoBehaviour
         for (int y = 0; y < CountY; ++y)
         {
             Product pro = mFrames[idxX, y].ChildProduct;
-            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                 rets.Add(pro);
         }
 
@@ -700,7 +704,7 @@ public class InGameManager : MonoBehaviour
             for (int y = 0; y < CountY; ++y)
             {
                 Product pro = mFrames[idxXRight, y].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                     rets.Add(pro);
             }
         }
@@ -711,7 +715,7 @@ public class InGameManager : MonoBehaviour
             for (int y = 0; y < CountY; ++y)
             {
                 Product pro = mFrames[idxXLeft, y].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                     rets.Add(pro);
             }
         }
@@ -738,7 +742,7 @@ public class InGameManager : MonoBehaviour
                     continue;
 
                 Product pro = mFrames[x, y].ChildProduct;
-                if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                     rets.Add(pro);
             }
         }
@@ -749,35 +753,35 @@ public class InGameManager : MonoBehaviour
     {
         DestroyProducts(new Product[1] { skilledProduct });
 
-        if (skilledProduct.mSkill == ProductSkill.Horizontal)
+        if (skilledProduct.Skill == ProductSkill.Horizontal)
         {
             CreateStripeEffect(skilledProduct.transform.position, false);
             Product[] destroyes = ScanHorizenProducts(skilledProduct);
             DestroyProducts(destroyes);
             return destroyes;
         }
-        else if (skilledProduct.mSkill == ProductSkill.Vertical)
+        else if (skilledProduct.Skill == ProductSkill.Vertical)
         {
             CreateStripeEffect(skilledProduct.transform.position, true);
             Product[] destroyes = ScanVerticalProducts(skilledProduct);
             DestroyProducts(destroyes);
             return destroyes;
         }
-        else if (skilledProduct.mSkill == ProductSkill.Bomb)
+        else if (skilledProduct.Skill == ProductSkill.Bomb)
         {
             CreateExplosionEffect(skilledProduct.transform.position);
             Product[] destroyes = ScanAroundProducts(skilledProduct, 1);
             DestroyProducts(destroyes);
             return destroyes;
         }
-        else if (skilledProduct.mSkill == ProductSkill.SameColor)
+        else if (skilledProduct.Skill == ProductSkill.SameColor)
         {
             Vector3 startPos = skilledProduct.transform.position;
             List<Product> pros = new List<Product>();
             foreach (Frame frame in mFrames)
             {
                 Product pro = frame.ChildProduct;
-                if (pro == null || pro.IsLocked())
+                if (pro == null || pro.IsLocked)
                     continue;
 
                 pros.Add(pro);
@@ -790,7 +794,7 @@ public class InGameManager : MonoBehaviour
             {
                 Vector3 destPos = match[0].transform.position;
                 CreateLaserEffect(startPos, destPos);
-                DestroyProducts(match);
+                DestroyProducts(match, true);
                 pros.AddRange(match);
             }
 
@@ -813,7 +817,7 @@ public class InGameManager : MonoBehaviour
             skilledProducts.Clear();
             foreach (Product pro in destroies)
             {
-                if (pro.mSkill != ProductSkill.Nothing)
+                if (pro.Skill != ProductSkill.Nothing)
                     skilledProducts.Add(pro);
             }
 
@@ -830,29 +834,29 @@ public class InGameManager : MonoBehaviour
     {
         DestroyProducts(new Product[2] { productA, productB });
 
-        if (productA.mSkill == ProductSkill.Bomb)
+        if (productA.Skill == ProductSkill.Bomb)
         {
             List<Product> pros = new List<Product>();
-            if (productB.mSkill == ProductSkill.Horizontal)
+            if (productB.Skill == ProductSkill.Horizontal)
             {
                 Product[] destroyes = ScanHorizenProducts(productA, 2);
                 DestroyProducts(destroyes);
                 return destroyes;
             }
-            else if (productB.mSkill == ProductSkill.Vertical)
+            else if (productB.Skill == ProductSkill.Vertical)
             {
                 Product[] destroyes = ScanVerticalProducts(productA, 2);
                 DestroyProducts(destroyes);
                 return destroyes;
             }
-            else if (productB.mSkill == ProductSkill.Bomb)
+            else if (productB.Skill == ProductSkill.Bomb)
             {
                 Product[] destroyes = ScanAroundProducts(productA, 2);
                 DestroyProducts(destroyes);
                 return destroyes;
             }
         }
-        else if (productA.mSkill == ProductSkill.Horizontal || productA.mSkill == ProductSkill.Vertical)
+        else if (productA.Skill == ProductSkill.Horizontal || productA.Skill == ProductSkill.Vertical)
         {
             List<Product> destroyes = new List<Product>();
             Product[] rets = null;
@@ -878,7 +882,7 @@ public class InGameManager : MonoBehaviour
                 {
                     Frame frame = mFrames[x, y];
                     Product pro = frame.ChildProduct;
-                    if (pro != null && pro.mSkill != ProductSkill.Nothing && !pro.IsLocked())
+                    if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked)
                     {
                         BreakSkilledProduct(pro);
                         goto KeepLoop;
@@ -909,14 +913,14 @@ public class InGameManager : MonoBehaviour
                     continue;
 
                 Product pro = frame.ChildProduct;
-                if (pro != null && !pro.IsLocked())
+                if (pro != null && !pro.IsLocked)
                 {
                     List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
                     if (matches.Count > 0)
                     {
                         Vector3 destPos = matches[0][0].transform.position;
                         CreateLaserEffect(startPos, destPos);
-                        DestroyProducts(matches[0]);
+                        DestroyProducts(matches[0], true);
                         end = false;
                     }
                 }
@@ -944,7 +948,7 @@ public class InGameManager : MonoBehaviour
             int idxX = curIdx % CountX;
             int idxY = curIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro != null && !pro.IsLocked() && !pro.IsChocoBlock() && !pro.IsIced)
+            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
                 rets.Add(pro);
         }
         return rets.ToArray();
@@ -953,9 +957,9 @@ public class InGameManager : MonoBehaviour
     {
         DestroyProducts(new Product[2] { productA, productB });
 
-        if (productA.mSkill == ProductSkill.SameColor)
+        if (productA.Skill == ProductSkill.SameColor)
         {
-            if (productB.mSkill == ProductSkill.Horizontal || productB.mSkill == ProductSkill.Vertical)
+            if (productB.Skill == ProductSkill.Horizontal || productB.Skill == ProductSkill.Vertical)
             {
                 Product[] randomProducts = ScanRandomProducts(5);
                 foreach(Product pro in randomProducts)
@@ -965,7 +969,7 @@ public class InGameManager : MonoBehaviour
                 }
                 StartCoroutine(LoopBreakAllSkill());
             }
-            else if (productB.mSkill == ProductSkill.Bomb)
+            else if (productB.Skill == ProductSkill.Bomb)
             {
                 Product[] randomProducts = ScanRandomProducts(5);
                 foreach (Product pro in randomProducts)
@@ -975,7 +979,7 @@ public class InGameManager : MonoBehaviour
                 }
                 StartCoroutine(LoopBreakAllSkill());
             }
-            else if (productB.mSkill == ProductSkill.SameColor)
+            else if (productB.Skill == ProductSkill.SameColor)
             {
                 StartCoroutine(LoopSameColorSkill(productA.transform.position));
             }
@@ -983,12 +987,12 @@ public class InGameManager : MonoBehaviour
     }
     private void SwipeSkilledProducts(Product main, Product sub)
     {
-        if (main.mSkill == ProductSkill.SameColor)
+        if (main.Skill == ProductSkill.SameColor)
         {
             mStopDropping = false;
             BreakSameColorBoth(main, sub);
         }
-        else if (sub.mSkill == ProductSkill.SameColor)
+        else if (sub.Skill == ProductSkill.SameColor)
         {
             mStopDropping = false;
             BreakSameColorBoth(sub, main);
@@ -996,7 +1000,7 @@ public class InGameManager : MonoBehaviour
         else
         {
             Product[] destroies = null;
-            switch (sub.mSkill)
+            switch (sub.Skill)
             {
                 case ProductSkill.Horizontal:   destroies = BreakSkilledProductBoth(main, sub); break;
                 case ProductSkill.Vertical:     destroies = BreakSkilledProductBoth(main, sub); break;
@@ -1006,7 +1010,7 @@ public class InGameManager : MonoBehaviour
             List<Product> skillProducts = new List<Product>();
             foreach (Product pro in destroies)
             {
-                if (pro.mSkill != ProductSkill.Nothing)
+                if (pro.Skill != ProductSkill.Nothing)
                     skillProducts.Add(pro);
             }
 
@@ -1039,7 +1043,7 @@ public class InGameManager : MonoBehaviour
                 continue;
 
             List<Product> matches = new List<Product>();
-            pro.SearchMatchedProducts(matches, pro.mColor);
+            pro.SearchMatchedProducts(matches, pro.Color);
             if (matches.Count >= UserSetting.MatchCount)
             {
                 list.Add(matches.ToArray());
@@ -1058,7 +1062,7 @@ public class InGameManager : MonoBehaviour
             foreach (Frame sub in aroundFrames)
             {
                 Product pro = sub.ChildProduct;
-                if (pro != null && !pro.IsLocked())
+                if (pro != null && !pro.IsLocked)
                     aroundProducts[pro] = 1;
             }
         }
@@ -1227,7 +1231,7 @@ public class InGameManager : MonoBehaviour
 
             counter++;
             Product pro = frame.ChildProduct;
-            if (pro != null && pro.IsChocoBlock())
+            if (pro != null && pro.IsChocoBlock)
                 counter--;
         }
 
@@ -1250,7 +1254,7 @@ public class InGameManager : MonoBehaviour
                 if (frame.Empty)
                     continue;
                 Product pro = frame.ChildProduct;
-                if (pro == null || pro.IsChocoBlock() || pro.IsIced)
+                if (pro == null || pro.IsChocoBlock)
                     continue;
 
                 products.Add(pro);
@@ -1302,9 +1306,9 @@ public class InGameManager : MonoBehaviour
         List<Product> list = new List<Product>();
         foreach (Frame frame in mFrames)
         {
-            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked() || frame.ChildProduct.IsChocoBlock())
+            if (frame.Empty || frame.ChildProduct == null || frame.ChildProduct.IsLocked || frame.ChildProduct.IsChocoBlock)
                 continue;
-            if (frame.ChildProduct.mColor != color)
+            if (frame.ChildProduct.Color != color)
                 continue;
             list.Add(frame.ChildProduct);
         }
@@ -1330,7 +1334,7 @@ public class InGameManager : MonoBehaviour
             {
                 if (mFrames[x, y].Empty)
                     continue;
-                if (mFrames[x, y].ChildProduct == null || mFrames[x, y].ChildProduct.IsLocked())
+                if (mFrames[x, y].ChildProduct == null || mFrames[x, y].ChildProduct.IsLocked)
                     return false;
             }
         }
@@ -1356,7 +1360,6 @@ public class InGameManager : MonoBehaviour
                     mask = CreateMask(centerPos, height, maskOrder);
                     maskOrder++;
                 }
-                curFrame.SetSubTopFrame(subTopFrame);
                 curFrame.SetSpriteMask(mask);
 
                 if (curFrame.Left() == null) curFrame.ShowBorder(0);
@@ -1454,24 +1457,23 @@ public class InGameManager : MonoBehaviour
         }
 
         float vel = 0;
-        var list = obstacles.ToArray();
         while (true)
         {
             vel += 2;
-            foreach (var each in list)
+            bool isDone = true;
+            foreach (var each in obstacles)
             {
                 GameObject obstacle = each.Item1;
                 Product destProduct = each.Item2;
-                if (destProduct.IsIced)
+                if (destProduct.IsChocoBlock || obstacle == null)
                     continue;
 
+                isDone = false;
                 float deltaY = vel * Time.deltaTime;
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
-                    destProduct.SetIce(true);
-                    obstacle.transform.SetParent(destProduct.transform);
-                    obstacle.transform.localPosition = new Vector3(0, 0, -0.5f);
-                    obstacles.Remove(each);
+                    destProduct.SetChocoBlock(1);
+                    Destroy(obstacle);
                 }
                 else
                 {
@@ -1479,7 +1481,7 @@ public class InGameManager : MonoBehaviour
                 }
             }
 
-            if (obstacles.Count <= 0)
+            if (isDone)
                 break;
             else
                 yield return null;
@@ -1541,7 +1543,7 @@ public class InGameManager : MonoBehaviour
     public int NextMatchCount(Product pro, SwipeDirection dir)
     {
         Product target = pro.Dir(dir);
-        if (target == null || target.mColor == pro.mColor)
+        if (target == null || target.Color == pro.Color)
             return 0;
 
         List<Product> matches = new List<Product>();
@@ -1551,7 +1553,7 @@ public class InGameManager : MonoBehaviour
             if (each == pro)
                 continue;
 
-            each.SearchMatchedProducts(matches, pro.mColor);
+            each.SearchMatchedProducts(matches, pro.Color);
         }
         return matches.Count;
     }
@@ -1570,7 +1572,7 @@ public class InGameManager : MonoBehaviour
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro == null || pro.IsLocked())
+            if (pro == null || pro.IsLocked)
                 continue;
 
             rets[ranIdx] = pro.ParentFrame;
@@ -1585,7 +1587,7 @@ public class InGameManager : MonoBehaviour
 
         foreach(Product[] pros in nextProducts)
         {
-            SkillPair skillPair = SkillMapping[(int)pros[0].mColor];
+            SkillPair skillPair = SkillMapping[(int)pros[0].Color];
             PVPCommand skill = skillPair.Item1;
             if (skill == PVPCommand.Undef)
                 continue;
@@ -1758,7 +1760,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro != null && pro.IsChocoBlock())
+            if (pro != null && pro.IsChocoBlock)
             {
                 CreateLaserEffect(startPos, pro.ParentFrame.transform.position);
                 pro.BreakChocoBlock(100);
@@ -1780,7 +1782,7 @@ public class InGameManager : MonoBehaviour
     }
     void CreateSkillEffect(Product pro)
     {
-        switch(pro.mSkill)
+        switch(pro.Skill)
         {
             case ProductSkill.Horizontal:
                 CreateStripeEffect(pro.transform.position, false);
@@ -1909,7 +1911,7 @@ public class InGameManager : MonoBehaviour
                 {
                     ProductInfo info = body.products[i];
                     Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
-                    if (pro != null && !pro.IsLocked())
+                    if (pro != null && !pro.IsLocked)
                         products.Add(pro);
                 }
                 
@@ -1929,9 +1931,17 @@ public class InGameManager : MonoBehaviour
                     {
                         for (int idx = 0; idx < body.ArrayCount; ++idx)
                         {
+                            if (body.withLaserEffect)
+                            {
+                                if(idx == 0)
+                                    CreateLaserEffect(transform.position, products[idx].transform.position);
+                            }
+                            else
+                            {
+                                CreateSkillEffect(products[idx]);
+                            }
                             Frame parentFrame = products[idx].ParentFrame;
                             products[idx].DestroyImmediately();
-                            CreateSkillEffect(products[idx]);
                             Product newPro = CreateNewProduct(body.products[idx].color);
                             parentFrame.VertFrames.AddNewProduct(newPro);
                         }
@@ -1988,7 +1998,7 @@ public class InGameManager : MonoBehaviour
             ProductInfo info = new ProductInfo();
             info.idxX = pros[i].ParentFrame.IndexX;
             info.idxY = pros[i].ParentFrame.IndexY;
-            info.color = pros[i].mColor;
+            info.color = pros[i].Color;
             infos.Add(info);
         }
         return infos.ToArray();
@@ -2035,7 +2045,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = 1;
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].color = pro.mColor;
+        req.products[0].color = pro.Color;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
@@ -2051,10 +2061,10 @@ public class InGameManager : MonoBehaviour
         req.dir = dir;
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].color = pro.mColor;
+        req.products[0].color = pro.Color;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Destroy(ProductInfo[] pros, ProductSkill skill)
+    private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
@@ -2064,6 +2074,7 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.skill = skill;
+        req.withLaserEffect = withLaserEffect;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);

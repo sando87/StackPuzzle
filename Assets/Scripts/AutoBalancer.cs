@@ -68,12 +68,12 @@ public class AutoBalancer : MonoBehaviour
             for (int x = 0; x < mCntX; ++x)
             {
                 Product cenPro = mgr.Frame(x, fixedY).ChildProduct;
-                if (cenPro == null || cenPro.IsLocked() || cenPro.IsChocoBlock())
+                if (cenPro == null || cenPro.IsLocked || cenPro.IsChocoBlock)
                     continue;
 
                 AutoBalancerInfo info = new AutoBalancerInfo();
                 List<Product> matches = new List<Product>();
-                cenPro.SearchMatchedProducts(matches, cenPro.mColor);
+                cenPro.SearchMatchedProducts(matches, cenPro.Color);
                 if (matches.Count >= UserSetting.MatchCount)
                     continue;
 
@@ -128,11 +128,11 @@ public class AutoBalancer : MonoBehaviour
             for (int x = 0; x < mCntX; ++x)
             {
                 Product pro = mgr.Frame(x, fixedY).ChildProduct;
-                if (pro == null || pro.IsLocked())
+                if (pro == null || pro.IsLocked)
                     continue;
 
                 List<Product> matchedList = new List<Product>();
-                pro.SearchMatchedProducts(matchedList, pro.mColor);
+                pro.SearchMatchedProducts(matchedList, pro.Color);
                 if (matchedList.Count >= UserSetting.MatchCount)
                 {
                     mgr.OnClick(pro.gameObject);

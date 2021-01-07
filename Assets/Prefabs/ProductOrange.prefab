@@ -99,13 +99,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1120493df21afd648ab4b2e3009ffbe4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mBeamUpEffect: {fileID: 185082, guid: 7ba5e319299a7a540823eb3edb0d9cc9, type: 3}
+  Color: 3
   ChocoBlock: {fileID: 4026617317052118366}
-  mColor: 3
-  mSkill: 0
-  mAnimation: {fileID: -8355793636216218706}
-  IceCover: {fileID: 3433760669729593834}
-  SkillObject: {fileID: 2734885034547654197}
+  Animation: {fileID: -8355793636216218706}
   Renderer: {fileID: 8720663225260977315}
   Images:
   - {fileID: 21300000, guid: 8bbcb1844295cdd4a87527537dfbc9c5, type: 3}

@@ -6,28 +6,24 @@ using UnityEngine;
 
 public class Frame : MonoBehaviour
 {
-    private int mIndexX;
-    private int mIndexY;
     private int mCoverCount;
-    private bool mIsEmpty;
-    private Frame mSubTopFrame;
     private SpriteMask mMask;
-    private InGameManager mGameManager;
 
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
+    public SpriteRenderer CoverRenderer;
 
     public VerticalFrames VertFrames { get; set; }
-    public InGameManager GameManager { get { return mGameManager; } }
-    public bool Empty { get { return mIsEmpty; } }
-    public ProductSkill SkillBackupSpace { get; set; }
-    public int IndexX { get { return mIndexX; } }
-    public int IndexY { get { return mIndexY; } }
-    public bool IsBottom { get { return mIndexY == 0; } }
-    public bool IsTop { get { return mIndexY == GameManager.CountY - 1; } }
+    public InGameManager GameManager { get; private set; }
+    public bool Empty { get; private set; }
+    public int IndexX { get; private set; }
+    public int IndexY { get; private set; }
+    public bool IsBottom { get { return IndexY == 0; } }
+    public bool IsTop { get { return IndexY == GameManager.CountY - 1; } }
     public Product ChildProduct { get; set; }
-    public SpriteRenderer CoverRenderer;
-    public Func<int, int, Frame> GetFrame;
+    public int MaskLayerOrder { get { return mMask.backSortingOrder; } }
+    public bool IsCovered { get { return mCoverCount > 0; } }
+
     public Action EventBreakCover;
 
     // Start is called before the first frame update
@@ -43,29 +39,25 @@ public class Frame : MonoBehaviour
 
     public void Initialize(InGameManager mgr, int idxX, int idxY, int coverCount)
     {
-        mGameManager = mgr;
-        mIndexX = idxX;
-        mIndexY = idxY;
+        GameManager = mgr;
+        IndexX = idxX;
+        IndexY = idxY;
 
         if (coverCount < 0)
         {
-            mIsEmpty = true;
+            Empty = true;
             mCoverCount = 0;
             CoverRenderer.sprite = Covers[0];
             gameObject.SetActive(false);
         }
         else
         {
-            mIsEmpty = false;
+            Empty = false;
             mCoverCount = coverCount;
             CoverRenderer.sprite = Covers[mCoverCount];
         }
     }
 
-    public void SetSubTopFrame(Frame subTopFrame)
-    {
-        mSubTopFrame = subTopFrame;
-    }
     public void SetSpriteMask(SpriteMask mask)
     {
         mMask = mask;
@@ -76,7 +68,6 @@ public class Frame : MonoBehaviour
         Borders[pos].enabled = true;
     }
 
-    public int MaskLayerOrder { get { return mMask.backSortingOrder; } }
 
     public void BreakCover(int combo)
     {
@@ -87,26 +78,22 @@ public class Frame : MonoBehaviour
         if (mCoverCount == 0 && backCount > 0)
             EventBreakCover?.Invoke();
     }
-    public bool IsCovered()
-    {
-        return mCoverCount > 0;
-    }
 
     public Frame Left()
     {
-        return mIndexX > 0 ? mGameManager.Frame(mIndexX - 1, mIndexY) : null;
+        return IndexX > 0 ? GameManager.Frame(IndexX - 1, IndexY) : null;
     }
     public Frame Right()
     {
-        return mIndexX < mGameManager.CountX - 1 ? mGameManager.Frame(mIndexX + 1, mIndexY) : null;
+        return IndexX < GameManager.CountX - 1 ? GameManager.Frame(IndexX + 1, IndexY) : null;
     }
     public Frame Down()
     {
-        return mIndexY > 0 ? mGameManager.Frame(mIndexX, mIndexY - 1) : null;
+        return IndexY > 0 ? GameManager.Frame(IndexX, IndexY - 1) : null;
     }
     public Frame Up()
     {
-        return mIndexY < mGameManager.CountY - 1 ? mGameManager.Frame(mIndexX, mIndexY + 1) : null;
+        return IndexY < GameManager.CountY - 1 ? GameManager.Frame(IndexX, IndexY + 1) : null;
     }
     public Frame[] GetAroundFrames()
     {

@@ -5,18 +5,9 @@ using UnityEngine;
 
 public class Product : MonoBehaviour
 {
-    private bool mLocked = false;
-    private Frame mParentFrame = null;
-
-    public GameObject mBeamUpEffect;
+    public ProductColor Color;
     public GameObject ChocoBlock;
-    public ProductColor mColor;
-    public ProductSkill mSkill;
-    public Animation mAnimation;
-
-    public GameObject IceCover;
-    public GameObject SkillObject;
-
+    public Animation Animation;
     public SpriteRenderer Renderer;
     public Sprite[] Images;
     public Sprite[] Chocos;
@@ -27,44 +18,36 @@ public class Product : MonoBehaviour
     public Sprite ImgCombo;
     public GameObject ComboNumPrefab;
 
-    public Product Dir(SwipeDirection dir)
-    {
-        switch(dir)
-        {
-            case SwipeDirection.LEFT: return Left();
-            case SwipeDirection.RIGHT: return Right();
-            case SwipeDirection.UP: return Up();
-            case SwipeDirection.DOWN: return Down();
-        }
-        return null;
-    }
     public Action EventUnWrapChoco;
 
+    public Frame ParentFrame { get; private set; }
+    public ProductSkill Skill { get; private set; }
     public float DropSpeed { get; set; }
     public float Weight { get; set; }
-    public int Combo { get; set; }
+    public int Combo { get; private set; }
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; set; }
-    public bool IsLocked() { return mLocked || IsDestroying || IsMerging || IsMoving || IsDropping; }
-    public Frame ParentFrame { get { return mParentFrame; } }
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
+    public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
+
     public void AttachTo(Frame parentFrame)
     {
         parentFrame.ChildProduct = this;
-        mParentFrame = parentFrame;
+        ParentFrame = parentFrame;
         transform.SetParent(parentFrame.transform);
     }
     public Frame Detach()
     {
-        if (mParentFrame == null)
+        if (ParentFrame == null)
             return null;
 
-        Frame frame = mParentFrame;
+        Frame frame = ParentFrame;
         frame.ChildProduct = null;
         InGameManager mgr = frame.GameManager;
         transform.SetParent(mgr.transform);
-        mParentFrame = null;
+        ParentFrame = null;
         return frame;
     }
     public void SkillMerge(Product targetProduct, Action EventMergeEnd)
@@ -82,126 +65,11 @@ public class Product : MonoBehaviour
         AttachTo(targetFrame);
         targetProduct.AttachTo(myFrame);
 
-        mAnimation.Play("swap");
-        targetProduct.mAnimation.Play("swap");
+        Animation.Play("swap");
+        targetProduct.Animation.Play("swap");
 
         targetProduct.StartCoroutine(targetProduct.AnimateMove(myFrame.transform.position, 0.3f, null));
         StartCoroutine(AnimateMove(targetFrame.transform.position, 0.3f, EventSwipeEnd));
-    }
-    public void Drop(Action EventEndDrop)
-    {
-        if (IsDropping)
-            return;
-
-        Detach();
-        StartCoroutine(AnimateDrop(EventEndDrop));
-    }
-    public void Drop(Product underProduct, Action EventEndDrop)
-    {
-        if (IsDropping)
-            return;
-
-        Detach();
-        Vector3 newPos = underProduct.transform.position + new Vector3(0, InGameManager.InstCurrent.GridSize, 0);
-        transform.position = newPos;
-        StartCoroutine(AnimateDrop(underProduct, EventEndDrop));
-    }
-    private IEnumerator AnimateDrop(Action EventEndDrop)
-    {
-        IsDropping = true;
-        float time = 0;
-        Vector3 vel = new Vector3(0, 1.5f, 0);
-        Vector3 nextPos = Vector3.zero;
-        InGameManager mgr = InGameManager.InstCurrent;
-
-        while (true)
-        {
-            Vector3 delta = vel * time;
-            delta.y = Math.Min(delta.y, mgr.GridSize * 0.5f);
-            nextPos = transform.position - delta;
-
-            Frame footFrame = mgr.FrameOfWorldPos(nextPos.x, nextPos.y - mgr.GridSize * 0.5f - 0.01f);
-
-            if (footFrame == null) //In case of crashed with bottom
-            {
-                Frame frame = mgr.FrameOfWorldPos(nextPos.x, nextPos.y);
-                AttachTo(frame);
-                transform.localPosition = new Vector3(0, 0, -1);
-                break;
-            }
-            else if (footFrame.ChildProduct != null) //In case of crashed with under product
-            {
-                Frame frame = footFrame.Up();
-                if (frame == null) //on the top product
-                {
-                    yield return null;
-                }
-                else
-                {
-                    AttachTo(frame);
-                    transform.localPosition = new Vector3(0, 0, -1);
-                    break;
-                }
-            }
-            else //keep dropping..
-            {
-                transform.position = nextPos;
-                time += Time.deltaTime;
-                yield return null;
-            }
-        }
-
-        IsDropping = false;
-        EventEndDrop?.Invoke();
-    }
-    private IEnumerator AnimateDrop(Product underProduct, Action EventEndDrop)
-    {
-        IsDropping = true;
-        float time = 0;
-        Vector3 vel = new Vector3(0, 1.5f, 0);
-        Vector3 nextPos = Vector3.zero;
-        InGameManager mgr = InGameManager.InstCurrent;
-
-        while (true)
-        {
-            Vector3 delta = vel * time;
-            delta.y = Math.Min(delta.y, mgr.GridSize * 0.5f);
-            nextPos = transform.position - delta;
-            
-            float myMin = nextPos.y - mgr.GridSize * 0.5f;
-            float underMax = underProduct.transform.position.y + mgr.GridSize * 0.5f;
-
-            if (myMin < underMax) //대상 블록과 충돌시
-            {
-                if (underProduct.ParentFrame == null) //다음 블록과 충돌을 했지만 다음 블록이 아직 멈추지 않은 상태(속도가 위에것이 더 빨리 떨어지는 경우)
-                {
-                    yield return null;
-                }
-                else
-                {
-                    Frame frame = underProduct.ParentFrame.Up();
-                    if (frame == null)
-                    {
-                        yield return null;
-                    }
-                    else
-                    {
-                        AttachTo(frame);
-                        transform.localPosition = new Vector3(0, 0, -1);
-                        break;
-                    }
-                }
-            }
-            else //대상 블록과 비충돌시
-            {
-                transform.position = nextPos;
-                time += Time.deltaTime;
-                yield return null;
-            }
-        }
-
-        IsDropping = false;
-        EventEndDrop?.Invoke();
     }
     public bool ReadyForMerge(int combo)
     {
@@ -226,32 +94,6 @@ public class Product : MonoBehaviour
                 Destroy(gameObject);
             }));
         }
-    }
-    public void StartMergeTo(Product destProduct, float duration)
-    {
-        IsMerging = true;
-        CreateComboTextEffect();
-
-        StartCoroutine(AnimateFlash(1.3f));
-
-        StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
-            Detach();
-            StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
-                Destroy(gameObject);
-            }));
-
-        }));
-    }
-    public void StartToChangeSkilledProduct(float duration, ProductSkill skill)
-    {
-        mSkill = skill;
-
-        CreateComboTextEffect();
-        StartCoroutine(AnimateFlash(1.3f));
-
-        StartCoroutine(UnityUtils.CallAfterSeconds(duration, () => {
-            ChangeProductImage(skill);
-        }));
     }
     public bool ReadyForDestroy(int combo)
     {
@@ -278,32 +120,19 @@ public class Product : MonoBehaviour
 
         return parent;
     }
-    public Frame StartDestroy(float flashIntesity, float delay, int combo)
+    public Product Dir(SwipeDirection dir)
     {
-        if (IsDestroying)
-            return null;
-
-        Combo = combo;
-        IsDestroying = true;
-        CreateComboTextEffect();
-
-        if(flashIntesity > 0)
-            StartCoroutine(AnimateFlash(flashIntesity));
-
-        StartCoroutine(UnityUtils.CallAfterSeconds(delay, () => {
-
-            Frame prvFrame = Detach();
-            UnWrapChocoBlocksAroundFrame(prvFrame, Combo);
-            prvFrame.BreakCover(Combo);
-
-            StartCoroutine(AnimateDestroy());
-        }));
-        return ParentFrame;
+        switch (dir)
+        {
+            case SwipeDirection.LEFT: return Left();
+            case SwipeDirection.RIGHT: return Right();
+            case SwipeDirection.UP: return Up();
+            case SwipeDirection.DOWN: return Down();
+        }
+        return null;
     }
-    public void StartFlash(float flashIntesity)
-    {
-        StartCoroutine(AnimateFlash(flashIntesity));
-    }
+
+
     IEnumerator AnimateMoveTo(Product destProduct, float duration, Action EventMoveEnd)
     {
         IsMoving = true;
@@ -355,45 +184,9 @@ public class Product : MonoBehaviour
         }
         Destroy(gameObject);
     }
-
-
-
-    IEnumerator AnimateDrop(float duration)
-    {
-        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-        Renderer.sortingOrder = ParentFrame.MaskLayerOrder;
-        
-        //블럭이 떨어져야 하는 높이에 따라 다르게 delay를 줘서 떨어져야 한다.
-        //채공시간은 0.6초, 착지순간은 모두 동일하게 수학적으로 계산한다.
-        float totalTime = duration;
-        float totalHeight = UserSetting.GridSize * 8; //totalTime 동안 떨어지는 블럭 높이(즉 속도조절값)
-        float a = totalHeight / (totalTime * totalTime);
-        Vector3 startPos = transform.position;
-        Vector3 endPos = ParentFrame.transform.position;
-        float delay = totalTime - Mathf.Sqrt((startPos.y - endPos.y) / a);
-        endPos.z = startPos.z;
-        float time = 0;
-        while (time < totalTime)
-        {
-            float x = time - delay;
-            x = x < 0 ? 0 : x;
-            float y = a * x * x;
-            Vector3 curPos = startPos;
-            curPos.y -= y;
-            transform.position = curPos;
-            time += Time.deltaTime;
-            yield return null;
-        }
-        transform.position = endPos;
-
-        mLocked = false;
-
-        Renderer.sortingLayerName = "Default";
-        Renderer.maskInteraction = SpriteMaskInteraction.None;
-    }
     IEnumerator AnimateFlash(float intensity)
     {
-        mAnimation.Play("spitout");
+        Animation.Play("spitout");
         float halfTime = 0.12f;
         float k = -intensity / (halfTime * halfTime);
         float t = 0;
@@ -431,7 +224,7 @@ public class Product : MonoBehaviour
 
     #region Support Functions
 
-    void CreateComboTextEffect()
+    public void CreateComboTextEffect()
     {
         if (Combo <= 0)
             return;
@@ -445,10 +238,9 @@ public class Product : MonoBehaviour
             Destroy(obj);
         }));
     }
-
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (mLocked || mColor != color || IsChocoBlock() || mSkill != ProductSkill.Nothing || IsIced)
+        if (Color != color || IsChocoBlock || Skill != ProductSkill.Nothing)
             return;
 
         if (products.Contains(this))
@@ -521,33 +313,10 @@ public class Product : MonoBehaviour
         }
         return products.ToArray();
     }
-    List<Frame> GetEmptyDownFrames()
-    {
-        List<Frame> emptyFrames = new List<Frame>();
-        Frame curFrame = ParentFrame.Down();
-        while (curFrame != null && curFrame.ChildProduct == null)
-        {
-            emptyFrames.Add(curFrame);
-            curFrame = curFrame.Down();
-        }
-        return emptyFrames;
-    }
-    List<Frame> GetIdleUpFrames()
-    {
-        List<Frame> idleFrames = new List<Frame>();
-        idleFrames.Add(ParentFrame);
-        Frame curFrame = ParentFrame.Up();
-        while (curFrame != null && curFrame.ChildProduct != null && !curFrame.ChildProduct.IsLocked())
-        {
-            idleFrames.Add(curFrame);
-            curFrame = curFrame.Up();
-        }
-        return idleFrames;
-    }
     public void ChangeProductImage(ProductSkill skill)
     {
-        mAnimation.Play("swap");
-        mSkill = skill;
+        Animation.Play("swap");
+        Skill = skill;
         switch (skill)
         {
             case ProductSkill.Horizontal:   Renderer.sprite = ImgHorizontal; break;
@@ -557,6 +326,7 @@ public class Product : MonoBehaviour
             default: break;
         }
     }
+
     public bool BreakChocoBlock(int combo)
     {
         if (ChocoBlock.tag == "off")
@@ -578,12 +348,7 @@ public class Product : MonoBehaviour
     IEnumerator AnimBreakChoco()
     {
         yield return new WaitForSeconds(0.2f);
-        mAnimation.Play("swap");
-    }
-    public void ChangeColor(ProductColor color)
-    {
-        mColor = color;
-        mAnimation.Play("swap");
+        Animation.Play("swap");
     }
     public void SetChocoBlock(int level, bool anim = false)
     {
@@ -606,20 +371,12 @@ public class Product : MonoBehaviour
         }
             
     }
-    public bool IsChocoBlock()
-    {
-        return ChocoBlock.tag == "on";
-    }
     public void UnWrapChocoBlocksAroundFrame(Frame frame, int combo)
     {
         Product[] around = GetAroundProducts(frame);
         foreach(Product pro in around)
             pro.BreakChocoBlock(combo);
     }
-    public bool IsIced { get { return IceCover.activeSelf; } }
-    public void SetIce(bool ice)
-    {
-        IceCover.SetActive(ice);
-    }
+
     #endregion
 }
