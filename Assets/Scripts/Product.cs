@@ -120,11 +120,11 @@ public class Product : MonoBehaviour
             delta.y = Math.Min(delta.y, mgr.GridSize * 0.5f);
             nextPos = transform.position - delta;
 
-            Frame footFrame = mgr.GetFrame(nextPos.x, nextPos.y - mgr.GridSize * 0.5f - 0.01f);
+            Frame footFrame = mgr.FrameOfWorldPos(nextPos.x, nextPos.y - mgr.GridSize * 0.5f - 0.01f);
 
             if (footFrame == null) //In case of crashed with bottom
             {
-                Frame frame = mgr.GetFrame(nextPos.x, nextPos.y);
+                Frame frame = mgr.FrameOfWorldPos(nextPos.x, nextPos.y);
                 AttachTo(frame);
                 transform.localPosition = new Vector3(0, 0, -1);
                 break;

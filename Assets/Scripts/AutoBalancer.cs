@@ -67,11 +67,7 @@ public class AutoBalancer : MonoBehaviour
             int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Frame frame = mgr.GetFrame(x, fixedY);
-                if (frame == null)
-                    continue;
-
-                Product cenPro = frame.ChildProduct;
+                Product cenPro = mgr.Frame(x, fixedY).ChildProduct;
                 if (cenPro == null || cenPro.IsLocked() || cenPro.IsChocoBlock())
                     continue;
 
@@ -131,7 +127,7 @@ public class AutoBalancer : MonoBehaviour
             int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Product pro = mgr.GetFrame(x, fixedY).ChildProduct;
+                Product pro = mgr.Frame(x, fixedY).ChildProduct;
                 if (pro == null || pro.IsLocked())
                     continue;
 
