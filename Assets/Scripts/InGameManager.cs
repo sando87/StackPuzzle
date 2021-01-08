@@ -124,6 +124,7 @@ public class InGameManager : MonoBehaviour
     private UserInfo mUserInfo = null;
     private bool mIsFinished = false;
     private bool mStopDropping = false;
+    private bool mStopUserInput = false;
     private bool mIsDropping = false;
     private bool mIsSwipping = false;
     private bool mIsFlushing = false;
@@ -160,7 +161,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mIsFinished && !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing; } }
+    public bool IsIdle { get { return !mIsFinished && !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mStopUserInput; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
@@ -377,9 +378,10 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
-            mStopDropping = true;
+            mStopUserInput = true;
             CreateMergeEffect(product, targetProduct);
             product.SkillMerge(targetProduct, () => {
+                mStopUserInput = false;
                 SwipeSkilledProducts(product, targetProduct);
             });
         }
@@ -767,12 +769,10 @@ public class InGameManager : MonoBehaviour
     {
         if (main.Skill == ProductSkill.SameColor)
         {
-            mStopDropping = false;
             DestroySameColorBoth(main, sub);
         }
         else if (sub.Skill == ProductSkill.SameColor)
         {
-            mStopDropping = false;
             DestroySameColorBoth(sub, main);
         }
         else
@@ -946,6 +946,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator LoopBreakAllSkill()
     {
+        mStopUserInput = true;
         while (true)
         {
             for(int y = CountY - 1; y >= 0; --y)
@@ -967,9 +968,11 @@ public class InGameManager : MonoBehaviour
         KeepLoop:
             yield return new WaitForSeconds(0.4f);
         }
+        mStopUserInput = false;
     }
     IEnumerator LoopSameColorSkill(Vector3 startPos)
     {
+        mStopUserInput = true;
         while (true)
         {
             if (mIsDropping)
@@ -1003,6 +1006,7 @@ public class InGameManager : MonoBehaviour
             else
                 yield return new WaitForSeconds(0.3f);
         }
+        mStopUserInput = false;
     }
 
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
@@ -1521,6 +1525,7 @@ public class InGameManager : MonoBehaviour
         mIsFinished = false;
         mIsDropping = false;
         mStopDropping = false;
+        mStopUserInput = false;
         mIsSwipping = false;
         mIsFlushing = false;
 
@@ -1904,8 +1909,15 @@ public class InGameManager : MonoBehaviour
             else if (body.cmd == PVPCommand.Swipe)
             {
                 Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
-                OnSwipe(pro.gameObject, body.dir);
-                mNetMessages.RemoveFirst();
+                if(pro != null && !pro.IsLocked)
+                {
+                    Product target = pro.Dir(body.dir);
+                    if(target != null && !target.IsLocked)
+                    {
+                        OnSwipe(pro.gameObject, body.dir);
+                        mNetMessages.RemoveFirst();
+                    }
+                }
             }
             else if (body.cmd == PVPCommand.Destroy)
             {

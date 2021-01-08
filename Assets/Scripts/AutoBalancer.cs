@@ -131,13 +131,32 @@ public class AutoBalancer : MonoBehaviour
                 if (pro == null || pro.IsLocked)
                     continue;
 
-                List<Product> matchedList = new List<Product>();
-                pro.SearchMatchedProducts(matchedList, pro.Color);
-                if (matchedList.Count >= UserSetting.MatchCount)
+                if(pro.Skill != ProductSkill.Nothing)
                 {
-                    mgr.OnClick(pro.gameObject);
+                    if (pro.Left() != null && pro.Left().Skill != ProductSkill.Nothing)
+                        mgr.OnSwipe(pro.gameObject, SwipeDirection.LEFT);
+                    else if (pro.Right() != null && pro.Right().Skill != ProductSkill.Nothing)
+                        mgr.OnSwipe(pro.gameObject, SwipeDirection.RIGHT);
+                    else if (pro.Up() != null && pro.Up().Skill != ProductSkill.Nothing)
+                        mgr.OnSwipe(pro.gameObject, SwipeDirection.UP);
+                    else if (pro.Down() != null && pro.Down().Skill != ProductSkill.Nothing)
+                        mgr.OnSwipe(pro.gameObject, SwipeDirection.DOWN);
+                    else
+                        mgr.OnClick(pro.gameObject);
+
                     return;
                 }
+                else
+                {
+                    List<Product> matchedList = new List<Product>();
+                    pro.SearchMatchedProducts(matchedList, pro.Color);
+                    if (matchedList.Count >= UserSetting.MatchCount)
+                    {
+                        mgr.OnClick(pro.gameObject);
+                        return;
+                    }
+                }
+
             }
         }
     }
