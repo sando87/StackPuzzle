@@ -9,7 +9,7 @@ public enum NetCMD
 }
 public enum PVPCommand
 {
-    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, Drop,
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, Drop, ChangeSkill,
     SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
 }
 public enum ProductColor
@@ -153,9 +153,10 @@ public class UserInfo
 public struct ProductInfo
 {
     public ProductColor color;
+    public ProductSkill skill;
     public int idxX;
     public int idxY;
-    public ProductInfo(ProductColor color, int idxX, int idxY) { this.color = color; this.idxX = idxX; this.idxY = idxY; }
+    public ProductInfo(ProductColor color, ProductSkill skill, int idxX, int idxY) { this.color = color; this.skill = skill; this.idxX = idxX; this.idxY = idxY; }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
