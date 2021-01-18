@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class MenuBattle : MonoBehaviour
 {
     private static MenuBattle mInst = null;
-    private const string UIObjName = "MenuBattle";
+    private const string UIObjName = "UISpace/CanvasPanel/PVP";
     private const int mScorePerBar = 300;
 
     public Image ScoreBar1;
@@ -43,7 +43,7 @@ public class MenuBattle : MonoBehaviour
     public static MenuBattle Inst()
     {
         if (mInst == null)
-            mInst = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.GetComponent<MenuBattle>();
+            mInst = GameObject.Find(UIObjName).GetComponent<MenuBattle>();
         return mInst;
     }
 

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuStages : MonoBehaviour
 {
-    private const string UIObjName = "MenuStages";
+    private const string UIObjName = "UISpace/CanvasPanel/Stages";
     private static MenuStages mInst = null;
 
     public Text HeartTimer;
@@ -27,7 +27,7 @@ public class MenuStages : MonoBehaviour
         get
         {
             if (mInst == null)
-                mInst = GameObject.Find("UIGroup").transform.Find(UIObjName).GetComponent<MenuStages>();
+                mInst = GameObject.Find(UIObjName).GetComponent<MenuStages>();
             return mInst;
         }
     }
@@ -36,8 +36,8 @@ public class MenuStages : MonoBehaviour
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
 
         Inst.gameObject.SetActive(true);
-        Inst.StopCoroutine("UpdateHeartTimer");
-        Inst.StartCoroutine("UpdateHeartTimer");
+        //Inst.StopCoroutine("UpdateHeartTimer");
+        //Inst.StartCoroutine("UpdateHeartTimer");
 
         if(UserSetting.IsBotPlayer)
             Inst.StartCoroutine(Inst.AutoStartNextStage());

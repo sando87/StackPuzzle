@@ -8,7 +8,7 @@ using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 
 public class MenuWaitMatch : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuWaitMatch";
+    private const string UIObjName = "UISpace/CanvasPopup/SearchBattle";
     private bool mIsSearching = false;
     private ProductColor mCurrentProductColor = ProductColor.None;
 
@@ -31,7 +31,7 @@ public class MenuWaitMatch : MonoBehaviour
 
     public static void PopUp(bool autoPlay = false)
     {
-        GameObject menuMatch = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
         menu.ResetMatchUI();

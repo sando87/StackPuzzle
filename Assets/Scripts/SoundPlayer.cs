@@ -4,7 +4,16 @@ using UnityEngine;
 
 public class SoundPlayer : MonoBehaviour
 {
-    static public SoundPlayer Inst = null;
+    static private SoundPlayer mInst = null;
+    static public SoundPlayer Inst
+    {
+        get
+        {
+            if(mInst == null)
+                mInst = GameObject.Find("SoundPlayer").GetComponent<SoundPlayer>();
+            return mInst;
+        }
+    }
     public AudioSource Player;
 
     public AudioClip BackMusicMap;
@@ -24,7 +33,6 @@ public class SoundPlayer : MonoBehaviour
 
     private void Awake()
     {
-        Inst = this;
         Player.mute = UserSetting.Mute;
     }
 

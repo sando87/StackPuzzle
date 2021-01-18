@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 public class MenuInGame : MonoBehaviour
 {
     private static MenuInGame mInst = null;
-    private const string UIObjName = "MenuInGame";
+    private const string UIObjName = "UISpace/CanvasPanel/InGame";
     private StageInfo mStageInfo;
     private int mAddedScore;
     private int mCurrentScore;
@@ -140,7 +140,7 @@ public class MenuInGame : MonoBehaviour
     public static MenuInGame Inst()
     {
         if(mInst == null)
-            mInst = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject.GetComponent<MenuInGame>();
+            mInst = GameObject.Find(UIObjName).GetComponent<MenuInGame>();
         return mInst;
     }
     public static void PopUp(StageInfo info)

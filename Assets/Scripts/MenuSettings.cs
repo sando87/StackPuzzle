@@ -5,14 +5,14 @@ using UnityEngine.UI;
 
 public class MenuSettings : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuSettings";
+    private const string UIObjName = "UISpace/CanvasPopup/Settings";
     private int mTouchCount = 0;
 
     public Image SoundOFF;
 
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
         objMenu.GetComponent<MenuSettings>().SoundOFF.gameObject.SetActive(UserSetting.Mute);
     }

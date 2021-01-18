@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuComplete : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuComplete";
+    private const string UIObjName = "UISpace/CanvasPopup/Play_Result";
 
     public Image Star1;
     public Image Star2;
@@ -15,7 +15,7 @@ public class MenuComplete : MonoBehaviour
 
     public static void PopUp(int level, int starCount, int score)
     {
-        GameObject menuComp = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject menuComp = GameObject.Find(UIObjName);
 
         MenuComplete menu = menuComp.GetComponent<MenuComplete>();
         menu.Star1.gameObject.SetActive(starCount >= 1);

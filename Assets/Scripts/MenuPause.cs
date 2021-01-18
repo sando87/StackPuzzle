@@ -5,18 +5,18 @@ using UnityEngine.UI;
 
 public class MenuPause : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuPause";
+    private const string UIObjName = "UISpace/CanvasPopup/Play_Pause";
 
     public GameObject GameField;
 
     public static void PopUp()
     {
-        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject menuPlay = GameObject.Find(UIObjName);
         menuPlay.SetActive(true);
     }
     public static bool IsPopped()
     {
-        GameObject menuPlay = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject menuPlay = GameObject.Find(UIObjName);
         return menuPlay.activeSelf;
     }
 

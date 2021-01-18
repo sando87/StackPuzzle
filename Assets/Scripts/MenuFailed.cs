@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuFailed : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuFailed";
+    private const string UIObjName = "UISpace/CanvasPopup/Play_Continue";
 
     public Text Score;
     public Text TargetScore;
@@ -14,7 +14,7 @@ public class MenuFailed : MonoBehaviour
 
     public static void PopUp(int level, int target, Sprite targetImg, int score)
     {
-        GameObject menuFailed = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject menuFailed = GameObject.Find(UIObjName).gameObject;
 
         MenuFailed menu = menuFailed.GetComponent<MenuFailed>();
         menu.Score.text = score.ToString();
