@@ -97,6 +97,8 @@ public class InGameManager : MonoBehaviour
     private const float intervalDrop = 0.1f;
     private const float durationMerge = intervalMatch + intervalDrop;
 
+    public Sprite[] BackgroundImages;
+    public SpriteRenderer BackgroundSprite;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
@@ -226,6 +228,14 @@ public class InGameManager : MonoBehaviour
         mStageInfo = info;
         mUserInfo = userInfo;
         mStartTime = DateTime.Now;
+
+        int stageCountPerTheme = 20;
+        int themeCount = 9;
+        int backImgIdx = (mStageInfo.Num % (stageCountPerTheme * themeCount)) / stageCountPerTheme;
+        backImgIdx = Math.Min(backImgIdx, BackgroundImages.Length - 1);
+        BackgroundSprite.sprite = BackgroundImages[backImgIdx];
+        float scale = Camera.main.orthographicSize / 10.24f; //10.24f는 배경 이미지 height의 절반
+        BackgroundSprite.transform.localScale = new Vector3(scale, scale, 1);
 
         if (FieldType == GameFieldType.Stage)
         {

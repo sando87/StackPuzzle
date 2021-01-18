@@ -5,30 +5,20 @@ using UnityEngine.EventSystems;
 
 public class DragStageMap : MonoBehaviour
 {
+    public float MaxY = 1000;
+    public float MinY = -10;
+
+    private Vector3 mCameraDownPos;
+    private Vector3 mMouseDownPos;
+
     private Vector3 defaultPosision = new Vector3(0, 0, -10);
-    private Vector2 _prevPosition;
-    private Transform _transform;
 
-    private Vector2 firstV;
-    private Vector2 deltaV;
-    private float currentTime;
-    private float speed;
-    private bool touched;
-
-    public Camera Camera;
-    public Bounds Bounds;
+    public float CameraMinY { get { return transform.position.y - Camera.main.orthographicSize; } }
+    public float CameraMaxY { get { return transform.position.y + Camera.main.orthographicSize; } }
 
     public void Awake()
     {
-        _transform = transform;
-        currentTime = 0;
-        speed = 0;
-        SetCameraWidth(8.0f);
-    }
-
-    public void OnDrawGizmos()
-    {
-        Gizmos.DrawWireCube(Bounds.center, Bounds.size);
+        SetCameraWidth(7.68f);
     }
 
     public void Update()
@@ -40,6 +30,7 @@ public class DragStageMap : MonoBehaviour
 #else
             HandleMouseInput();
 #endif
+            LimitCamera();
         }
         else
         {
@@ -50,13 +41,7 @@ public class DragStageMap : MonoBehaviour
     public void SetCameraWidth(float worldWidth)
     {
         float aspect = (float)Screen.height / Screen.width;
-        Camera.orthographicSize = aspect * worldWidth * 0.5f;
-    }
-
-    void LateUpdate()
-    {
-        if (MenuStages.Inst.gameObject.activeSelf)
-            SetPosition(transform.position);
+        Camera.main.orthographicSize = aspect * worldWidth * 0.5f;
     }
 
     private void HandleTouchInput()
@@ -66,88 +51,55 @@ public class DragStageMap : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             if (touch.phase == TouchPhase.Began)
             {
-                touched = true;
-                deltaV = Vector2.zero;
-                _prevPosition = touch.position;
-                firstV = _prevPosition;
-                currentTime = Time.time;
+                mCameraDownPos = transform.position;
+                mMouseDownPos = Input.mousePosition;
             }
             else if (touch.phase == TouchPhase.Moved)
             {
-                Vector2 curPosition = touch.position;
-                MoveCamera(_prevPosition, curPosition);
-                deltaV = _prevPosition - curPosition;
-                _prevPosition = curPosition;
+                float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
+                transform.position = mCameraDownPos + new Vector3(0, dy, 0);
             }
             else if (touch.phase == TouchPhase.Ended)
             {
-                touched = false;
+                mCameraDownPos = Vector3.zero;
+                mMouseDownPos = Vector3.zero;
             }
         }
-        else if (!touched)
-        {
-            deltaV -= deltaV * Time.deltaTime * 10;
-            transform.Translate(deltaV.x / 30, deltaV.y / 30, 0);
-        }
-
     }
 
     private void HandleMouseInput()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            deltaV = Vector2.zero;
-            _prevPosition = Input.mousePosition;
-            firstV = _prevPosition;
-            currentTime = Time.time;
+            mCameraDownPos = transform.position;
+            mMouseDownPos = Input.mousePosition;
         }
-
         else if (Input.GetMouseButton(0))
         {
-            Vector2 curMousePosition = Input.mousePosition;
-            MoveCamera(_prevPosition, curMousePosition);
-            deltaV = _prevPosition - curMousePosition;
-
-            _prevPosition = curMousePosition;
-            speed = Time.time;
+            float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
+            transform.position = mCameraDownPos + new Vector3(0, dy, 0);
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            speed = (Time.time - currentTime);
-            Vector3 diffV = (transform.position - (Vector3)deltaV);
-            Vector3 destination = (transform.position - diffV / 20);
+            mCameraDownPos = Vector3.zero;
+            mMouseDownPos = Vector3.zero;
         }
-        else
+    }
+
+
+    private void LimitCamera()
+    {
+        if(CameraMinY < MinY)
         {
-            deltaV -= deltaV * Time.deltaTime * 10;
-            transform.Translate(deltaV.x / 30, deltaV.y / 30, 0);
+            Vector3 tmpPos = transform.position;
+            tmpPos.y = MinY + Camera.main.orthographicSize;
+            transform.position = tmpPos;
         }
-
-    }
-    private void MoveCamera(Vector2 prevPosition, Vector2 curPosition)
-    {
-        if (EventSystem.current.IsPointerOverGameObject(-1))
-            return;
-        SetPosition(
-            transform.localPosition +
-            (Camera.ScreenToWorldPoint(prevPosition) - Camera.ScreenToWorldPoint(curPosition)));
-    }
-
-    public void SetPosition(Vector2 position)
-    {
-        Vector2 validatedPosition = ApplyBounds(position);
-        _transform = transform;
-        _transform.position = new Vector3(validatedPosition.x, validatedPosition.y, _transform.position.z);
-    }
-
-    private Vector2 ApplyBounds(Vector2 position)
-    {
-        float cameraHeight = Camera.orthographicSize * 2f;
-        float cameraWidth = (Screen.width * 1f / Screen.height) * cameraHeight;
-        position.x = Mathf.Max(position.x, Bounds.min.x + cameraWidth / 2f);
-        position.y = Mathf.Max(position.y, Bounds.min.y + cameraHeight / 2f);
-        position.x = Mathf.Min(position.x, Bounds.max.x - cameraWidth / 2f);
-        position.y = Mathf.Min(position.y, Bounds.max.y - cameraHeight / 2f);
-        return position;
+        else if(CameraMaxY > MaxY)
+        {
+            Vector3 tmpPos = transform.position;
+            tmpPos.y = MaxY - Camera.main.orthographicSize;
+            transform.position = tmpPos;
+        }
     }
 }
