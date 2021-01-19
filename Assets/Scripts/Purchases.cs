@@ -10,9 +10,22 @@ public class PurchaseInfo
     public int maxHeart;
     public int countHeart;
     public long useTimeTick;
+    public int countGold;
     public int countDiamond;
-    public int[] countItem = new int[4];
     public bool infiniteHeart;
+    public int[] countItem = new int[16];
+    public PurchaseInfo()
+    {
+        maxHeart = 20;
+        countHeart = 20;
+        useTimeTick = DateTime.Now.Ticks;
+        countGold = 200;
+        countDiamond = 10;
+        infiniteHeart = false;
+
+        for (int i = 0; i < countItem.Length; ++i)
+            countItem[i] = 0;
+    }
     public byte[] Serialize()
     {
         List<byte> bytes = new List<byte>();
@@ -20,12 +33,13 @@ public class PurchaseInfo
         bytes.AddRange(BitConverter.GetBytes(maxHeart));
         bytes.AddRange(BitConverter.GetBytes(countHeart));
         bytes.AddRange(BitConverter.GetBytes(useTimeTick));
+        bytes.AddRange(BitConverter.GetBytes(countGold));
         bytes.AddRange(BitConverter.GetBytes(countDiamond));
-        bytes.AddRange(BitConverter.GetBytes(countItem[0]));
-        bytes.AddRange(BitConverter.GetBytes(countItem[1]));
-        bytes.AddRange(BitConverter.GetBytes(countItem[2]));
-        bytes.AddRange(BitConverter.GetBytes(countItem[3]));
         bytes.AddRange(BitConverter.GetBytes(infiniteHeart));
+
+        for (int i = 0; i < countItem.Length; ++i)
+            bytes.AddRange(BitConverter.GetBytes(countItem[i]));
+
         return bytes.ToArray();
     }
     public void DeSerialize(byte[] data)
@@ -34,25 +48,25 @@ public class PurchaseInfo
         maxHeart = BitConverter.ToInt32(data, 4);
         countHeart = BitConverter.ToInt32(data, 8);
         useTimeTick = BitConverter.ToInt64(data, 12);
-        countDiamond = BitConverter.ToInt32(data, 20);
-        countItem[0] = BitConverter.ToInt32(data, 24);
-        countItem[1] = BitConverter.ToInt32(data, 28);
-        countItem[2] = BitConverter.ToInt32(data, 32);
-        countItem[3] = BitConverter.ToInt32(data, 36);
-        infiniteHeart = BitConverter.ToBoolean(data, 40);
+        countGold =    BitConverter.ToInt32(data, 20);
+        countDiamond = BitConverter.ToInt32(data, 24);
+        infiniteHeart = BitConverter.ToBoolean(data, 28);
+
+        for(int i = 0; i < countItem.Length; ++i)
+            countItem[i] = BitConverter.ToInt32(data, 32 + i * 4);
     }
 }
 
 public class Purchases
 {
-    private const string prefsKeyName = "pcInfo2";
+    private const string prefsKeyName = "pcInfo3";
     private static PurchaseInfo mInfo = null;
-    private const int chargingIntervalMin = 5;
 
     public static void Initialize()
     {
         mInfo = LoadPurchaseInfo();
     }
+
     public static bool MaxHeart()
     {
         return mInfo.countHeart >= mInfo.maxHeart;
@@ -103,7 +117,7 @@ public class Purchases
     {
         if (mInfo.countHeart >= mInfo.maxHeart || mInfo.useTimeTick <= 0)
             return 0;
-        DateTime nextTime = new DateTime(mInfo.useTimeTick) + new TimeSpan(0, chargingIntervalMin, 0);
+        DateTime nextTime = new DateTime(mInfo.useTimeTick) + new TimeSpan(0, UserSetting.HeartChargingIntervalMin, 0);
         return (int)(nextTime - DateTime.Now).TotalSeconds;
     }
     public static void UpdateHeartTimer()
@@ -112,7 +126,7 @@ public class Purchases
             return;
 
         TimeSpan term = DateTime.Now - new DateTime(mInfo.useTimeTick);
-        int fiveMinite = chargingIntervalMin * 60;
+        int fiveMinite = UserSetting.HeartChargingIntervalMin * 60;
         int gainHeart = (int)term.TotalSeconds / fiveMinite;
         int remainSec = (int)term.TotalSeconds % fiveMinite;
         if (gainHeart > 0)
@@ -130,20 +144,39 @@ public class Purchases
             UpdatePurchaseInfo(mInfo);
         }
     }
+
+    public static int CountGold()
+    {
+        return mInfo.countGold;
+    }
     public static int CountDiamond()
     {
         return mInfo.countDiamond;
+    }
+    public static void AddGold(int gold)
+    {
+        mInfo.countGold += gold;
+        UpdatePurchaseInfo(mInfo);
     }
     public static void PurchaseDiamond(int cnt)
     {
         mInfo.countDiamond += cnt;
         UpdatePurchaseInfo(mInfo);
     }
-    public static bool ChargeItem(int type, int cnt, int cost)
+    public static bool ChargeItemUseGold(int type, int cnt, int gold)
     {
-        if (mInfo.countDiamond < cost)
+        if (mInfo.countGold < gold)
             return false;
-        mInfo.countDiamond -= cost;
+        mInfo.countGold -= gold;
+        mInfo.countItem[type] += cnt;
+        UpdatePurchaseInfo(mInfo);
+        return true;
+    }
+    public static bool ChargeItemUseDia(int type, int cnt, int diamond)
+    {
+        if (mInfo.countDiamond < diamond)
+            return false;
+        mInfo.countDiamond -= diamond;
         mInfo.countItem[type] += cnt;
         UpdatePurchaseInfo(mInfo);
         return true;
@@ -175,15 +208,6 @@ public class Purchases
         else
         {
             PurchaseInfo info = new PurchaseInfo();
-            info.maxHeart = 20;
-            info.countHeart = 20;
-            info.useTimeTick = DateTime.Now.Ticks;
-            info.infiniteHeart = false;
-            info.countDiamond = 100;
-            info.countItem[0] = 0;
-            info.countItem[1] = 0;
-            info.countItem[2] = 0;
-            info.countItem[3] = 0;
             UpdatePurchaseInfo(info);
             return info;
         }

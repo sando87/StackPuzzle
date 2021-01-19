@@ -7,20 +7,11 @@ public class MenuFailed : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/Play_Continue";
 
-    public Text Score;
-    public Text TargetScore;
-    public Image TargetType;
-    public Text StageLevel;
-
-    public static void PopUp(int level, int target, Sprite targetImg, int score)
+    public static void PopUp()
     {
         GameObject menuFailed = GameObject.Find(UIObjName).gameObject;
 
         MenuFailed menu = menuFailed.GetComponent<MenuFailed>();
-        menu.Score.text = score.ToString();
-        menu.StageLevel.text = level.ToString();
-        menu.TargetScore.text = target.ToString();
-        menu.TargetType.sprite = targetImg;
 
         menuFailed.SetActive(true);
 

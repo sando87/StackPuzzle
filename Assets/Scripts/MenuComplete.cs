@@ -13,7 +13,7 @@ public class MenuComplete : MonoBehaviour
     public Text Score;
     public Text StageLevel;
 
-    public static void PopUp(int level, int starCount, int score)
+    public static void PopUp(int level, int starCount, int score, bool isFirstClear)
     {
         GameObject menuComp = GameObject.Find(UIObjName);
 

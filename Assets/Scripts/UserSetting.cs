@@ -69,6 +69,7 @@ public class UserSetting
     public const float GridSize = 0.82f;
     public const int ScorePerBar = 300;
     public const float BattleOppResize = 0.6f;
+    public const int HeartChargingIntervalMin = 5;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;

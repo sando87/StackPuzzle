@@ -8,19 +8,18 @@ public class MenuStages : MonoBehaviour
     private const string UIObjName = "UISpace/CanvasPanel/Stages";
     private static MenuStages mInst = null;
 
-    public Text HeartTimer;
+    public Image HeartTimer;
     public Text HeartCount;
     public Text DiamondCount;
+    public Text GoldCount;
     private int mAutoNextStageNum = 1;
+
+
+    private MenuMessageBox mMenu = null;
 
     private void Update()
     {
-#if PLATFORM_ANDROID
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            OnClose();
-        }
-#endif
+        QuitProgram();
     }
     public static MenuStages Inst
     {
@@ -62,13 +61,15 @@ public class MenuStages : MonoBehaviour
         mAutoNextStageNum++;
     }
 
-    public void OnClose()
+    public void OnExit()
     {
-        SoundPlayer.Inst.Player.Stop();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-        Inst.gameObject.SetActive(false);
-        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
-        MenuMain.PopUp();
+        MenuMessageBox.PopUp("Quit??", true, (bool isOK) =>
+        {
+            if (isOK)
+                Application.Quit();
+            else
+                mMenu = null;
+        });
     }
     public void OnShopHeart()
     {
@@ -104,17 +105,43 @@ public class MenuStages : MonoBehaviour
             HeartCount.text = remainLife.ToString();
             if (Purchases.MaxHeart())
             {
-                HeartTimer.text = "Full";
+                HeartTimer.fillAmount = 1;
             }
             else
             {
-                int min = remainSec / 60;
-                int sec = remainSec % 60;
-                string secStr = string.Format("{0:D2}", sec);
-                HeartTimer.text = min + ":" + secStr;
+                //int min = remainSec / 60;
+                //int sec = remainSec % 60;
+                //string secStr = string.Format("{0:D2}", sec);
+                //HeartTimer.text = min + ":" + secStr;
+                float rate = remainSec / (UserSetting.HeartChargingIntervalMin * 60.0f);
+                HeartTimer.fillAmount = rate;
             }
+            GoldCount.text = Purchases.CountGold().ToString();
             DiamondCount.text = Purchases.CountDiamond().ToString();
             yield return new WaitForSeconds(1);
         }
+    }
+
+    private void QuitProgram()
+    {
+#if PLATFORM_ANDROID
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (mMenu == null)
+            {
+                mMenu = MenuMessageBox.PopUp("Quit??", true, (bool isOK) =>
+                {
+                    if (isOK)
+                        Application.Quit();
+                    else
+                        mMenu = null;
+                });
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
+#endif
     }
 }

@@ -41,7 +41,7 @@ public class MenuItemShop : MonoBehaviour
         int cnt = int.Parse(item.transform.Find("ItemCount/Text").GetComponent<Text>().text);
         int cost = int.Parse(item.transform.Find("BtnPurchase/Text").GetComponent<Text>().text);
 
-        Purchases.ChargeItem(type, cnt, cost);
+        Purchases.ChargeItemUseDia(type, cnt, cost);
         int currentItemCount = Purchases.CountItem(type);
         switch(type)
         {
