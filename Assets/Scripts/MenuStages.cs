@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +10,9 @@ public class MenuStages : MonoBehaviour
     private static MenuStages mInst = null;
 
     public Image HeartTimer;
-    public Text HeartCount;
-    public Text DiamondCount;
-    public Text GoldCount;
+    public TextMeshProUGUI HeartCount;
+    public TextMeshProUGUI DiamondCount;
+    public TextMeshProUGUI GoldCount;
     private int mAutoNextStageNum = 1;
 
 

@@ -163,7 +163,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mIsFinished && !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mStopUserInput; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mStopUserInput; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
@@ -317,7 +317,7 @@ public class InGameManager : MonoBehaviour
 
     public void OnClick(GameObject clickedObj)
     {
-        if (!IsIdle)
+        if (!IsIdle || mIsFinished)
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
@@ -353,7 +353,7 @@ public class InGameManager : MonoBehaviour
     }
     public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
-        if (!IsIdle)
+        if (!IsIdle || mIsFinished)
             return;
 
         SwipeDirection fixedDir = dir;

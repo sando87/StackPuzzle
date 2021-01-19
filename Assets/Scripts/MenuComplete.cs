@@ -1,17 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MenuComplete : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/Play_Result";
+    private const string UIObjName = "UISpace/CanvasPopup/PlayComplete";
 
     public Image Star1;
     public Image Star2;
     public Image Star3;
-    public Text Score;
-    public Text StageLevel;
+    public TextMeshProUGUI Score;
+    public TextMeshProUGUI StageLevel;
 
     public static void PopUp(int level, int starCount, int score, bool isFirstClear)
     {

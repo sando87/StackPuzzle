@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -10,24 +11,18 @@ public class MenuInGame : MonoBehaviour
     private static MenuInGame mInst = null;
     private const string UIObjName = "UISpace/CanvasPanel/InGame";
     private StageInfo mStageInfo;
-    private int mAddedScore;
-    private int mCurrentScore;
     private MenuMessageBox mMenu = null;
 
-    public Text CurrentScore;
-    public Text Limit;
-    public Text StageLevel;
-    public Text ScoreStarCount;
-    public Text TargetValue;
+    public TextMeshProUGUI Limit;
+    public TextMeshProUGUI TargetValue;
     public Image TargetType;
-    public Image ScoreBar1;
-    public Image ScoreBar2;
     public NumbersUI ComboNumber;
+    public ScoreBar ScoreBarObj;
 
     public GameObject EffectParent;
     public GameObject ItemPrefab;
 
-    public int Score { get { return mCurrentScore + mAddedScore; } }
+    public int Score { get { return ScoreBarObj.CurrentScore; } }
     public int RemainLimit { get { return int.Parse(Limit.text); } }
 
     private void Update()
@@ -38,8 +33,6 @@ public class MenuInGame : MonoBehaviour
             OnPause();
         }
 #endif
-        UpdateScore();
-
     }
 
     public static MenuInGame Inst()
@@ -63,23 +56,18 @@ public class MenuInGame : MonoBehaviour
             Destroy(EffectParent.transform.GetChild(i).gameObject);
 
         mStageInfo = info;
-        ScoreBar1.fillAmount = 0;
-        ScoreBar2.gameObject.SetActive(false);
 
-        mAddedScore = 0;
-        mCurrentScore = 0;
-        CurrentScore.text = "0";
         Limit.text = info.MoveLimit.ToString();
         TargetType.sprite = info.GoalTypeImage;
         TargetValue.text = info.GoalValue.ToString();
-        StageLevel.text = info.Num.ToString();
         ComboNumber.Clear();
+        ScoreBarObj.Clear();
 
         InGameManager.InstStage.EventBreakTarget = (pos, type) => {
             ReduceGoalValue(pos, type);
         };
         InGameManager.InstStage.EventMatched = (products) => {
-            mAddedScore += products[0].Combo * products.Length;
+            ScoreBarObj.AddScore(products[0].Combo * products.Length);
         };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
@@ -115,7 +103,7 @@ public class MenuInGame : MonoBehaviour
         int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
         remain = Mathf.Max(0, remain);
         Limit.text = remain.ToString();
-        Limit.GetComponent<Animation>().Play("touch");
+        //Limit.GetComponent<Animation>().Play("touch");
     }
 
     public void FinishGame(bool success)
@@ -136,7 +124,7 @@ public class MenuInGame : MonoBehaviour
 
             SoundPlayer.Inst.Player.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuComplete.PopUp(mStageInfo.Num, starCount, mCurrentScore, isFirstClear);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear);
         }
         else
         {
@@ -163,7 +151,7 @@ public class MenuInGame : MonoBehaviour
             int value = int.Parse(TargetValue.text) - 1;
             value = Mathf.Max(0, value);
             TargetValue.text = value.ToString();
-            TargetValue.GetComponent<Animation>().Play("touch");
+            //TargetValue.GetComponent<Animation>().Play("touch");
         }));
     }
     IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
@@ -210,85 +198,5 @@ public class MenuInGame : MonoBehaviour
                 }
             });
         }
-    }
-
-    private void UpdateScore()
-    {
-        int scorePerBar = UserSetting.ScorePerBar;
-        if (mAddedScore <= 0)
-            return;
-
-        if (mAddedScore < 30)
-        {
-            mCurrentScore += mAddedScore;
-            mAddedScore = 0;
-            int n = mCurrentScore % scorePerBar;
-            ScoreBar1.fillAmount = n / (float)scorePerBar;
-            ScoreBar2.gameObject.SetActive(false);
-            CurrentScore.text = mCurrentScore.ToString();
-            CurrentScore.GetComponent<Animation>().Play("touch");
-            ScoreStarCount.text = (mCurrentScore / scorePerBar).ToString();
-            ScoreStarCount.GetComponent<Animation>().Play("touch");
-        }
-        else if ((mCurrentScore + mAddedScore) / scorePerBar > mCurrentScore / scorePerBar)
-        {
-            mCurrentScore += mAddedScore;
-            mAddedScore = 0;
-
-            int preScore = (mCurrentScore / scorePerBar) * scorePerBar;
-            int addScore = mCurrentScore % scorePerBar;
-            StartCoroutine(ScoreBarEffect(preScore, addScore));
-
-            CurrentScore.text = mCurrentScore.ToString();
-            CurrentScore.GetComponent<Animation>().Play("touch");
-            ScoreStarCount.text = (mCurrentScore / scorePerBar).ToString();
-            ScoreStarCount.GetComponent<Animation>().Play("touch");
-        }
-        else
-        {
-            StartCoroutine(ScoreBarEffect(mCurrentScore, mAddedScore));
-
-            mCurrentScore += mAddedScore;
-            mAddedScore = 0;
-
-            CurrentScore.text = mCurrentScore.ToString();
-            CurrentScore.GetComponent<Animation>().Play("touch");
-            ScoreStarCount.text = (mCurrentScore / scorePerBar).ToString();
-            ScoreStarCount.GetComponent<Animation>().Play("touch");
-        }
-    }
-    private IEnumerator ScoreBarEffect(int prevScore, int addedScore)
-    {
-        int scorePerBar = UserSetting.ScorePerBar;
-        int nextScore = prevScore + addedScore;
-        float totalWidth = ScoreBar1.GetComponent<RectTransform>().rect.width;
-        float fromRate = (prevScore % scorePerBar) / (float)scorePerBar;
-        float toRate = (nextScore % scorePerBar) / (float)scorePerBar;
-        float bar2Width = totalWidth * (toRate - fromRate) + 1;
-        ScoreBar1.fillAmount = fromRate;
-        ScoreBar2.gameObject.SetActive(true);
-        RectTransform rt = ScoreBar2.GetComponent<RectTransform>();
-        Vector2 pos = rt.anchoredPosition;
-        Vector2 size = rt.sizeDelta;
-        pos.x = totalWidth * toRate;
-        size.x = bar2Width;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = size;
-        float time = 0;
-        float duration = 0.5f;
-        float slope1 = (toRate - fromRate) / (duration * duration);
-        float slope2 = -bar2Width / (duration * duration);
-        while (time < duration)
-        {
-            size.x = slope2 * time * time + bar2Width;
-            ScoreBar1.fillAmount = slope1 * time * time + fromRate;
-            rt.sizeDelta = size;
-            time += Time.deltaTime;
-            yield return null;
-        }
-
-        ScoreBar1.fillAmount = toRate;
-        ScoreBar2.gameObject.SetActive(false);
-
     }
 }

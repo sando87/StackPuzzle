@@ -12,7 +12,7 @@ public class PurchaseInfo
     public long useTimeTick;
     public int countGold;
     public int countDiamond;
-    public bool infiniteHeart;
+    public int infiniteHeart;
     public int[] countItem = new int[16];
     public PurchaseInfo()
     {
@@ -21,7 +21,7 @@ public class PurchaseInfo
         useTimeTick = DateTime.Now.Ticks;
         countGold = 200;
         countDiamond = 10;
-        infiniteHeart = false;
+        infiniteHeart = 0;
 
         for (int i = 0; i < countItem.Length; ++i)
             countItem[i] = 0;
@@ -50,7 +50,7 @@ public class PurchaseInfo
         useTimeTick = BitConverter.ToInt64(data, 12);
         countGold =    BitConverter.ToInt32(data, 20);
         countDiamond = BitConverter.ToInt32(data, 24);
-        infiniteHeart = BitConverter.ToBoolean(data, 28);
+        infiniteHeart = BitConverter.ToInt32(data, 28);
 
         for(int i = 0; i < countItem.Length; ++i)
             countItem[i] = BitConverter.ToInt32(data, 32 + i * 4);
@@ -97,7 +97,7 @@ public class Purchases
     }
     public static bool ChargeHeartInfinite()
     {
-        mInfo.infiniteHeart = true;
+        mInfo.infiniteHeart = 1;
         mInfo.countHeart = mInfo.maxHeart;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
