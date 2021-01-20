@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,33 +11,23 @@ public class MenuWaitMatch : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/SearchBattle";
     private bool mIsSearching = false;
-    private ProductColor mCurrentProductColor = ProductColor.None;
 
-    public Text HeartTimer;
-    public Text HeartCount;
-    public Text MyUserInfo;
-    public Text OppUserInfo;
-    public Text CountDown;
-    public GameObject BtnClose;
+    public TextMeshProUGUI WaitText;
+    public TextMeshProUGUI Ranking;
+    public TextMeshProUGUI ExpLevel;
+    public Image RankImage;
+    public Image ExpBar;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
 
-    public GameObject SkillSelector;
-    public Image ProductBlueForSkill;
-    public Image ProductGreenForSkill;
-    public Image ProductOrangeForSkill;
-    public Image ProductPurpleForSkill;
-    public Image ProductRedForSkill;
-    public Sprite[] Skillimages;
-
-    public static void PopUp(bool autoPlay = false)
+    public static void PopUp()
     {
         GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
         menu.ResetMatchUI();
 
-        if (autoPlay)
+        if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoMatch());
     }
 
@@ -96,8 +87,8 @@ public class MenuWaitMatch : MonoBehaviour
             RequestMatch();
 
         mIsSearching = true;
-        BtnCancle.SetActive(true);
         BtnMatch.SetActive(false);
+        BtnCancle.SetActive(true);
 
         StartCoroutine("WaitOpponent");
     }
@@ -105,13 +96,14 @@ public class MenuWaitMatch : MonoBehaviour
     IEnumerator WaitOpponent()
     {
         int n = 0;
-        while(true)
+        WaitText.gameObject.SetActive(true);
+        while (true)
         {
             switch(n%3)
             {
-                case 0: OppUserInfo.text = "Matching.."; break;
-                case 1: OppUserInfo.text = "Matching..."; break;
-                case 2: OppUserInfo.text = "Matching...."; break;
+                case 0: WaitText.text = "Matching.."; break;
+                case 1: WaitText.text = "Matching..."; break;
+                case 2: WaitText.text = "Matching...."; break;
             }
             n++;
             yield return new WaitForSeconds(1);
@@ -161,52 +153,30 @@ public class MenuWaitMatch : MonoBehaviour
                         StartCoroutine(AutoMatch());
                 }
                 else
-                    StartCoroutine(StartCountDown(res));
+                    ReadyToFight(res);
             }
             return;
         });
     }
 
-    IEnumerator StartCountDown(SearchOpponentInfo opponentInfo)
+    void ReadyToFight(SearchOpponentInfo opponentInfo)
     {
         if (!UserSetting.IsBotPlayer)
             Purchases.UseHeart();
 
-        StageInfo info = StageInfo.Load(0);
 
-        SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;
-        oppSkillMap[(int)ProductColor.Blue] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillBlue, GetSkillimage(opponentInfo.skillBlue));
-        oppSkillMap[(int)ProductColor.Green] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillGreen, GetSkillimage(opponentInfo.skillGreen));
-        oppSkillMap[(int)ProductColor.Orange] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillOrange, GetSkillimage(opponentInfo.skillOrange));
-        oppSkillMap[(int)ProductColor.Purple] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillPurple, GetSkillimage(opponentInfo.skillPurple));
-        oppSkillMap[(int)ProductColor.Red] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillRed, GetSkillimage(opponentInfo.skillRed));
-        oppSkillMap[(int)ProductColor.Yellow] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillYellow, GetSkillimage(opponentInfo.skillYellow));
+        //SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;
+        //oppSkillMap[(int)ProductColor.Blue] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillBlue, GetSkillimage(opponentInfo.skillBlue));
+        //oppSkillMap[(int)ProductColor.Green] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillGreen, GetSkillimage(opponentInfo.skillGreen));
+        //oppSkillMap[(int)ProductColor.Orange] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillOrange, GetSkillimage(opponentInfo.skillOrange));
+        //oppSkillMap[(int)ProductColor.Purple] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillPurple, GetSkillimage(opponentInfo.skillPurple));
+        //oppSkillMap[(int)ProductColor.Red] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillRed, GetSkillimage(opponentInfo.skillRed));
+        //oppSkillMap[(int)ProductColor.Yellow] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillYellow, GetSkillimage(opponentInfo.skillYellow));
 
-        InGameManager.InstPVP_Opponent.StartGame(info, opponentInfo.UserInfo);
-        InGameManager.InstPVP_Player.StartGame(info, UserSetting.UserInfo);
-
-        mIsSearching = false;
-        StopCoroutine("WaitOpponent");
-        UpdateUserInfo(opponentInfo.UserInfo);
-        BtnClose.SetActive(false);
-        BtnMatch.SetActive(false);
-        BtnCancle.SetActive(false);
-
-        CountDown.gameObject.SetActive(true);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
-        CountDown.text = "3";
-        yield return new WaitForSeconds(1);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
-        CountDown.text = "2";
-        yield return new WaitForSeconds(1);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCountDown);
-        CountDown.text = "1";
-        yield return new WaitForSeconds(1);
-
-        InGameManager.InstPVP_Player.InitProducts();
+        ResetMatchUI();
 
         gameObject.SetActive(false);
-        MenuBattle.PopUp();
+        MenuPVPReady.PopUp(UserSetting.UserInfo, opponentInfo.UserInfo);
     }
     private void FailMatch()
     {
@@ -215,73 +185,31 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private IEnumerator AutoMatch()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(1);
         OnMatch();
     }
     private void ResetMatchUI()
     {
-        mCurrentProductColor = ProductColor.None;
         mIsSearching = false;
-        BtnCancle.SetActive(false);
+        WaitText.text = "";
+        WaitText.gameObject.SetActive(false);
         BtnMatch.SetActive(true);
-        BtnClose.SetActive(true);
+        BtnCancle.SetActive(false);
         UpdateUserInfo(UserSetting.UserInfo);
-        OppUserInfo.text = "No Matched User";
-        CountDown.text = "0";
-        CountDown.gameObject.SetActive(false);
         StopCoroutine("WaitOpponent");
-        StopCoroutine("UpdateHeartTimer");
-        StartCoroutine("UpdateHeartTimer");
-        UpdateSkillPanel();
     }
     private void UpdateUserInfo(UserInfo info)
     {
-        string text =
-            "ID : #" + info.userPk + "\n" +
-            "Name : " + info.userName + "\n" +
-            "Score : " + info.score + "\n" +
-            "Win/Lose : " + info.win + "/" + info.lose;
-
-        if (UserSetting.UserPK == info.userPk)
-            MyUserInfo.text = text;
-        else
-            OppUserInfo.text = text;
-    }
-    IEnumerator UpdateHeartTimer()
-    {
-        while (true)
-        {
-            Purchases.UpdateHeartTimer();
-            int remainSec = Purchases.RemainSeconds();
-            int remainLife = Purchases.CountHeart();
-            HeartCount.text = remainLife.ToString();
-            if (Purchases.MaxHeart())
-            {
-                HeartTimer.text = "Full";
-            }
-            else
-            {
-                int min = remainSec / 60;
-                int sec = remainSec % 60;
-                string secStr = string.Format("{0:D2}", sec);
-                HeartTimer.text = min + ":" + secStr;
-            }
-            yield return new WaitForSeconds(1);
-        }
-    }
-    public void OnSelectProduct(GameObject btn)
-    {
-        mCurrentProductColor = ToColor(btn.name);
-        SkillSelector.SetActive(true);
-    }
-    public void OnSelectSkill(GameObject btn)
-    {
-        PVPCommand skill = ToSkill(btn.name);
-        InGameManager.InstPVP_Player.SkillMapping[(int)mCurrentProductColor] = new Tuple<PVPCommand, Sprite>(skill, GetSkillimage(skill));
-
-        UpdateSkillPanel();
-        SkillSelector.SetActive(false);
-        mCurrentProductColor = ProductColor.None;
+        //string text =
+        //    "ID : #" + info.userPk + "\n" +
+        //    "Name : " + info.userName + "\n" +
+        //    "Score : " + info.score + "\n" +
+        //    "Win/Lose : " + info.win + "/" + info.lose;
+        //
+        //if (UserSetting.UserPK == info.userPk)
+        //    MyUserInfo.text = text;
+        //else
+        //    OppUserInfo.text = text;
     }
 
     private ProductColor ToColor(string color)
@@ -312,31 +240,5 @@ public class MenuWaitMatch : MonoBehaviour
             case "remove": return PVPCommand.SkillRemoveBadEffects;
         }
         return PVPCommand.Undef;
-    }
-    private void UpdateSkillPanel()
-    {
-        SkillPair[] map = InGameManager.InstPVP_Player.SkillMapping;
-
-        ProductBlueForSkill.sprite = GetSkillimage(map[(int)ProductColor.Blue].Item1);
-        ProductGreenForSkill.sprite = GetSkillimage(map[(int)ProductColor.Green].Item1);
-        ProductOrangeForSkill.sprite = GetSkillimage(map[(int)ProductColor.Orange].Item1);
-        ProductPurpleForSkill.sprite = GetSkillimage(map[(int)ProductColor.Purple].Item1);
-        ProductRedForSkill.sprite = GetSkillimage(map[(int)ProductColor.Red].Item1);
-    }
-    private Sprite GetSkillimage(PVPCommand skill)
-    {
-        Sprite sprite = null;
-        switch (skill)
-        {
-            case PVPCommand.SkillBomb: sprite = Skillimages[1]; break;
-            case PVPCommand.SkillIce: sprite = Skillimages[2]; break;
-            case PVPCommand.SkillShield: sprite = Skillimages[3]; break;
-            case PVPCommand.SkillScoreBuff: sprite = Skillimages[4]; break;
-            case PVPCommand.SkillCloud: sprite = Skillimages[5]; break;
-            case PVPCommand.SkillUpsideDown: sprite = Skillimages[6]; break;
-            case PVPCommand.SkillRemoveBadEffects: sprite = Skillimages[7]; break;
-            case PVPCommand.Undef: sprite = Skillimages[0]; break;
-        }
-        return sprite;
     }
 }

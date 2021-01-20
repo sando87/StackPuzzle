@@ -21,6 +21,7 @@ public class MenuFailed : MonoBehaviour
     IEnumerator AutoEnd()
     {
         yield return new WaitForSeconds(1);
+        MenuStages.Inst.AutoStartAfterSec(1);
         OnAgain();
     }
 

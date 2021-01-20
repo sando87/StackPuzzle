@@ -38,9 +38,6 @@ public class MenuStages : MonoBehaviour
         Inst.gameObject.SetActive(true);
         //Inst.StopCoroutine("UpdateHeartTimer");
         //Inst.StartCoroutine("UpdateHeartTimer");
-
-        if(UserSetting.IsBotPlayer)
-            Inst.StartCoroutine(Inst.AutoStartNextStage());
     }
     public static void Hide()
     {
@@ -48,9 +45,13 @@ public class MenuStages : MonoBehaviour
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
     }
 
-    IEnumerator AutoStartNextStage()
+
+    public void AutoStartAfterSec(float second)
     {
-        yield return new WaitForSeconds(1);
+        Invoke("AutoStartNextStage", second);
+    }
+    private void AutoStartNextStage()
+    {
         StageInfo stageInfo = StageInfo.Load(mAutoNextStageNum);
         if (stageInfo == null)
         {
