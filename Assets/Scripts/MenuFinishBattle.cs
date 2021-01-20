@@ -5,8 +5,10 @@ using UnityEngine.UI;
 
 public class MenuFinishBattle : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPanel/MenuFinishBattle";
+    private const string UIObjName = "UISpace/CanvasPanel/PlayFinishPVP";
 
+    public GameObject WinEffect;
+    public GameObject LoseEffect;
 
     public static void PopUp(bool win, UserInfo info, int deltaExp)
     {
@@ -14,6 +16,8 @@ public class MenuFinishBattle : MonoBehaviour
         objMenu.SetActive(true);
 
         MenuFinishBattle menu = objMenu.GetComponent<MenuFinishBattle>();
+        menu.WinEffect.SetActive(win);
+        menu.LoseEffect.SetActive(!win);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoNext());
@@ -24,6 +28,13 @@ public class MenuFinishBattle : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         gameObject.SetActive(false);
         MenuWaitMatch.PopUp();
+    }
+
+    public void OnClose()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        gameObject.SetActive(false);
+        MenuStages.PopUp();
     }
 
     private IEnumerator AutoNext()

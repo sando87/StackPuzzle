@@ -42,7 +42,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         mIsSearching = false;
         gameObject.SetActive(false);
-        MenuMain.PopUp();
+        MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 

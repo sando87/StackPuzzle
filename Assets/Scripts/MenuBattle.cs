@@ -69,10 +69,10 @@ public class MenuBattle : MonoBehaviour
         mMenu = null;
         ComboPlayer.Clear();
         ComboOpponent.Clear();
-        PVPScoreBar.Clear();
+        //PVPScoreBar.Clear();
 
         InGameManager.InstPVP_Player.EventMatched = (products) => {
-            PVPScoreBar.AddScore(products[0].Combo * products.Length);
+            //PVPScoreBar.AddScore(products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);
@@ -106,7 +106,7 @@ public class MenuBattle : MonoBehaviour
         {
             SoundPlayer.Inst.Player.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
-            MenuFailed.PopUp();
+            MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
         }
 
         string log = InGameManager.InstPVP_Player.GetBillboard().ToCSVString();

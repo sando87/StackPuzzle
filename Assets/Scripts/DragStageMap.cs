@@ -8,6 +8,7 @@ public class DragStageMap : MonoBehaviour
     public float MaxY = 1000;
     public float MinY = -10;
 
+    private bool mIsDown = false;
     private Vector3 mCameraDownPos;
     private Vector3 mMouseDownPos;
 
@@ -46,21 +47,29 @@ public class DragStageMap : MonoBehaviour
 
     private void HandleTouchInput()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         if (Input.touchCount == 1)
         {
             Touch touch = Input.GetTouch(0);
             if (touch.phase == TouchPhase.Began)
             {
+                mIsDown = true;
                 mCameraDownPos = transform.position;
                 mMouseDownPos = Input.mousePosition;
             }
             else if (touch.phase == TouchPhase.Moved)
             {
-                float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
-                transform.position = mCameraDownPos + new Vector3(0, dy, 0);
+                if(mIsDown)
+                {
+                    float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
+                    transform.position = mCameraDownPos + new Vector3(0, dy, 0);
+                }
             }
             else if (touch.phase == TouchPhase.Ended)
             {
+                mIsDown = false;
                 mCameraDownPos = Vector3.zero;
                 mMouseDownPos = Vector3.zero;
             }
@@ -69,18 +78,26 @@ public class DragStageMap : MonoBehaviour
 
     private void HandleMouseInput()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         if (Input.GetMouseButtonDown(0))
         {
+            mIsDown = true;
             mCameraDownPos = transform.position;
             mMouseDownPos = Input.mousePosition;
         }
         else if (Input.GetMouseButton(0))
         {
-            float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
-            transform.position = mCameraDownPos + new Vector3(0, dy, 0);
+            if (mIsDown)
+            {
+                float dy = Camera.main.ScreenToWorldPoint(mMouseDownPos).y - Camera.main.ScreenToWorldPoint(Input.mousePosition).y;
+                transform.position = mCameraDownPos + new Vector3(0, dy, 0);
+            }
         }
         else if (Input.GetMouseButtonUp(0))
         {
+            mIsDown = false;
             mCameraDownPos = Vector3.zero;
             mMouseDownPos = Vector3.zero;
         }

@@ -97,6 +97,12 @@ public class MenuStages : MonoBehaviour
         MenuItemShop.PopUp();
         Hide();
     }
+    public void OnBattle()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        MenuWaitMatch.PopUp();
+        Hide();
+    }
     IEnumerator UpdateHeartTimer()
     {
         while(true)

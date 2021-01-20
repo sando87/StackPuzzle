@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class Stage : MonoBehaviour
@@ -23,11 +24,17 @@ public class Stage : MonoBehaviour
     #region Mouse/Touch Event
     private void OnMouseEnter()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         transform.localScale = OriginalScale * 1.05f;
     }
 
     private void OnMouseDown()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         transform.localScale = OriginalScale * 0.95f;
     }
 
@@ -42,6 +49,9 @@ public class Stage : MonoBehaviour
     }
     private void OnMouseUpAsButton()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         transform.localScale = OriginalScale;
         StageInfo stageInfo = StageInfo.Load(Number);
