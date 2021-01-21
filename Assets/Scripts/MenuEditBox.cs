@@ -1,51 +1,37 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MenuEditBox : MonoBehaviour
 {
-    public Text mMessage;
-    public InputField mInputField;
-    public GameObject OkButton;
-    public GameObject CancleButton;
+    public TextMeshProUGUI Message;
+    public TMP_InputField InputField;
 
-    private Action<bool, string> mOnClick = null;
+    private Action<bool, string> EventClick = null;
 
-    public static MenuEditBox PopUp(string message, bool twoButtonMode, Action<bool, string> onClick)
+    public static MenuEditBox PopUp(string message, Action<bool, string> onClick)
     {
-        GameObject prefab = (GameObject)Resources.Load("Prefabs/EditBox", typeof(GameObject));
-        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UIGroup/CanvasPopUp").transform);
+        GameObject prefab = (GameObject)Resources.Load("Prefabs/EditName", typeof(GameObject));
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuEditBox box = objMenu.GetComponent<MenuEditBox>();
-        box.mOnClick = onClick;
-        box.mMessage.text = message;
-        if (twoButtonMode)
-        {
-            box.OkButton.SetActive(true);
-            box.CancleButton.SetActive(true);
-        }
-        else
-        {
-            box.OkButton.SetActive(true);
-            box.CancleButton.SetActive(false);
-            Vector3 pos = box.OkButton.transform.localPosition;
-            pos.x = 0;
-            box.OkButton.transform.localPosition = pos;
-        }
+        box.EventClick = onClick;
+        box.Message.text = message;
         return box;
     }
 
     public void OnOK()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        mOnClick?.Invoke(true, mInputField.text);
+        EventClick?.Invoke(true, InputField.text);
         Destroy(gameObject);
     }
     public void OnCancle()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-        mOnClick?.Invoke(false, mInputField.text);
+        EventClick?.Invoke(false, InputField.text);
         Destroy(gameObject);
     }
 }

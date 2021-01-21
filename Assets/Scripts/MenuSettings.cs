@@ -8,13 +8,11 @@ public class MenuSettings : MonoBehaviour
     private const string UIObjName = "UISpace/CanvasPopup/Settings";
     private int mTouchCount = 0;
 
-    public Image SoundOFF;
-
     public static void PopUp()
     {
         GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
-        objMenu.GetComponent<MenuSettings>().SoundOFF.gameObject.SetActive(UserSetting.Mute);
+        //objMenu.GetComponent<MenuSettings>().SoundOFF.gameObject.SetActive(UserSetting.Mute);
     }
 
     public void OnClose()
@@ -27,7 +25,7 @@ public class MenuSettings : MonoBehaviour
     public void OnSound()
     {
         bool isMute = SoundPlayer.Inst.OnOff();
-        SoundOFF.gameObject.SetActive(isMute);
+        //SoundOFF.gameObject.SetActive(isMute);
         UserSetting.Mute = isMute;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
@@ -44,7 +42,7 @@ public class MenuSettings : MonoBehaviour
         if(mTouchCount >= 5)
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuEditBox.PopUp("write test device name, no name for disable", true, (isOK, inputText) =>
+            MenuEditBox.PopUp("write test device name, no name for disable", (isOK, inputText) =>
             {
                 if(isOK)
                 {
