@@ -14,6 +14,7 @@ public class MenuPVPReady : MonoBehaviour
     public static void PopUp(UserInfo player, UserInfo opponent)
     {
         GameObject menuPlay = GameObject.Find(UIObjName);
+        menuPlay.SetActive(true);
         MenuPVPReady menu = menuPlay.GetComponent<MenuPVPReady>();
         menu.UpdateUserInfo(player, opponent);
 
