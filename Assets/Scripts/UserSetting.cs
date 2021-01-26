@@ -70,6 +70,7 @@ public class UserSetting
     public const int ScorePerBar = 300;
     public const float BattleOppResize = 0.6f;
     public const int HeartChargingIntervalMin = 5;
+    public const float InfoBoxDisplayTime = 2.0f;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;

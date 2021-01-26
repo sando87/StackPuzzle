@@ -59,7 +59,7 @@ public class MenuPlay : MonoBehaviour
 
         SoundPlayer.Inst.Player.Stop();
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
-        InGameManager.InstStage.StartGame(mStageInfo, UserSetting.UserInfo);
+        InGameManager.InstStage.StartGameInStageMode(mStageInfo, UserSetting.UserInfo);
         InGameManager.InstStage.InitProducts();
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();

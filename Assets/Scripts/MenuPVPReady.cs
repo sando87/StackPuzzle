@@ -11,6 +11,9 @@ public class MenuPVPReady : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/PlayPVPReady";
 
+    private UserInfo mPlayer = null;
+    private UserInfo mOpponent = null;
+
     public static void PopUp(UserInfo player, UserInfo opponent)
     {
         GameObject menuPlay = GameObject.Find(UIObjName);
@@ -18,10 +21,9 @@ public class MenuPVPReady : MonoBehaviour
         MenuPVPReady menu = menuPlay.GetComponent<MenuPVPReady>();
         menu.UpdateUserInfo(player, opponent);
 
-        StageInfo info = StageInfo.Load(0);
-        InGameManager.InstPVP_Opponent.StartGame(info, opponent);
-        InGameManager.InstPVP_Player.StartGame(info, player);
-
+        menu.mPlayer = player;
+        menu.mOpponent = opponent;
+        
         menu.Invoke("StartBattle", 3.0f);
     }
 
@@ -32,6 +34,10 @@ public class MenuPVPReady : MonoBehaviour
 
     private void StartBattle()
     {
+        StageInfo info = StageInfo.Load(0);
+        InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
+        InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
+
         InGameManager.InstPVP_Player.InitProducts();
 
         gameObject.SetActive(false);

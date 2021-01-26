@@ -197,6 +197,36 @@ public class InGameManager : MonoBehaviour
         mPrevIdleState = IsIdle;
         DropNextProducts();
     }
+    public void StartGameInStageMode(StageInfo info, UserInfo userInfo)
+    {
+        MenuInformBox.PopUp("START!!");
+        StartGame(info, userInfo);
+
+        StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
+        {
+            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+            GetComponent<SwipeDetector>().EventClick = OnClick;
+            StartCoroutine(CheckFinishStageMode());
+        }));
+    }
+    public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)
+    {
+        MenuInformBox.PopUp("START!!");
+        StartGame(info, userInfo);
+
+        StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
+        {
+            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+            GetComponent<SwipeDetector>().EventClick = OnClick;
+        }));
+    }
+    public void StartGameInPVPOpponent(StageInfo info, UserInfo userInfo)
+    {
+        StartGame(info, userInfo);
+
+        transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
+        StartCoroutine(ProcessNetMessages());
+    }
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
         ResetGame();
@@ -214,24 +244,6 @@ public class InGameManager : MonoBehaviour
         BackgroundSprite.sprite = BackgroundImages[backImgIdx];
         float scale = Camera.main.orthographicSize / 10.24f; //10.24f는 배경 이미지 height의 절반
         BackgroundSprite.transform.localScale = new Vector3(scale, scale, 1);
-
-        if (FieldType == GameFieldType.Stage)
-        {
-            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
-            GetComponent<SwipeDetector>().EventClick = OnClick;
-            StartCoroutine(CheckFinishStageMode());
-        }
-        else if (FieldType == GameFieldType.pvpPlayer)
-        {
-            GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
-            GetComponent<SwipeDetector>().EventClick = OnClick;
-        }
-        else if (FieldType == GameFieldType.pvpOpponent)
-        {
-            transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
-            StartCoroutine(ProcessNetMessages());
-        }
-
 
         float gridSize = UserSetting.GridSize;
         Vector3 localBasePos = new Vector3(-gridSize * info.XCount * 0.5f, -gridSize * info.YCount * 0.5f, 0);
@@ -1161,8 +1173,35 @@ public class InGameManager : MonoBehaviour
         {
             if (IsIdle)
             {
-                bool isWin = FieldType == GameFieldType.Stage && IsAchieveGoals();
-                EventFinish?.Invoke(isWin);
+                bool success = false;
+                if(FieldType == GameFieldType.Stage)
+                {
+                    if(IsAchieveGoals())
+                    {
+                        MenuInformBox.PopUp("MISSION COMPLETE!!");
+                        success = true;
+                    }
+                    else if(mStageInfo.MoveLimit > 0)
+                        MenuInformBox.PopUp("MOVE LIMITTED");
+                    else if (mStageInfo.TimeLimit > 0)
+                        MenuInformBox.PopUp("TIMEOUT");
+                    else
+                        MenuInformBox.PopUp("GAME OVER");
+                }
+                else
+                {
+                    if(Opponent.mIsFinished)
+                    {
+                        MenuInformBox.PopUp("YOU WIN");
+                        success = true;
+                    }
+                    else
+                        MenuInformBox.PopUp("YOU LOSE");
+                }
+
+                yield return new WaitForSeconds(UserSetting.InfoBoxDisplayTime);
+
+                EventFinish?.Invoke(success);
                 CleanUpGame();
                 break;
             }
@@ -1181,14 +1220,14 @@ public class InGameManager : MonoBehaviour
                 time += Time.deltaTime;
                 int curSec = (int)time;
                 int remainTime = mStageInfo.TimeLimit - curSec;
-                if (prevSec == 0 || prevSec != curSec)
-                    EventRemainTime?.Invoke(remainTime);
-
                 if (remainTime < 0)
                 {
                     StartCoroutine("StartFinishing");
                     break;
                 }
+                else if (prevSec == 0 || prevSec != curSec)
+                    EventRemainTime?.Invoke(remainTime);
+
             }
 
             if (IsAchieveGoals())
@@ -1528,7 +1567,10 @@ public class InGameManager : MonoBehaviour
         mUserInfo = null;
         mStageInfo = null;
 
+        GetComponent<SwipeDetector>().EventSwipe = null;
+        GetComponent<SwipeDetector>().EventClick = null;
         StopAllCoroutines();
+        CancelInvoke();
     }
     private void RemoveLimit()
     {
@@ -1875,8 +1917,8 @@ public class InGameManager : MonoBehaviour
             PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.EndGame)
             {
-                EventFinish?.Invoke(body.success);
-                CleanUpGame();
+                mIsFinished = true;
+                Opponent.StartCoroutine("StartFinishing");
             }
             else if (body.cmd == PVPCommand.StartGame)
             {
