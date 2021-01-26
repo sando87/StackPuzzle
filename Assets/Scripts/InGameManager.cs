@@ -126,11 +126,11 @@ public class InGameManager : MonoBehaviour
     private UserInfo mUserInfo = null;
     private bool mIsFinished = false;
     private bool mStopDropping = false;
-    private bool mStopUserInput = false;
+    private bool mItemLooping = false;
     private bool mIsDropping = false;
     private bool mIsSwipping = false;
     private bool mIsFlushing = false;
-    private DateTime mStartTime = DateTime.Now;
+    private bool mPrevIdleState = false;
     private VerticalFrames[] mFrameDropGroup = null;
 
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
@@ -163,7 +163,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mStopUserInput; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mItemLooping; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
@@ -187,36 +187,15 @@ public class InGameManager : MonoBehaviour
     public Action<int> EventCombo;
     public Action<int> EventRemainTime;
     public Action EventReduceLimit;
+    public Action EventEnterIdle;
 
     private void Update()
     {
-        if (mStopDropping)
-            return;
+        if (IsIdle && !mPrevIdleState)
+            EventEnterIdle?.Invoke();
 
-        if (FieldType != GameFieldType.pvpOpponent)
-        {
-            int cnt = StartToDropNewProducts();
-            if (cnt > 0)
-                Network_Drop(cnt);
-        }
-        else
-        {
-            foreach (var group in mFrameDropGroup)
-            {
-                if (group.NewProducts.Count > 0)
-                    return;
-            }
-        }
-
-        mIsDropping = false;
-        foreach (var group in mFrameDropGroup)
-        {
-            if (group.VerticalProducts.Count > 0)
-            {
-                mIsDropping = true;
-                UpdateDropProducts(group);
-            }
-        }
+        mPrevIdleState = IsIdle;
+        DropNextProducts();
     }
     public void StartGame(StageInfo info, UserInfo userInfo)
     {
@@ -227,7 +206,6 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mStageInfo = info;
         mUserInfo = userInfo;
-        mStartTime = DateTime.Now;
 
         int stageCountPerTheme = 20;
         int themeCount = 9;
@@ -241,13 +219,12 @@ public class InGameManager : MonoBehaviour
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            StartCoroutine(CheckFinishGame());
+            StartCoroutine(CheckFinishStageMode());
         }
         else if (FieldType == GameFieldType.pvpPlayer)
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            StartCoroutine(CheckFinishGame());
         }
         else if (FieldType == GameFieldType.pvpOpponent)
         {
@@ -308,7 +285,7 @@ public class InGameManager : MonoBehaviour
 
         Network_StartGame(Serialize(initProducts.ToArray()));
     }
-    public void FinishGame()
+    public void CleanUpGame()
     {
         ResetGame();
         gameObject.SetActive(false);
@@ -346,8 +323,8 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                RemoveLimit();
                 StartCoroutine(DoMatchingCycle(matches[0]));
+                RemoveLimit();
             }
         }
     }
@@ -384,14 +361,12 @@ public class InGameManager : MonoBehaviour
         if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock)
             return;
 
-        RemoveLimit();
-
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
-            mStopUserInput = true;
+            mItemLooping = true;
             CreateMergeEffect(product, targetProduct);
             product.SkillMerge(targetProduct, () => {
-                mStopUserInput = false;
+                mItemLooping = false;
                 SwipeSkilledProducts(product, targetProduct);
             });
         }
@@ -403,6 +378,8 @@ public class InGameManager : MonoBehaviour
                 mIsSwipping = false;
             });
         }
+
+        RemoveLimit();
     }
 
     #region Utility
@@ -956,7 +933,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator LoopBreakAllSkill()
     {
-        mStopUserInput = true;
+        mItemLooping = true;
         while (true)
         {
             for(int y = CountY - 1; y >= 0; --y)
@@ -978,11 +955,11 @@ public class InGameManager : MonoBehaviour
         KeepLoop:
             yield return new WaitForSeconds(0.4f);
         }
-        mStopUserInput = false;
+        mItemLooping = false;
     }
     IEnumerator LoopSameColorSkill(Vector3 startPos)
     {
-        mStopUserInput = true;
+        mItemLooping = true;
         while (true)
         {
             if (mIsDropping)
@@ -1016,7 +993,7 @@ public class InGameManager : MonoBehaviour
             else
                 yield return new WaitForSeconds(0.3f);
         }
-        mStopUserInput = false;
+        mItemLooping = false;
     }
 
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
@@ -1095,6 +1072,36 @@ public class InGameManager : MonoBehaviour
         }
         return rets.ToArray();
     }
+    private void DropNextProducts()
+    {
+        if (mStopDropping)
+            return;
+
+        if (FieldType != GameFieldType.pvpOpponent)
+        {
+            int cnt = StartToDropNewProducts();
+            if (cnt > 0)
+                Network_Drop(cnt);
+        }
+        else
+        {
+            foreach (var group in mFrameDropGroup)
+            {
+                if (group.NewProducts.Count > 0)
+                    return;
+            }
+        }
+
+        mIsDropping = false;
+        foreach (var group in mFrameDropGroup)
+        {
+            if (group.VerticalProducts.Count > 0)
+            {
+                mIsDropping = true;
+                UpdateDropProducts(group);
+            }
+        }
+    }
     private void Attack(int score, Vector3 fromPos)
     {
         if (FieldType == GameFieldType.Stage)
@@ -1134,6 +1141,11 @@ public class InGameManager : MonoBehaviour
                 Product[] rets = products.ToArray();
                 Network_FlushAttacks(Serialize(rets));
                 StartCoroutine(FlushObstacles(rets));
+                if(products.Count < cnt)
+                {
+                    StartCoroutine("StartFinishing");
+                    break;
+                }
 
                 yield return new WaitForSeconds(2.0f);
             }
@@ -1142,50 +1154,53 @@ public class InGameManager : MonoBehaviour
 
         }
     }
-    private IEnumerator CheckFinishGame()
+    private IEnumerator StartFinishing()
     {
-        EventRemainTime?.Invoke(mStageInfo.TimeLimit);
-
-        int preRemainSec = 0;
+        mIsFinished = true;
         while(true)
         {
+            if (IsIdle)
+            {
+                bool isWin = FieldType == GameFieldType.Stage && IsAchieveGoals();
+                EventFinish?.Invoke(isWin);
+                CleanUpGame();
+                break;
+            }
+
             yield return null;
-
-            if (mStageInfo.TimeLimit > 0)
-            {
-                int currentPlaySec = (int)new TimeSpan((DateTime.Now - mStartTime).Ticks).TotalSeconds;
-                int remainSec = mStageInfo.TimeLimit - currentPlaySec;
-                if (remainSec != preRemainSec && remainSec >= 0)
-                {
-                    preRemainSec = remainSec;
-                    EventRemainTime?.Invoke(remainSec);
-                }
-
-                if(remainSec < 0 && IsIdle)
-                {
-                    bool isWin = Billboard.CurrentScore > Opponent.Billboard.CurrentScore;
-                    EventFinish?.Invoke(isWin);
-                    FinishGame();
-                    break;
-                }
-            }
-            else if(mStageInfo.MoveLimit > 0)
-            {
-                if (Billboard.MoveCount >= mStageInfo.MoveLimit && IsIdle)
-                {
-                    EventFinish?.Invoke(false);
-                    FinishGame();
-                    break;
-                }
-            }
-
-            if (FieldType == GameFieldType.Stage)
-                CheckStageFinish();
-            else if (FieldType == GameFieldType.pvpPlayer)
-                CheckPVPFinish();
         }
     }
-    private void CheckStageFinish()
+    private IEnumerator CheckFinishStageMode()
+    {
+        float time = 0;
+        while(true)
+        {
+            if(mStageInfo.TimeLimit > 0)
+            {
+                int prevSec = (int)time;
+                time += Time.deltaTime;
+                int curSec = (int)time;
+                int remainTime = mStageInfo.TimeLimit - curSec;
+                if (prevSec == 0 || prevSec != curSec)
+                    EventRemainTime?.Invoke(remainTime);
+
+                if (remainTime < 0)
+                {
+                    StartCoroutine("StartFinishing");
+                    break;
+                }
+            }
+
+            if (IsAchieveGoals())
+            {
+                StartCoroutine("StartFinishing");
+                break;
+            }
+
+            yield return null;
+        }
+    }
+    private bool IsAchieveGoals()
     {
         bool isSuccess = false;
         int targetCount = mStageInfo.GoalValue;
@@ -1223,42 +1238,7 @@ public class InGameManager : MonoBehaviour
                 break;
         }
 
-        if (isSuccess)
-        {
-            EventFinish?.Invoke(true);
-            FinishGame();
-        }
-
-        return;
-    }
-    private void CheckPVPFinish()
-    {
-        if (Opponent.AttackPoints.Count > 200)
-        {
-            EventFinish?.Invoke(true);
-            FinishGame();
-            return;
-        }
-
-        int counter = 0;
-        foreach (Frame frame in mFrames)
-        {
-            if (frame.Empty)
-                continue;
-
-            counter++;
-            Product pro = frame.ChildProduct;
-            if (pro != null && pro.IsChocoBlock)
-                counter--;
-        }
-
-        if(counter == 0)
-        {
-            EventFinish?.Invoke(false);
-            FinishGame();
-        }
-        
-        return;
+        return isSuccess;
     }
     private List<Product> GetNextFlushTargets(int cnt)
     {
@@ -1535,9 +1515,10 @@ public class InGameManager : MonoBehaviour
         mIsFinished = false;
         mIsDropping = false;
         mStopDropping = false;
-        mStopUserInput = false;
+        mItemLooping = false;
         mIsSwipping = false;
         mIsFlushing = false;
+        mPrevIdleState = IsIdle;
 
         Billboard.Reset();
         mNetMessages.Clear();
@@ -1554,8 +1535,9 @@ public class InGameManager : MonoBehaviour
         if(mStageInfo.MoveLimit > 0)
         {
             Billboard.MoveCount++;
-            mIsFinished = Billboard.MoveCount >= mStageInfo.MoveLimit;
             EventReduceLimit?.Invoke();
+            if (Billboard.MoveCount >= mStageInfo.MoveLimit)
+                StartCoroutine("StartFinishing");
         }
     }
     public int NextMatchCount(Product pro, SwipeDirection dir)
@@ -1894,7 +1876,7 @@ public class InGameManager : MonoBehaviour
             if (body.cmd == PVPCommand.EndGame)
             {
                 EventFinish?.Invoke(body.success);
-                FinishGame();
+                CleanUpGame();
             }
             else if (body.cmd == PVPCommand.StartGame)
             {

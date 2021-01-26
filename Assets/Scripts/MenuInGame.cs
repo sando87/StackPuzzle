@@ -135,7 +135,7 @@ public class MenuInGame : MonoBehaviour
 
         string log = mStageInfo.ToCSVString() + "," + InGameManager.InstStage.GetBillboard().ToCSVString();
         LOG.echo(log);
-        InGameManager.InstStage.FinishGame();
+        InGameManager.InstStage.CleanUpGame();
         Hide();
     }
     public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)

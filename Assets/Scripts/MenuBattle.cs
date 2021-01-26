@@ -112,8 +112,8 @@ public class MenuBattle : MonoBehaviour
         string log = InGameManager.InstPVP_Player.GetBillboard().ToCSVString();
         LOG.echo(log);
 
-        InGameManager.InstPVP_Player.FinishGame();
-        InGameManager.InstPVP_Opponent.FinishGame();
+        InGameManager.InstPVP_Player.CleanUpGame();
+        InGameManager.InstPVP_Opponent.CleanUpGame();
         Hide();
     }
     private int NextDeltaExp(bool isWin, int curScore, float colorCount)
