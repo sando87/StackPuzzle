@@ -11,21 +11,19 @@ public class MenuComplete : MonoBehaviour
     public Image Star1;
     public Image Star2;
     public Image Star3;
+    public Animator RewardCoin;
     public TextMeshProUGUI Score;
     public TextMeshProUGUI StageLevel;
+    public GameObject CoinPrefab;
+    public GameObject FireworkPrefab;
+    private List<GameObject> Effects = new List<GameObject>();
 
     public static void PopUp(int level, int starCount, int score, bool isFirstClear)
     {
         GameObject menuComp = GameObject.Find(UIObjName);
 
         MenuComplete menu = menuComp.GetComponent<MenuComplete>();
-        menu.Star1.gameObject.SetActive(starCount >= 1);
-        menu.Star2.gameObject.SetActive(starCount >= 2);
-        menu.Star3.gameObject.SetActive(starCount >= 3);
-        menu.Score.text = score.ToString();
-        menu.StageLevel.text = level.ToString();
-
-        menuComp.SetActive(true);
+        menu.UpdateUIState(level, starCount, score, isFirstClear);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoEnd());
@@ -37,8 +35,84 @@ public class MenuComplete : MonoBehaviour
         OnNext();
     }
 
+    private void UpdateUIState(int level, int starCount, int score, bool isFirstClear)
+    {
+        foreach (var effect in Effects)
+            if(effect != null)
+                Destroy(effect);
+        Effects.Clear();
+
+        Score.text = score.ToString();
+        StageLevel.text = "Stage " + level.ToString();
+
+        gameObject.SetActive(true);
+
+        int gold = score / UserSetting.ScorePerCoin;
+        Purchases.AddGold(gold);
+
+        StartCoroutine(AnimateReward(score));
+        StartCoroutine(AnimateStars(starCount));
+        StartCoroutine(AnimateFireworkParticles());
+    }
+
+    IEnumerator AnimateFireworkParticles()
+    {
+        for(int i = 0; i < 6; ++i)
+        {
+            float xOff = UnityEngine.Random.Range(-300.0f, 300.0f);
+            float yOff = UnityEngine.Random.Range(-300.0f, 300.0f);
+            float size = UnityEngine.Random.Range(50.0f, 150.0f);
+            ParticleSystem particle = Instantiate(FireworkPrefab, transform).GetComponent<ParticleSystem>();
+            particle.transform.localPosition = new Vector3(xOff, 300 + yOff, 0);
+            particle.transform.localScale = new Vector3(size, size, 1);
+            Effects.Add(particle.gameObject);
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+    IEnumerator AnimateStars(int starCount)
+    {
+        Star1.gameObject.SetActive(false);
+        Star2.gameObject.SetActive(false);
+        Star3.gameObject.SetActive(false);
+        yield return null;
+        Star1.gameObject.SetActive(starCount >= 1);
+        yield return new WaitForSeconds(1);
+        Star2.gameObject.SetActive(starCount >= 2);
+        yield return new WaitForSeconds(1);
+        Star3.gameObject.SetActive(starCount >= 3);
+    }
+    IEnumerator AnimateReward(int score)
+    {
+        float duration = 3.0f;
+        float curScore = score;
+        int prvCoinCount = score / UserSetting.ScorePerCoin;
+        while (curScore > 0)
+        {
+            float step = score * Time.deltaTime / duration;
+            curScore -= step;
+            int curCoinCount = (int)(curScore / UserSetting.ScorePerCoin);
+            if(prvCoinCount != curCoinCount)
+            {
+                prvCoinCount = curCoinCount;
+                GameObject coinObj = Instantiate(CoinPrefab, Score.transform.position, Quaternion.identity, transform);
+                Effects.Add(coinObj);
+                StartCoroutine(UnityUtils.AnimateConvex(coinObj, RewardCoin.transform.position, 0.5f, () =>
+                {
+                    Destroy(coinObj);
+                    RewardCoin.Play("push", -1, 0);
+                }));
+            }
+            yield return null;
+        }
+    }
+
     public void OnNext()
     {
+        foreach (var effect in Effects)
+            if (effect != null)
+                Destroy(effect);
+        Effects.Clear();
+
         gameObject.SetActive(false);
         MenuInGame.Hide();
         MenuStages.PopUp();

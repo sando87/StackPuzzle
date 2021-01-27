@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 
@@ -17,6 +18,9 @@ public class SwipeDetector : MonoBehaviour
 
     void Update()
     {
+        if (EventSystem.current.IsPointerOverGameObject(-1))
+            return;
+
         CheckSwipe();
     }
 

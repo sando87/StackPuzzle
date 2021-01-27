@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class MenuStages : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPanel/Stages";
+    private const string UIObjName = "UISpace/CanvasPopup/Stages";
     private static MenuStages mInst = null;
 
     public Image HeartTimer;

@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 public class MenuInGame : MonoBehaviour
 {
     private static MenuInGame mInst = null;
-    private const string UIObjName = "UISpace/CanvasPanel/InGame";
+    private const string UIObjName = "UISpace/CanvasPopup/InGame";
     private StageInfo mStageInfo;
     private MenuMessageBox mMenu = null;
 

@@ -25,6 +25,8 @@ public class UnityUtils
 
         yield return null;
     }
+
+    //오목함수
     public static IEnumerator AnimateConcave(GameObject obj, Vector3 worldDest, float duration, Action action = null)
     {
         float time = 0;
@@ -49,6 +51,7 @@ public class UnityUtils
         action?.Invoke();
     }
 
+    //볼록함수
     public static IEnumerator AnimateConvex(GameObject obj, Vector3 worldDest, float duration, Action action = null)
     {
         float time = 0;
