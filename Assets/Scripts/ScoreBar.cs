@@ -5,30 +5,52 @@ using UnityEngine.UI;
 
 public class ScoreBar : MonoBehaviour
 {
+    private int mTotalScore = UserSetting.ScorePerBar;
     private int mCurrentScore = 0;
     private int mAddedScore = 0;
 
     public Image ScoreBarMain;
     public Image ScoreBarEffect;
     public GameObject GroupLine;
+    public GameObject SplitBarPrefab;
 
     public int CurrentScore { get { return mCurrentScore + mAddedScore; } }
     
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateScoreBar();
+        mCurrentScore += mAddedScore;
+        mAddedScore = 0;
+        float rate = (float)mCurrentScore / mTotalScore;
+        if (rate < 1)
+        {
+            ScoreBarMain.fillAmount = rate;
+            ScoreBarEffect.fillAmount = 0;
+        }
+        else
+        {
+            mTotalScore *= 3;
+            RenewSplitBar();
+            rate = (float)mCurrentScore / mTotalScore;
+            ScoreBarMain.fillAmount = rate;
+            ScoreBarEffect.fillAmount = 0;
+        }
     }
 
     public void AddScore(int score)
     {
         mAddedScore += score;
+    }
+    public void Init(int curScore, int totalScore)
+    {
+        mTotalScore = totalScore;
+        mCurrentScore = curScore;
+        RenewSplitBar();
     }
     public void Clear()
     {
@@ -37,11 +59,25 @@ public class ScoreBar : MonoBehaviour
 
         mAddedScore = 0;
         mCurrentScore = 0;
+        mTotalScore = UserSetting.ScorePerBar;
 
-        int count = GroupLine.transform.childCount;
-        for (int i = 5; i < count; ++i)
-            Destroy(GroupLine.transform.GetChild(i).gameObject);
+        RenewSplitBar();
     }
+
+    private void RenewSplitBar()
+    {
+        foreach (Transform chid in GroupLine.transform)
+            Destroy(chid.gameObject);
+
+        int count = mTotalScore / UserSetting.ScorePerSplitBar;
+        float gap = ((float)UserSetting.ScorePerSplitBar / mTotalScore) * GroupLine.GetComponent<RectTransform>().sizeDelta.x;
+        for (int i = 0; i < count; ++i)
+        {
+            GameObject subBar = Instantiate(SplitBarPrefab, GroupLine.transform);
+            subBar.transform.localPosition = new Vector3(gap * (i + 1), 0, 0);
+        }
+    }
+
 
     private void UpdateScoreBar()
     {
@@ -108,8 +144,5 @@ public class ScoreBar : MonoBehaviour
         ScoreBarEffect.gameObject.SetActive(false);
 
     }
-    private void UpdateGroupLine()
-    {
-
-    }
+    
 }
