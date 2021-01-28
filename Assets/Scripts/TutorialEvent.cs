@@ -3,82 +3,66 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public enum TutorialEventType
 {
     None, Left, Right, Up, Down, Click
 }
-public class TutorialEvent : MonoBehaviour, IDragHandler, IEndDragHandler, IPointerClickHandler
+public class TutorialEvent : MonoBehaviour
 {
-    private Vector2 accDelta = Vector2.zero;
+    private GraphicRaycaster UIEvnets = null;
+    private DragStageMap WorldEvnets = null;
     private TutorialEventType type = TutorialEventType.None;
-    private Action<TutorialEventType> EventUserAction = null;
+    private Action EventUserAction = null;
     private GameObject ParentObject = null;
 
-    static public void Start(int level, TutorialEventType type, Action<TutorialEventType> eventUserAction)
+    static public void Start(int level, TutorialEventType type, Action eventUserAction)
     {
-        GameObject UICanvas = GameObject.Find("UISpace/CanvasPopup");
         string prefabName = "Tutorial" + level.ToString();
         GameObject prefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
-        GameObject obj = Instantiate(prefab, UICanvas.transform);
+        GameObject obj = Instantiate(prefab);
+        Vector3 camPos = Camera.main.transform.position;
+        camPos.z = -5;
+        obj.transform.position = camPos;
         TutorialEvent comp = obj.GetComponentInChildren<TutorialEvent>();
         comp.ParentObject = obj;
         comp.EventUserAction = eventUserAction;
         comp.type = type;
+        comp.UIEvnets = GameObject.Find("UISpace/CanvasPopup").GetComponent<GraphicRaycaster>();
+        comp.WorldEvnets = GameObject.Find("Main Camera").GetComponent<DragStageMap>();
     }
-    public void OnDrag(PointerEventData eventData)
+    void Start()
     {
-        if (type == TutorialEventType.Click)
+        GetComponent<SwipeDetector>().EventClick = OnClick;
+        GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
+        UIEvnets.enabled = false;
+        WorldEvnets.enabled = false;
+    }
+    void OnClick(GameObject obj)
+    {
+        if (obj != gameObject || type != TutorialEventType.Click)
             return;
 
-        accDelta += eventData.delta;
-
-        if (type == TutorialEventType.Left)
-        {
-            if (accDelta.x < -1)
-            {
-                EventUserAction?.Invoke(type);
-                Destroy(ParentObject);
-            }
-        }
-        else if (type == TutorialEventType.Right)
-        {
-            if (accDelta.x > 1)
-            {
-                EventUserAction?.Invoke(type);
-                Destroy(ParentObject);
-            }
-        }
-        else if (type == TutorialEventType.Up)
-        {
-            if (accDelta.y > 1)
-            {
-                EventUserAction?.Invoke(type);
-                Destroy(ParentObject);
-            }
-        }
-        else if (type == TutorialEventType.Down)
-        {
-            if (accDelta.y < -1)
-            {
-                EventUserAction?.Invoke(type);
-                Destroy(ParentObject);
-            }
-        }
-        
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        accDelta = Vector2.zero;
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (type != TutorialEventType.Click)
-            return;
-
-        EventUserAction?.Invoke(type);
+        EventUserAction?.Invoke();
+        UIEvnets.enabled = true;
+        WorldEvnets.enabled = true;
         Destroy(ParentObject);
+    }
+    void OnSwipe(GameObject obj, SwipeDirection dir)
+    {
+        if (obj != gameObject || type == TutorialEventType.Click)
+            return;
+
+        if ((type == TutorialEventType.Left && dir == SwipeDirection.LEFT)
+            || (type == TutorialEventType.Right && dir == SwipeDirection.RIGHT)
+            || (type == TutorialEventType.Up && dir == SwipeDirection.UP)
+            || (type == TutorialEventType.Down && dir == SwipeDirection.DOWN))
+        {
+            EventUserAction?.Invoke();
+            UIEvnets.enabled = true;
+            WorldEvnets.enabled = true;
+            Destroy(ParentObject);
+        }
     }
 }

@@ -70,11 +70,12 @@ public class ScoreBar : MonoBehaviour
             Destroy(chid.gameObject);
 
         int count = mTotalScore / UserSetting.ScorePerSplitBar;
-        float gap = ((float)UserSetting.ScorePerSplitBar / mTotalScore) * GroupLine.GetComponent<RectTransform>().sizeDelta.x;
+        float gap = ((float)UserSetting.ScorePerSplitBar / mTotalScore) * GroupLine.GetComponent<RectTransform>().rect.width;
         for (int i = 0; i < count; ++i)
         {
             GameObject subBar = Instantiate(SplitBarPrefab, GroupLine.transform);
-            subBar.transform.localPosition = new Vector3(gap * (i + 1), 0, 0);
+            RectTransform tr = subBar.GetComponent<RectTransform>();
+            tr.anchoredPosition = new Vector2(gap * (i + 1), 0);
         }
     }
 
