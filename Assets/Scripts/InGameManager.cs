@@ -850,27 +850,63 @@ public class InGameManager : MonoBehaviour
                 List<Product> pros = new List<Product>();
                 if (productB.Skill == ProductSkill.Horizontal)
                 {
-                    Product[] scan = ScanHorizenProducts(productA, 2);
-                    return DestroyProducts(scan);
+                    List<Product> list = new List<Product>();
+                    list.AddRange(ScanHorizenProducts(productB));
+                    CreateStripeEffect(productB.transform.position, false);
+
+                    Product productB_up = productB.Up();
+                    if (productB_up != null)
+                    {
+                        list.AddRange(ScanHorizenProducts(productB_up));
+                        CreateStripeEffect(productB_up.transform.position, false);
+                    }
+
+                    Product productB_down = productB.Down();
+                    if (productB_down != null)
+                    {
+                        list.AddRange(ScanHorizenProducts(productB_down));
+                        CreateStripeEffect(productB_down.transform.position, false);
+                    }
+
+                    return DestroyProducts(list.ToArray());
                 }
                 else if (productB.Skill == ProductSkill.Vertical)
                 {
-                    Product[] scan = ScanVerticalProducts(productA, 2);
-                    return DestroyProducts(scan);
+
+                    List<Product> list = new List<Product>();
+                    list.AddRange(ScanVerticalProducts(productB));
+                    CreateStripeEffect(productB.transform.position, true);
+
+                    Product productB_left = productB.Left();
+                    if (productB_left != null)
+                    {
+                        list.AddRange(ScanVerticalProducts(productB_left));
+                        CreateStripeEffect(productB_left.transform.position, true);
+                    }
+
+                    Product productB_right = productB.Right();
+                    if (productB_right != null)
+                    {
+                        list.AddRange(ScanVerticalProducts(productB_right));
+                        CreateStripeEffect(productB_right.transform.position, true);
+                    }
+
+                    return DestroyProducts(list.ToArray());
                 }
                 else if (productB.Skill == ProductSkill.Bomb)
                 {
-                    Product[] scan = ScanAroundProducts(productA, 2);
+                    Product[] scan = ScanAroundProducts(productB, 2);
+                    CreateExplosionEffect(productB.transform.position);
                     return DestroyProducts(scan);
                 }
             }
             else if (productA.Skill == ProductSkill.Horizontal || productA.Skill == ProductSkill.Vertical)
             {
                 List<Product> scan = new List<Product>();
-                scan.AddRange(ScanHorizenProducts(productA));
-                scan.AddRange(ScanVerticalProducts(productA));
                 scan.AddRange(ScanHorizenProducts(productB));
                 scan.AddRange(ScanVerticalProducts(productB));
+                CreateStripeEffect(productB.transform.position, false);
+                CreateStripeEffect(productB.transform.position, true);
                 return DestroyProducts(scan.ToArray());
             }
         }

@@ -17,7 +17,7 @@ public class TutorialEvent : MonoBehaviour
     private Action EventUserAction = null;
     private GameObject ParentObject = null;
 
-    static public void Start(int level, TutorialEventType type, Action eventUserAction)
+    static public void Start(int level, TutorialEventType type, Vector2 screenWorldPos, Action eventUserAction)
     {
         string prefabName = "Tutorial" + level.ToString();
         GameObject prefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
@@ -29,6 +29,10 @@ public class TutorialEvent : MonoBehaviour
         comp.ParentObject = obj;
         comp.EventUserAction = eventUserAction;
         comp.type = type;
+        Vector3 pos = comp.transform.position;
+        pos.x = screenWorldPos.x;
+        pos.y = screenWorldPos.y;
+        comp.transform.position = pos;
         comp.UIEvnets = GameObject.Find("UISpace/CanvasPopup").GetComponent<GraphicRaycaster>();
         comp.WorldEvnets = GameObject.Find("Main Camera").GetComponent<DragStageMap>();
     }

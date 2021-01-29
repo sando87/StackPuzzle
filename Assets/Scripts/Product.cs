@@ -52,10 +52,64 @@ public class Product : MonoBehaviour
     }
     public void SkillMerge(Product targetProduct, Action EventMergeEnd)
     {
-        Vector3 center = (transform.position + targetProduct.transform.position) *0.5f;
+        StartCoroutine(SkillMergeEffect(targetProduct, EventMergeEnd));
+    }
+    private IEnumerator SkillMergeEffect(Product target, Action EventEnd)
+    {
+        IsMoving = true;
+        target.IsMoving = true;
+        float duration = 0.2f;
+        Vector3 start = transform.position;
+        Vector3 dest = new Vector3(target.transform.position.x, target.transform.position.y, start.z);
+        Vector3 vel = (dest - start) / duration;
+        Vector3 offset = Vector3.zero;
+        float time = 0;
+        while (time < duration)
+        {
+            transform.position = start + (vel * time);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        transform.position = dest;
 
-        targetProduct.StartCoroutine(targetProduct.AnimateMove(center, 0.2f, null));
-        StartCoroutine(AnimateMove(center, 0.2f, EventMergeEnd));
+        Product sizingProduct = PickMainProduct(this, target);
+        if(sizingProduct != null)
+        {
+            Vector3 refPos = sizingProduct.transform.position;
+            refPos.z -= 0.1f;
+            Vector3 randomOff = Vector3.zero;
+            Vector3 sizeStep = new Vector3(0.1f, 0.1f, 0);
+            time = 0;
+            while (time < 0.4f)
+            {
+                randomOff.x = UnityEngine.Random.Range(-0.05f, 0.05f);
+                randomOff.y = UnityEngine.Random.Range(-0.05f, 0.05f);
+                sizingProduct.transform.localScale += sizeStep;
+                sizingProduct.transform.position = refPos + randomOff;
+                time += Time.deltaTime;
+                yield return null;
+            }
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        IsMoving = false;
+        target.IsMoving = false;
+        EventEnd?.Invoke();
+    }
+    Product PickMainProduct(Product main, Product sub)
+    {
+        if (main.Skill == ProductSkill.SameColor)
+            return main;
+        else if (sub.Skill == ProductSkill.SameColor)
+            return sub;
+        else
+        {
+            if (main.Skill == ProductSkill.Bomb)
+                return sub;
+            else if (sub.Skill == ProductSkill.Bomb)
+                return main;
+        }
+        return null;
     }
     public void Swipe(Product targetProduct, Action EventSwipeEnd)
     {
