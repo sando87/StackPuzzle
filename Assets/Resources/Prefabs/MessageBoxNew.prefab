@@ -372,6 +372,7 @@ GameObject:
   - component: {fileID: 2148455702602074094}
   - component: {fileID: 2148455702602074088}
   - component: {fileID: 2148455702602074089}
+  - component: {fileID: 4466690309004175739}
   m_Layer: 5
   m_Name: Popup
   m_TagString: Untagged
@@ -443,6 +444,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &4466690309004175739
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2148455702602074095}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: 3827f248baf49b145a7aef59829ab1ce, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: 3827f248baf49b145a7aef59829ab1ce, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &2148455702788490460
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,6 +545,7 @@ GameObject:
   - component: {fileID: 2148455703188775595}
   - component: {fileID: 2148455703188775605}
   - component: {fileID: 2148455703188775594}
+  - component: {fileID: 5339996542572382228}
   m_Layer: 5
   m_Name: Dimed
   m_TagString: Untagged
@@ -591,6 +609,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!111 &5339996542572382228
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2148455703188775592}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Animation: {fileID: 7400000, guid: bca6c3bb2d39d79458fed0894115a2d5, type: 2}
+  m_Animations:
+  - {fileID: 7400000, guid: bca6c3bb2d39d79458fed0894115a2d5, type: 2}
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_CullingType: 0
 --- !u!1 &2148455703287472818
 GameObject:
   m_ObjectHideFlags: 0
