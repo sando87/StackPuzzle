@@ -166,6 +166,7 @@ public class InGameManager : MonoBehaviour
     public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mItemLooping; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
+    public int StageNum { get { return mStageInfo.Num; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
     public AttackPoints AttackPoints { get; set; }

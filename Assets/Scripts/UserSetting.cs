@@ -35,6 +35,11 @@ public class UserSetting
         get { return PlayerPrefs.GetInt("userMute", 0) == 1; }
         set { PlayerPrefs.SetInt("userMute", value ? 1 : 0); }
     }
+    public static int TutorialNumber
+    {
+        get { return PlayerPrefs.GetInt("TutorialNumber", 1); }
+        set { PlayerPrefs.SetInt("TutorialNumber", value); }
+    }
     public static bool StageIsLocked(int stageNum)
     {
         byte cnt = StageStarCount[stageNum - 1];

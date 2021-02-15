@@ -11,13 +11,14 @@ public enum TutorialEventType
 }
 public class TutorialEvent : MonoBehaviour
 {
+    [SerializeField] private Animator Anim = null;
     private GraphicRaycaster UIEvnets = null;
     private DragStageMap WorldEvnets = null;
     private TutorialEventType type = TutorialEventType.None;
-    private Action EventUserAction = null;
+    private Action<TutorialEventType> EventUserAction = null;
     private GameObject ParentObject = null;
 
-    static public void Start(int level, TutorialEventType type, Vector2 screenWorldPos, Action eventUserAction)
+    static public void Start(int level, TutorialEventType type, Vector2 screenWorldPos, Action<TutorialEventType> eventUserAction)
     {
         string prefabName = "Tutorial" + level.ToString();
         GameObject prefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
@@ -42,15 +43,33 @@ public class TutorialEvent : MonoBehaviour
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
         UIEvnets.enabled = false;
         WorldEvnets.enabled = false;
+        InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = false;
+        StartCoroutine(PlayAnim());
+    }
+    private IEnumerator PlayAnim()
+    {
+        Anim.StopPlayback();
+        yield return new WaitForSeconds(2);
+        Anim.Play("tutorialDim", -1, 0);
+        yield return new WaitForSeconds(1);
+        switch(type)
+        {
+            case TutorialEventType.Click: Anim.SetTrigger("click"); break;
+            case TutorialEventType.Left: Anim.SetTrigger("left"); break;
+            case TutorialEventType.Right: Anim.SetTrigger("right"); break;
+            case TutorialEventType.Up: Anim.SetTrigger("up"); break;
+            case TutorialEventType.Down: Anim.SetTrigger("down"); break;
+        }
     }
     void OnClick(GameObject obj)
     {
         if (obj != gameObject || type != TutorialEventType.Click)
             return;
 
-        EventUserAction?.Invoke();
+        EventUserAction?.Invoke(TutorialEventType.Click);
         UIEvnets.enabled = true;
         WorldEvnets.enabled = true;
+        InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = true;
         Destroy(ParentObject);
     }
     void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -63,9 +82,10 @@ public class TutorialEvent : MonoBehaviour
             || (type == TutorialEventType.Up && dir == SwipeDirection.UP)
             || (type == TutorialEventType.Down && dir == SwipeDirection.DOWN))
         {
-            EventUserAction?.Invoke();
+            EventUserAction?.Invoke(type);
             UIEvnets.enabled = true;
             WorldEvnets.enabled = true;
+            InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = true;
             Destroy(ParentObject);
         }
     }
