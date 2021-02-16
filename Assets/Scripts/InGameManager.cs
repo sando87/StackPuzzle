@@ -131,6 +131,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsSwipping = false;
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
+    private System.Random mRandomSeed = null;
     private VerticalFrames[] mFrameDropGroup = null;
 
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
@@ -237,6 +238,7 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mStageInfo = info;
         mUserInfo = userInfo;
+        mRandomSeed = new System.Random(info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed);
 
         int stageCountPerTheme = 20;
         int themeCount = 9;
@@ -1563,15 +1565,16 @@ public class InGameManager : MonoBehaviour
     }
     private int RandomNextColor()
     {
-        int count = (int)(mStageInfo.ColorCount + 0.99f);
-        float remain = mStageInfo.ColorCount - (int)mStageInfo.ColorCount;
-        int idx = UnityEngine.Random.Range(0, count);
-        if (remain > 0 && idx == count - 1)
-        {
-            if (remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
-                idx = UnityEngine.Random.Range(0, count - 1);
-        }
-        return idx;
+        return mRandomSeed.Next((int)mStageInfo.ColorCount);
+        //int count = (int)(mStageInfo.ColorCount + 0.99f);
+        //float remain = mStageInfo.ColorCount - (int)mStageInfo.ColorCount;
+        //int idx = UnityEngine.Random.Range(0, count);
+        //if (remain > 0 && idx == count - 1)
+        //{
+        //    if (remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
+        //        idx = UnityEngine.Random.Range(0, count - 1);
+        //}
+        //return idx;
     }
     private void ResetGame()
     {
@@ -1595,6 +1598,7 @@ public class InGameManager : MonoBehaviour
         mIsSwipping = false;
         mIsFlushing = false;
         mPrevIdleState = IsIdle;
+        mRandomSeed = null;
 
         Billboard.Reset();
         mNetMessages.Clear();

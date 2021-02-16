@@ -1,0 +1,14 @@
+GoalType,ItemSameColor
+GoalValue,3
+MoveLimit,25
+ColorCount,5
+Items,4:OneMore/5:KeepCombo/6:SameColor
+XCount,7
+YCount,7
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0

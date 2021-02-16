@@ -1,0 +1,15 @@
+GoalType,Score
+GoalValue,1
+TimeLimit,70
+ColorCount,5
+XCount,5
+YCount,9
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0

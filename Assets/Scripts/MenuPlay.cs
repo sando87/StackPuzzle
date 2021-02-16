@@ -54,9 +54,6 @@ public class MenuPlay : MonoBehaviour
             return;
         }
 
-        if (!UserSetting.IsBotPlayer)
-            Purchases.UseHeart();
-
         SoundPlayer.Inst.Player.Stop();
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         InGameManager.InstStage.StartGameInStageMode(mStageInfo, UserSetting.UserInfo);
@@ -65,5 +62,8 @@ public class MenuPlay : MonoBehaviour
         MenuStages.Hide();
         StageManager.Inst.Activate(false);
         gameObject.SetActive(false);
+
+        if (!UserSetting.IsBotPlayer)
+            Purchases.UseHeart();
     }
 }

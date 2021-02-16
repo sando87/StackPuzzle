@@ -1,0 +1,13 @@
+GoalType,Score
+GoalValue,1
+MoveLimit,20
+ColorCount,4
+RandomSeed,1
+XCount,5
+YCount,6
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0

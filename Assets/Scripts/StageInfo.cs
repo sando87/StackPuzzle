@@ -17,7 +17,7 @@ public class StageInfoCell
 }
 public class StageInfo
 {
-    public const int Version = 3;
+    public const int Version = 4;
     public int Num = 0;
     public string GoalType = "";
     public int GoalValue = 0;
@@ -28,6 +28,7 @@ public class StageInfo
     public float ColorCount = 0;
     public int XCount = 0;
     public int YCount = 0;
+    public int RandomSeed = -1;
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
     public StageInfoCell[,] Field = null;
 
@@ -75,6 +76,7 @@ public class StageInfo
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
                 case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
+                case "RandomSeed": info.RandomSeed = int.Parse(tokens[1]); break;
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
                 case "Items": info.Items = Parse(tokens[1]); break;
@@ -187,6 +189,7 @@ public class StageInfo
             + MoveLimit + ","
             + TimeLimit + ","
             + ColorCount + ","
+            + RandomSeed + ","
             + XCount + ","
             + YCount + ","
             + StageInfo.ItemToString(Items);
@@ -236,6 +239,7 @@ public class StageInfo
         "GoalValue,3\r\n" +
         "MoveLimit,25\r\n" +
         "ColorCount,5.0\r\n" +
+        "RandomSeed,-1\r\n" +
         "Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor\r\n" +
         "XCount,7\r\n" +
         "YCount,7\r\n" +

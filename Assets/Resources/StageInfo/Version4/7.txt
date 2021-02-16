@@ -1,0 +1,15 @@
+GoalType,ItemKeepCombo
+GoalValue,3
+MoveLimit,15
+ColorCount,5
+Items,4:OneMore/5:KeepCombo
+XCount,6
+YCount,8
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1 
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1
+Rows,0/-1 0/0 0/0 0/0 0/0 0/-1
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
