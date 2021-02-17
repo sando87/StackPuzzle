@@ -29,8 +29,8 @@ public class Product : MonoBehaviour
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; set; }
-    public bool UserLock { get; set; } = false;
-    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || UserLock; } }
+    public bool SkillCasted { get; set; } = false;
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
 
     public void AttachTo(Frame parentFrame)
@@ -166,7 +166,7 @@ public class Product : MonoBehaviour
     {
         if (ParentFrame == null)
             return null;
-
+        
         IsDestroying = true;
         Frame parent = Detach();
         UnWrapChocoBlocksAroundFrame(parent, Combo);
@@ -295,7 +295,7 @@ public class Product : MonoBehaviour
     }
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (Color != color || IsChocoBlock || Skill != ProductSkill.Nothing)
+        if (Color != color || IsChocoBlock || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
         if (products.Contains(this))

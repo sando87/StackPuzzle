@@ -382,10 +382,19 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
-            mItemLooping = true;
+            //mItemLooping = true;
+            //CreateMergeEffect(product, targetProduct);
+            //product.SkillMerge(targetProduct, () => {
+            //    mItemLooping = false;
+            //    SwipeSkilledProducts(product, targetProduct);
+            //});
+
+
+            mIsSwipping = true;
+            Network_Swipe(product, dir);
             CreateMergeEffect(product, targetProduct);
-            product.SkillMerge(targetProduct, () => {
-                mItemLooping = false;
+            product.Swipe(targetProduct, () => {
+                mIsSwipping = false;
                 SwipeSkilledProducts(product, targetProduct);
             });
         }
@@ -771,35 +780,6 @@ public class InGameManager : MonoBehaviour
         return rets.ToArray();
     }
 
-    private void SwipeSkilledProducts(Product main, Product sub)
-    {
-        if (main.Skill == ProductSkill.SameColor)
-        {
-            DestroySameColorBoth(main, sub);
-        }
-        else if (sub.Skill == ProductSkill.SameColor)
-        {
-            DestroySameColorBoth(sub, main);
-        }
-        else
-        {
-            Product[] destroies = null;
-            switch (sub.Skill)
-            {
-                case ProductSkill.Horizontal: destroies = DestroySkillProduct(main, sub); break;
-                case ProductSkill.Vertical: destroies = DestroySkillProduct(main, sub); break;
-                case ProductSkill.Bomb: destroies = DestroySkillProduct(sub, main); break;
-            }
-
-            List<Product> skillProducts = new List<Product>();
-            foreach (Product pro in destroies)
-            {
-                if (pro.Skill != ProductSkill.Nothing && pro != main && pro != sub)
-                    skillProducts.Add(pro);
-            }
-            StartCoroutine(LoopBreakSkill(skillProducts.ToArray()));
-        }
-    }
     public Product[] DestroySkillProduct(Product productA, Product productB = null)
     {
         if (productB == null)
@@ -905,7 +885,7 @@ public class InGameManager : MonoBehaviour
         {
             if (productB.Skill == ProductSkill.Horizontal || productB.Skill == ProductSkill.Vertical)
             {
-                Product[] randomProducts = ScanRandomProducts(5);
+                List<Product> randomProducts = ScanRandomProducts(5);
                 List<ProductInfo> netInfo = new List<ProductInfo>();
                 foreach (Product pro in randomProducts)
                 {
@@ -918,7 +898,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (productB.Skill == ProductSkill.Bomb)
             {
-                Product[] randomProducts = ScanRandomProducts(5);
+                List<Product> randomProducts = ScanRandomProducts(5);
                 List<ProductInfo> netInfo = new List<ProductInfo>();
                 foreach (Product pro in randomProducts)
                 {
@@ -964,32 +944,6 @@ public class InGameManager : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         mStopDropping = false;
     }
-    IEnumerator LoopBreakAllSkill()
-    {
-        mItemLooping = true;
-        while (true)
-        {
-            for(int y = CountY - 1; y >= 0; --y)
-            {
-                for (int x = 0; x < CountX; ++x)
-                {
-                    Frame frame = mFrames[x, y];
-                    Product pro = frame.ChildProduct;
-                    if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked)
-                    {
-                        DestroySkillProduct(pro);
-                        goto KeepLoop;
-                    }
-                }
-            }
-
-            break;
-
-        KeepLoop:
-            yield return new WaitForSeconds(0.4f);
-        }
-        mItemLooping = false;
-    }
     IEnumerator LoopSameColorSkill(Vector3 startPos)
     {
         mItemLooping = true;
@@ -1029,6 +983,56 @@ public class InGameManager : MonoBehaviour
         mItemLooping = false;
     }
 
+
+
+    private void SwipeSkilledProducts(Product main, Product sub)
+    {
+        if (main.Skill == ProductSkill.SameColor || sub.Skill == ProductSkill.SameColor)
+        {
+            DestroySkillWithSamecolor(main, sub);
+        }
+        else if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
+        {
+            DestroySkillBomb_Bomb(main, sub);
+        }
+        else if (main.Skill != ProductSkill.Bomb && sub.Skill != ProductSkill.Bomb)
+        {
+            DestroySkillStripe_Stripe(main, sub);
+        }
+        else
+        {
+            if (main.Skill == ProductSkill.Bomb)
+                DestroySkillBomb_Stripe(main, sub);
+            else
+                DestroySkillBomb_Stripe(sub, main);
+        }
+    }
+    IEnumerator LoopBreakAllSkill()
+    {
+        mItemLooping = true;
+        while (true)
+        {
+            for (int y = CountY - 1; y >= 0; --y)
+            {
+                for (int x = 0; x < CountX; ++x)
+                {
+                    Frame frame = mFrames[x, y];
+                    Product pro = frame.ChildProduct;
+                    if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked)
+                    {
+                        DestroySkillProduct(pro);
+                        goto KeepLoop;
+                    }
+                }
+            }
+
+            break;
+
+        KeepLoop:
+            yield return new WaitForSeconds(0.4f);
+        }
+        mItemLooping = false;
+    }
     IEnumerator StartAutoMatchFlow()
     {
         mIsAutoMatching = true;
@@ -1128,18 +1132,73 @@ public class InGameManager : MonoBehaviour
         }
         mIsAutoMatching = false;
     }
-    IEnumerator StartElectronicEffect(Product main, Product[] pros, Action eventEnd)
+    IEnumerator StartElectronicEffect(Product main, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
-        foreach(Product pro in pros)
+        Vector3 startPos = main.transform.position;
+        while (true)
         {
-            CreateLaserEffect(main.transform.position, pro.transform.position);
+            int idx = 0;
+            bool isDone = true;
+            Product cur = null;
+            for(idx = 0; idx < pros.Length; ++idx)
+            {
+                if (pros[idx] == null)
+                    continue;
+                else if(pros[idx].IsLocked)
+                {
+                    isDone = false;
+                    continue;
+                }
+                else
+                {
+                    cur = pros[idx];
+                    break;
+                }
+            }
+
+            if (isDone && cur == null)
+                break;
+
+            CreateLaserEffect(startPos, cur.transform.position);
+            eventTurn?.Invoke(cur);
+            pros[idx] = null;
             yield return new WaitForSeconds(0.2f);
         }
 
         eventEnd?.Invoke();
     }
+    public void DestroySkillOneshot(Product productA)
+    {
+        if (productA.Skill == ProductSkill.Horizontal)
+        {
+            CreateStripeEffect(productA.transform.position, false);
+            Product[] scan = ScanHorizenProducts(productA);
+            DestroyProducts(scan);
+        }
+        else if (productA.Skill == ProductSkill.Vertical)
+        {
+            CreateStripeEffect(productA.transform.position, true);
+            Product[] scan = ScanVerticalProducts(productA);
+            DestroyProducts(scan);
+        }
+        else if (productA.Skill == ProductSkill.Bomb)
+        {
+            CreateExplosionEffect(productA.transform.position);
+            Product[] scan = ScanAroundProducts(productA, 1);
+            DestroyProducts(scan);
+        }
+        else if (productA.Skill == ProductSkill.SameColor)
+        {
+            Product[] sameProducts = FindSameColor(productA);
+            DestroyProducts(sameProducts);
+        }
+    }
     private void DestroySkill(Product target)
     {
+        if (target.SkillCasted)
+            return;
+
+        target.SkillCasted = true;
         if (target.Skill == ProductSkill.Horizontal)
         {
             CreateStripeEffect(target.transform.position, false);
@@ -1170,14 +1229,160 @@ public class InGameManager : MonoBehaviour
         else if (target.Skill == ProductSkill.SameColor)
         {
             Product[] pros = FindSameColor(target);
-            foreach (Product pro in pros)
-                pro.UserLock = true;
-            
-            StartCoroutine(StartElectronicEffect(target, pros, () => {
-                DestroyProducts(pros);
-            }));
+            StartCoroutine(StartElectronicEffect(target, pros,
+                (pro) => {
+                DestroyProducts(new Product[1] { pro });
+            }, null));
         }
     }
+    public void DestroySkillWithSamecolor(Product productA, Product productB)
+    {
+        Product sameColor = productA.Skill == ProductSkill.SameColor ? productA : productB;
+        Product another = productA.Skill == ProductSkill.SameColor ? productB : productA;
+        if (sameColor.Skill != ProductSkill.SameColor)
+            return;
+
+        if (another.Skill == ProductSkill.Horizontal || another.Skill == ProductSkill.Vertical)
+        {
+            List<Product> randomProducts = ScanRandomProducts(5);
+            randomProducts.Add(sameColor);
+            Product[] pros = randomProducts.ToArray();
+
+            List<ProductInfo> netInfo = new List<ProductInfo>();
+            StartCoroutine(StartElectronicEffect(sameColor, pros, 
+                (pro) => {
+                    pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                },
+                () => {
+                    Network_ChangeSkill(netInfo.ToArray());
+                    StartCoroutine(LoopBreakAllSkill());
+                }));
+        }
+        else if (another.Skill == ProductSkill.Bomb)
+        {
+            List<Product> randomProducts = ScanRandomProducts(5);
+            randomProducts.Add(sameColor);
+            Product[] pros = randomProducts.ToArray();
+
+            List<ProductInfo> netInfo = new List<ProductInfo>();
+            StartCoroutine(StartElectronicEffect(sameColor, pros,
+                (pro) => {
+                    pro.ChangeProductImage(ProductSkill.Bomb);
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                },
+                () => {
+                    Network_ChangeSkill(netInfo.ToArray());
+                    StartCoroutine(LoopBreakAllSkill());
+                }));
+        }
+        else if (another.Skill == ProductSkill.SameColor)
+        {
+            List<Product> randomProducts = ScanRandomProducts(5);
+            Product[] pros = randomProducts.ToArray();
+
+            List<ProductInfo> netInfo = new List<ProductInfo>();
+            StartCoroutine(StartElectronicEffect(sameColor, pros,
+                (pro) => {
+                    pro.ChangeProductImage(ProductSkill.SameColor);
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                },
+                () => {
+                    Network_ChangeSkill(netInfo.ToArray());
+                    List<Product> allSkillProducts = new List<Product>();
+                    foreach (Frame frame in mFrames)
+                        if (frame.ChildProduct != null && !frame.ChildProduct.IsLocked && frame.ChildProduct.Skill != ProductSkill.Nothing)
+                            allSkillProducts.Add(frame.ChildProduct);
+
+                    DestroyProducts(allSkillProducts.ToArray());
+                    StartCoroutine(StartAutoMatchFlow2());
+                }));
+        }
+    }
+    public void DestroySkillBomb_Stripe(Product productbomb, Product productStripe)
+    {
+        if (productStripe.Skill == ProductSkill.Horizontal)
+        {
+            List<Product> pros = new List<Product>();
+            pros.AddRange(ScanHorizenProducts(productStripe));
+            CreateStripeEffect(productStripe.transform.position, false);
+
+            Product productB_up = productStripe.Up();
+            if (productB_up != null)
+            {
+                pros.AddRange(ScanHorizenProducts(productB_up));
+                CreateStripeEffect(productB_up.transform.position, false);
+            }
+
+            Product productB_down = productStripe.Down();
+            if (productB_down != null)
+            {
+                pros.AddRange(ScanHorizenProducts(productB_down));
+                CreateStripeEffect(productB_down.transform.position, false);
+            }
+
+            DestroyProducts(pros.ToArray());
+            foreach (Product pro in pros)
+                if (pro != productbomb && pro != productStripe && pro.Skill != ProductSkill.Nothing)
+                    DestroySkill(pro);
+        }
+        else if (productStripe.Skill == ProductSkill.Vertical)
+        {
+            List<Product> pros = new List<Product>();
+            pros.AddRange(ScanVerticalProducts(productStripe));
+            CreateStripeEffect(productStripe.transform.position, true);
+
+            Product productB_left = productStripe.Left();
+            if (productB_left != null)
+            {
+                pros.AddRange(ScanVerticalProducts(productB_left));
+                CreateStripeEffect(productB_left.transform.position, true);
+            }
+
+            Product productB_right = productStripe.Right();
+            if (productB_right != null)
+            {
+                pros.AddRange(ScanVerticalProducts(productB_right));
+                CreateStripeEffect(productB_right.transform.position, true);
+            }
+
+            DestroyProducts(pros.ToArray());
+            foreach (Product pro in pros)
+                if (pro != productbomb && pro != productStripe && pro.Skill != ProductSkill.Nothing)
+                    DestroySkill(pro);
+        }
+
+    }
+    public void DestroySkillStripe_Stripe(Product productStripeA, Product productStripeB)
+    {
+
+        List<Product> pros = new List<Product>();
+        pros.AddRange(ScanHorizenProducts(productStripeA));
+        pros.AddRange(ScanVerticalProducts(productStripeA));
+        pros.AddRange(ScanHorizenProducts(productStripeB));
+        pros.AddRange(ScanVerticalProducts(productStripeB));
+        CreateStripeEffect(productStripeA.transform.position, false);
+        CreateStripeEffect(productStripeA.transform.position, true);
+        CreateStripeEffect(productStripeB.transform.position, false);
+        CreateStripeEffect(productStripeB.transform.position, true);
+
+        DestroyProducts(pros.ToArray());
+        foreach (Product pro in pros)
+            if (pro != productStripeA && pro != productStripeB && pro.Skill != ProductSkill.Nothing)
+                DestroySkill(pro);
+    }
+    public void DestroySkillBomb_Bomb(Product productbombA, Product productbombB)
+    {
+        Product[] pros = ScanAroundProducts(productbombB, 2);
+        CreateExplosionEffect(productbombB.transform.position);
+
+        DestroyProducts(pros);
+        foreach (Product pro in pros)
+            if (pro != productbombA && pro != productbombB && pro.Skill != ProductSkill.Nothing)
+                DestroySkill(pro);
+    }
+
+
 
     private Product[] FindSameColor(Product target)
     {
@@ -1250,7 +1455,7 @@ public class InGameManager : MonoBehaviour
         float idxY = (worldPosY - worldRect.yMin) / GridSize;
         return mFrames[(int)idxX, (int)idxY];
     }
-    private Product[] ScanRandomProducts(int step)
+    private List<Product> ScanRandomProducts(int step)
     {
         List<Product> rets = new List<Product>();
         int totalCount = CountX * CountY;
@@ -1265,10 +1470,10 @@ public class InGameManager : MonoBehaviour
             int idxX = curIdx % CountX;
             int idxY = curIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock && pro.Skill == ProductSkill.Nothing)
                 rets.Add(pro);
         }
-        return rets.ToArray();
+        return rets;
     }
     private void DropNextProducts()
     {
