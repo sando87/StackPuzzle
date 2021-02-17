@@ -125,6 +125,7 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo = null;
     private UserInfo mUserInfo = null;
     private bool mIsFinished = false;
+    private bool mIsAutoMatching = false;
     private bool mStopDropping = false;
     private bool mItemLooping = false;
     private bool mIsDropping = false;
@@ -164,7 +165,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mItemLooping; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mItemLooping && !mIsAutoMatching; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -315,19 +316,22 @@ public class InGameManager : MonoBehaviour
         Product pro = clickedObj.GetComponent<Product>();
         if(pro.Skill != ProductSkill.Nothing)
         {
-            mStopDropping = true;
+            //mStopDropping = true;
             pro.Animation.Play("swap");
-            CreateSparkEffect(pro.transform.position);
-            StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => {
-                List<Product> nextSkills = new List<Product>();
-                Product[] destroyes = DestroySkillProduct(pro);
-                foreach (Product des in destroyes)
-                {
-                    if (des.Skill != ProductSkill.Nothing && des != pro)
-                        nextSkills.Add(des);
-                }
-                StartCoroutine(LoopBreakSkill(nextSkills.ToArray()));
-            }));
+
+            DestroySkill(pro);
+
+            //CreateSparkEffect(pro.transform.position);
+            //StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => {
+            //    List<Product> nextSkills = new List<Product>();
+            //    Product[] destroyes = DestroySkillProduct(pro);
+            //    foreach (Product des in destroyes)
+            //    {
+            //        if (des.Skill != ProductSkill.Nothing && des != pro)
+            //            nextSkills.Add(des);
+            //    }
+            //    StartCoroutine(LoopBreakSkill(nextSkills.ToArray()));
+            //}));
         }
         else
         {
@@ -820,30 +824,8 @@ public class InGameManager : MonoBehaviour
             }
             else if (productA.Skill == ProductSkill.SameColor)
             {
-                List<Product> pros = new List<Product>();
-                foreach (Frame frame in mFrames)
-                {
-                    Product pro = frame.ChildProduct;
-                    if (pro == null || pro.IsLocked)
-                        continue;
-
-                    pros.Add(pro);
-                }
-
-                List<Product[]> matches = FindMatchedProducts(pros.ToArray());
-                matches.Add(new Product[1] { productA });
-
-                pros.Clear();
-                Vector3 startPos = productA.transform.position;
-                foreach (Product[] match in matches)
-                {
-                    Vector3 destPos = match[0].transform.position;
-                    CreateLaserEffect(startPos, destPos);
-                    DestroyProducts(match, true);
-                    pros.AddRange(match);
-                }
-
-                return pros.ToArray();
+                Product[] sameProducts = FindSameColor(productA);
+                return DestroyProducts(sameProducts);
             }
         }
         else
@@ -1047,6 +1029,171 @@ public class InGameManager : MonoBehaviour
         mItemLooping = false;
     }
 
+    IEnumerator StartAutoMatchFlow()
+    {
+        mIsAutoMatching = true;
+        while (true)
+        {
+            bool isAllIdle = true;
+            Product[] matchableProducts = null;
+            foreach (Frame frame in mFrames)
+            {
+                if (frame.Empty)
+                    continue;
+
+                if (frame.ChildProduct == null || frame.ChildProduct.IsLocked)
+                {
+                    isAllIdle = false;
+                    continue;
+                }
+                    
+                List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct });
+                if (matches.Count <= 0)
+                    continue;
+
+                isAllIdle = false;
+                matchableProducts = matches[0];
+                break;
+            }
+
+            
+            if (isAllIdle)
+            {
+                break;
+            }
+            else if (matchableProducts != null)
+            {
+                ProductSkill nextSkill = CheckSkillable(matchableProducts);
+                if (nextSkill == ProductSkill.Nothing)
+                    DestroyProducts(matchableProducts);
+                else
+                    MergeProducts(matchableProducts, nextSkill);
+            }
+            
+            yield return new WaitForSeconds(0.3f);
+        }
+        mIsAutoMatching = false;
+    }
+    IEnumerator StartAutoMatchFlow2()
+    {
+        mIsAutoMatching = true;
+        float time = 0;
+        float interval = 0.3f;
+        float limitTime = 5.0f;
+        int matchCount = UserSetting.MatchCount;
+        while (true)
+        {
+            time += Time.deltaTime;
+            bool isAllIdle = true;
+            Product[] matchableProducts = null;
+            foreach (Frame frame in mFrames)
+            {
+                if (frame.Empty)
+                    continue;
+
+                if (frame.ChildProduct == null || frame.ChildProduct.IsLocked)
+                {
+                    isAllIdle = false;
+                    continue;
+                }
+
+                List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct }, matchCount);
+                if (matches.Count <= 0)
+                    continue;
+
+                matchableProducts = matches[0];
+                isAllIdle = false;
+                break;
+            }
+
+            if (time > limitTime || isAllIdle)
+            {
+                time = 0;
+                interval -= 0.1f;
+                matchCount--;
+                limitTime -= 2.0f;
+                if (matchCount <= 1)
+                    break;
+            }
+            else if (matchableProducts != null)
+            {
+                ProductSkill nextSkill = CheckSkillable(matchableProducts);
+                if (nextSkill == ProductSkill.Nothing)
+                    DestroyProducts(matchableProducts);
+                else
+                    MergeProducts(matchableProducts, nextSkill);
+            }
+
+            yield return new WaitForSeconds(interval);
+        }
+        mIsAutoMatching = false;
+    }
+    IEnumerator StartElectronicEffect(Product main, Product[] pros, Action eventEnd)
+    {
+        foreach(Product pro in pros)
+        {
+            CreateLaserEffect(main.transform.position, pro.transform.position);
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        eventEnd?.Invoke();
+    }
+    private void DestroySkill(Product target)
+    {
+        if (target.Skill == ProductSkill.Horizontal)
+        {
+            CreateStripeEffect(target.transform.position, false);
+            Product[] pros = ScanHorizenProducts(target);
+            DestroyProducts(pros);
+            foreach (Product pro in pros)
+                if (pro != target && pro.Skill != ProductSkill.Nothing)
+                    DestroySkill(pro);
+        }
+        else if (target.Skill == ProductSkill.Vertical)
+        {
+            CreateStripeEffect(target.transform.position, true);
+            Product[] pros = ScanVerticalProducts(target);
+            DestroyProducts(pros);
+            foreach (Product pro in pros)
+                if (pro != target && pro.Skill != ProductSkill.Nothing)
+                    DestroySkill(pro);
+        }
+        else if (target.Skill == ProductSkill.Bomb)
+        {
+            CreateExplosionEffect(target.transform.position);
+            Product[] pros = ScanAroundProducts(target, 1);
+            DestroyProducts(pros);
+            foreach (Product pro in pros)
+                if (pro != target && pro.Skill != ProductSkill.Nothing)
+                    DestroySkill(pro);
+        }
+        else if (target.Skill == ProductSkill.SameColor)
+        {
+            Product[] pros = FindSameColor(target);
+            foreach (Product pro in pros)
+                pro.UserLock = true;
+            
+            StartCoroutine(StartElectronicEffect(target, pros, () => {
+                DestroyProducts(pros);
+            }));
+        }
+    }
+
+    private Product[] FindSameColor(Product target)
+    {
+        List<Product> pros = new List<Product>();
+        pros.Add(target);
+        foreach (Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro == null || pro.IsLocked || pro.Skill != ProductSkill.Nothing)
+                continue;
+
+            if(pro.Color == target.Color)
+                pros.Add(pro);
+        }
+        return pros.ToArray();
+    }
     private Queue<Product> FindAliveProducts(Frame[] subFrames)
     {
         Queue<Product> aliveProducts = new Queue<Product>();
@@ -1058,7 +1205,7 @@ public class InGameManager : MonoBehaviour
         }
         return aliveProducts;
     }
-    private List<Product[]> FindMatchedProducts(Product[] targetProducts)
+    private List<Product[]> FindMatchedProducts(Product[] targetProducts, int matchCount = UserSetting.MatchCount)
     {
         Dictionary<Product, int> matchedPro = new Dictionary<Product, int>();
         List<Product[]> list = new List<Product[]>();
@@ -1069,7 +1216,7 @@ public class InGameManager : MonoBehaviour
 
             List<Product> matches = new List<Product>();
             pro.SearchMatchedProducts(matches, pro.Color);
-            if (matches.Count >= UserSetting.MatchCount)
+            if (matches.Count >= matchCount)
             {
                 list.Add(matches.ToArray());
                 foreach (Product sub in matches)
@@ -1132,7 +1279,11 @@ public class InGameManager : MonoBehaviour
         {
             int cnt = StartToDropNewProducts();
             if (cnt > 0)
+            {
                 Network_Drop(cnt);
+                if (!mIsAutoMatching)
+                    StartCoroutine(StartAutoMatchFlow());
+            }
         }
         else
         {
@@ -1362,7 +1513,7 @@ public class InGameManager : MonoBehaviour
         if (matches.Length <= UserSetting.MatchCount)
             return ProductSkill.Nothing;
 
-        if (matches.Length >= 5)
+        if (matches.Length >= UserSetting.MatchCount + 2)
             return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
@@ -1597,6 +1748,7 @@ public class InGameManager : MonoBehaviour
         mItemLooping = false;
         mIsSwipping = false;
         mIsFlushing = false;
+        mIsAutoMatching = false;
         mPrevIdleState = IsIdle;
         mRandomSeed = null;
 

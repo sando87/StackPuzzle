@@ -29,7 +29,8 @@ public class Product : MonoBehaviour
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; set; }
-    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
+    public bool UserLock { get; set; } = false;
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || UserLock; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
 
     public void AttachTo(Frame parentFrame)
