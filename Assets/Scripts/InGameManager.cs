@@ -1608,8 +1608,13 @@ public class InGameManager : MonoBehaviour
         mUserInfo = null;
         mStageInfo = null;
 
-        GetComponent<SwipeDetector>().EventSwipe = null;
-        GetComponent<SwipeDetector>().EventClick = null;
+        SwipeDetector comp = GetComponent<SwipeDetector>();
+        if(comp != null)
+        {
+            comp.EventSwipe = null;
+            comp.EventClick = null;
+        }
+
         StopAllCoroutines();
         CancelInvoke();
     }
