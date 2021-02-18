@@ -25,6 +25,7 @@ public class Product : MonoBehaviour
     public float DropSpeed { get; set; }
     public float Weight { get; set; }
     public int Combo { get; private set; }
+    public int InstanceID { get; set; }
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
@@ -146,6 +147,7 @@ public class Product : MonoBehaviour
         {
             Detach();
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
+                InGameManager.InstCurrent.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
             }));
         }
@@ -292,6 +294,7 @@ public class Product : MonoBehaviour
             idx++;
             yield return null;
         }
+        InGameManager.InstCurrent.ProductIDs.Remove(InstanceID);
         Destroy(gameObject);
     }
     IEnumerator AnimateFlash(float intensity)

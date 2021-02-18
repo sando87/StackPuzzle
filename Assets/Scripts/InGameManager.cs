@@ -138,6 +138,7 @@ public class InGameManager : MonoBehaviour
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
 
+    public Dictionary<int, Product> ProductIDs = new Dictionary<int, Product>();
     public SkillPair[] SkillMapping = new SkillPair[7]
     {
         new SkillPair(PVPCommand.Undef, null),
@@ -484,7 +485,7 @@ public class InGameManager : MonoBehaviour
             pro.DestroyImmediately();
             Product newPro = CreateNewProduct();
             parentFrame.VertFrames.AddNewProduct(newPro);
-            nextProducts.Add(new ProductInfo(newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY));
+            nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
         }
         Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect);
     }
@@ -535,13 +536,13 @@ public class InGameManager : MonoBehaviour
 
             if(pro == mergeProducts[0])
             {
-                nextProducts.Add(new ProductInfo(ProductColor.None, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY));
+                nextProducts.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, pro.InstanceID));
             }
             else
             {
                 Product newPro = CreateNewProduct();
                 parentFrame.VertFrames.AddNewProduct(newPro);
-                nextProducts.Add(new ProductInfo(newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY));
+                nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
             }
         }
         Network_Destroy(nextProducts.ToArray(), skill, false);
@@ -891,7 +892,7 @@ public class InGameManager : MonoBehaviour
                 {
                     CreateLaserEffect(productA.transform.position, pro.transform.position);
                     pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
-                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, 0, 0));
                 }
                 Network_ChangeSkill(netInfo.ToArray());
                 StartCoroutine(LoopBreakAllSkill());
@@ -904,7 +905,7 @@ public class InGameManager : MonoBehaviour
                 {
                     CreateLaserEffect(productA.transform.position, pro.transform.position);
                     pro.ChangeProductImage(ProductSkill.Bomb);
-                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, 0, 0));
                 }
                 Network_ChangeSkill(netInfo.ToArray());
                 StartCoroutine(LoopBreakAllSkill());
@@ -1256,7 +1257,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(StartElectronicEffect(sameColor, pros, 
                 (pro) => {
                     pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
-                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
@@ -1273,7 +1274,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(StartElectronicEffect(sameColor, pros,
                 (pro) => {
                     pro.ChangeProductImage(ProductSkill.Bomb);
-                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
@@ -1289,7 +1290,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(StartElectronicEffect(sameColor, pros,
                 (pro) => {
                     pro.ChangeProductImage(ProductSkill.SameColor);
-                    netInfo.Add(new ProductInfo(pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY));
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
@@ -1484,23 +1485,11 @@ public class InGameManager : MonoBehaviour
         if (mStopDropping)
             return;
 
-        if (FieldType != GameFieldType.pvpOpponent)
+        int cnt = StartToDropNewProducts();
+        if (cnt > 0 && FieldType != GameFieldType.pvpOpponent)
         {
-            int cnt = StartToDropNewProducts();
-            if (cnt > 0)
-            {
-                Network_Drop(cnt);
-                if (!mIsAutoMatching)
-                    StartCoroutine(StartAutoMatchFlow());
-            }
-        }
-        else
-        {
-            foreach (var group in mFrameDropGroup)
-            {
-                if (group.NewProducts.Count > 0)
-                    return;
-            }
+            if (!mIsAutoMatching)
+                StartCoroutine(StartAutoMatchFlow());
         }
 
         mIsDropping = false;
@@ -1869,6 +1858,8 @@ public class InGameManager : MonoBehaviour
         Product product = obj.GetComponent<Product>();
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.AttachTo(parent);
+        product.InstanceID = product.GetInstanceID();
+        ProductIDs[product.InstanceID] = product;
         return product;
     }
     private Product CreateNewProduct(ProductColor color = ProductColor.None)
@@ -1876,6 +1867,8 @@ public class InGameManager : MonoBehaviour
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
         Product product = obj.GetComponent<Product>();
+        product.InstanceID = product.GetInstanceID();
+        ProductIDs[product.InstanceID] = product;
         return product;
     }
     IEnumerator FlushObstacles(Product[] targets)
@@ -1961,6 +1954,7 @@ public class InGameManager : MonoBehaviour
         mPrevIdleState = IsIdle;
         mRandomSeed = null;
 
+        ProductIDs.Clear();
         Billboard.Reset();
         mNetMessages.Clear();
 
@@ -2333,14 +2327,17 @@ public class InGameManager : MonoBehaviour
                 {
                     ProductInfo info = body.products[i];
                     Frame frame = mFrames[info.idxX, info.idxY];
-                    Product pro = CreateNewProduct(frame, info.color);
+                    Product pro = CreateNewProduct(frame, info.nextColor);
                     pro.GetComponent<BoxCollider2D>().enabled = false;
+                    pro.InstanceID = info.nextInstID;
+                    ProductIDs[pro.InstanceID] = pro;
                     pro.SetChocoBlock(0);
                     pro.EventUnWrapChoco = () => {
                         Billboard.ChocoCount++;
                         EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
                     };
                 }
+
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.Click)
@@ -2370,8 +2367,8 @@ public class InGameManager : MonoBehaviour
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
                     ProductInfo info = body.products[i];
-                    Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
-                    if (pro != null && !pro.IsLocked)
+                    Product pro = ProductIDs[info.prvInstID];
+                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
                         products.Add(pro);
                 }
                 
@@ -2402,7 +2399,9 @@ public class InGameManager : MonoBehaviour
                             }
                             Frame parentFrame = products[idx].ParentFrame;
                             products[idx].DestroyImmediately();
-                            Product newPro = CreateNewProduct(body.products[idx].color);
+                            Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                            newPro.InstanceID = body.products[idx].nextInstID;
+                            ProductIDs[newPro.InstanceID] = newPro;
                             parentFrame.VertFrames.AddNewProduct(newPro);
                         }
                     }
@@ -2414,7 +2413,9 @@ public class InGameManager : MonoBehaviour
                             products[idx].MergeImImmediately(products[0], body.skill);
                             if (idx != 0)
                             {
-                                Product newPro = CreateNewProduct(body.products[idx].color);
+                                Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                                newPro.InstanceID = body.products[idx].nextInstID;
+                                ProductIDs[newPro.InstanceID] = newPro;
                                 parentFrame.VertFrames.AddNewProduct(newPro);
                             }
                         }
@@ -2476,10 +2477,12 @@ public class InGameManager : MonoBehaviour
         for (int i = 0; i < pros.Length; ++i)
         {
             ProductInfo info = new ProductInfo();
+            info.prvInstID = pros[i].InstanceID;
+            info.nextInstID = pros[i].InstanceID;
             info.idxX = pros[i].ParentFrame.IndexX;
             info.idxY = pros[i].ParentFrame.IndexY;
             info.skill = pros[i].Skill;
-            info.color = pros[i].Color;
+            info.nextColor = pros[i].Color;
             infos.Add(info);
         }
         return infos.ToArray();
@@ -2493,7 +2496,7 @@ public class InGameManager : MonoBehaviour
             info.idxX = frames[i].IndexX;
             info.idxY = frames[i].IndexY;
             info.skill = ProductSkill.Nothing;
-            info.color = ProductColor.None;
+            info.nextColor = ProductColor.None;
             infos.Add(info);
         }
         return infos.ToArray();
@@ -2527,7 +2530,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = 1;
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].color = pro.Color;
+        req.products[0].prvColor = pro.Color;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
@@ -2543,7 +2546,7 @@ public class InGameManager : MonoBehaviour
         req.dir = dir;
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].color = pro.Color;
+        req.products[0].prvColor = pro.Color;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect)

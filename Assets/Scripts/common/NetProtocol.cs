@@ -152,11 +152,15 @@ public class UserInfo
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public struct ProductInfo
 {
-    public ProductColor color;
+    public ProductColor prvColor;
+    public ProductColor nextColor;
     public ProductSkill skill;
     public int idxX;
     public int idxY;
-    public ProductInfo(ProductColor color, ProductSkill skill, int idxX, int idxY) { this.color = color; this.skill = skill; this.idxX = idxX; this.idxY = idxY; }
+    public int prvInstID;
+    public int nextInstID;
+    public ProductInfo(ProductColor prvColor, ProductColor nextColor, ProductSkill skill, int idxX, int idxY, int prvInstID, int nextInstID)
+    { this.prvColor = prvColor; this.nextColor = nextColor; this.skill = skill; this.idxX = idxX; this.idxY = idxY; this.prvInstID = prvInstID; this.nextInstID = nextInstID; }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
