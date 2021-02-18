@@ -188,6 +188,61 @@ public class Product : MonoBehaviour
     }
 
 
+    public void Drop(Action eventEnd)
+    {
+        if (IsDropping)
+            return;
+
+        StartCoroutine(StartDropping(eventEnd));
+    }
+    private IEnumerator StartDropping(Action eventEnd)
+    {
+        IsDropping = true;
+        float dropGravity = -1;
+        float dropSpeed = 0;
+        Vector3 pos = transform.position;
+        while(true)
+        {
+            dropSpeed += dropGravity * Time.deltaTime;
+            pos.y += dropSpeed * Time.deltaTime;
+            Product downProduct = GetDynamicDownProduct();
+
+            float dropDestY = 0;
+            if (downProduct == null) //맨 바닥일 경우
+                dropDestY = transform.parent.GetChild(0).transform.position.y;
+            else
+                dropDestY = downProduct.transform.position.y + InGameManager.InstCurrent.GridSize;
+
+            if (pos.y > dropDestY) //충돌하지 않았다면
+            {
+                transform.position = pos;
+            }
+            else //충돌했다면
+            {
+                pos.y = dropDestY;
+                transform.position = pos;
+                if (downProduct != null && downProduct.IsDropping) //충돌한게 낙하중이면 속도만 0
+                {
+                    dropSpeed = 0;
+                }
+                else //충돌한게 고정된 상태이면 land
+                {
+                    break;
+                }
+            }
+            yield return null;
+        }
+        IsDropping = false;
+        eventEnd?.Invoke();
+    }
+    private Product GetDynamicDownProduct()
+    {
+        int idx = transform.GetSiblingIndex();
+        Product pro = transform.parent.GetChild(idx - 1).GetComponent<Product>();
+        return pro;
+    }
+
+
     IEnumerator AnimateMoveTo(Product destProduct, float duration, Action EventMoveEnd)
     {
         IsMoving = true;
