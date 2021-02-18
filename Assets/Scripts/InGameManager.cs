@@ -1159,10 +1159,14 @@ public class InGameManager : MonoBehaviour
             if (isDone && cur == null)
                 break;
 
-            CreateLaserEffect(startPos, cur.transform.position);
-            eventTurn?.Invoke(cur);
-            pros[idx] = null;
-            yield return new WaitForSeconds(0.2f);
+            if(cur != null)
+            {
+                CreateLaserEffect(startPos, cur.transform.position);
+                eventTurn?.Invoke(cur);
+                pros[idx] = null;
+            }
+
+            yield return new WaitForSeconds(0.1f);
         }
 
         eventEnd?.Invoke();
@@ -2351,7 +2355,11 @@ public class InGameManager : MonoBehaviour
                     Product target = pro.Dir(body.dir);
                     if(target != null && !target.IsLocked)
                     {
-                        OnSwipe(pro.gameObject, body.dir);
+                        mIsSwipping = true;
+                        pro.Swipe(target, () => {
+                            mIsSwipping = false;
+                        });
+
                         mNetMessages.RemoveFirst();
                     }
                 }
