@@ -5,22 +5,157 @@ using UnityEngine;
 
 public class AttackPoints : MonoBehaviour
 {
-    private const float mDist = 0.6f;
-    private int mChocoCount = 0;
-    private int mAttackPoint = 0;
-    private bool mIsReady = false;
-    private float InitSize = 1.0f;
-    private float mScaleForEffect = 1.0f;
-    private AttackPoints OppAttackPoints = null;
-    private InGameManager ParentManager = null;
+    [SerializeField] private Sprite[] Images = new Sprite[4];
+    [SerializeField] private GameObject BaseSprite = null;
+
+    private const float mAnimateSpeed = 0.6f;
     private List<GameObject> mChilds = new List<GameObject>();
 
-    public GameObject BaseSprite;
-    public GameObject Projectile;
-    public Sprite[] Images = new Sprite[4];
+    public int Points { get; private set; }
+    public float TouchedTime { get; private set; }
 
-    public int Count { get { return mAttackPoint; } }
-    public bool IsReady { get { return mIsReady && mChocoCount > 0; } }
+    //private int mChocoCount = 0;
+    //private int mAttackPoint = 0;
+    //private float InitSize = 1.0f;
+    //private float mScaleForEffect = 1.0f;
+    //private AttackPoints OppAttackPoints = null;
+    //private InGameManager ParentManager { get { return transform.parent.GetComponent<InGameManager>(); } }
+    //public GameObject Projectile;
+    //public int Count { get { return mAttackPoint; } }
+
+
+    private void StartAnimate()
+    {
+        StopCoroutine("AnimateFold");
+        StopCoroutine("AnimateUnFold");
+
+        StartCoroutine("AnimateFold", Points);
+    }
+    private IEnumerator AnimateFold(int count)
+    {
+        if (mChilds.Count > 0)
+        {
+
+            float time = 0;
+            while (time < 0.2f)
+            {
+                for (int i = 0; i < mChilds.Count; ++i)
+                {
+                    GameObject child = mChilds[i];
+                    float speed = mAnimateSpeed * (i + 1) * 5;
+                    child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, Vector3.zero, speed * Time.deltaTime);
+                }
+                time += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        ClearChocos();
+        if(count != 0)
+            CreateNewChild(count);
+
+    }
+    private void ClearChocos()
+    {
+        for (int i = 0; i < mChilds.Count; ++i)
+            Destroy(mChilds[i]);
+        mChilds.Clear();
+    }
+    private void CreateNewChild(int points)
+    {
+        int count = Math.Abs(points);
+        int cntA = count / 27;
+        int cntB = (count % 27) / 9;
+        int cntC = (count % 9) / 3;
+        int cntD = count % 3;
+
+        for (int i = 0; i < cntA; ++i)
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[3];
+            mChilds.Add(obj);
+        }
+        for (int i = 0; i < cntB; ++i)
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[2];
+            mChilds.Add(obj);
+        }
+        for (int i = 0; i < cntC; ++i)
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[1];
+            mChilds.Add(obj);
+        }
+        for (int i = 0; i < cntD; ++i)
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[0];
+            mChilds.Add(obj);
+        }
+
+        StartCoroutine("AnimateUnFold", points > 0 ? true : false);
+    }
+    private IEnumerator AnimateUnFold(bool isLeft)
+    {
+        float time = 0;
+        while (time < 0.2f)
+        {
+            for (int i = 0; i < mChilds.Count; ++i)
+            {
+                GameObject child = mChilds[i];
+                float speed = mAnimateSpeed * (i + 1) * 5;
+                Vector3 dest = new Vector3(mAnimateSpeed * (i + 1), 0, 0);
+                if (isLeft)
+                    dest.x *= -1;
+                child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, dest, speed * Time.deltaTime);
+            }
+            time += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    public void ResetPoints()
+    {
+        TouchedTime = 0;
+        Points = 0;
+
+        foreach (Transform child in transform)
+            Destroy(child.gameObject);
+    }
+    public void AddPoints(int point)
+    {
+        TouchedTime = Time.realtimeSinceStartup;
+        Points += point;
+        StartAnimate();
+    }
+    public int Flush(int reqPoint)
+    {
+        TouchedTime = Time.realtimeSinceStartup;
+
+        if (Points > 0)
+        {
+            int flushPoint = Points >= reqPoint ? reqPoint : Points;
+            Points -= flushPoint;
+            StartAnimate();
+            return flushPoint;
+        }
+        else if(Points < 0)
+        {
+            int flushPoint = -Points >= reqPoint ? reqPoint : -Points;
+            Points += flushPoint;
+            StartAnimate();
+            return flushPoint;
+        }
+
+        return 0;
+    }
+
+    /*
     public void Add(int point, Vector3 fromPos)
     {
         if (OppAttackPoints == null)
@@ -31,10 +166,10 @@ public class AttackPoints : MonoBehaviour
             mScaleForEffect = ParentManager.FieldType == GameFieldType.pvpPlayer ? UserSetting.BattleOppResize : 1 / UserSetting.BattleOppResize;
             mScaleForEffect *= InitSize;
         }
-            
+
 
         mAttackPoint += point;
-        if(mAttackPoint < 0)
+        if (mAttackPoint < 0)
         {
             OppAttackPoints.mAttackPoint = Mathf.Abs(mAttackPoint);
             mAttackPoint = 0;
@@ -121,132 +256,6 @@ public class AttackPoints : MonoBehaviour
 
         action?.Invoke();
     }
+    */
 
-    public int Pop(int point)
-    {
-        if (mChocoCount < point)
-            point = mChocoCount;
-
-        mAttackPoint -= point;
-        AddChoco(-point);
-
-        return point;
-    }
-
-    void AddChoco(int count)
-    {
-        mChocoCount += count;
-
-        mIsReady = false;
-        StopCoroutine("WaitForReady");
-        StartCoroutine("WaitForReady");
-
-        StopCoroutine("AnimateFold");
-        StopCoroutine("AnimateUnFold");
-
-        if (mChocoCount < 0)
-        {
-            OppAttackPoints.AddChoco(Mathf.Abs(mChocoCount));
-            mChocoCount = 0;
-            StartCoroutine("AnimateFold", mChocoCount);
-        }
-        else
-        {
-            StartCoroutine("AnimateFold", mChocoCount);
-        }
-    }
-    IEnumerator WaitForReady()
-    {
-        yield return new WaitForSeconds(UserSetting.ChocoFlushInterval);
-        mIsReady = true;
-    }
-
-    IEnumerator AnimateFold(int count)
-    {
-
-        if (mChilds.Count > 0)
-        {
-
-            float time = 0;
-            while (time < 0.2f)
-            {
-                for (int i = 0; i < mChilds.Count; ++i)
-                {
-                    GameObject child = mChilds[i];
-                    float speed = mDist * (i + 1) * 5;
-                    child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, Vector3.zero, speed * Time.deltaTime);
-                }
-                time += Time.deltaTime;
-                yield return null;
-            }
-        }
-
-        ClearChocos();
-        if(count > 0)
-            CreateNewChild(count);
-
-    }
-
-    private void ClearChocos()
-    {
-        for (int i = 0; i < mChilds.Count; ++i)
-            Destroy(mChilds[i]);
-        mChilds.Clear();
-    }
-
-    private void CreateNewChild(int count)
-    {
-        int cntA = count / 27;
-        int cntB = (count % 27) / 9;
-        int cntC = (count % 9) / 3;
-        int cntD = count % 3;
-
-        for (int i = 0; i < cntA; ++i)
-        {
-            GameObject obj = Instantiate(BaseSprite, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            obj.GetComponent<SpriteRenderer>().sprite = Images[3];
-            mChilds.Add(obj);
-        }
-        for (int i = 0; i < cntB; ++i)
-        {
-            GameObject obj = Instantiate(BaseSprite, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            obj.GetComponent<SpriteRenderer>().sprite = Images[2];
-            mChilds.Add(obj);
-        }
-        for (int i = 0; i < cntC; ++i)
-        {
-            GameObject obj = Instantiate(BaseSprite, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            obj.GetComponent<SpriteRenderer>().sprite = Images[1];
-            mChilds.Add(obj);
-        }
-        for (int i = 0; i < cntD; ++i)
-        {
-            GameObject obj = Instantiate(BaseSprite, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            obj.GetComponent<SpriteRenderer>().sprite = Images[0];
-            mChilds.Add(obj);
-        }
-
-        StartCoroutine("AnimateUnFold");
-    }
-
-    IEnumerator AnimateUnFold()
-    {
-        float time = 0;
-        while (time < 0.2f)
-        {
-            for (int i = 0; i < mChilds.Count; ++i)
-            {
-                GameObject child = mChilds[i];
-                float speed = mDist * (i + 1) * 5;
-                Vector3 dest = new Vector3(mDist * (i + 1), 0, 0);
-                child.transform.localPosition = Vector3.MoveTowards(child.transform.localPosition, dest, speed * Time.deltaTime);
-            }
-            time += Time.deltaTime;
-            yield return null;
-        }
-    }
 }

@@ -20,6 +20,7 @@ public class Product : MonoBehaviour
 
     public Action EventUnWrapChoco;
 
+    public InGameManager Manager { get; set; }
     public Frame ParentFrame { get; private set; }
     public ProductSkill Skill { get; private set; }
     public float DropSpeed { get; set; }
@@ -47,8 +48,7 @@ public class Product : MonoBehaviour
 
         Frame frame = ParentFrame;
         frame.ChildProduct = null;
-        InGameManager mgr = frame.GameManager;
-        transform.SetParent(mgr.transform);
+        transform.SetParent(Manager.transform);
         ParentFrame = null;
         return frame;
     }
@@ -147,7 +147,7 @@ public class Product : MonoBehaviour
         {
             Detach();
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
-                InGameManager.InstCurrent.ProductIDs.Remove(InstanceID);
+                Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
             }));
         }
@@ -213,7 +213,7 @@ public class Product : MonoBehaviour
             if (downProduct == null) //맨 바닥일 경우
                 dropDestY = transform.parent.GetChild(0).transform.position.y;
             else
-                dropDestY = downProduct.transform.position.y + InGameManager.InstCurrent.GridSize;
+                dropDestY = downProduct.transform.position.y + Manager.GridSize;
 
             if (pos.y > dropDestY) //충돌하지 않았다면
             {
@@ -294,7 +294,7 @@ public class Product : MonoBehaviour
             idx++;
             yield return null;
         }
-        InGameManager.InstCurrent.ProductIDs.Remove(InstanceID);
+        Manager.ProductIDs.Remove(InstanceID);
         Destroy(gameObject);
     }
     IEnumerator AnimateFlash(float intensity)

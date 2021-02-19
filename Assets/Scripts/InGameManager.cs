@@ -21,7 +21,7 @@ public class VerticalFrames
         newPro.gameObject.SetActive(false);
         NewProducts.Add(newPro);
     }
-    public void StartDrop()
+    public void StartDrop(float gridSize)
     {
         List<Product> newVertList = new List<Product>();
         foreach (Product dropProduct in VerticalProducts)
@@ -30,7 +30,7 @@ public class VerticalFrames
                 newVertList.Add(dropProduct);
         }
 
-        float height = InGameManager.InstCurrent.GridSize;
+        float height = gridSize;
         Vector3 topPos = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].transform.position : Frames[Frames.Length - 1].transform.position;
         topPos.z = Frames[0].transform.position.z - 1;
         float dropSpeed = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].DropSpeed : 0;
@@ -118,6 +118,8 @@ public class InGameManager : MonoBehaviour
     public GameObject CloudPrefab;
     public GameObject UpsideDownParticle;
     public GameObject RemoveBadEffectParticle;
+    public AttackPoints AttackPointFrame;
+    public GameObject AttackBullet;
 
     public GameObject[] SkillSlots;
 
@@ -129,7 +131,7 @@ public class InGameManager : MonoBehaviour
     private bool mStopDropping = false;
     private bool mItemLooping = false;
     private bool mIsDropping = false;
-    private bool mIsSwipping = false;
+    private bool mIsUserEventLock = false;
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
     private System.Random mRandomSeed = null;
@@ -166,13 +168,12 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsSwipping && !mIsFlushing && !mItemLooping && !mIsAutoMatching; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
-    public AttackPoints AttackPoints { get; set; }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
     public float GridSize { get { return UserSetting.GridSize * transform.localScale.x; } }
@@ -222,6 +223,7 @@ public class InGameManager : MonoBehaviour
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
+            StartCoroutine(CheckFlush());
         }));
     }
     public void StartGameInPVPOpponent(StageInfo info, UserInfo userInfo)
@@ -276,9 +278,7 @@ public class InGameManager : MonoBehaviour
         SecondaryInitFrames();
         InitDropGroupFrames();
 
-        GameObject ap = Instantiate(AttackPointPrefab, transform);
-        ap.transform.localPosition = localBasePos + new Vector3(-gridSize + 0.2f, gridSize * CountY - 0.1f, 0);
-        AttackPoints = ap.GetComponent<AttackPoints>();
+        AttackPointFrame.ResetPoints();
     }
     public void InitProducts()
     {
@@ -311,28 +311,17 @@ public class InGameManager : MonoBehaviour
 
     public void OnClick(GameObject clickedObj)
     {
-        if (!IsIdle || mIsFinished)
+        if (!IsIdle || mIsFinished || IsAllProductIdle())
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
         if(pro.Skill != ProductSkill.Nothing)
         {
-            //mStopDropping = true;
             pro.Animation.Play("swap");
 
-            DestroySkill(pro);
-
             //CreateSparkEffect(pro.transform.position);
-            //StartCoroutine(UnityUtils.CallAfterSeconds(0.4f, () => {
-            //    List<Product> nextSkills = new List<Product>();
-            //    Product[] destroyes = DestroySkillProduct(pro);
-            //    foreach (Product des in destroyes)
-            //    {
-            //        if (des.Skill != ProductSkill.Nothing && des != pro)
-            //            nextSkills.Add(des);
-            //    }
-            //    StartCoroutine(LoopBreakSkill(nextSkills.ToArray()));
-            //}));
+
+            DestroySkill(pro);
         }
         else
         {
@@ -350,7 +339,7 @@ public class InGameManager : MonoBehaviour
     }
     public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
-        if (!IsIdle || mIsFinished)
+        if (!IsIdle || mIsFinished || IsAllProductIdle())
             return;
 
         SwipeDirection fixedDir = dir;
@@ -391,20 +380,20 @@ public class InGameManager : MonoBehaviour
             //});
 
 
-            mIsSwipping = true;
+            mIsUserEventLock = true;
             Network_Swipe(product, dir);
-            CreateMergeEffect(product, targetProduct);
+            //CreateMergeEffect(product, targetProduct);
             product.Swipe(targetProduct, () => {
-                mIsSwipping = false;
+                mIsUserEventLock = false;
                 SwipeSkilledProducts(product, targetProduct);
             });
         }
         else
         {
-            mIsSwipping = true;
+            mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () => {
-                mIsSwipping = false;
+                mIsUserEventLock = false;
             });
         }
 
@@ -415,6 +404,7 @@ public class InGameManager : MonoBehaviour
     private IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
         mStopDropping = true;
+        Network_Drop(true);
         Billboard.CurrentCombo = 1;
         EventCombo?.Invoke(Billboard.CurrentCombo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
@@ -457,6 +447,7 @@ public class InGameManager : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
 
         EventCombo?.Invoke(0);
+        Network_Drop(false);
         mStopDropping = false;
     }
     private Product[] ToProducts(Frame[] frames)
@@ -580,7 +571,7 @@ public class InGameManager : MonoBehaviour
             if (group.NewProducts.Count > 0)
             {
                 newProductCount += group.NewProducts.Count;
-                group.StartDrop();
+                group.StartDrop(GridSize);
             }
         }
         return newProductCount;
@@ -1135,6 +1126,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator StartElectronicEffect(Product main, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
+        mItemLooping = true;
         Vector3 startPos = main.transform.position;
         while (true)
         {
@@ -1171,6 +1163,7 @@ public class InGameManager : MonoBehaviour
         }
 
         eventEnd?.Invoke();
+        mItemLooping = false;
     }
     public void DestroySkillOneshot(Product productA)
     {
@@ -1388,7 +1381,6 @@ public class InGameManager : MonoBehaviour
     }
 
 
-
     private Product[] FindSameColor(Product target)
     {
         List<Product> pros = new List<Product>();
@@ -1504,54 +1496,107 @@ public class InGameManager : MonoBehaviour
     }
     private void Attack(int score, Vector3 fromPos)
     {
-        if (FieldType == GameFieldType.Stage)
-            return;
-
         int point = score / UserSetting.AttackScore;
         if (point <= 0)
             return;
 
-        int remainPt = AttackPoints.Count;
-        if (remainPt <= 0)
+        if (FieldType == GameFieldType.Stage)
+            return;
+        else if (FieldType == GameFieldType.pvpPlayer)
         {
-            Opponent.Damaged(point, fromPos);
-        }
-        else
-        {
-            AttackPoints.Add(-point, fromPos);
-        }
-    }
-    private void Damaged(int point, Vector3 fromPos)
-    {
-        AttackPoints.Add(point, fromPos);
-        if(FieldType == GameFieldType.pvpPlayer)
-        {
-            StopCoroutine("FlushAttacks");
-            StartCoroutine("FlushAttacks");
-        }
-    }
-    private IEnumerator FlushAttacks()
-    {
-        while (AttackPoints.Count > 0)
-        {
-            if (AttackPoints.IsReady && IsIdle)
+            fromPos.z -= 1;
+            GameObject obj = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            StartCoroutine(AnimateThrowOver(obj, () =>
             {
-                int cnt = AttackPoints.Pop(CountX);
-                List<Product> products = GetNextFlushTargets(cnt);
+                Destroy(obj);
+                AttackPointFrame.AddPoints(-point);
+            }));
+        }
+        else if (FieldType == GameFieldType.pvpOpponent)
+        {
+            fromPos.z -= 1;
+            GameObject obj = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            StartCoroutine(AnimateThrowOver(obj, () => {
+                Destroy(obj);
+                AttackPointFrame.AddPoints(point);
+            }));
+        }
+    }
+    IEnumerator AnimateThrowSide(GameObject obj, Action action = null)
+    {
+        float time = 0;
+        float duration = 1.0f;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = AttackPointFrame.transform.position;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        float slopeY = dir.y / (duration * duration);
+        float slopeX = -dir.x / (duration * duration);
+        while (time < duration)
+        {
+            float nowT = time - duration;
+            offset.x = slopeX * nowT * nowT + dir.x;
+            offset.y = slopeY * time * time;
+            obj.transform.position = startPos + offset;
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action?.Invoke();
+    }
+    IEnumerator AnimateThrowOver(GameObject obj, Action action = null)
+    {
+        float time = 0;
+        float duration = 1.0f;
+        Vector3 startPos = obj.transform.position;
+        Vector3 destPos = AttackPointFrame.transform.position;
+        Vector3 dir = destPos - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        float slopeY = -dir.y / (duration * duration);
+        float slopeX = -dir.x / (duration * duration);
+        while (time < duration)
+        {
+            float nowT = time - duration;
+            offset.x = slopeX * nowT * nowT + dir.x;
+            offset.y = slopeY * nowT * nowT + dir.y;
+            obj.transform.position = startPos + offset;
+            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        action?.Invoke();
+    }
+    private IEnumerator CheckFlush()
+    {
+        while (true)
+        {
+            if(AttackPointFrame.Points > 0
+                && AttackPointFrame.TouchedTime > Time.realtimeSinceStartup + UserSetting.ChocoFlushInterval
+                && IsAllProductIdle() )
+            {
+                int point = AttackPointFrame.Flush(UserSetting.FlushCount);
+
+                List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
                 Network_FlushAttacks(Serialize(rets));
                 StartCoroutine(FlushObstacles(rets));
-                if(products.Count < cnt)
+                if (products.Count <= point)
                 {
                     StartCoroutine("StartFinishing");
                     break;
                 }
 
-                yield return new WaitForSeconds(2.0f);
+                yield return new WaitForSeconds(UserSetting.ChocoFlushInterval);
             }
-            else
-                yield return null;
-
+            yield return null;
         }
     }
     private IEnumerator StartFinishing()
@@ -1856,6 +1901,7 @@ public class InGameManager : MonoBehaviour
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
         Product product = obj.GetComponent<Product>();
+        product.Manager = this;
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.AttachTo(parent);
         product.InstanceID = product.GetInstanceID();
@@ -1867,6 +1913,7 @@ public class InGameManager : MonoBehaviour
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
         Product product = obj.GetComponent<Product>();
+        product.Manager = this;
         product.InstanceID = product.GetInstanceID();
         ProductIDs[product.InstanceID] = product;
         return product;
@@ -1943,12 +1990,12 @@ public class InGameManager : MonoBehaviour
         EventFinish = null;
         EventReduceLimit = null;
 
-        AttackPoints = null;
+        AttackPointFrame.ResetPoints();
         mIsFinished = false;
         mIsDropping = false;
         mStopDropping = false;
         mItemLooping = false;
-        mIsSwipping = false;
+        mIsUserEventLock = false;
         mIsFlushing = false;
         mIsAutoMatching = false;
         mPrevIdleState = IsIdle;
@@ -2346,19 +2393,17 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Swipe)
             {
-                Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
-                if(pro != null && !pro.IsLocked)
+                if(IsAllProductIdle())
                 {
+                    Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
                     Product target = pro.Dir(body.dir);
-                    if(target != null && !target.IsLocked)
-                    {
-                        mIsSwipping = true;
-                        pro.Swipe(target, () => {
-                            mIsSwipping = false;
-                        });
 
-                        mNetMessages.RemoveFirst();
-                    }
+                    mIsUserEventLock = true;
+                    pro.Swipe(target, () => {
+                        mIsUserEventLock = false;
+                    });
+
+                    mNetMessages.RemoveFirst();
                 }
             }
             else if (body.cmd == PVPCommand.Destroy)
@@ -2424,12 +2469,17 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
-            else if (body.cmd == PVPCommand.Drop)
+            else if (body.cmd == PVPCommand.DropPause)
             {
-                int cnt = StartToDropNewProducts();
-                if (cnt != body.newDropCount)
-                    LOG.warn("miss-matched new drop count!!");
-
+                if(IsAllProductIdle())
+                {
+                    mStopDropping = true;
+                    mNetMessages.RemoveFirst();
+                }
+            }
+            else if (body.cmd == PVPCommand.DropResume)
+            {
+                mStopDropping = false;
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.ChangeSkill)
@@ -2456,7 +2506,7 @@ public class InGameManager : MonoBehaviour
             {
                 if(IsAllProductIdle())
                 {
-                    AttackPoints.Pop(body.ArrayCount);
+                    AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> rets = new List<Product>();
                     for (int i = 0; i < body.ArrayCount; ++i)
                     {
@@ -2564,15 +2614,14 @@ public class InGameManager : MonoBehaviour
         Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Drop(int count)
+    private void Network_Drop(bool pause)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
 
         PVPInfo req = new PVPInfo();
-        req.cmd = PVPCommand.Drop;
+        req.cmd = pause ? PVPCommand.DropPause : PVPCommand.DropResume;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.newDropCount = count;
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
