@@ -40,7 +40,7 @@ public class AutoBalancer : MonoBehaviour
             else
                 continue;
 
-            if (mgr.IsIdle)
+            if (mgr.IsIdle && mgr.IsAllProductIdle())
             {
                 counter++;
                 if (counter > counterLimit)
@@ -68,7 +68,7 @@ public class AutoBalancer : MonoBehaviour
             for (int x = 0; x < mCntX; ++x)
             {
                 Product cenPro = mgr.Frame(x, fixedY).ChildProduct;
-                if (cenPro == null || cenPro.IsLocked || cenPro.IsChocoBlock)
+                if (cenPro == null || cenPro.IsLocked || cenPro.IsChocoBlock || cenPro.Skill != ProductSkill.Nothing)
                     continue;
 
                 AutoBalancerInfo info = new AutoBalancerInfo();
@@ -128,7 +128,7 @@ public class AutoBalancer : MonoBehaviour
             for (int x = 0; x < mCntX; ++x)
             {
                 Product pro = mgr.Frame(x, fixedY).ChildProduct;
-                if (pro == null || pro.IsLocked)
+                if (pro == null || pro.IsLocked || pro.IsChocoBlock)
                     continue;
 
                 if(pro.Skill != ProductSkill.Nothing)

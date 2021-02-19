@@ -207,11 +207,13 @@ public class InGameManager : MonoBehaviour
         MenuInformBox.PopUp("START!!");
         StartGame(info, userInfo);
 
+        mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFinishStageMode());
+            mIsUserEventLock = false;
         }));
     }
     public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)
@@ -219,11 +221,13 @@ public class InGameManager : MonoBehaviour
         MenuInformBox.PopUp("START!!");
         StartGame(info, userInfo);
 
+        mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFlush());
+            mIsUserEventLock = false;
         }));
     }
     public void StartGameInPVPOpponent(StageInfo info, UserInfo userInfo)
@@ -1795,7 +1799,7 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    private bool IsAllProductIdle()
+    public bool IsAllProductIdle()
     {
         for (int y = CountY - 1; y >= 0; --y)
         {
@@ -2033,7 +2037,7 @@ public class InGameManager : MonoBehaviour
     public int NextMatchCount(Product pro, SwipeDirection dir)
     {
         Product target = pro.Dir(dir);
-        if (target == null || target.Color == pro.Color)
+        if (target == null || target.Color == pro.Color || target.IsChocoBlock || target.Skill != ProductSkill.Nothing)
             return 0;
 
         List<Product> matches = new List<Product>();
