@@ -1579,7 +1579,7 @@ public class InGameManager : MonoBehaviour
         while (true)
         {
             if(AttackPointFrame.Points > 0
-                && AttackPointFrame.TouchedTime > Time.realtimeSinceStartup + UserSetting.ChocoFlushInterval
+                && Time.realtimeSinceStartup > AttackPointFrame.TouchedTime + UserSetting.ChocoFlushInterval
                 && IsAllProductIdle() )
             {
                 int point = AttackPointFrame.Flush(UserSetting.FlushCount);
@@ -1588,7 +1588,7 @@ public class InGameManager : MonoBehaviour
                 Product[] rets = products.ToArray();
                 Network_FlushAttacks(Serialize(rets));
                 StartCoroutine(FlushObstacles(rets));
-                if (products.Count <= point)
+                if (products.Count < point)
                 {
                     StartCoroutine("StartFinishing");
                     break;

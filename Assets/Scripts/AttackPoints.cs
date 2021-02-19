@@ -123,9 +123,7 @@ public class AttackPoints : MonoBehaviour
     {
         TouchedTime = 0;
         Points = 0;
-
-        foreach (Transform child in transform)
-            Destroy(child.gameObject);
+        ClearChocos();
     }
     public void AddPoints(int point)
     {
