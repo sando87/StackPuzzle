@@ -2367,6 +2367,7 @@ public class InGameManager : MonoBehaviour
             {
                 mIsFinished = true;
                 Opponent.StartCoroutine("StartFinishing");
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.StartGame)
             {
