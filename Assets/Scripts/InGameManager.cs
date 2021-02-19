@@ -311,7 +311,7 @@ public class InGameManager : MonoBehaviour
 
     public void OnClick(GameObject clickedObj)
     {
-        if (!IsIdle || mIsFinished || IsAllProductIdle())
+        if (!IsIdle || mIsFinished || !IsAllProductIdle())
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
@@ -339,7 +339,7 @@ public class InGameManager : MonoBehaviour
     }
     public void OnSwipe(GameObject swipeObj, SwipeDirection dir)
     {
-        if (!IsIdle || mIsFinished || IsAllProductIdle())
+        if (!IsIdle || mIsFinished || !IsAllProductIdle())
             return;
 
         SwipeDirection fixedDir = dir;

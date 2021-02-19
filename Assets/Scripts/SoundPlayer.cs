@@ -31,31 +31,23 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectBadEffect;
     public AudioClip EffectCooltime;
 
+    private Dictionary<AudioClip, int> mRequestedClips = new Dictionary<AudioClip, int>();
+
     private void Awake()
     {
         Player.mute = UserSetting.Mute;
     }
 
-    private void Start()
+    private void Update()
     {
-        //StartCoroutine(FPSCounter());
-    }
-
-    IEnumerator FPSCounter()
-    {
-        float time = 0;
-        int count = 0;
-        while(true)
+        if(mRequestedClips.Count > 0)
         {
-            count++;
-            time += Time.deltaTime;
-            if(time > 1)
+            foreach(var item in mRequestedClips)
             {
-                Debug.Log(count);
-                count = 0;
-                time = 0;
+                AudioClip clip = item.Key;
+                Player.PlayOneShot(clip);
             }
-            yield return null;
+            mRequestedClips.Clear();
         }
     }
 
@@ -75,6 +67,6 @@ public class SoundPlayer : MonoBehaviour
 
     public void PlaySoundEffect(AudioClip sound)
     {
-        Player.PlayOneShot(sound);
+        mRequestedClips[sound] = 1;
     }
 }
