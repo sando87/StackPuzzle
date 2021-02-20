@@ -114,6 +114,7 @@ GameObject:
   - component: {fileID: 598150436799844540}
   - component: {fileID: 3602449773104491778}
   - component: {fileID: 3493207562547874036}
+  - component: {fileID: 7692775677413869010}
   m_Layer: 0
   m_Name: ProductRed
   m_TagString: Untagged
@@ -246,7 +247,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.28, y: 1.28}
+  m_Size: {x: 1.28, y: 1.4}
   m_EdgeRadius: 0
 --- !u!111 &3493207562547874036
 Animation:
@@ -270,6 +271,27 @@ Animation:
   m_PlayAutomatically: 0
   m_AnimatePhysics: 0
   m_CullingType: 0
+--- !u!50 &7692775677413869010
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 598150436799844536}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &649697071518979952
 GameObject:
   m_ObjectHideFlags: 0

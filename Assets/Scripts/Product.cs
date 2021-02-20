@@ -34,6 +34,7 @@ public class Product : MonoBehaviour
     public bool SkillCasted { get; set; } = false;
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
+    public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
     public void AttachTo(Frame parentFrame)
     {
@@ -41,14 +42,14 @@ public class Product : MonoBehaviour
         ParentFrame = parentFrame;
         transform.SetParent(parentFrame.transform);
     }
-    public Frame Detach()
+    public Frame Detach(Transform toTransform)
     {
         if (ParentFrame == null)
             return null;
 
         Frame frame = ParentFrame;
         frame.ChildProduct = null;
-        transform.SetParent(Manager.transform);
+        transform.SetParent(toTransform);
         ParentFrame = null;
         return frame;
     }
@@ -115,8 +116,8 @@ public class Product : MonoBehaviour
     }
     public void Swipe(Product targetProduct, Action EventSwipeEnd)
     {
-        Frame myFrame = Detach();
-        Frame targetFrame = targetProduct.Detach();
+        Frame myFrame = Detach(Manager.transform);
+        Frame targetFrame = targetProduct.Detach(Manager.transform);
 
         AttachTo(targetFrame);
         targetProduct.AttachTo(myFrame);
@@ -145,7 +146,7 @@ public class Product : MonoBehaviour
         }
         else
         {
-            Detach();
+            Detach(Manager.transform);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
@@ -170,7 +171,7 @@ public class Product : MonoBehaviour
             return null;
         
         IsDestroying = true;
-        Frame parent = Detach();
+        Frame parent = Detach(Manager.transform);
         UnWrapChocoBlocksAroundFrame(parent, Combo);
         parent.BreakCover(Combo);
         StartCoroutine(AnimateDestroy());
@@ -189,59 +190,70 @@ public class Product : MonoBehaviour
         return null;
     }
 
-
-    public void Drop(Action eventEnd)
+    private void FixedUpdate()
+    {
+        if(IsDropping)
+        {
+            float dropGravity = -50;
+            Vector3 pos = transform.position;
+            DropSpeed += dropGravity * Time.deltaTime;
+            pos.y += DropSpeed * Time.deltaTime;
+            transform.position = pos;
+        }
+    }
+    public void Drop()
     {
         if (IsDropping)
             return;
 
-        StartCoroutine(StartDropping(eventEnd));
-    }
-    private IEnumerator StartDropping(Action eventEnd)
-    {
+        if(ParentFrame != null)
+            Detach(ParentFrame.VertFrames.transform);
+
+        DropSpeed = 0;
         IsDropping = true;
-        float dropGravity = -1;
-        float dropSpeed = 0;
+        GetComponent<BoxCollider2D>().isTrigger = true;
+        //StartCoroutine("UpdateDropping");
+    }
+    private IEnumerator UpdateDropping()
+    {
+        float dropGravity = -50;
         Vector3 pos = transform.position;
         while(true)
         {
-            dropSpeed += dropGravity * Time.deltaTime;
-            pos.y += dropSpeed * Time.deltaTime;
-            Product downProduct = GetDynamicDownProduct();
-
-            float dropDestY = 0;
-            if (downProduct == null) //맨 바닥일 경우
-                dropDestY = transform.parent.GetChild(0).transform.position.y;
-            else
-                dropDestY = downProduct.transform.position.y + Manager.GridSize;
-
-            if (pos.y > dropDestY) //충돌하지 않았다면
-            {
-                transform.position = pos;
-            }
-            else //충돌했다면
-            {
-                pos.y = dropDestY;
-                transform.position = pos;
-                if (downProduct != null && downProduct.IsDropping) //충돌한게 낙하중이면 속도만 0
-                {
-                    dropSpeed = 0;
-                }
-                else //충돌한게 고정된 상태이면 land
-                {
-                    break;
-                }
-            }
-            yield return null;
+            DropSpeed += dropGravity * Time.deltaTime;
+            pos.y += DropSpeed * Time.deltaTime;
+            transform.position = pos;
+            yield return new WaitForFixedUpdate();
         }
-        IsDropping = false;
-        eventEnd?.Invoke();
     }
-    private Product GetDynamicDownProduct()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        int idx = transform.GetSiblingIndex();
-        Product pro = transform.parent.GetChild(idx - 1).GetComponent<Product>();
-        return pro;
+        if (!IsDropping)
+            return;
+
+        Product target = collision.GetComponent<Product>();
+        if (target == null || target.transform.position.y > transform.position.y || target.VertFrames != VertFrames)
+            return;
+
+        if (target.IsDropping)
+        {
+            DropSpeed = 0;
+            transform.position = target.transform.position + new Vector3(0, Manager.GridSize, 0);
+        }
+        else
+        {
+            EndDrop(VertFrames.NextDropEndFrame());
+        }
+
+    }
+    private void EndDrop(Frame parentFrame)
+    {
+        DropSpeed = 0;
+        IsDropping = false;
+        AttachTo(parentFrame);
+        StopCoroutine("UpdateDropping");
+        GetComponent<BoxCollider2D>().isTrigger = false;
+        transform.localPosition = new Vector3(0, 0, -1);
     }
 
 

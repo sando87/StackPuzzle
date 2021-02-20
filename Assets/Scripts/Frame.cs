@@ -13,7 +13,7 @@ public class Frame : MonoBehaviour
     public SpriteRenderer[] Borders;
     public SpriteRenderer CoverRenderer;
 
-    public VerticalFrames VertFrames { get; set; }
+    public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
     public InGameManager GameManager { get; private set; }
     public bool Empty { get; private set; }
     public int IndexX { get; private set; }

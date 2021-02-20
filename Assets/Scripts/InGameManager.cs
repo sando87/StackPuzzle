@@ -6,76 +6,6 @@ using UnityEngine.UI;
 
 using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 
-public class VerticalFrames
-{
-    public Frame[] Frames;
-    public List<Product> NewProducts = new List<Product>();
-    public List<Product> VerticalProducts = new List<Product>();
-    public Frame TopFrame()
-    {
-        return Frames[Frames.Length - 1];
-    }
-    public void AddNewProduct(Product newPro)
-    {
-        newPro.IsDropping = false;
-        newPro.gameObject.SetActive(false);
-        NewProducts.Add(newPro);
-    }
-    public void StartDrop(float gridSize)
-    {
-        List<Product> newVertList = new List<Product>();
-        foreach (Product dropProduct in VerticalProducts)
-        {
-            if (dropProduct.IsDropping)
-                newVertList.Add(dropProduct);
-        }
-
-        float height = gridSize;
-        Vector3 topPos = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].transform.position : Frames[Frames.Length - 1].transform.position;
-        topPos.z = Frames[0].transform.position.z - 1;
-        float dropSpeed = VerticalProducts.Count > 0 ? VerticalProducts[VerticalProducts.Count - 1].DropSpeed : 0;
-        foreach (Product newPro in NewProducts)
-        {
-            topPos.y += height;
-            newPro.IsDropping = true;
-            newPro.transform.position = topPos;
-            newPro.DropSpeed = dropSpeed;
-            newPro.gameObject.SetActive(true);
-            newVertList.Add(newPro);
-        }
-
-        bool droppable = false;
-        foreach (Frame frame in Frames)
-        {
-            Product target = frame.ChildProduct;
-            if(target == null)
-            {
-                droppable = true;
-            }
-            else
-            {
-                newVertList.Add(target);
-                if (target.IsLocked)
-                {
-                    droppable = false;
-                }
-                else
-                {
-                    if (droppable)
-                    {
-                        target.IsDropping = true;
-                        target.Detach();
-                    }
-                }
-            }
-        }
-
-        newVertList.Sort((lhs, rhs) => { return lhs.transform.position.y > rhs.transform.position.y ? 1 : -1; });
-        NewProducts.Clear();
-        VerticalProducts = newVertList;
-    }
-}
-
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
 public class InGameManager : MonoBehaviour
@@ -96,6 +26,7 @@ public class InGameManager : MonoBehaviour
     private const float intervalMatch = 0.5f;
     private const float intervalDrop = 0.1f;
     private const float durationMerge = intervalMatch + intervalDrop;
+    private const string vgName = "VerticalGroup";
 
     public Sprite[] BackgroundImages;
     public SpriteRenderer BackgroundSprite;
@@ -135,7 +66,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
     private System.Random mRandomSeed = null;
-    private VerticalFrames[] mFrameDropGroup = null;
+    private VerticalFrames[] mVerticalFrames = null;
 
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
@@ -567,109 +498,35 @@ public class InGameManager : MonoBehaviour
 
         EventMatched?.Invoke(matches);
     }
+    private void DropNextProducts()
+    {
+        if (mStopDropping)
+            return;
+
+        int cnt = StartToDropNewProducts();
+        if (cnt > 0 && FieldType != GameFieldType.pvpOpponent)
+        {
+            if (!mIsAutoMatching)
+                StartCoroutine(StartAutoMatchFlow());
+        }
+
+        mIsDropping = CountDroppingProducts() > 0;
+    }
     private int StartToDropNewProducts()
     {
-        int newProductCount = 0;
-        foreach (var group in mFrameDropGroup)
-        {
-            if (group.NewProducts.Count > 0)
-            {
-                newProductCount += group.NewProducts.Count;
-                group.StartDrop(GridSize);
-            }
-        }
-        return newProductCount;
+        int newCount = 0;
+        foreach(VerticalFrames group in mVerticalFrames)
+            newCount += group.StartToDrop();
+
+        return newCount;
     }
-    private void UpdateDropProducts(VerticalFrames group)
+    private int CountDroppingProducts()
     {
-        float acc = 2;
-        float delta = Time.deltaTime;
-        float gridSizeHalf = GridSize * 0.5f;
-        Vector3 basePos = group.VerticalProducts[0].transform.position;
-        Product prvProduct = null;
+        int count = 0;
+        foreach (VerticalFrames group in mVerticalFrames)
+            count += group.Droppingcount;
 
-        foreach (Product dropProduct in group.VerticalProducts)
-        {
-            if (dropProduct.IsDropping)
-            {
-                float nextVel = dropProduct.DropSpeed + acc;
-                float nextPos = dropProduct.transform.position.y - (nextVel * delta);
-
-                if (prvProduct == null)
-                {
-                    if (nextPos - gridSizeHalf <= FieldWorldRect.yMin)
-                    {
-                        Frame targetFrame = group.Frames[0];
-                        basePos.y = targetFrame.transform.position.y;
-                        dropProduct.transform.position = basePos;
-                        dropProduct.IsDropping = false;
-                        dropProduct.DropSpeed = 0;
-                        dropProduct.AttachTo(targetFrame);
-                    }
-                    else
-                    {
-                        basePos.y = nextPos;
-                        dropProduct.DropSpeed = nextVel;
-                        dropProduct.transform.position = basePos;
-                    }
-                }
-                else
-                {
-                    if (nextPos - gridSizeHalf < prvProduct.transform.position.y + gridSizeHalf)
-                    {
-                        if (prvProduct.IsDropping)
-                        {
-                            basePos.y = prvProduct.transform.position.y + (gridSizeHalf * 2);
-                            dropProduct.transform.position = basePos;
-                            dropProduct.IsDropping = true;
-                            dropProduct.DropSpeed = 0;
-                        }
-                        else
-                        {
-                            Frame targetFrame = prvProduct.ParentFrame.Up();
-                            if (targetFrame == null)
-                            {
-                                basePos.y = prvProduct.transform.position.y + (gridSizeHalf * 2);
-                                dropProduct.transform.position = basePos;
-                                dropProduct.IsDropping = true;
-                                dropProduct.DropSpeed = 0;
-                            }
-                            else
-                            {
-                                basePos.y = targetFrame.transform.position.y;
-                                dropProduct.transform.position = basePos;
-                                dropProduct.IsDropping = false;
-                                dropProduct.DropSpeed = 0;
-                                dropProduct.AttachTo(targetFrame);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        basePos.y = nextPos;
-                        dropProduct.IsDropping = true;
-                        dropProduct.DropSpeed = nextVel;
-                        dropProduct.transform.position = basePos;
-                    }
-                }
-
-                prvProduct = dropProduct;
-            }
-            else
-            {
-                prvProduct = dropProduct;
-                Frame downFrame = dropProduct.ParentFrame.Down();
-                if (downFrame != null && downFrame.ChildProduct == null && !dropProduct.IsLocked)
-                {
-                    dropProduct.IsDropping = true;
-                    dropProduct.Detach();
-                }
-            }
-        }
-
-        int count = group.VerticalProducts.Count;
-        if (group.VerticalProducts[count - 1].ParentFrame != null)
-            group.VerticalProducts.Clear();
+        return count;
     }
     private Product[] ScanHorizenProducts(Product target, int range = 0)
     {
@@ -1476,28 +1333,6 @@ public class InGameManager : MonoBehaviour
         }
         return rets;
     }
-    private void DropNextProducts()
-    {
-        if (mStopDropping)
-            return;
-
-        int cnt = StartToDropNewProducts();
-        if (cnt > 0 && FieldType != GameFieldType.pvpOpponent)
-        {
-            if (!mIsAutoMatching)
-                StartCoroutine(StartAutoMatchFlow());
-        }
-
-        mIsDropping = false;
-        foreach (var group in mFrameDropGroup)
-        {
-            if (group.VerticalProducts.Count > 0)
-            {
-                mIsDropping = true;
-                UpdateDropProducts(group);
-            }
-        }
-    }
     private void Attack(int score, Vector3 fromPos)
     {
         int point = score / UserSetting.AttackScore;
@@ -1835,46 +1670,42 @@ public class InGameManager : MonoBehaviour
                 }
                 curFrame.SetSpriteMask(mask);
 
-                if (curFrame.Left() == null) curFrame.ShowBorder(0);
-                if (curFrame.Right() == null) curFrame.ShowBorder(1);
-                if (curFrame.Up() == null) curFrame.ShowBorder(2);
-                if (curFrame.Down() == null) curFrame.ShowBorder(3);
+                if (curFrame.Left() == null || curFrame.Left().Empty) curFrame.ShowBorder(0);
+                if (curFrame.Right() == null || curFrame.Right().Empty) curFrame.ShowBorder(1);
+                if (curFrame.Up() == null || curFrame.Up().Empty) curFrame.ShowBorder(2);
+                if (curFrame.Down() == null || curFrame.Down().Empty) curFrame.ShowBorder(3);
             }
         }
     }
     private void InitDropGroupFrames()
     {
-        List<VerticalFrames> groups = new List<VerticalFrames>();
-        VerticalFrames group = new VerticalFrames();
+        List<VerticalFrames> vf = new List<VerticalFrames>();
+        VerticalFrames vg = null;
         for (int x = 0; x < CountX; ++x)
         {
-            List<Frame> frames = new List<Frame>();
+            vg = null;
             for (int y = 0; y < CountY; ++y)
             {
                 Frame curFrame = mFrames[x, y];
                 if (curFrame.Empty)
-                    continue;
-
-                Frame up = curFrame.Up();
-                if (up == null || up.Empty)
                 {
-                    curFrame.VertFrames = group;
-                    frames.Add(curFrame);
-
-                    group.Frames = frames.ToArray();
-                    groups.Add(group);
-                    frames.Clear();
-                    group = new VerticalFrames();
+                    vg = null;
+                    continue;
                 }
                 else
                 {
-                    curFrame.VertFrames = group;
-                    frames.Add(curFrame);
+                    if(vg == null)
+                    {
+                        vg = new GameObject().AddComponent<VerticalFrames>();
+                        vg.name = vgName;
+                        vg.transform.SetParent(transform);
+                        vf.Add(vg);
+                    }
+                    curFrame.transform.SetParent(vg.transform);
                 }
             }
         }
-
-        mFrameDropGroup = groups.ToArray();
+        mVerticalFrames = vf.ToArray();
     }
     private Frame SubTopFrame(Frame baseFrame)
     {
@@ -1928,7 +1759,7 @@ public class InGameManager : MonoBehaviour
         List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
         foreach (Product target in targets)
         {
-            Vector3 startPos = target.ParentFrame.VertFrames.TopFrame().transform.position;
+            Vector3 startPos = target.ParentFrame.VertFrames.TopFrame.transform.position;
             startPos.y += GridSize;
             startPos.z = target.transform.position.z - 0.5f;
             GameObject obj = Instantiate(ObstaclePrefab, startPos, Quaternion.identity, transform);
@@ -2009,7 +1840,7 @@ public class InGameManager : MonoBehaviour
         Billboard.Reset();
         mNetMessages.Clear();
 
-        mFrameDropGroup = null;
+        mVerticalFrames = null;
         mFrames = null;
         mUserInfo = null;
         mStageInfo = null;
