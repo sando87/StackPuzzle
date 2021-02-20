@@ -37,6 +37,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ComboNumPrefab;
     public GameObject AttackPointPrefab;
     public GameObject ObstaclePrefab;
+    public GameObject GroundPrefab;
 
     public GameObject ExplosionParticle;
     public GameObject MergeParticle;
@@ -516,7 +517,7 @@ public class InGameManager : MonoBehaviour
     {
         int newCount = 0;
         foreach(VerticalFrames group in mVerticalFrames)
-            newCount += group.StartToDrop();
+            newCount += group.StartToDropNewProducts();
 
         return newCount;
     }
@@ -527,6 +528,11 @@ public class InGameManager : MonoBehaviour
             count += group.Droppingcount;
 
         return count;
+    }
+    private void DropFloatingProducts()
+    {
+        foreach (VerticalFrames group in mVerticalFrames)
+            group.StartToDropFloatingProducts();
     }
     private Product[] ScanHorizenProducts(Product target, int range = 0)
     {
@@ -1700,6 +1706,10 @@ public class InGameManager : MonoBehaviour
                         vg.name = vgName;
                         vg.transform.SetParent(transform);
                         vf.Add(vg);
+
+                        GameObject ground = Instantiate(GroundPrefab, vg.transform);
+                        ground.name = "ground";
+                        ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
                     }
                     curFrame.transform.SetParent(vg.transform);
                 }

@@ -194,7 +194,7 @@ public class Product : MonoBehaviour
     {
         if(IsDropping)
         {
-            float dropGravity = -50;
+            float dropGravity = -40;
             Vector3 pos = transform.position;
             DropSpeed += dropGravity * Time.deltaTime;
             pos.y += DropSpeed * Time.deltaTime;
@@ -226,23 +226,39 @@ public class Product : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
     }
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if (!IsDropping)
             return;
+
+
+        if (collision.name == "ground")
+        {
+            EndDrop(VertFrames.BottomFrame);
+            return;
+        }
 
         Product target = collision.GetComponent<Product>();
         if (target == null || target.transform.position.y > transform.position.y || target.VertFrames != VertFrames)
             return;
 
-        if (target.IsDropping)
+        if (target.ParentFrame == null)
         {
             DropSpeed = 0;
             transform.position = target.transform.position + new Vector3(0, Manager.GridSize, 0);
         }
         else
         {
-            EndDrop(VertFrames.NextDropEndFrame());
+            Frame targetFrame = target.ParentFrame;
+            if (targetFrame == VertFrames.TopFrame)
+            {
+                DropSpeed = 0;
+                transform.position = target.transform.position + new Vector3(0, Manager.GridSize, 0);
+            }
+            else
+            {
+                EndDrop(targetFrame.Up());
+            }
         }
 
     }

@@ -11,72 +11,30 @@ public class VerticalFrames : MonoBehaviour
     {
         List<Frame> list = new List<Frame>();
         foreach (Transform child in transform)
-            list.Add(child.GetComponent<Frame>());
+        {
+            Frame frame = child.GetComponent<Frame>();
+            if(frame != null)
+                list.Add(frame);
+        }
 
         Frames = list.ToArray();
     }
 
 
     public int FrameCount { get { return Frames.Length; } }
-    public int Droppingcount { get { return transform.childCount - FrameCount; } }
-    public Frame TopFrame { get { return transform.GetChild(FrameCount - 1).GetComponent<Frame>(); } }
-    public Frame BottomFrame { get { return transform.GetChild(0).GetComponent<Frame>(); } }
-    public int StartToDrop()
+    public int Droppingcount { get { return transform.childCount - FrameCount - 1; } } //dummy ground 하나 더 빼줘야함.
+    public Frame TopFrame { get { return Frames[Frames.Length - 1]; } }
+    public Frame BottomFrame { get { return Frames[0]; } }
+    public int StartToDropNewProducts()
     {
         if (NewProducts.Count <= 0)
             return 0;
 
-        int newCount = NewProducts.Count;
         StartToDropFloatingProducts();
-        Product topProduct = FindTopProduct();
-        StartToDropNewProducts(topProduct);
-        return newCount;
-    }
-    public void AddNewProduct(Product pro)
-    {
-        pro.gameObject.SetActive(false);
-        NewProducts.Add(pro);
-    }
-    public Frame NextDropEndFrame()
-    {
-        foreach(Frame frame in Frames)
-        {
-            if (frame.ChildProduct == null)
-                return frame;
-        }
-        return null;
-    }
 
-
-    private Product FindTopProduct()
-    {
-        Product[] pros = GetComponentsInChildren<Product>();
-        List<Product> list = new List<Product>();
-        list.AddRange(pros);
-        list.Sort((lsh, rsh) => { return lsh.transform.position.y > rsh.transform.position.y ? -1 : 1; });
-        return list[0];
-    }
-    private void StartToDropFloatingProducts()
-    {
-        bool isFloating = false;
-        foreach (Frame frame in Frames)
-        {
-            if (isFloating)
-            {
-                if (frame.ChildProduct != null)
-                    frame.ChildProduct.Drop();
-            }
-            else
-            {
-                if (frame.ChildProduct == null)
-                    isFloating = true;
-            }
-        }
-    }
-    private void StartToDropNewProducts(Product topProduct)
-    {
+        int newCount = NewProducts.Count;
         InGameManager mgr = transform.parent.GetComponent<InGameManager>();
-        Vector3 startPos = topProduct.transform.position;
+        Vector3 startPos = FindTopPosition();
         startPos.y = Mathf.Max(startPos.y, TopFrame.transform.position.y);
         Vector3 step = new Vector3(0, mgr.GridSize, 0);
         foreach (Product pro in NewProducts)
@@ -88,5 +46,47 @@ public class VerticalFrames : MonoBehaviour
             pro.Drop();
         }
         NewProducts.Clear();
+        return newCount;
+    }
+    public void AddNewProduct(Product pro)
+    {
+        pro.gameObject.SetActive(false);
+        NewProducts.Add(pro);
+    }
+    public void StartToDropFloatingProducts()
+    {
+        bool isFloating = false;
+        foreach (Frame frame in Frames)
+        {
+            if (isFloating)
+            {
+                Product pro = frame.ChildProduct;
+                if (pro != null)
+                {
+                    if (pro.IsLocked)
+                        break;
+                    else
+                        pro.Drop();
+                }
+            }
+            else
+            {
+                if (frame.ChildProduct == null)
+                    isFloating = true;
+            }
+        }
+    }
+
+
+    private Vector3 FindTopPosition()
+    {
+        Product[] pros = GetComponentsInChildren<Product>();
+        if (pros.Length <= 0)
+            return TopFrame.transform.position;
+
+        List<Product> list = new List<Product>();
+        list.AddRange(pros);
+        list.Sort((lsh, rsh) => { return lsh.transform.position.y > rsh.transform.position.y ? -1 : 1; });
+        return list[0].transform.position;
     }
 }
