@@ -31,7 +31,7 @@ public class AutoBalancer : MonoBehaviour
         int counterLimit = 5;
         while (true)
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(0.1f);
             
             if (InGameManager.InstStage.gameObject.activeInHierarchy)
                 mgr = InGameManager.InstStage;

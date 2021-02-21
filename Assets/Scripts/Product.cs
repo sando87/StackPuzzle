@@ -194,7 +194,7 @@ public class Product : MonoBehaviour
     {
         if(IsDropping)
         {
-            float dropGravity = -40;
+            float dropGravity = -50;
             Vector3 pos = transform.position;
             DropSpeed += dropGravity * Time.deltaTime;
             pos.y += DropSpeed * Time.deltaTime;
@@ -264,9 +264,13 @@ public class Product : MonoBehaviour
     }
     private void EndDrop(Frame parentFrame)
     {
+        Frame curFrame = parentFrame;
+        while (curFrame.ChildProduct != null)
+            curFrame = curFrame.Up();
+
         DropSpeed = 0;
         IsDropping = false;
-        AttachTo(parentFrame);
+        AttachTo(curFrame);
         StopCoroutine("UpdateDropping");
         GetComponent<BoxCollider2D>().isTrigger = false;
         transform.localPosition = new Vector3(0, 0, -1);
@@ -369,6 +373,9 @@ public class Product : MonoBehaviour
     {
         if (Combo <= 0)
             return;
+
+        if (ParentFrame == null)
+            Debug.Log("asdf");
 
         Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -1);
         GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, ParentFrame.gameObject.transform);

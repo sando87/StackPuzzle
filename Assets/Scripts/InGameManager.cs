@@ -66,6 +66,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsUserEventLock = false;
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
+    private bool mRequestDrop = false;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
 
@@ -414,6 +415,7 @@ public class InGameManager : MonoBehaviour
             parentFrame.VertFrames.AddNewProduct(newPro);
             nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
         }
+        mRequestDrop = true;
         Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect);
     }
     private Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
@@ -472,7 +474,9 @@ public class InGameManager : MonoBehaviour
                 nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
             }
         }
+        mRequestDrop = true;
         Network_Destroy(nextProducts.ToArray(), skill, false);
+
     }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -504,11 +508,15 @@ public class InGameManager : MonoBehaviour
         if (mStopDropping)
             return;
 
-        int cnt = StartToDropNewProducts();
-        if (cnt > 0 && FieldType != GameFieldType.pvpOpponent)
+        if(mRequestDrop)
         {
-            if (!mIsAutoMatching)
-                StartCoroutine(StartAutoMatchFlow());
+            mRequestDrop = false;
+            StartToDropNewProducts();
+            if (FieldType != GameFieldType.pvpOpponent)
+            {
+                if (!mIsAutoMatching)
+                    StartCoroutine(StartAutoMatchFlow());
+            }
         }
 
         mIsDropping = CountDroppingProducts() > 0;
@@ -1844,6 +1852,7 @@ public class InGameManager : MonoBehaviour
         mIsFlushing = false;
         mIsAutoMatching = false;
         mPrevIdleState = IsIdle;
+        mRequestDrop = false;
         mRandomSeed = null;
 
         ProductIDs.Clear();
