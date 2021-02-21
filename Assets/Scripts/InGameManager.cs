@@ -2230,7 +2230,6 @@ public class InGameManager : MonoBehaviour
                     ProductInfo info = body.products[i];
                     Frame frame = mFrames[info.idxX, info.idxY];
                     Product pro = CreateNewProduct(frame, info.nextColor);
-                    pro.GetComponent<BoxCollider2D>().enabled = false;
                     pro.InstanceID = info.nextInstID;
                     ProductIDs[pro.InstanceID] = pro;
                     pro.SetChocoBlock(0);
@@ -2304,6 +2303,7 @@ public class InGameManager : MonoBehaviour
                             ProductIDs[newPro.InstanceID] = newPro;
                             parentFrame.VertFrames.AddNewProduct(newPro);
                         }
+                        mRequestDrop = true;
                     }
                     else
                     {
@@ -2319,6 +2319,7 @@ public class InGameManager : MonoBehaviour
                                 parentFrame.VertFrames.AddNewProduct(newPro);
                             }
                         }
+                        mRequestDrop = true;
                     }
 
                     mNetMessages.RemoveFirst();
