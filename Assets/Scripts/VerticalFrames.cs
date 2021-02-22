@@ -7,7 +7,7 @@ public class VerticalFrames : MonoBehaviour
     private List<Product> NewProducts = new List<Product>();
     private Frame[] Frames = null;
 
-    private void Start()
+    public void init()
     {
         List<Frame> list = new List<Frame>();
         foreach (Transform child in transform)
@@ -18,8 +18,8 @@ public class VerticalFrames : MonoBehaviour
         }
 
         Frames = list.ToArray();
+        NewProducts.Clear();
     }
-
 
     public int FrameCount { get { return Frames.Length; } }
     public int Droppingcount { get { return transform.childCount - FrameCount - 1; } } //dummy ground 하나 더 빼줘야함.

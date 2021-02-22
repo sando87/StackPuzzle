@@ -1742,6 +1742,10 @@ public class InGameManager : MonoBehaviour
                 }
             }
         }
+
+        foreach (VerticalFrames group in vf)
+            group.init();
+
         mVerticalFrames = vf.ToArray();
     }
     private Frame SubTopFrame(Frame baseFrame)
