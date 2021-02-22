@@ -25,14 +25,12 @@ public class VerticalFrames : MonoBehaviour
     public int Droppingcount { get { return transform.childCount - FrameCount - 1; } } //dummy ground 하나 더 빼줘야함.
     public Frame TopFrame { get { return Frames[Frames.Length - 1]; } }
     public Frame BottomFrame { get { return Frames[0]; } }
-    public int StartToDropNewProducts()
+    public Product[] StartToDropNewProducts()
     {
+        List<Product> droppedPros = new List<Product>();
         if (NewProducts.Count <= 0)
-            return 0;
+            return droppedPros.ToArray();
 
-        StartToDropFloatingProducts();
-
-        int newCount = NewProducts.Count;
         InGameManager mgr = transform.parent.GetComponent<InGameManager>();
         Vector3 startPos = FindTopPosition();
         startPos.y = Mathf.Max(startPos.y, TopFrame.transform.position.y);
@@ -44,17 +42,31 @@ public class VerticalFrames : MonoBehaviour
             pro.transform.SetParent(transform);
             pro.transform.position = startPos;
             pro.Drop();
+            droppedPros.Add(pro);
         }
         NewProducts.Clear();
-        return newCount;
+        return droppedPros.ToArray();
     }
     public void AddNewProduct(Product pro)
     {
         pro.gameObject.SetActive(false);
         NewProducts.Add(pro);
     }
-    public void StartToDropFloatingProducts()
+    public void AddNDropNewProduct(Product pro)
     {
+        InGameManager mgr = transform.parent.GetComponent<InGameManager>();
+        Vector3 startPos = FindTopPosition();
+        startPos.y = Mathf.Max(startPos.y, TopFrame.transform.position.y);
+        Vector3 step = new Vector3(0, mgr.GridSize, 0);
+        startPos += step;
+        pro.gameObject.SetActive(true);
+        pro.transform.SetParent(transform);
+        pro.transform.position = startPos;
+        pro.Drop();
+    }
+    public Product[] StartToDropFloatingProducts()
+    {
+        List<Product> droppedPros = new List<Product>();
         bool isFloating = false;
         foreach (Frame frame in Frames)
         {
@@ -66,7 +78,10 @@ public class VerticalFrames : MonoBehaviour
                     if (pro.IsLocked)
                         break;
                     else
+                    {
                         pro.Drop();
+                        droppedPros.Add(pro);
+                    }
                 }
             }
             else
@@ -75,6 +90,7 @@ public class VerticalFrames : MonoBehaviour
                     isFloating = true;
             }
         }
+        return droppedPros.ToArray();
     }
 
 
