@@ -232,7 +232,7 @@ public class Product : MonoBehaviour
             return;
 
 
-        if (collision.name == "ground")
+        if (collision.name == "ground" && collision.transform.parent == transform.parent)
         {
             EndDrop(VertFrames.BottomFrame);
             return;
