@@ -334,6 +334,7 @@ public class InGameManager : MonoBehaviour
             });
         }
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Swipe);
         RemoveLimit();
     }
 
@@ -343,7 +344,6 @@ public class InGameManager : MonoBehaviour
         mStopDropping = true;
         Billboard.CurrentCombo = 1;
         EventCombo?.Invoke(Billboard.CurrentCombo);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
 
         List<Frame> nextScanFrames = new List<Frame>();
         nextScanFrames.AddRange(ToFrames(firstMatches));
@@ -448,6 +448,7 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += validProducts.Length;
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
         EventMatched?.Invoke(validProducts);
         return validProducts;
     }
@@ -472,8 +473,16 @@ public class InGameManager : MonoBehaviour
                 nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
             }
         }
+
         mRequestDrop = true;
         Network_Destroy(nextProducts.ToArray(), skill, false);
+
+        if (skill == ProductSkill.SameColor)
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3);
+        else if (skill == ProductSkill.Bomb)
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2);
+        else
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1);
 
     }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
@@ -499,6 +508,7 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
         EventMatched?.Invoke(matches);
     }
     private void DropNextProducts()
@@ -2161,28 +2171,6 @@ public class InGameManager : MonoBehaviour
                 break;
         }
     }
-    void CreateLaserEffect(Vector2 startPos, Vector2 destPos)
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
-        GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
-        laserObj.GetComponent<EffectLaser>().SetDestination(dest);
-    }
-    void CreateSparkEffect(Vector2 startPos)
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        GameObject obj = GameObject.Instantiate(SparkParticle, start, Quaternion.identity, transform);
-        Destroy(obj, 1.0f);
-    }
-    void CreateStripeEffect(Vector2 startPos, bool isVertical)
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
-        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        GameObject obj = GameObject.Instantiate(StripeParticle, start, isVertical ? Quaternion.Euler(0, 0, 90) : Quaternion.identity, transform);
-        Destroy(obj, 1.0f);
-    }
     void CreateMergeEffect(Product productA, Product productB)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
@@ -2191,9 +2179,31 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(MergeParticle, pos, Quaternion.identity, transform);
         obj.GetComponent<EffectMerge>().SetProucts(productA, productB);
     }
-    void CreateExplosionEffect(Vector2 startPos)
+    void CreateSparkEffect(Vector2 startPos)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBadEffect);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(SparkParticle, start, Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    void CreateLaserEffect(Vector2 startPos, Vector2 destPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill3);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
+        GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
+        laserObj.GetComponent<EffectLaser>().SetDestination(dest);
+    }
+    void CreateStripeEffect(Vector2 startPos, bool isVertical)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill1);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(StripeParticle, start, isVertical ? Quaternion.Euler(0, 0, 90) : Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    void CreateExplosionEffect(Vector2 startPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);

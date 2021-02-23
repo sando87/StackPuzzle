@@ -59,14 +59,15 @@ public class MenuComplete : MonoBehaviour
     {
         for(int i = 0; i < 6; ++i)
         {
-            float xOff = UnityEngine.Random.Range(-300.0f, 300.0f);
-            float yOff = UnityEngine.Random.Range(-300.0f, 300.0f);
-            float size = UnityEngine.Random.Range(50.0f, 150.0f);
+            float xOff = Random.Range(-300.0f, 300.0f);
+            float yOff = Random.Range(-300.0f, 300.0f);
+            float size = Random.Range(50.0f, 150.0f);
             ParticleSystem particle = Instantiate(FireworkPrefab, transform).GetComponent<ParticleSystem>();
             particle.transform.localPosition = new Vector3(xOff, 300 + yOff, 0);
             particle.transform.localScale = new Vector3(size, size, 1);
             Effects.Add(particle.gameObject);
-            yield return new WaitForSeconds(0.5f);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectFirework);
+            yield return new WaitForSeconds(Random.Range(5, 10) * 0.1f);
         }
     }
     IEnumerator AnimateStars(int starCount)
@@ -74,12 +75,18 @@ public class MenuComplete : MonoBehaviour
         Star1.gameObject.SetActive(false);
         Star2.gameObject.SetActive(false);
         Star3.gameObject.SetActive(false);
-        yield return null;
+        yield return new WaitForSeconds(0.5f);
         Star1.gameObject.SetActive(starCount >= 1);
+        if(starCount >= 1)
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
         yield return new WaitForSeconds(1);
         Star2.gameObject.SetActive(starCount >= 2);
+        if(starCount >= 2)
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
         yield return new WaitForSeconds(1);
         Star3.gameObject.SetActive(starCount >= 3);
+        if(starCount >= 3)
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
     }
     IEnumerator AnimateReward(int score)
     {
@@ -101,6 +108,7 @@ public class MenuComplete : MonoBehaviour
                     Destroy(coinObj);
                     RewardCoin.Play("push", -1, 0);
                 }));
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin);
             }
             yield return null;
         }
