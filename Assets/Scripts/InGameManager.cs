@@ -506,12 +506,12 @@ public class InGameManager : MonoBehaviour
         if (mStopDropping)
             return;
 
-        if(mRequestDrop && FieldType != GameFieldType.pvpOpponent)
+        if(mRequestDrop)
         {
             mRequestDrop = false;
             StartToDropProducts();
 
-            if (!mIsAutoMatching)
+            if (!mIsAutoMatching && FieldType != GameFieldType.pvpOpponent)
                 StartCoroutine(StartAutoMatchFlow());
         }
 
@@ -531,7 +531,7 @@ public class InGameManager : MonoBehaviour
                 droppedPros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, 0, 0, pro.InstanceID, pro.InstanceID));
         }
 
-        Network_Drop(droppedPros.ToArray());
+        //Network_Drop(droppedPros.ToArray());
 
         return droppedPros.Count;
     }
@@ -555,11 +555,6 @@ public class InGameManager : MonoBehaviour
             count += group.Droppingcount;
 
         return count;
-    }
-    private void DropFloatingProducts()
-    {
-        foreach (VerticalFrames group in mVerticalFrames)
-            group.StartToDropFloatingProducts();
     }
     private Product[] ScanHorizenProducts(Product target, int range = 0)
     {
@@ -2324,8 +2319,10 @@ public class InGameManager : MonoBehaviour
                             Product newPro = CreateNewProduct(body.products[idx].nextColor);
                             newPro.InstanceID = body.products[idx].nextInstID;
                             ProductIDs[newPro.InstanceID] = newPro;
-                            newPro.transform.SetParent(parentFrame.VertFrames.transform);
+                            //newPro.transform.SetParent(parentFrame.VertFrames.transform);
+                            parentFrame.VertFrames.AddNewProduct(newPro);
                         }
+                        mRequestDrop = true;
                     }
                     else
                     {
@@ -2338,30 +2335,25 @@ public class InGameManager : MonoBehaviour
                                 Product newPro = CreateNewProduct(body.products[idx].nextColor);
                                 newPro.InstanceID = body.products[idx].nextInstID;
                                 ProductIDs[newPro.InstanceID] = newPro;
-                                newPro.transform.SetParent(parentFrame.VertFrames.transform);
+                                //newPro.transform.SetParent(parentFrame.VertFrames.transform);
+                                parentFrame.VertFrames.AddNewProduct(newPro);
                             }
                         }
+                        mRequestDrop = true;
                     }
 
                     mNetMessages.RemoveFirst();
                 }
             }
-            else if (body.cmd == PVPCommand.Drop)
+            else if (body.cmd == PVPCommand.DropPause)
             {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
-                {
-                    DropProductsManually(products.ToArray());
-                    mNetMessages.RemoveFirst();
-                }
+                mStopDropping = true;
+                mNetMessages.RemoveFirst();
+            }
+            else if (body.cmd == PVPCommand.DropResume)
+            {
+                mStopDropping = false;
+                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.ChangeSkill)
             {
@@ -2495,16 +2487,14 @@ public class InGameManager : MonoBehaviour
         Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
-    private void Network_Drop(ProductInfo[] pros)
+    private void Network_Drop(bool dropPause)
     {
         if (FieldType != GameFieldType.pvpPlayer)
             return;
 
         PVPInfo req = new PVPInfo();
-        req.cmd = PVPCommand.Drop;
+        req.cmd = dropPause ? PVPCommand.DropPause : PVPCommand.DropResume;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
