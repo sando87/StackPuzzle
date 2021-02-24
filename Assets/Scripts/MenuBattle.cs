@@ -75,13 +75,13 @@ public class MenuBattle : MonoBehaviour
         PVPScoreBarOpponent.Clear();
 
         InGameManager.InstPVP_Player.EventMatched = (products) => {
-            PVPScoreBarPlayer.AddScore(products[0].Combo * products.Length);
+            PVPScoreBarPlayer.SetScore(PVPScoreBarPlayer.CurrentScore + products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);
         };
         InGameManager.InstPVP_Opponent.EventMatched = (products) => {
-            PVPScoreBarOpponent.AddScore(products[0].Combo * products.Length);
+            PVPScoreBarOpponent.SetScore(PVPScoreBarOpponent.CurrentScore + products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) => {
             FinishGame(!success);

@@ -107,6 +107,7 @@ public class InGameManager : MonoBehaviour
     public int StageNum { get { return mStageInfo.Num; } }
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
+    public int UserScore { get { return mUserInfo.score; } }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
     public float GridSize { get { return UserSetting.GridSize * transform.localScale.x; } }
@@ -2325,6 +2326,7 @@ public class InGameManager : MonoBehaviour
                                 CreateSkillEffect(products[idx]);
                             }
                             Frame parentFrame = products[idx].ParentFrame;
+                            products[idx].Combo = body.combo;
                             products[idx].DestroyImmediately();
                             Product newPro = CreateNewProduct(body.products[idx].nextColor);
                             newPro.InstanceID = body.products[idx].nextInstID;
@@ -2333,12 +2335,14 @@ public class InGameManager : MonoBehaviour
                             parentFrame.VertFrames.AddNewProduct(newPro);
                         }
                         mRequestDrop = true;
+                        EventMatched?.Invoke(products.ToArray());
                     }
                     else
                     {
                         for (int idx = 0; idx < body.ArrayCount; ++idx)
                         {
                             Frame parentFrame = products[idx].ParentFrame;
+                            products[idx].Combo = body.combo;
                             products[idx].MergeImImmediately(products[0], body.skill);
                             if (idx != 0)
                             {
@@ -2350,6 +2354,7 @@ public class InGameManager : MonoBehaviour
                             }
                         }
                         mRequestDrop = true;
+                        EventMatched?.Invoke(products.ToArray());
                     }
 
                     mNetMessages.RemoveFirst();

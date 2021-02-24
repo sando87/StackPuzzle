@@ -67,7 +67,7 @@ public class MenuInGame : MonoBehaviour
             ReduceGoalValue(pos, type);
         };
         InGameManager.InstStage.EventMatched = (products) => {
-            ScoreBarObj.AddScore(products[0].Combo * products.Length);
+            ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + products[0].Combo * products.Length);
         };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);

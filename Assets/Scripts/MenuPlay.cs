@@ -33,7 +33,7 @@ public class MenuPlay : MonoBehaviour
     {
         int starCount = UserSetting.GetStageStarCount(info.Num);
         mStageInfo = info;
-        StageLevel.text = info.Num.ToString();
+        StageLevel.text = "STAGE " + info.Num.ToString();
         TargetScore.text = info.GoalValue.ToString();
         TargetType.sprite = info.GoalTypeImage;
     }

@@ -12,8 +12,8 @@ public class MenuComplete : MonoBehaviour
     public Image Star2;
     public Image Star3;
     public Animator RewardCoin;
-    public TextMeshProUGUI Score;
     public TextMeshProUGUI StageLevel;
+    public ScoreBar ScoreDisplay;
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
     private List<GameObject> Effects = new List<GameObject>();
@@ -42,8 +42,9 @@ public class MenuComplete : MonoBehaviour
                 Destroy(effect);
         Effects.Clear();
 
-        Score.text = score.ToString();
-        StageLevel.text = "Stage " + level.ToString();
+        ScoreDisplay.Clear();
+        ScoreDisplay.SetScore(score);
+        StageLevel.text = "STAGE " + level.ToString();
 
         gameObject.SetActive(true);
 
@@ -90,6 +91,7 @@ public class MenuComplete : MonoBehaviour
     }
     IEnumerator AnimateReward(int score)
     {
+        yield return new WaitForSeconds(0.5f);
         float duration = 3.0f;
         float curScore = score;
         int prvCoinCount = score / UserSetting.ScorePerCoin;
@@ -97,11 +99,12 @@ public class MenuComplete : MonoBehaviour
         {
             float step = score * Time.deltaTime / duration;
             curScore -= step;
+            ScoreDisplay.SetScore((int)curScore);
             int curCoinCount = (int)(curScore / UserSetting.ScorePerCoin);
             if(prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;
-                GameObject coinObj = Instantiate(CoinPrefab, Score.transform.position, Quaternion.identity, transform);
+                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.transform.position, Quaternion.identity, transform);
                 Effects.Add(coinObj);
                 StartCoroutine(UnityUtils.AnimateConvex(coinObj, RewardCoin.transform.position, 0.5f, () =>
                 {

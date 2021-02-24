@@ -25,7 +25,7 @@ public class Product : MonoBehaviour
     public ProductSkill Skill { get; private set; }
     public float DropSpeed { get; set; }
     public float Weight { get; set; }
-    public int Combo { get; private set; }
+    public int Combo { get; set; }
     public int InstanceID { get; set; }
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
