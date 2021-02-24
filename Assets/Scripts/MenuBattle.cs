@@ -12,7 +12,8 @@ public class MenuBattle : MonoBehaviour
     public GameObject EffectParent;
     public NumbersUI ComboPlayer;
     public NumbersUI ComboOpponent;
-    public ScoreBar PVPScoreBar;
+    public ScoreBar PVPScoreBarPlayer;
+    public ScoreBar PVPScoreBarOpponent;
 
     private MenuMessageBox mMenu;
 
@@ -38,6 +39,7 @@ public class MenuBattle : MonoBehaviour
         Inst().gameObject.SetActive(true);
         Inst().Init();
     }
+
     public static void Hide()
     {
         Inst().gameObject.SetActive(false);
@@ -69,13 +71,17 @@ public class MenuBattle : MonoBehaviour
         mMenu = null;
         ComboPlayer.Clear();
         ComboOpponent.Clear();
-        //PVPScoreBar.Clear();
+        PVPScoreBarPlayer.Clear();
+        PVPScoreBarOpponent.Clear();
 
         InGameManager.InstPVP_Player.EventMatched = (products) => {
-            //PVPScoreBar.AddScore(products[0].Combo * products.Length);
+            PVPScoreBarPlayer.AddScore(products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);
+        };
+        InGameManager.InstPVP_Opponent.EventMatched = (products) => {
+            PVPScoreBarOpponent.AddScore(products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) => {
             FinishGame(!success);

@@ -21,7 +21,7 @@ public class MenuInGame : MonoBehaviour
 
     public GameObject EffectParent;
     public GameObject ItemPrefab;
-
+                                                
     public int Score { get { return ScoreBarObj.CurrentScore; } }
     public int RemainLimit { get { return int.Parse(Limit.text); } }
 

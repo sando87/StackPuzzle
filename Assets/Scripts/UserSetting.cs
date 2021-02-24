@@ -73,7 +73,7 @@ public class UserSetting
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
     public const int ScorePerBar = 300;
-    public const int ScorePerSplitBar = 60;
+    public const int ScorePerSplitBar = 30;
     public const float BattleOppResize = 1.0f;
     public const int HeartChargingIntervalMin = 5;
     public const float InfoBoxDisplayTime = 2.0f;
