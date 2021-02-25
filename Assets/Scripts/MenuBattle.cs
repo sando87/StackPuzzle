@@ -91,7 +91,14 @@ public class MenuBattle : MonoBehaviour
 
     private void FinishGame(bool success)
     {
-        int deltaExp = NextDeltaExp(success, UserSetting.UserScore, InGameManager.InstPVP_Player.ColorCount);
+        int deltaExp = NextDeltaExp2(success, UserSetting.UserScore, InGameManager.InstPVP_Opponent.UserScore);
+        if(deltaExp < 0)
+        {
+            int curLevel = UserSetting.ToLevel(UserSetting.UserScore);
+            int nextLevel = UserSetting.ToLevel(UserSetting.UserScore + deltaExp);
+            if (nextLevel < curLevel)
+                deltaExp = 0;
+        }
         UserSetting.UserScore += deltaExp;
         UserSetting.Win = success;
 
@@ -134,6 +141,25 @@ public class MenuBattle : MonoBehaviour
             nextX = curX - ((180 - degree) / 1000.0f);
 
         return (int)((nextX - curX) * 100.0f);
+    }
+    private int NextDeltaExp2(bool isWin, int playerScore, int opponentScore)
+    {
+        if (isWin)
+        {
+            int level = UserSetting.ToLevel(playerScore);
+            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
+            float gap = (opponentScore - (playerScore - 100)) * 0.1f;
+            float exp = Mathf.Clamp(gap * weight, 2, 30);
+            return (int)exp;
+        }
+        else
+        {
+            int level = UserSetting.ToLevel(playerScore);
+            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
+            float gap = (opponentScore - (playerScore + 100)) * 0.1f;
+            float exp = Mathf.Clamp(gap * weight, -30, -2);
+            return (int)exp;
+        }
     }
 
     public void OnClose()
