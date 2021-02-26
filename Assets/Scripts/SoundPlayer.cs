@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum ClipSound
 {
-    Match, Drop, Swipe, Merge1, Merge2, Merge3, Skill1, Skill2, Skill3, Star1, Star2, Star3, Coin
+    Match, Drop, Swipe, Merge1, Merge2, Merge3, Skill1, Skill2, Skill3, Star1, Star2, Star3, Coin1, Coin2
 }
 
 public class SoundPlayer : MonoBehaviour
@@ -105,7 +105,8 @@ public class SoundPlayer : MonoBehaviour
             case ClipSound.Star1: clip = StarClip[0]; break;
             case ClipSound.Star2: clip = StarClip[1]; break;
             case ClipSound.Star3: clip = StarClip[2]; break;
-            case ClipSound.Coin: clip = CoinClip[0]; break;
+            case ClipSound.Coin1: clip = CoinClip[0]; break;
+            case ClipSound.Coin2: clip = CoinClip[1]; break;
         }
         return clip;
     }

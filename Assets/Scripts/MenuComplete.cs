@@ -104,16 +104,44 @@ public class MenuComplete : MonoBehaviour
             if(prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;
-                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.transform.position, Quaternion.identity, transform);
+                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.transform.position, Quaternion.identity, RewardCoin.transform);
                 Effects.Add(coinObj);
-                StartCoroutine(UnityUtils.AnimateConvex(coinObj, RewardCoin.transform.position, 0.5f, () =>
-                {
-                    Destroy(coinObj);
-                    RewardCoin.Play("push", -1, 0);
-                }));
-                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin);
+                StartCoroutine(UnityUtils.AnimateThrow(coinObj));
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin1);
             }
             yield return null;
+        }
+        yield return new WaitForSeconds(1);
+        StartCoroutine(AnimateCollectCoins());
+    }
+    private IEnumerator AnimateCollectCoins()
+    {
+        int speed = 10;
+        Image[] coins = RewardCoin.GetComponentsInChildren<Image>();
+        while (true)
+        {
+            yield return null;
+            bool isAllDone = true;
+            foreach(Image coin in coins)
+            {
+                if (coin == null)
+                    continue;
+
+                isAllDone = false;
+                Vector3 dir = coin.transform.localPosition;
+                dir.Normalize();
+                coin.transform.localPosition -= speed * dir * Time.deltaTime;
+                if(Vector3.Dot(dir, coin.transform.localPosition) < 0)
+                {
+                    SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
+                    RewardCoin.Play("push", -1, 0);
+                    Destroy(coin.gameObject);
+                }
+            }
+
+            speed += 1;
+            if (isAllDone)
+                break;
         }
     }
 
