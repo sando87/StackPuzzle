@@ -11,6 +11,11 @@ public class MenuPVPReady : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/PlayPVPReady";
 
+    public TextMeshProUGUI PlayerName;
+    public TextMeshProUGUI PlayerLevel;
+    public TextMeshProUGUI OpponentName;
+    public TextMeshProUGUI OpponentLevel;
+
     private UserInfo mPlayer = null;
     private UserInfo mOpponent = null;
 
@@ -29,7 +34,10 @@ public class MenuPVPReady : MonoBehaviour
 
     private void UpdateUserInfo(UserInfo player, UserInfo opponent)
     {
-
+        PlayerName.text = player.userName;
+        PlayerLevel.text = "Lv." + UserSetting.ToLevel(player.score);
+        OpponentName.text = opponent.userName;
+        OpponentLevel.text = "Lv." + UserSetting.ToLevel(opponent.score);
     }
 
     private void StartBattle()

@@ -116,7 +116,7 @@ public class MenuComplete : MonoBehaviour
     }
     private IEnumerator AnimateCollectCoins()
     {
-        int speed = 10;
+        int speed = 0;
         Image[] coins = RewardCoin.GetComponentsInChildren<Image>();
         while (true)
         {
@@ -124,7 +124,7 @@ public class MenuComplete : MonoBehaviour
             bool isAllDone = true;
             foreach(Image coin in coins)
             {
-                if (coin == null)
+                if (coin == null || coin.gameObject == RewardCoin.gameObject)
                     continue;
 
                 isAllDone = false;
@@ -139,7 +139,7 @@ public class MenuComplete : MonoBehaviour
                 }
             }
 
-            speed += 1;
+            speed += 50;
             if (isAllDone)
                 break;
         }

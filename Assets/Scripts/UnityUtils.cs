@@ -77,18 +77,21 @@ public class UnityUtils
     }
     public static IEnumerator AnimateThrow(GameObject obj)
     {
-        float dragCoeff = 0.01f;
+        float dragCoeff = 0.05f;
         int ranDegree = UnityEngine.Random.Range(0, 360);
-        int power = UnityEngine.Random.Range(100, 200);
+        int power = UnityEngine.Random.Range(10, 15);
         Vector3 startPos = obj.transform.position;
-        Vector3 dir = new Vector3(Mathf.Cos(ranDegree), Mathf.Sin(ranDegree), 0);
+        Vector3 dir = new Vector3(Mathf.Cos(ranDegree * Mathf.Deg2Rad), Mathf.Sin(ranDegree * Mathf.Deg2Rad), 0);
         dir.Normalize();
         Vector3 speed = power * dir;
         while (true)
         {
             yield return null;
+            if (obj == null)
+                break;
+
             obj.transform.position += speed * Time.deltaTime;
-            speed -= dragCoeff * speed.sqrMagnitude * speed.sqrMagnitude * dir;
+            speed -= dragCoeff * speed.sqrMagnitude * dir;
             if (Vector3.Dot(dir, speed) < 0)
                 break;
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,10 @@ public class MenuBattle : MonoBehaviour
     public NumbersUI ComboOpponent;
     public ScoreBar PVPScoreBarPlayer;
     public ScoreBar PVPScoreBarOpponent;
+    public TextMeshProUGUI PlayerName;
+    public TextMeshProUGUI PlayerScore;
+    public TextMeshProUGUI OpponentName;
+    public TextMeshProUGUI OpponentScore;
 
     private MenuMessageBox mMenu;
 
@@ -73,6 +78,10 @@ public class MenuBattle : MonoBehaviour
         ComboOpponent.Clear();
         PVPScoreBarPlayer.Clear();
         PVPScoreBarOpponent.Clear();
+        PlayerName.text = InGameManager.InstPVP_Player.UserInfo.userName;
+        OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
+        PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
+        OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
         InGameManager.InstPVP_Player.EventMatched = (products) => {
             PVPScoreBarPlayer.SetScore(PVPScoreBarPlayer.CurrentScore + products[0].Combo * products.Length);
@@ -97,7 +106,7 @@ public class MenuBattle : MonoBehaviour
             int curLevel = UserSetting.ToLevel(UserSetting.UserScore);
             int nextLevel = UserSetting.ToLevel(UserSetting.UserScore + deltaExp);
             if (nextLevel < curLevel)
-                deltaExp = 0;
+                deltaExp = UserSetting.ToScore(curLevel) - UserSetting.UserScore;
         }
         UserSetting.UserScore += deltaExp;
         UserSetting.Win = success;

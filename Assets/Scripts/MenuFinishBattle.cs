@@ -33,7 +33,8 @@ public class MenuFinishBattle : MonoBehaviour
     {
         int prvLevel = UserSetting.ToLevel(fromScore);
         int score = fromScore;
-        while(score != toScore)
+        UpdateExpBar(score);
+        while (score != toScore)
         {
             yield return new WaitForSeconds(0.2f);
             score += toScore > fromScore ? 1 : -1;

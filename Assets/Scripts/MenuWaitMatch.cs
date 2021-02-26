@@ -15,8 +15,10 @@ public class MenuWaitMatch : MonoBehaviour
     public TextMeshProUGUI WaitText;
     public TextMeshProUGUI Ranking;
     public TextMeshProUGUI ExpLevel;
+    public TextMeshProUGUI Exp;
+    public TextMeshProUGUI WinLose;
+    public Slider ExpBar;
     public Image RankImage;
-    public Image ExpBar;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
 
@@ -200,6 +202,8 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void UpdateUserInfo(UserInfo info)
     {
+        WinLose.text = info.win + " / " + info.lose;
+        UpdateExpBar(info.score);
         //string text =
         //    "ID : #" + info.userPk + "\n" +
         //    "Name : " + info.userName + "\n" +
@@ -210,6 +214,15 @@ public class MenuWaitMatch : MonoBehaviour
         //    MyUserInfo.text = text;
         //else
         //    OppUserInfo.text = text;
+    }
+    private void UpdateExpBar(int score)
+    {
+        int level = UserSetting.ToLevel(score);
+        ExpLevel.text = level.ToString();
+        Exp.text = score.ToString();
+        int dd = score % UserSetting.ScorePerLevel;
+        float rate = (float)dd / UserSetting.ScorePerLevel;
+        ExpBar.normalizedValue = rate;
     }
 
     private ProductColor ToColor(string color)
