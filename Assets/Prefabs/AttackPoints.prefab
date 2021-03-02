@@ -43,12 +43,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 983484598d1191a45ba87db23b9d9595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Images:
+  - {fileID: 21300000, guid: 3a8b26ad50693f349a1b738b14b80044, type: 3}
+  - {fileID: 21300000, guid: ade07bf068eabfd41bacdf2a76ab4473, type: 3}
+  - {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
+  - {fileID: 21300000, guid: 0984c0762497c7e498278b0bee0b7f6c, type: 3}
   BaseSprite: {fileID: 5081829746968103039, guid: f7051f857a854084091d9873b5be7663,
     type: 3}
-  Projectile: {fileID: 3807958604607232518, guid: 8e8826c93ee128d4984cf41758f45d4d,
-    type: 3}
-  Images:
-  - {fileID: 21300000, guid: 99755bc976c9726479cef5c940f41bc0, type: 3}
-  - {fileID: 21300000, guid: 448ca790034a0fb489a247283a877511, type: 3}
-  - {fileID: 21300000, guid: ab3fadc94da61a543bfa53567ccaafd7, type: 3}
-  - {fileID: 21300000, guid: 90c44fb153cb1744f89dab28c7a7518b, type: 3}

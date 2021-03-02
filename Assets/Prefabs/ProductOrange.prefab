@@ -111,13 +111,13 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 7fdc799948986214b96974f207d4a09a, type: 3}
   - {fileID: 21300000, guid: 9b4faa760ca8ddc4296ea3713a2fe59b, type: 3}
   Chocos:
-  - {fileID: 21300000, guid: 99755bc976c9726479cef5c940f41bc0, type: 3}
-  - {fileID: 21300000, guid: 448ca790034a0fb489a247283a877511, type: 3}
-  - {fileID: 21300000, guid: ab3fadc94da61a543bfa53567ccaafd7, type: 3}
-  - {fileID: 21300000, guid: 90c44fb153cb1744f89dab28c7a7518b, type: 3}
-  ImgHorizontal: {fileID: 21300000, guid: ae2b69aa367cdf046b0ed45feacabb3e, type: 3}
-  ImgVertical: {fileID: 21300000, guid: 0f2d81ba0e095b04da3daff9aa239cd6, type: 3}
-  ImgBomb: {fileID: 21300000, guid: 2802edd6f69e24b4cafb0ec08ed69dd7, type: 3}
+  - {fileID: 21300000, guid: ade07bf068eabfd41bacdf2a76ab4473, type: 3}
+  - {fileID: 21300000, guid: 0984c0762497c7e498278b0bee0b7f6c, type: 3}
+  - {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
+  - {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
+  ImgHorizontal: {fileID: 21300000, guid: 7811148399876d441afe9179f58e19f2, type: 3}
+  ImgVertical: {fileID: 21300000, guid: b3de6e9327925ab478fd41039bd839e7, type: 3}
+  ImgBomb: {fileID: 21300000, guid: e5e05a422b9f82f469905445f179f73c, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 1ef8c6073aa03dc4eb73f3faf2de4798, type: 3}
   ImgCombo: {fileID: 21300000, guid: 92c44bc2c05c2ec43bac5a61b8ee642e, type: 3}
   ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
@@ -350,7 +350,7 @@ SpriteRenderer:
   m_Size: {x: 1.28, y: 1.28}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4026617317052118366

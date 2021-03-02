@@ -146,7 +146,9 @@ public class Product : MonoBehaviour
         }
         else
         {
-            Detach(Manager.transform);
+            Frame parent = Detach(Manager.transform);
+            UnWrapChocoBlocksAroundFrame(parent, Combo);
+            parent.BreakCover(Combo);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
@@ -485,7 +487,6 @@ public class Product : MonoBehaviour
             return false;
 
         StartCoroutine(AnimBreakChoco());
-        Renderer.enabled = true;
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
         ChocoBlock.GetComponent<Animator>().enabled = true;
@@ -503,7 +504,6 @@ public class Product : MonoBehaviour
         if (level <= 0)
             return;
 
-        Renderer.enabled = false;
         ChocoBlock.tag = "on";
         ChocoBlock.name = level.ToString();
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
