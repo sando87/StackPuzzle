@@ -1289,7 +1289,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked || pro.Skill != ProductSkill.Nothing)
+            if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill != ProductSkill.Nothing)
                 continue;
 
             if(pro.Color == target.Color)
@@ -1831,6 +1831,7 @@ public class InGameManager : MonoBehaviour
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
                     destProduct.SetChocoBlock(1);
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce);
                     Destroy(obstacle);
                 }
                 else
@@ -1844,6 +1845,7 @@ public class InGameManager : MonoBehaviour
             else
                 yield return null;
         }
+        ShakeField();
         mIsFlushing = false;
     }
     private int RandomNextColor()
@@ -1913,6 +1915,28 @@ public class InGameManager : MonoBehaviour
             if (Billboard.MoveCount >= mStageInfo.MoveLimit)
                 StartCoroutine("StartFinishing");
         }
+    }
+    public void ShakeField()
+    {
+        StopCoroutine("AnimShakeField");
+        StartCoroutine("AnimShakeField", 0.05f);
+    }
+    IEnumerator AnimShakeField(float intensity)
+    {
+        GetComponent<Animator>().enabled = false;
+        float dist = intensity;
+        Vector3 startPos = transform.position;
+        Vector3 dir = new Vector3(-1, -1, 0);
+        dir.Normalize();
+        while (dist > 0.01f)
+        {
+            transform.position = startPos + (dist * dir);
+            dist *= 0.7f;
+            dir *= -1;
+            yield return new WaitForSeconds(0.1f);
+        }
+        transform.position = startPos;
+        GetComponent<Animator>().enabled = true;
     }
     public int NextMatchCount(Product pro, SwipeDirection dir)
     {

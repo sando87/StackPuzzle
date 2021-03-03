@@ -11,6 +11,7 @@ public class Product : MonoBehaviour
     public SpriteRenderer Renderer;
     public Sprite[] Images;
     public Sprite[] Chocos;
+    public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
     public Sprite ImgBomb;
@@ -486,18 +487,26 @@ public class Product : MonoBehaviour
         if (combo < (chocoLevel - 1) * 3)
             return false;
 
-        StartCoroutine(AnimBreakChoco());
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
-        ChocoBlock.GetComponent<Animator>().enabled = true;
-        ChocoBlock.GetComponent<Animator>().SetTrigger("hide");
         EventUnWrapChoco?.Invoke();
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
+        StartCoroutine(AnimBreakChoco());
         return true;
     }
     IEnumerator AnimBreakChoco()
     {
-        yield return new WaitForSeconds(0.2f);
+        SpriteRenderer ren = ChocoBlock.GetComponent<SpriteRenderer>();
+        ChocoBlock.transform.localScale = new Vector3(1.2f, 1.2f, 1.0f);
+        int idx = 0;
+        while(idx < IceBreakSprites.Length)
+        {
+            ren.sprite = IceBreakSprites[idx];
+            idx++;
+            yield return new WaitForSeconds(0.1f);
+        }
         Animation.Play("swap");
+        ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
     }
     public void SetChocoBlock(int level, bool anim = false)
     {
@@ -506,18 +515,9 @@ public class Product : MonoBehaviour
 
         ChocoBlock.tag = "on";
         ChocoBlock.name = level.ToString();
+        ChocoBlock.GetComponent<SpriteRenderer>().enabled = true;
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
-        if (anim && level == 1)
-        {
-            ChocoBlock.GetComponent<Animator>().enabled = true;
-            ChocoBlock.GetComponent<Animator>().SetTrigger("show");
-        }
-        else
-        {
-            ChocoBlock.GetComponent<Animator>().enabled = false;
-            ChocoBlock.transform.localScale = new Vector3(1, 1, 1);
-        }
-            
+        ChocoBlock.transform.localScale = Vector3.one;
     }
     public void UnWrapChocoBlocksAroundFrame(Frame frame, int combo)
     {
