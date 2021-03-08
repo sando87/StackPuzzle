@@ -1632,10 +1632,10 @@ public class InGameManager : MonoBehaviour
     }
     private ProductSkill CheckSkillable(Product[] matches)
     {
-        if (matches.Length <= UserSetting.MatchCount)
+        if (matches.Length <= UserSetting.MatchCount + 1)
             return ProductSkill.Nothing;
 
-        if (matches.Length >= UserSetting.MatchCount + 2)
+        if (matches.Length >= UserSetting.MatchCount + 4)
             return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
