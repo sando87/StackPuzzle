@@ -11,12 +11,12 @@ public enum TutorialEventType
 }
 public class TutorialEvent : MonoBehaviour
 {
-    [SerializeField] private Animator Anim = null;
-    private GraphicRaycaster UIEvnets = null;
-    private DragStageMap WorldEvnets = null;
-    private TutorialEventType type = TutorialEventType.None;
-    private Action<TutorialEventType> EventUserAction = null;
-    private GameObject ParentObject = null;
+    [SerializeField] protected Animator Anim = null;
+    protected GraphicRaycaster UIEvnets = null;
+    protected DragStageMap WorldEvnets = null;
+    protected TutorialEventType type = TutorialEventType.None;
+    protected Action<TutorialEventType> EventUserAction = null;
+    protected GameObject ParentObject = null;
 
     static public void Start(int level, TutorialEventType type, Vector2 worldPos, Action<TutorialEventType> eventUserAction)
     {
@@ -40,13 +40,11 @@ public class TutorialEvent : MonoBehaviour
         basePoint.y = worldPos.y;
         baseTr.position = basePoint;
     }
-    void Start()
+    protected virtual void Start()
     {
         GetComponent<SwipeDetector>().EventClick = OnClick;
         GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
-        UIEvnets.enabled = false;
-        WorldEvnets.enabled = false;
-        InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = false;
+        LockSystemEvent(true);
         StartCoroutine(PlayAnim());
     }
     private IEnumerator PlayAnim()
@@ -64,18 +62,16 @@ public class TutorialEvent : MonoBehaviour
             case TutorialEventType.Down: Anim.SetTrigger("down"); break;
         }
     }
-    void OnClick(GameObject obj)
+    protected virtual void OnClick(GameObject obj)
     {
         if (obj != gameObject || type != TutorialEventType.Click)
             return;
 
         EventUserAction?.Invoke(TutorialEventType.Click);
-        UIEvnets.enabled = true;
-        WorldEvnets.enabled = true;
-        InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = true;
+        LockSystemEvent(false);
         Destroy(ParentObject);
     }
-    void OnSwipe(GameObject obj, SwipeDirection dir)
+    protected virtual void OnSwipe(GameObject obj, SwipeDirection dir)
     {
         if (obj != gameObject || type == TutorialEventType.Click)
             return;
@@ -86,10 +82,14 @@ public class TutorialEvent : MonoBehaviour
             || (type == TutorialEventType.Down && dir == SwipeDirection.DOWN))
         {
             EventUserAction?.Invoke(type);
-            UIEvnets.enabled = true;
-            WorldEvnets.enabled = true;
-            InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = true;
+            LockSystemEvent(false);
             Destroy(ParentObject);
         }
+    }
+    protected void LockSystemEvent(bool isLock)
+    {
+        UIEvnets.enabled = !isLock;
+        WorldEvnets.enabled = !isLock;
+        InGameManager.InstStage.GetComponent<SwipeDetector>().enabled = !isLock;
     }
 }
