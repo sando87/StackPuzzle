@@ -42,9 +42,36 @@ public class Tutorials : MonoBehaviour
                 TutorialEvent.Start(curNum, TutorialEventType.Click, frame.transform.position, OnEvnetHandler);
                 break;
             }
-            else if (curNum == 4)
+            else if (curNum == 4) //콤보 튜토리얼
             {
                 if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 2)
+                {
+                    TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
+                    break;
+                }
+            }
+            else if (curNum == 5) //1개 아이템 스킬 튜토리얼
+            {
+                if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 2)
+                {
+                    if(FindObjectOfType<TutorialEventCombo>() == null)
+                    {
+                        TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
+                        break;
+                    }
+                }
+            }
+            else if (curNum == 6) //2개 아이템 조합 스킬 튜토리얼
+            {
+                if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 3)
+                {
+                    TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
+                    break;
+                }
+            }
+            else if (curNum == 7) //얼음 블럭 깨는 튜토리얼
+            {
+                if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 4)
                 {
                     TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
                     break;
@@ -87,10 +114,61 @@ public class Tutorials : MonoBehaviour
             }
             else if (type == TutorialEventType.Click)
             {
-                Frame frame = StageGameField.Frame(4, 0);
+                Frame frame = StageGameField.Frame(5, 0);
                 StageGameField.OnClick(frame.ChildProduct.gameObject);
                 UserSetting.TutorialNumber = curNum + 1;
                 StartCoroutine(TutorialStarter());
+            }
+        }
+        else if (curNum == 5)
+        {
+            if (type == TutorialEventType.Down)
+            {
+                Frame frame = StageGameField.Frame(2, 5);
+                StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.DOWN);
+            }
+            else if (type == TutorialEventType.Left)
+            {
+                Frame frame = StageGameField.Frame(4, 3);
+                StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.LEFT);
+            }
+            else if (type == TutorialEventType.Click)
+            {
+                Frame frame = StageGameField.Frame(3, 3);
+                StageGameField.OnClick(frame.ChildProduct.gameObject);
+                UserSetting.TutorialNumber = curNum + 1;
+                StartCoroutine(TutorialStarter());
+            }
+            else if (type == TutorialEventType.Click2)
+            {
+                Frame frame = StageGameField.Frame(3, 3);
+                StageGameField.OnClick(frame.ChildProduct.gameObject);
+                UserSetting.TutorialNumber = curNum + 1;
+                StartCoroutine(TutorialStarter());
+            }
+        }
+        else if (curNum == 6)
+        {
+            if (type == TutorialEventType.Down)
+            {
+                Frame frame = StageGameField.Frame(3, 3);
+                StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.DOWN);
+
+                UserSetting.TutorialNumber = curNum + 1;
+                StartCoroutine(TutorialStarter());
+            }
+            else if (type == TutorialEventType.Click)
+            {
+                Frame frame = StageGameField.Frame(3, 5);
+                StageGameField.OnClick(frame.ChildProduct.gameObject);
+            }
+        }
+        else if (curNum == 7)
+        {
+            if (type == TutorialEventType.Click)
+            {
+                Frame frame = StageGameField.Frame(4, 0);
+                StageGameField.OnClick(frame.ChildProduct.gameObject);
             }
         }
     }

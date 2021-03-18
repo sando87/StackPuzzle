@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public enum TutorialEventType
 {
-    None, Left, Right, Up, Down, Click
+    None, Left, Right, Up, Down, Click, Click2
 }
 public class TutorialEvent : MonoBehaviour
 {

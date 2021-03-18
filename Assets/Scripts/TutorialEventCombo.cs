@@ -16,12 +16,14 @@ public class TutorialEventCombo : TutorialEvent
     public GameObject ComboSet1;
     public GameObject ComboSet2;
     public GameObject ComboSet3;
+    public GameObject ComboDisplay;
 
-    Vector3[] points = new Vector3[3]
+    Vector3[] points = new Vector3[4]
     {
         new Vector3(1.8f, 4.3f, 0), //메시지 클릭 포인트
         new Vector3(-0.41f, -1.64f, 0), //스와이프 블럭
-        new Vector3(1.23f, -2.46f, 0) //콤보 시작 클릭
+        new Vector3(1.23f, -2.46f, 0), //콤보 시작 클릭
+        new Vector3(2.6f, 6.2f, 0) //콤보 디스플레이 클릭
     };
 
     protected override void Start()
@@ -45,6 +47,29 @@ public class TutorialEventCombo : TutorialEvent
         else if (Step == 2)
         {
             EventUserAction?.Invoke(TutorialEventType.Click);
+            Step++;
+
+            SwipeSubWindow.SetActive(false);
+            ShowBasePoint(false);
+            MessageBox.SetActive(false);
+            Anim.Play("TutorialHideAll", -1, 0);
+
+            StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
+            {
+                Anim.Play("tutorialDim", -1, 0);
+
+                ComboDisplay.SetActive(true);
+                ComboDisplay.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+                StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
+                {
+                    ShowBasePoint(true);
+                    BasePoint.transform.localPosition = points[3];
+                    Anim.SetTrigger("click");
+                }));
+            }));
+        }
+        else if (Step == 3)
+        {
             LockSystemEvent(false);
             Destroy(ParentObject);
         }
