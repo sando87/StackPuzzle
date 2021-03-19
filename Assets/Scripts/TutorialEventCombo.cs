@@ -22,8 +22,8 @@ public class TutorialEventCombo : TutorialEvent
     {
         new Vector3(1.8f, 4.3f, 0), //메시지 클릭 포인트
         new Vector3(-0.41f, -1.64f, 0), //스와이프 블럭
-        new Vector3(1.23f, -2.46f, 0), //콤보 시작 클릭
-        new Vector3(2.6f, 6.2f, 0) //콤보 디스플레이 클릭
+        new Vector3(2.05f, -2.46f, 0), //콤보 시작 클릭
+        new Vector3(1.6f, 5.5f, 0) //콤보 디스플레이 클릭
     };
 
     protected override void Start()
@@ -58,6 +58,9 @@ public class TutorialEventCombo : TutorialEvent
             {
                 Anim.Play("tutorialDim", -1, 0);
 
+                ComboSet1.SetActive(false);
+                ComboSet2.SetActive(false);
+                ComboSet3.SetActive(false);
                 ComboDisplay.SetActive(true);
                 ComboDisplay.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
@@ -71,6 +74,7 @@ public class TutorialEventCombo : TutorialEvent
         else if (Step == 3)
         {
             LockSystemEvent(false);
+            EventUserAction?.Invoke(TutorialEventType.Click2);
             Destroy(ParentObject);
         }
     }

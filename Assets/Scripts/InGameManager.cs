@@ -1427,7 +1427,8 @@ public class InGameManager : MonoBehaviour
             fromPos.z -= 1;
             GameObject obj = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
             obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            StartCoroutine(AnimateThrowOver(obj, () => {
+            StartCoroutine(AnimateThrowOver(obj, () =>
+            {
                 Destroy(obj);
                 AttackPointFrame.AddPoints(point);
             }));
@@ -1483,16 +1484,18 @@ public class InGameManager : MonoBehaviour
 
         action?.Invoke();
     }
-    IEnumerator AnimateAttack(GameObject[] objs, Vector3 dest, Action EventEndEach)
+    IEnumerator AnimateAttack(GameObject[] objs, Vector3 dest, Action<GameObject> EventEndEach)
     {
-        float dragFactor = 1.0f;
+        float dragFactor = 0.02f;
         float destFactor = 0;
-        Vector2[] startSpeed = new Vector2[objs.Length];
+        Tuple<Vector2,float>[] startSpeed = new Tuple<Vector2, float>[objs.Length];
         for (int i = 0; i < objs.Length; ++i)
         {
-            float rad = UnityEngine.Random.Range(0, 360) * Mathf.Deg2Rad;
+            float rad = UnityEngine.Random.Range(225, 315) * Mathf.Deg2Rad;
+            if (objs[i].transform.position.y > dest.y)
+                rad += Mathf.PI;
             Vector2 force = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            startSpeed[i] = force * UnityEngine.Random.Range(0, 10);
+            startSpeed[i] = new Tuple<Vector2, float>(force, UnityEngine.Random.Range(30, 35));
         }
 
         while (true)
@@ -1505,19 +1508,24 @@ public class InGameManager : MonoBehaviour
                     continue;
 
                 isFinished = false;
-                Vector3 dragSpeed = startSpeed[i] * dragFactor;
+                Vector3 curStartSpeed = startSpeed[i].Item1 * startSpeed[i].Item2;
                 Vector3 dir = dest - obj.transform.position;
                 dir.z = 0;
                 dir.Normalize();
-                Vector3 curSpeed = dragSpeed + dir * destFactor;
+                Vector3 curSpeed = curStartSpeed + dir * destFactor;
                 obj.transform.position += curSpeed * Time.deltaTime;
+                obj.transform.Rotate(Vector3.forward, startSpeed[i].Item2 * 5.0f);
+
+                float nextSpeed = startSpeed[i].Item2 - (startSpeed[i].Item2 * startSpeed[i].Item2 * dragFactor);
+                nextSpeed = Mathf.Max(0, nextSpeed);
+                startSpeed[i] = new Tuple<Vector2, float>(startSpeed[i].Item1, nextSpeed);
 
                 Vector3 afterDir = dest - obj.transform.position;
                 afterDir.z = 0;
                 afterDir.Normalize();
                 if (Vector3.Dot(afterDir, dir) < 0)
                 {
-                    EventEndEach?.Invoke();
+                    EventEndEach?.Invoke(obj);
                     objs[i] = null;
                 }
 
@@ -1526,8 +1534,7 @@ public class InGameManager : MonoBehaviour
             if (isFinished)
                 break;
 
-            dragFactor = Mathf.Max(0, dragFactor - 0.2f);
-            destFactor += 0.1f;
+            destFactor += 0.7f;
             yield return null;
         }
     }

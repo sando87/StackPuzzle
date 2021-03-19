@@ -26,16 +26,6 @@ public class TutorialEventItem : TutorialEvent
         new Vector3(2.6f, 6.2f, 0) //click item
     };
 
-    protected override void Start()
-    {
-        base.Start();
-        Step = 0;
-
-        BasePoint.transform.localPosition = points[0];
-        SwipeBlock1.SetActive(true);
-        Anim.SetTrigger("down");
-    }
-
     protected override void OnClick(GameObject obj)
     {
         if (obj != gameObject)
@@ -82,7 +72,9 @@ public class TutorialEventItem : TutorialEvent
             Step++;
             EventUserAction?.Invoke(TutorialEventType.Down);
 
-            BasePoint.transform.localPosition = points[1];
+            Vector3 pos = InGameManager.InstStage.Frame(4, 3).transform.position;
+            pos.z = BasePoint.transform.position.z;
+            BasePoint.transform.position = pos;
             SwipeBlock1.SetActive(false);
             SwipeBlock2.SetActive(true);
             Anim.SetTrigger("left");
