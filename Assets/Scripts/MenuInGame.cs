@@ -110,7 +110,9 @@ public class MenuInGame : MonoBehaviour
     {
         if (success)
         {
-            int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
+            //int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
+            float limitRate = InGameManager.InstStage.LimitRate;
+            int starCount = limitRate < 0.6f ? 3 : (limitRate < 0.8f ? 2 : 1);
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 

@@ -67,6 +67,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
     private bool mRequestDrop = false;
+    private float mStartTime = 0;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
 
@@ -108,6 +109,8 @@ public class InGameManager : MonoBehaviour
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
     public int UserScore { get { return mUserInfo.score; } }
+    public float PlayTime { get { return Time.realtimeSinceStartup - mStartTime; } }
+    public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit ; } }
     public UserInfo UserInfo { get { return mUserInfo; } }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
@@ -145,6 +148,7 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
+            mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFinishStageMode());
@@ -159,6 +163,7 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
+            mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFlush());
@@ -919,7 +924,8 @@ public class InGameManager : MonoBehaviour
                 }
             }
 
-            break;
+            if(IsAllProductIdle())
+                break;
 
         KeepLoop:
             yield return new WaitForSeconds(0.4f);
@@ -1025,10 +1031,10 @@ public class InGameManager : MonoBehaviour
         }
         mIsAutoMatching = false;
     }
-    IEnumerator StartElectronicEffect(Product main, Product[] pros, Action<Product> eventTurn, Action eventEnd)
+    IEnumerator StartElectronicEffect(Vector3 _startPos, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
         mItemLooping = true;
-        Vector3 startPos = main.transform.position;
+        Vector3 startPos = _startPos;
         while (true)
         {
             int idx = 0;
@@ -1128,7 +1134,7 @@ public class InGameManager : MonoBehaviour
         else if (target.Skill == ProductSkill.SameColor)
         {
             Product[] pros = FindSameColor(target);
-            StartCoroutine(StartElectronicEffect(target, pros,
+            StartCoroutine(StartElectronicEffect(target.transform.position, pros,
                 (pro) => {
                 DestroyProducts(new Product[1] { pro });
             }, null));
@@ -1148,7 +1154,7 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor, pros, 
+            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros, 
                 (pro) => {
                     pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
@@ -1165,7 +1171,7 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor, pros,
+            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros,
                 (pro) => {
                     pro.ChangeProductImage(ProductSkill.Bomb);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
@@ -1181,7 +1187,7 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor, pros,
+            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros,
                 (pro) => {
                     pro.ChangeProductImage(ProductSkill.SameColor);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
@@ -1280,6 +1286,30 @@ public class InGameManager : MonoBehaviour
             if (pro != productbombA && pro != productbombB && pro.Skill != ProductSkill.Nothing)
                 DestroySkill(pro);
     }
+    public void RewardRemainLimits()
+    {
+        if (LimitRate > 0.9)
+            return;
+
+        int step = (int)(LimitRate * CountX * CountY);
+        List<Product> randomProducts = ScanRandomProducts(step);
+        Product[] pros = randomProducts.ToArray();
+
+        StartCoroutine(StartElectronicEffect(Vector3.zero, pros,
+            (pro) => {
+                int ran = UnityEngine.Random.Range(0, 3);
+                if(ran == 0)
+                    pro.ChangeProductImage(ProductSkill.Horizontal);
+                else if(ran == 1)
+                    pro.ChangeProductImage(ProductSkill.Vertical);
+                else
+                    pro.ChangeProductImage(ProductSkill.Bomb);
+            },
+            () => {
+                StartCoroutine(LoopBreakAllSkill());
+            }));
+    }
+    
 
 
     private Product[] FindSameColor(Product target)
@@ -1490,6 +1520,10 @@ public class InGameManager : MonoBehaviour
                 {
                     if(IsAchieveGoals())
                     {
+                        RewardRemainLimits();
+                        while (!IsIdle)
+                            yield return null; //마지막 보상 스킬들 루틴 끝날때까지 기달...
+
                         MenuInformBox.PopUp("MISSION COMPLETE!!");
                         success = true;
                     }
@@ -1523,23 +1557,17 @@ public class InGameManager : MonoBehaviour
     }
     private IEnumerator CheckFinishStageMode()
     {
-        float time = 0;
-        while(true)
+        while (true)
         {
             if(mStageInfo.TimeLimit > 0)
             {
-                int prevSec = (int)time;
-                time += Time.deltaTime;
-                int curSec = (int)time;
-                int remainTime = mStageInfo.TimeLimit - curSec;
+                float remainTime = mStageInfo.TimeLimit - PlayTime;
+                EventRemainTime?.Invoke((int)remainTime);
                 if (remainTime < 0)
                 {
                     StartCoroutine("StartFinishing");
                     break;
                 }
-                else if (prevSec == 0 || prevSec != curSec)
-                    EventRemainTime?.Invoke(remainTime);
-
             }
 
             if (IsAchieveGoals())
@@ -1886,6 +1914,7 @@ public class InGameManager : MonoBehaviour
         mPrevIdleState = IsIdle;
         mRequestDrop = false;
         mRandomSeed = null;
+        mStartTime = 0;
 
         ProductIDs.Clear();
         Billboard.Reset();
