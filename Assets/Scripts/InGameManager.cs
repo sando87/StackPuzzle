@@ -1483,6 +1483,54 @@ public class InGameManager : MonoBehaviour
 
         action?.Invoke();
     }
+    IEnumerator AnimateAttack(GameObject[] objs, Vector3 dest, Action EventEndEach)
+    {
+        float dragFactor = 1.0f;
+        float destFactor = 0;
+        Vector2[] startSpeed = new Vector2[objs.Length];
+        for (int i = 0; i < objs.Length; ++i)
+        {
+            float rad = UnityEngine.Random.Range(0, 360) * Mathf.Deg2Rad;
+            Vector2 force = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            startSpeed[i] = force * UnityEngine.Random.Range(0, 10);
+        }
+
+        while (true)
+        {
+            bool isFinished = true;
+            for (int i = 0; i < objs.Length; ++i)
+            {
+                GameObject obj = objs[i];
+                if (obj == null)
+                    continue;
+
+                isFinished = false;
+                Vector3 dragSpeed = startSpeed[i] * dragFactor;
+                Vector3 dir = dest - obj.transform.position;
+                dir.z = 0;
+                dir.Normalize();
+                Vector3 curSpeed = dragSpeed + dir * destFactor;
+                obj.transform.position += curSpeed * Time.deltaTime;
+
+                Vector3 afterDir = dest - obj.transform.position;
+                afterDir.z = 0;
+                afterDir.Normalize();
+                if (Vector3.Dot(afterDir, dir) < 0)
+                {
+                    EventEndEach?.Invoke();
+                    objs[i] = null;
+                }
+
+            }
+
+            if (isFinished)
+                break;
+
+            dragFactor = Mathf.Max(0, dragFactor - 0.2f);
+            destFactor += 0.1f;
+            yield return null;
+        }
+    }
     private IEnumerator CheckFlush()
     {
         while (true)
