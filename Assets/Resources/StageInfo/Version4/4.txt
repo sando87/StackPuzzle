@@ -1,7 +1,8 @@
 GoalType,Choco
-GoalValue,8
+GoalValue,6
 MoveLimit,50
-ColorCount,4
+ColorCount,5
+RandomSeed,4
 XCount,6
 YCount,7
 Rows,0/-1 0/-1 0/0 0/0 0/-1 0/-1
@@ -9,5 +10,5 @@ Rows,0/-1 0/0 0/0 0/0 0/0 0/-1
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 1/0 1/0 1/0 1/0 0/0
-Rows,0/0 2/0 2/0 2/0 2/0 0/0
+Rows,0/0 0/0 0/0 1/0 1/0 1/0
+Rows,0/0 0/0 0/0 1/0 1/0 1/0

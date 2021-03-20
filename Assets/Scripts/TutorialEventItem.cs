@@ -18,14 +18,6 @@ public class TutorialEventItem : TutorialEvent
     public GameObject ClickBlock;
     public GameObject ClickItem;
 
-    Vector3[] points = new Vector3[4]
-    {
-        new Vector3(1.8f, 4.3f, 0), //swipe1
-        new Vector3(-0.41f, -1.64f, 0), //swipe2
-        new Vector3(1.23f, -2.46f, 0), //click
-        new Vector3(2.6f, 6.2f, 0) //click item
-    };
-
     protected override void OnClick(GameObject obj)
     {
         if (obj != gameObject)
@@ -45,11 +37,14 @@ public class TutorialEventItem : TutorialEvent
             StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
             {
                 Anim.Play("tutorialDim", -1, 0);
+                ClickBlock.SetActive(false);
                 ClickItem.SetActive(true);
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     ShowBasePoint(true);
-                    BasePoint.transform.localPosition = points[3];
+                    Vector3 pos = InGameManager.InstStage.Frame(3, 3).transform.position;
+                    pos.z = BasePoint.transform.position.z;
+                    BasePoint.transform.position = pos;
                     Anim.SetTrigger("click");
                 }));
             }));
@@ -84,7 +79,9 @@ public class TutorialEventItem : TutorialEvent
             Step++;
             EventUserAction?.Invoke(TutorialEventType.Left);
 
-            BasePoint.transform.localPosition = points[2];
+            Vector3 pos = InGameManager.InstStage.Frame(3, 3).transform.position;
+            pos.z = BasePoint.transform.position.z;
+            BasePoint.transform.position = pos;
             SwipeBlock2.SetActive(false);
             ClickBlock.SetActive(true);
             Anim.SetTrigger("click");

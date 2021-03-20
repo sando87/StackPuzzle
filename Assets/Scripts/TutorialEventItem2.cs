@@ -12,23 +12,7 @@ public class TutorialEventItem2 : TutorialEvent
     public GameObject Hand;
     public GameObject Circle;
 
-    public GameObject Click1;
     public GameObject Swipe1;
-
-    Vector3[] points = new Vector3[2]
-    {
-        new Vector3(1.8f, 4.3f, 0), //click1
-        new Vector3(-0.41f, -1.64f, 0) //swipe1
-    };
-
-    protected override void Start()
-    {
-        base.Start();
-
-        BasePoint.transform.localPosition = points[0];
-        Click1.SetActive(true);
-        Anim.SetTrigger("click");
-    }
 
     protected override void OnClick(GameObject obj)
     {
@@ -41,18 +25,19 @@ public class TutorialEventItem2 : TutorialEvent
             EventUserAction?.Invoke(TutorialEventType.Click);
 
             ShowBasePoint(false);
-            Click1.SetActive(false);
             MessageBox.SetActive(false);
             Anim.Play("TutorialHideAll", -1, 0);
 
-            StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
+            StartCoroutine(UnityUtils.CallAfterSeconds(2.0f, () =>
             {
                 Anim.Play("tutorialDim", -1, 0);
                 Swipe1.SetActive(true);
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     ShowBasePoint(true);
-                    BasePoint.transform.localPosition = points[1];
+                    Vector3 pos = InGameManager.InstStage.Frame(3, 3).transform.position;
+                    pos.z = BasePoint.transform.position.z;
+                    BasePoint.transform.position = pos;
                     Anim.SetTrigger("down");
                 }));
             }));

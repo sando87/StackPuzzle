@@ -57,7 +57,8 @@ public class Tutorials : MonoBehaviour
             {
                 if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 3)
                 {
-                    TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
+                    Frame frame = StageGameField.Frame(3, 5);
+                    TutorialEvent.Start(curNum, TutorialEventType.Click, frame.transform.position, OnEvnetHandler);
                     break;
                 }
             }
@@ -65,7 +66,8 @@ public class Tutorials : MonoBehaviour
             {
                 if (StageGameField.gameObject.activeInHierarchy && StageGameField.StageNum == 4)
                 {
-                    TutorialEvent.Start(curNum, TutorialEventType.Click, Vector3.zero, OnEvnetHandler);
+                    Frame frame = StageGameField.Frame(3, 2);
+                    TutorialEvent.Start(curNum, TutorialEventType.Click, frame.transform.position, OnEvnetHandler);
                     break;
                 }
             }
@@ -99,21 +101,50 @@ public class Tutorials : MonoBehaviour
         }
         else if (curNum == 4)
         {
-            if (type == TutorialEventType.Up)
+            TutorialEventCombo tutorial4 = FindObjectOfType<TutorialEventCombo>();
+            if(tutorial4 != null)
             {
-                Frame frame = StageGameField.Frame(2, 1);
-                StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.UP);
+                if (type == TutorialEventType.Up)
+                {
+                    Frame frame = StageGameField.Frame(2, 1);
+                    StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.UP);
+                }
+                else if (type == TutorialEventType.Click)
+                {
+                    Frame frame = StageGameField.Frame(5, 0);
+                    StageGameField.OnClick(frame.ChildProduct.gameObject);
+                }
+                else if (type == TutorialEventType.Click2)
+                {
+                    curNum++;
+                    Frame frame = StageGameField.Frame(2, 5);
+                    TutorialEvent.Start(curNum, TutorialEventType.Down, frame.transform.position, OnEvnetHandler);
+                }
             }
-            else if (type == TutorialEventType.Click)
+            else
             {
-                Frame frame = StageGameField.Frame(5, 0);
-                StageGameField.OnClick(frame.ChildProduct.gameObject);
-            }
-            else if (type == TutorialEventType.Click2)
-            {
-                curNum++;
-                Frame frame = StageGameField.Frame(2, 5);
-                TutorialEvent.Start(curNum, TutorialEventType.Down, frame.transform.position, OnEvnetHandler2);
+                if (type == TutorialEventType.Down)
+                {
+                    Frame frame = StageGameField.Frame(2, 5);
+                    StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.DOWN);
+                }
+                else if (type == TutorialEventType.Left)
+                {
+                    Frame frame = StageGameField.Frame(4, 3);
+                    StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.LEFT);
+                }
+                else if (type == TutorialEventType.Click)
+                {
+                    Frame frame = StageGameField.Frame(3, 3);
+                    StageGameField.OnClick(frame.ChildProduct.gameObject);
+                }
+                else if (type == TutorialEventType.Click2)
+                {
+                    Frame frame = StageGameField.Frame(3, 3);
+                    StageGameField.OnClick(frame.ChildProduct.gameObject);
+                    UserSetting.TutorialNumber = UserSetting.TutorialNumber + 2;
+                    StartCoroutine(TutorialStarter());
+                }
             }
         }
         else if (curNum == 5)
@@ -139,35 +170,10 @@ public class Tutorials : MonoBehaviour
         {
             if (type == TutorialEventType.Click)
             {
-                Frame frame = StageGameField.Frame(4, 0);
+                Frame frame = StageGameField.Frame(3, 2);
                 StageGameField.OnClick(frame.ChildProduct.gameObject);
+                UserSetting.TutorialNumber = curNum + 1;
             }
-        }
-    }
-
-    private void OnEvnetHandler2(TutorialEventType type)
-    {
-        if (type == TutorialEventType.Down)
-        {
-            Frame frame = StageGameField.Frame(2, 5);
-            StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.DOWN);
-        }
-        else if (type == TutorialEventType.Left)
-        {
-            Frame frame = StageGameField.Frame(4, 3);
-            StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.LEFT);
-        }
-        else if (type == TutorialEventType.Click)
-        {
-            Frame frame = StageGameField.Frame(3, 3);
-            StageGameField.OnClick(frame.ChildProduct.gameObject);
-        }
-        else if (type == TutorialEventType.Click2)
-        {
-            Frame frame = StageGameField.Frame(3, 3);
-            StageGameField.OnClick(frame.ChildProduct.gameObject);
-            UserSetting.TutorialNumber = UserSetting.TutorialNumber + 2;
-            StartCoroutine(TutorialStarter());
         }
     }
 }
