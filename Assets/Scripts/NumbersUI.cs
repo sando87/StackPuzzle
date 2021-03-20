@@ -107,6 +107,9 @@ public class NumbersUI : MonoBehaviour
 
     public void BreakCombo()
     {
+        if (Number <= 0)
+            return;
+
         Number = 0;
         if (gameObject.activeSelf)
         {
@@ -136,6 +139,7 @@ public class NumbersUI : MonoBehaviour
             yield return null;
         }
 
+        transform.localPosition = Vector3.zero;
         gameObject.SetActive(false);
     }
 
@@ -150,12 +154,13 @@ public class NumbersUI : MonoBehaviour
         ThirdOutline.color = Color.white;
         ComboText.color = Color.white;
         ComboTextOutline.color = Color.white;
-        GetComponent<RectTransform>().localPosition = new Vector3(0, -130.0f);
+        transform.localPosition = Vector3.zero;
     }
 
     public void Clear()
     {
         Number = 0;
+        transform.localPosition = Vector3.zero;
         gameObject.SetActive(false);
     }
 }

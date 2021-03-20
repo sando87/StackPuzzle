@@ -78,6 +78,7 @@ public class UserSetting
     public const int HeartChargingIntervalMin = 5;
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
+    public const int GoldPerCoin = 10;
     public const int ScorePerLevel = 50;
     static public int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
     static public int ToScore(int level) { return (level -1) * ScorePerLevel; }

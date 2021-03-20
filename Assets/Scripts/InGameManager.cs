@@ -334,6 +334,7 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
+            EventCombo?.Invoke(0);
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () => {
@@ -389,7 +390,6 @@ public class InGameManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        EventCombo?.Invoke(0);
         mStopDropping = false;
     }
     private Product[] ToProducts(Frame[] frames)
@@ -1069,8 +1069,8 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        eventEnd?.Invoke();
         mItemLooping = false;
+        eventEnd?.Invoke();
     }
     public void DestroySkillOneshot(Product productA)
     {
@@ -1643,7 +1643,7 @@ public class InGameManager : MonoBehaviour
         switch (mStageInfo.GoalTypeEnum)
         {
             case StageGoalType.Score:
-                if (Billboard.CurrentScore >= targetCount * UserSetting.ScorePerBar)
+                if (Billboard.CurrentScore >= targetCount)
                     isSuccess = true;
                 break;
             case StageGoalType.Combo:

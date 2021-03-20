@@ -13,6 +13,7 @@ public class MenuComplete : MonoBehaviour
     public Image Star3;
     public Animator RewardCoin;
     public TextMeshProUGUI StageLevel;
+    public TextMeshProUGUI GoldValue;
     public ScoreBar ScoreDisplay;
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
@@ -42,14 +43,22 @@ public class MenuComplete : MonoBehaviour
                 Destroy(effect);
         Effects.Clear();
 
+        StageInfo stageInfo = StageInfo.Load(level);
+
+        if (stageInfo.GoalTypeEnum == StageGoalType.Score)
+            ScoreDisplay.ScorePerBar = stageInfo.GoalValue;
+        else
+            ScoreDisplay.ScorePerBar = UserSetting.ScorePerBar;
+
         ScoreDisplay.Clear();
         ScoreDisplay.SetScore(score);
-        StageLevel.text = "STAGE " + level.ToString();
+        StageLevel.text = "STAGE " + level.ToString() + " Clear!!";
+        GoldValue.text = "0";
 
         gameObject.SetActive(true);
 
-        int gold = score / UserSetting.ScorePerCoin;
-        Purchases.AddGold(gold);
+        int coin = score / UserSetting.ScorePerCoin;
+        Purchases.AddGold(coin * UserSetting.GoldPerCoin);
 
         StartCoroutine(AnimateReward(score));
         StartCoroutine(AnimateStars(starCount));
@@ -135,6 +144,8 @@ public class MenuComplete : MonoBehaviour
                 {
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
                     RewardCoin.Play("push", -1, 0);
+                    int curGold = int.Parse(GoldValue.text);
+                    GoldValue.text = (curGold + UserSetting.GoldPerCoin).ToString();
                     Destroy(coin.gameObject);
                 }
             }

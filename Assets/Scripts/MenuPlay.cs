@@ -10,6 +10,7 @@ public class MenuPlay : MonoBehaviour
     private StageInfo mStageInfo;
 
     public TextMeshProUGUI StageLevel;
+    public TextMeshProUGUI TargetValue;
     public TextMeshProUGUI TargetScore;
     public Image TargetType;
 
@@ -34,8 +35,19 @@ public class MenuPlay : MonoBehaviour
         int starCount = UserSetting.GetStageStarCount(info.Num);
         mStageInfo = info;
         StageLevel.text = "STAGE " + info.Num.ToString();
-        TargetScore.text = info.GoalValue.ToString();
-        TargetType.sprite = info.GoalTypeImage;
+        if(info.GoalTypeEnum == StageGoalType.Score)
+        {
+            TargetType.gameObject.SetActive(false);
+            TargetScore.gameObject.SetActive(true);
+            TargetScore.text = "Score " + info.GoalValue.ToString();
+        }
+        else
+        {
+            TargetScore.gameObject.SetActive(false);
+            TargetType.gameObject.SetActive(true);
+            TargetType.sprite = info.GoalTypeImage;
+            TargetValue.text = info.GoalValue.ToString();
+        }
     }
 
     public void OnClose()

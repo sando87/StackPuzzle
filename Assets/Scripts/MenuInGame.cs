@@ -15,6 +15,7 @@ public class MenuInGame : MonoBehaviour
 
     public TextMeshProUGUI Limit;
     public TextMeshProUGUI TargetValue;
+    public TextMeshProUGUI TargetScoreText;
     public Image TargetType;
     public NumbersUI ComboNumber;
     public ScoreBar ScoreBarObj;
@@ -58,8 +59,21 @@ public class MenuInGame : MonoBehaviour
         mStageInfo = info;
 
         Limit.text = info.MoveLimit.ToString();
-        TargetType.sprite = info.GoalTypeImage;
-        TargetValue.text = info.GoalValue.ToString();
+        if (info.GoalTypeEnum == StageGoalType.Score)
+        {
+            TargetType.gameObject.SetActive(false);
+            TargetScoreText.gameObject.SetActive(true);
+            TargetScoreText.text = info.GoalValue.ToString();
+            ScoreBarObj.ScorePerBar = info.GoalValue;
+        }
+        else
+        {
+            TargetScoreText.gameObject.SetActive(false);
+            TargetType.gameObject.SetActive(true);
+            TargetType.sprite = info.GoalTypeImage;
+            TargetValue.text = info.GoalValue.ToString();
+            ScoreBarObj.ScorePerBar = UserSetting.ScorePerBar;
+        }
         ComboNumber.Clear();
         ScoreBarObj.Clear();
 
@@ -83,7 +97,7 @@ public class MenuInGame : MonoBehaviour
         };
     }
 
-    public int CurrentCombo
+    private int CurrentCombo
     {
         get
         {

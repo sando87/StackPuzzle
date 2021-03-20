@@ -1,6 +1,6 @@
 GoalType,Score
-GoalValue,1
-MoveLimit,20
+GoalValue,20
+MoveLimit,30
 ColorCount,6
 RandomSeed,7
 XCount,5

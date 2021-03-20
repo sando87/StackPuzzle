@@ -36,8 +36,8 @@ public class MenuStages : MonoBehaviour
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
 
         Inst.gameObject.SetActive(true);
-        //Inst.StopCoroutine("UpdateHeartTimer");
-        //Inst.StartCoroutine("UpdateHeartTimer");
+        Inst.StopCoroutine("UpdateHeartTimer");
+        Inst.StartCoroutine("UpdateHeartTimer");
     }
     public static void Hide()
     {

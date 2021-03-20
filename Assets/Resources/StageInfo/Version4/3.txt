@@ -1,6 +1,6 @@
-GoalType,Choco
-GoalValue,6
-MoveLimit,50
+GoalType,Score
+GoalValue,50
+MoveLimit,25
 ColorCount,4
 RandomSeed,4
 XCount,6

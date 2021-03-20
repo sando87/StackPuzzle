@@ -13,8 +13,9 @@ public class ScoreBar : MonoBehaviour
     [SerializeField] private GameObject GroupLine = null;
     [SerializeField] private GameObject SplitBarPrefab = null;
 
-    private int ScorePerBar = UserSetting.ScorePerBar;
-    public int CurrentScore { get; private set; }
+    //private int ScorePerBar = UserSetting.ScorePerBar;
+    public int ScorePerBar { get; set; } = UserSetting.ScorePerBar;
+    public int CurrentScore { get; private set; } = 0;
 
     public void Clear()
     {
@@ -34,6 +35,9 @@ public class ScoreBar : MonoBehaviour
     public void SetScore(int score)
     {
         score = Mathf.Max(0, score);
+        if (CurrentScore / ScorePerBar != score / ScorePerBar)
+            GetComponentInChildren<Animation>().Play();
+
         CurrentScore = score;
         UpdateScoreDisplay();
     }
@@ -74,13 +78,10 @@ public class ScoreBar : MonoBehaviour
 
     private void InitSplitBar()
     {
-        if (GroupLine != null && GroupLine.transform.childCount > 0)
-            return;
-
         foreach (Transform chid in GroupLine.transform)
             Destroy(chid.gameObject);
 
-        int count = UserSetting.ScorePerBar / UserSetting.ScorePerSplitBar;
+        int count = ScorePerBar / UserSetting.ScorePerSplitBar;
         float gap = (1.0f / count) * GroupLine.GetComponent<RectTransform>().rect.width;
         for (int i = 0; i < count; ++i)
         {
@@ -95,7 +96,7 @@ public class ScoreBar : MonoBehaviour
         if (StarCount == null)
             return;
 
-        int starCount = CurrentScore / UserSetting.ScorePerBar;
+        int starCount = CurrentScore / ScorePerBar;
         StarCount.text = starCount.ToString();
     }
 
