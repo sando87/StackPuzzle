@@ -19,6 +19,8 @@ public class MenuInGame : MonoBehaviour
     public Image TargetType;
     public NumbersUI ComboNumber;
     public ScoreBar ScoreBarObj;
+    public TextMeshProUGUI LevelCompleted;
+    public TextMeshProUGUI LevelFailed;
 
     public GameObject EffectParent;
     public GameObject ItemPrefab;
@@ -58,6 +60,8 @@ public class MenuInGame : MonoBehaviour
 
         mStageInfo = info;
 
+        LevelCompleted.gameObject.SetActive(false);
+        LevelFailed.gameObject.SetActive(false);
         Limit.text = info.MoveLimit.ToString();
         if (info.GoalTypeEnum == StageGoalType.Score)
         {
@@ -83,6 +87,9 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventMatched = (products) => {
             ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + products[0].Combo * products.Length);
         };
+        InGameManager.InstStage.EventFinishPre = (success) => {
+            ShowFinishMessage(success);
+        };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
         };
@@ -91,6 +98,9 @@ public class MenuInGame : MonoBehaviour
         };
         InGameManager.InstStage.EventCombo = (combo) => {
             CurrentCombo = combo;
+        };
+        InGameManager.InstStage.EventRemainTime = (remainSec) => {
+            Limit.text = remainSec.ToString();
         };
         InGameManager.InstStage.EventRemainTime = (remainSec) => {
             Limit.text = remainSec.ToString();
@@ -213,6 +223,23 @@ public class MenuInGame : MonoBehaviour
                     FinishGame(false);
                 }
             });
+        }
+    }
+
+    private void ShowFinishMessage(bool isComplete)
+    {
+        if (isComplete)
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLevelComplete);
+            LevelCompleted.gameObject.SetActive(true);
+            LevelFailed.gameObject.SetActive(false);
+            LevelCompleted.GetComponent<Animation>().Play();
+        }
+        else
+        {
+            LevelCompleted.gameObject.SetActive(false);
+            LevelFailed.gameObject.SetActive(true);
+            LevelFailed.GetComponent<Animation>().Play();
         }
     }
 }

@@ -68,6 +68,7 @@ public class InGameManager : MonoBehaviour
     private bool mPrevIdleState = false;
     private bool mRequestDrop = false;
     private float mStartTime = 0;
+    private int mProductCount = 0;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
 
@@ -102,7 +103,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }                     
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -127,6 +128,7 @@ public class InGameManager : MonoBehaviour
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventMatched;
     public Action<bool> EventFinish;
+    public Action<bool> EventFinishPre;
     public Action<int> EventCombo;
     public Action<int> EventRemainTime;
     public Action EventReduceLimit;
@@ -187,6 +189,7 @@ public class InGameManager : MonoBehaviour
         mStageInfo = info;
         mUserInfo = userInfo;
         mRandomSeed = new System.Random(info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed);
+        mProductCount = info.XCount * info.YCount;
 
         int stageCountPerTheme = 20;
         int themeCount = 9;
@@ -364,6 +367,9 @@ public class InGameManager : MonoBehaviour
         while (true)
         {
             List<Product> aroundProducts = FindAroundProducts(nextScanFrames.ToArray());
+            foreach (Product aroundPro in aroundProducts)
+                aroundPro.BreakChocoBlock(Billboard.CurrentCombo);
+
             List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
             if (nextMatches.Count <= 0)
                 break;
@@ -422,6 +428,7 @@ public class InGameManager : MonoBehaviour
         }
         mRequestDrop = true;
         Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect);
+        mProductCount += destroyedProducts.Length;
     }
     private Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
     {
@@ -444,9 +451,12 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
+        mProductCount -= validProducts.Length;
         StartCoroutine(DestroyProductDelay(validProducts, 0.2f, withLaserEffect));
 
-        Attack(addedScore, validProducts[0].transform.position);
+        int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
+        int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
+        Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
         //if (FieldType == GameFieldType.Stage)
         //    ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
         //else
@@ -491,6 +501,7 @@ public class InGameManager : MonoBehaviour
         else
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1);
 
+        mProductCount += mergeProducts.Length;
     }
     private void MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -504,9 +515,12 @@ public class InGameManager : MonoBehaviour
             addedScore += Billboard.CurrentCombo;
         }
 
+        mProductCount -= matches.Length;
         StartCoroutine(MergeProductDelay(matches, 0.2f, makeSkill));
 
-        Attack(addedScore, matches[0].transform.position);
+        int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
+        int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
+        Attack(curAttackCount - preAttackCount, matches[0].transform.position);
         //if (FieldType == GameFieldType.Stage)
         //    ReduceTargetScoreCombo(mainProduct, Billboard.CurrentScore, Billboard.CurrentScore + addedScore);
         //else
@@ -1288,14 +1302,22 @@ public class InGameManager : MonoBehaviour
     }
     public void RewardRemainLimits()
     {
-        if (LimitRate > 0.9)
-            return;
+        float totalLimits = 0;
+        if (mStageInfo.TimeLimit > 0)
+        {
+            totalLimits = mStageInfo.TimeLimit - PlayTime;
+        }
+        else
+        {
+            totalLimits = mStageInfo.MoveLimit - Billboard.MoveCount;
+        }
 
-        int step = (int)(LimitRate * CountX * CountY);
-        List<Product> randomProducts = ScanRandomProducts(step);
-        Product[] pros = randomProducts.ToArray();
+        int remains = Mathf.Min((int)totalLimits, mFrames.Length / 2);
+        Frame[] frames = GetRandomIdleFrames(remains);
+        Product[] pros = ToProducts(frames);
+        float step = totalLimits / pros.Length;
 
-        StartCoroutine(StartElectronicEffect(Vector3.zero, pros,
+        StartCoroutine(StartElectronicEffect(new Vector3(0, 3.5f, 0), pros,
             (pro) => {
                 int ran = UnityEngine.Random.Range(0, 3);
                 if(ran == 0)
@@ -1304,12 +1326,16 @@ public class InGameManager : MonoBehaviour
                     pro.ChangeProductImage(ProductSkill.Vertical);
                 else
                     pro.ChangeProductImage(ProductSkill.Bomb);
+
+                totalLimits -= step;
+                int limit = Mathf.Max(0, (int)totalLimits);
+                MenuInGame.Inst().Limit.text = limit.ToString();
             },
             () => {
+                MenuInGame.Inst().Limit.text = "0";
                 StartCoroutine(LoopBreakAllSkill());
             }));
     }
-    
 
 
     private Product[] FindSameColor(Product target)
@@ -1403,10 +1429,9 @@ public class InGameManager : MonoBehaviour
         }
         return rets;
     }
-    private void Attack(int score, Vector3 fromPos)
+    private void Attack(int count, Vector3 fromPos)
     {
-        int point = score / UserSetting.AttackScore;
-        if (point <= 0)
+        if (count <= 0)
             return;
 
         if (FieldType == GameFieldType.Stage)
@@ -1414,23 +1439,33 @@ public class InGameManager : MonoBehaviour
         else if (FieldType == GameFieldType.pvpPlayer)
         {
             fromPos.z -= 1;
-            GameObject obj = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            StartCoroutine(AnimateThrowOver(obj, () =>
+            GameObject[] objs = new GameObject[count];
+            for (int i = 0; i < count; ++i)
             {
-                Destroy(obj);
-                AttackPointFrame.AddPoints(-point);
+                objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+                objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            }
+
+            StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
+            {
+                Destroy(destObj);
+                AttackPointFrame.AddPoints(-1);
             }));
         }
         else if (FieldType == GameFieldType.pvpOpponent)
         {
             fromPos.z -= 1;
-            GameObject obj = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
-            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            StartCoroutine(AnimateThrowOver(obj, () =>
+            GameObject[] objs = new GameObject[count];
+            for (int i = 0; i < count; ++i)
             {
-                Destroy(obj);
-                AttackPointFrame.AddPoints(point);
+                objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+                objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            }
+
+            StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
+            {
+                Destroy(destObj);
+                AttackPointFrame.AddPoints(1);
             }));
         }
     }
@@ -1554,7 +1589,7 @@ public class InGameManager : MonoBehaviour
                 StartCoroutine(FlushObstacles(rets));
                 if (products.Count < point)
                 {
-                    StartCoroutine("StartFinishing");
+                    StartCoroutine("StartFinishing", false);
                     break;
                 }
 
@@ -1563,24 +1598,26 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    private IEnumerator StartFinishing()
+    private IEnumerator StartFinishing(bool isSuccess)
     {
         mIsFinished = true;
-        while(true)
+        while (true)
         {
             if (IsIdle)
             {
-                bool success = false;
                 if(FieldType == GameFieldType.Stage)
                 {
-                    if(IsAchieveGoals())
+                    if(isSuccess)
                     {
+                        EventFinishPre?.Invoke(isSuccess);
+                        yield return new WaitForSeconds(1);
+
                         RewardRemainLimits();
                         while (!IsIdle)
                             yield return null; //마지막 보상 스킬들 루틴 끝날때까지 기달...
 
+                        yield return new WaitForSeconds(0.5f);
                         MenuInformBox.PopUp("MISSION COMPLETE!!");
-                        success = true;
                     }
                     else if(mStageInfo.MoveLimit > 0)
                         MenuInformBox.PopUp("MOVE LIMITTED");
@@ -1591,18 +1628,15 @@ public class InGameManager : MonoBehaviour
                 }
                 else
                 {
-                    if(Opponent.mIsFinished)
-                    {
+                    if(isSuccess)
                         MenuInformBox.PopUp("YOU WIN");
-                        success = true;
-                    }
                     else
                         MenuInformBox.PopUp("YOU LOSE");
                 }
 
                 yield return new WaitForSeconds(UserSetting.InfoBoxDisplayTime);
 
-                EventFinish?.Invoke(success);
+                EventFinish?.Invoke(isSuccess);
                 CleanUpGame();
                 break;
             }
@@ -1620,14 +1654,14 @@ public class InGameManager : MonoBehaviour
                 EventRemainTime?.Invoke((int)remainTime);
                 if (remainTime < 0)
                 {
-                    StartCoroutine("StartFinishing");
+                    StartCoroutine("StartFinishing", false);
                     break;
                 }
             }
 
             if (IsAchieveGoals())
             {
-                StartCoroutine("StartFinishing");
+                StartCoroutine("StartFinishing", true);
                 break;
             }
 
@@ -1966,10 +2000,11 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = false;
         mIsFlushing = false;
         mIsAutoMatching = false;
-        mPrevIdleState = IsIdle;
+        mPrevIdleState = true;
         mRequestDrop = false;
         mRandomSeed = null;
         mStartTime = 0;
+        mProductCount = 0;
 
         ProductIDs.Clear();
         Billboard.Reset();
@@ -1997,7 +2032,7 @@ public class InGameManager : MonoBehaviour
             Billboard.MoveCount++;
             EventReduceLimit?.Invoke();
             if (Billboard.MoveCount >= mStageInfo.MoveLimit)
-                StartCoroutine("StartFinishing");
+                StartCoroutine("StartFinishing", false);
         }
     }
     public void ShakeField()
@@ -2358,7 +2393,7 @@ public class InGameManager : MonoBehaviour
             if (body.cmd == PVPCommand.EndGame)
             {
                 mIsFinished = true;
-                Opponent.StartCoroutine("StartFinishing");
+                Opponent.StartCoroutine("StartFinishing", true);
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.StartGame)
@@ -2416,10 +2451,14 @@ public class InGameManager : MonoBehaviour
                     Billboard.CurrentCombo = body.combo;
 
                     int score = body.combo * body.ArrayCount;
+
+                    int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
+                    int curAttackCount = (Billboard.CurrentScore + score) / UserSetting.ScorePerAttack;
+
                     Billboard.CurrentScore += score;
                     Billboard.DestroyCount += body.ArrayCount;
 
-                    Attack(score, products[0].transform.position);
+                    Attack(curAttackCount - preAttackCount, products[0].transform.position);
 
                     if (body.skill == ProductSkill.Nothing)
                     {

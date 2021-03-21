@@ -38,6 +38,7 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectFirework;
     public AudioClip EffectDropIce;
     public AudioClip EffectBreakIce;
+    public AudioClip EffectLevelComplete;
 
     public AudioClip[] MatchClip;
     public AudioClip[] DropClip;

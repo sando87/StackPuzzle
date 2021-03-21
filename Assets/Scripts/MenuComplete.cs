@@ -18,6 +18,7 @@ public class MenuComplete : MonoBehaviour
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
     private List<GameObject> Effects = new List<GameObject>();
+    private int ScorePerCoin = UserSetting.ScorePerCoin;
 
     public static void PopUp(int level, int starCount, int score, bool isFirstClear)
     {
@@ -58,6 +59,16 @@ public class MenuComplete : MonoBehaviour
         gameObject.SetActive(true);
 
         int coin = score / UserSetting.ScorePerCoin;
+        if (coin < 12)
+        {
+            ScorePerCoin = score / UnityEngine.Random.Range(10, 14);
+            coin = score / ScorePerCoin;
+        }
+        else
+        {
+            ScorePerCoin = UserSetting.ScorePerCoin;
+            coin = score / ScorePerCoin;
+        }
         Purchases.AddGold(coin * UserSetting.GoldPerCoin);
 
         StartCoroutine(AnimateReward(score));
@@ -103,13 +114,13 @@ public class MenuComplete : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         float duration = 3.0f;
         float curScore = score;
-        int prvCoinCount = score / UserSetting.ScorePerCoin;
+        int prvCoinCount = score / ScorePerCoin;
         while (curScore > 0)
         {
             float step = score * Time.deltaTime / duration;
             curScore -= step;
             ScoreDisplay.SetScore((int)curScore);
-            int curCoinCount = (int)(curScore / UserSetting.ScorePerCoin);
+            int curCoinCount = (int)(curScore / ScorePerCoin);
             if(prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;

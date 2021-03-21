@@ -32,8 +32,9 @@ public class Product : MonoBehaviour
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; set; }
+    public bool IsBreakingChoco { get; private set; } = false;
     public bool SkillCasted { get; set; } = false;
-    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || IsBreakingChoco; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
@@ -148,7 +149,6 @@ public class Product : MonoBehaviour
         else
         {
             Frame parent = Detach(Manager.transform);
-            UnWrapChocoBlocksAroundFrame(parent, Combo);
             parent.BreakCover(Combo);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Manager.ProductIDs.Remove(InstanceID);
@@ -175,7 +175,6 @@ public class Product : MonoBehaviour
         
         IsDestroying = true;
         Frame parent = Detach(Manager.transform);
-        UnWrapChocoBlocksAroundFrame(parent, Combo);
         parent.BreakCover(Combo);
         StartCoroutine(AnimateDestroy());
 
@@ -496,6 +495,7 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimBreakChoco()
     {
+        IsBreakingChoco = true;
         SpriteRenderer ren = ChocoBlock.GetComponent<SpriteRenderer>();
         ChocoBlock.transform.localScale = new Vector3(1.2f, 1.2f, 1.0f);
         int idx = 0;
@@ -507,6 +507,7 @@ public class Product : MonoBehaviour
         }
         Animation.Play("swap");
         ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
+        IsBreakingChoco = false;
     }
     public void SetChocoBlock(int level, bool anim = false)
     {
@@ -518,6 +519,7 @@ public class Product : MonoBehaviour
         ChocoBlock.GetComponent<SpriteRenderer>().enabled = true;
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
         ChocoBlock.transform.localScale = Vector3.one;
+        IsBreakingChoco = false;
     }
     public void UnWrapChocoBlocksAroundFrame(Frame frame, int combo)
     {

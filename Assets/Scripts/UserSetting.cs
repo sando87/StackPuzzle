@@ -68,7 +68,7 @@ public class UserSetting
     public const float MatchInterval = 2.0f;
     public const float ChocoFlushInterval = 1.5f;
     public const int MatchCount = 4;
-    public const int AttackScore = 10;
+    public const int ScorePerAttack = 10;
     public const int FlushCount = 20;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
@@ -78,7 +78,7 @@ public class UserSetting
     public const int HeartChargingIntervalMin = 5;
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
-    public const int GoldPerCoin = 10;
+    public const int GoldPerCoin = 1;
     public const int ScorePerLevel = 50;
     static public int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
     static public int ToScore(int level) { return (level -1) * ScorePerLevel; }
