@@ -36,7 +36,12 @@ public class ScoreBar : MonoBehaviour
     {
         score = Mathf.Max(0, score);
         if (CurrentScore / ScorePerBar != score / ScorePerBar)
-            GetComponentInChildren<Animation>().Play();
+        {
+            Animation anim = GetComponentInChildren<Animation>();
+            if (anim != null)
+                anim.Play();
+        }
+            
 
         CurrentScore = score;
         UpdateScoreDisplay();
