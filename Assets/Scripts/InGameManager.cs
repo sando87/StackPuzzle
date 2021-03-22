@@ -331,8 +331,13 @@ public class InGameManager : MonoBehaviour
             Network_Swipe(product, dir);
             //CreateMergeEffect(product, targetProduct);
             product.Swipe(targetProduct, () => {
-                mIsUserEventLock = false;
-                SwipeSkilledProducts(product, targetProduct);
+                StartCoroutine(UpDownSizing(product.gameObject, 0.3f));
+                StartCoroutine(UpDownSizing(targetProduct.gameObject, 0.3f));
+                StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+                {
+                    mIsUserEventLock = false;
+                    SwipeSkilledProducts(product, targetProduct);
+                }));
             });
         }
         else
@@ -905,6 +910,22 @@ public class InGameManager : MonoBehaviour
 
 
 
+    private IEnumerator UpDownSizing(GameObject obj, float duration)
+    {
+        float time = 0;
+        Vector2 oriSize = obj.transform.localScale;
+        Vector2 curSize = oriSize;
+        while (time < duration)
+        {
+            float halfTime = duration / 2;
+            float rate = (-1 / (halfTime * halfTime)) * (time - halfTime) * (time - halfTime) + 1;
+            curSize = oriSize * (1 + rate);
+            obj.transform.localScale = new Vector3(curSize.x, curSize.y, 1);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.localScale = new Vector3(oriSize.x, oriSize.y, 1);
+    }
     private void SwipeSkilledProducts(Product main, Product sub)
     {
         if (main.Skill == ProductSkill.SameColor || sub.Skill == ProductSkill.SameColor)
@@ -913,14 +934,17 @@ public class InGameManager : MonoBehaviour
         }
         else if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
         {
+            ShakeField(0.03f);
             DestroySkillBomb_Bomb(main, sub);
         }
         else if (main.Skill != ProductSkill.Bomb && sub.Skill != ProductSkill.Bomb)
         {
+            ShakeField(0.03f);
             DestroySkillStripe_Stripe(main, sub);
         }
         else
         {
+            ShakeField(0.03f);
             if (main.Skill == ProductSkill.Bomb)
                 DestroySkillBomb_Stripe(main, sub);
             else
@@ -1856,8 +1880,9 @@ public class InGameManager : MonoBehaviour
 
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
                         ground.name = "ground";
-                        ground.layer = LayerMask.NameToLayer("ProductOpp");
                         ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
+                        if (FieldType == GameFieldType.pvpOpponent)
+                            ground.layer = LayerMask.NameToLayer("ProductOpp");
                     }
                     curFrame.transform.SetParent(vg.transform);
                 }
@@ -1963,7 +1988,7 @@ public class InGameManager : MonoBehaviour
             else
                 yield return null;
         }
-        ShakeField();
+        ShakeField(0.05f);
         mIsFlushing = false;
     }
     private int RandomNextColor()
@@ -2036,10 +2061,10 @@ public class InGameManager : MonoBehaviour
                 StartCoroutine("StartFinishing", false);
         }
     }
-    public void ShakeField()
+    private void ShakeField(float intensity)
     {
         StopCoroutine("AnimShakeField");
-        StartCoroutine("AnimShakeField", 0.05f);
+        StartCoroutine("AnimShakeField", intensity);
     }
     IEnumerator AnimShakeField(float intensity)
     {
@@ -2525,7 +2550,7 @@ public class InGameManager : MonoBehaviour
                         products.Add(pro);
                 }
 
-                if (products.Count != body.ArrayCount)
+                if (products.Count == body.ArrayCount)
                 {
                     foreach (Product pro in products)
                         pro.BreakChocoBlock(body.combo);

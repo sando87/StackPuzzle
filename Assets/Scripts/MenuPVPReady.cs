@@ -45,10 +45,10 @@ public class MenuPVPReady : MonoBehaviour
         yield return new WaitForSeconds(1);
         StageInfo info = StageInfo.Load(0);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
-        InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
 
         yield return new WaitForSeconds(2);
 
+        InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
         InGameManager.InstPVP_Player.InitProducts();
 
         gameObject.SetActive(false);
