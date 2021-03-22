@@ -31,7 +31,7 @@ public class Product : MonoBehaviour
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
-    public bool IsDropping { get; set; }
+    public bool IsDropping { get; private set; }
     public bool IsBreakingChoco { get; private set; } = false;
     public bool SkillCasted { get; set; } = false;
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || IsBreakingChoco; } }
@@ -276,6 +276,7 @@ public class Product : MonoBehaviour
         StopCoroutine("UpdateDropping");
         GetComponent<BoxCollider2D>().isTrigger = false;
         transform.localPosition = new Vector3(0, 0, -1);
+        Renderer.maskInteraction = SpriteMaskInteraction.None;
     }
 
 
@@ -526,6 +527,11 @@ public class Product : MonoBehaviour
         Product[] around = GetAroundProducts(frame);
         foreach(Product pro in around)
             pro.BreakChocoBlock(combo);
+    }
+    public void EnableMasking(int order)
+    {
+        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        Renderer.sortingOrder = order;
     }
 
     #endregion

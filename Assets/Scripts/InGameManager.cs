@@ -222,7 +222,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        SecondaryInitFrames();
+        InitFrameBorders();
         InitDropGroupFrames();
 
         AttackPointFrame.ResetPoints();
@@ -424,6 +424,7 @@ public class InGameManager : MonoBehaviour
             pro.DestroyImmediately();
             Product newPro = CreateNewProduct();
             parentFrame.VertFrames.AddNewProduct(newPro);
+            newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
             nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
         }
         mRequestDrop = true;
@@ -487,6 +488,7 @@ public class InGameManager : MonoBehaviour
             {
                 Product newPro = CreateNewProduct();
                 parentFrame.VertFrames.AddNewProduct(newPro);
+                newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
                 nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
             }
         }
@@ -1805,27 +1807,15 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    private void SecondaryInitFrames()
+    private void InitFrameBorders()
     {
         for(int x = 0; x < CountX; ++x)
         {
-            SpriteMask mask = null;
-            int maskOrder = 0;
             for (int y = 0; y < CountY; ++y)
             {
                 Frame curFrame = mFrames[x, y];
                 if (curFrame.Empty)
                     continue;
-
-                Frame subTopFrame = SubTopFrame(curFrame);
-                if (curFrame.Down() == null)
-                {
-                    int height = subTopFrame.IndexY - curFrame.IndexY + 1;
-                    Vector3 centerPos = (curFrame.transform.position + subTopFrame.transform.position) * 0.5f;
-                    mask = CreateMask(centerPos, height, maskOrder);
-                    maskOrder++;
-                }
-                curFrame.SetSpriteMask(mask);
 
                 if (curFrame.Left() == null || curFrame.Left().Empty) curFrame.ShowBorder(0);
                 if (curFrame.Right() == null || curFrame.Right().Empty) curFrame.ShowBorder(1);
@@ -1867,8 +1857,12 @@ public class InGameManager : MonoBehaviour
             }
         }
 
+        int maskOrder = 0;
         foreach (VerticalFrames group in vf)
-            group.init();
+        {
+            group.init(maskOrder);
+            maskOrder++;
+        }
 
         mVerticalFrames = vf.ToArray();
     }
@@ -2481,6 +2475,7 @@ public class InGameManager : MonoBehaviour
                             ProductIDs[newPro.InstanceID] = newPro;
                             //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                             parentFrame.VertFrames.AddNewProduct(newPro);
+                            newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
                         }
                         mRequestDrop = true;
                         EventMatched?.Invoke(products.ToArray());
@@ -2499,6 +2494,7 @@ public class InGameManager : MonoBehaviour
                                 ProductIDs[newPro.InstanceID] = newPro;
                                 //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                                 parentFrame.VertFrames.AddNewProduct(newPro);
+                                newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
                             }
                         }
                         mRequestDrop = true;

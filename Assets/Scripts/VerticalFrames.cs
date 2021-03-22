@@ -6,8 +6,9 @@ public class VerticalFrames : MonoBehaviour
 {
     private List<Product> NewProducts = new List<Product>();
     private Frame[] Frames = null;
+    public int MaskOrder { get; private set; } = 0;
 
-    public void init()
+    public void init(int maskOrder)
     {
         List<Frame> list = new List<Frame>();
         foreach (Transform child in transform)
@@ -19,10 +20,23 @@ public class VerticalFrames : MonoBehaviour
 
         Frames = list.ToArray();
         NewProducts.Clear();
+
+        MaskOrder = maskOrder;
+        Vector3 centerPos = (Frames[0].transform.position + Frames[Frames.Length - 1].transform.position) * 0.5f;
+
+        SpriteMask mask = new GameObject().AddComponent<SpriteMask>();
+        mask.name = "Mask";
+        mask.transform.SetParent(transform);
+        mask.transform.position = centerPos;
+        mask.transform.localScale = new Vector3(1, list.Count, 1);
+        mask.sprite = Resources.Load<Sprite>("Images/spriteMask");
+        mask.isCustomRangeActive = true;
+        mask.frontSortingOrder = maskOrder + 1;
+        mask.backSortingOrder = maskOrder;
     }
 
     public int FrameCount { get { return Frames.Length; } }
-    public int Droppingcount { get { return transform.childCount - FrameCount - 1; } } //dummy ground 하나 더 빼줘야함.
+    public int Droppingcount { get { return transform.childCount - FrameCount - 2; } } //dummy ground 하나 더 빼줘야함.
     public Frame TopFrame { get { return Frames[Frames.Length - 1]; } }
     public Frame BottomFrame { get { return Frames[0]; } }
     public Product[] StartToDropNewProducts()
@@ -92,7 +106,6 @@ public class VerticalFrames : MonoBehaviour
         }
         return droppedPros.ToArray();
     }
-
 
     private Vector3 FindTopPosition()
     {

@@ -7,7 +7,6 @@ using UnityEngine;
 public class Frame : MonoBehaviour
 {
     private int mCoverCount;
-    private SpriteMask mMask;
 
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
@@ -21,7 +20,6 @@ public class Frame : MonoBehaviour
     public bool IsBottom { get { return IndexY == 0; } }
     public bool IsTop { get { return IndexY == GameManager.CountY - 1; } }
     public Product ChildProduct { get; set; }
-    public int MaskLayerOrder { get { return mMask.backSortingOrder; } }
     public bool IsCovered { get { return mCoverCount > 0; } }
 
     public Action EventBreakCover;
@@ -58,10 +56,6 @@ public class Frame : MonoBehaviour
         }
     }
 
-    public void SetSpriteMask(SpriteMask mask)
-    {
-        mMask = mask;
-    }
     public void ShowBorder(int pos)
     {
         //pos 0:Left, 1:Right, 2:Top, 3:Bottom
