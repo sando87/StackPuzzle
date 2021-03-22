@@ -367,8 +367,14 @@ public class InGameManager : MonoBehaviour
         while (true)
         {
             List<Product> aroundProducts = FindAroundProducts(nextScanFrames.ToArray());
+            List<ProductInfo> breakIceProducts = new List<ProductInfo>();
             foreach (Product aroundPro in aroundProducts)
-                aroundPro.BreakChocoBlock(Billboard.CurrentCombo);
+            {
+                if (aroundPro.BreakChocoBlock(Billboard.CurrentCombo))
+                    breakIceProducts.Add(new ProductInfo(aroundPro.Color, aroundPro.Color, ProductSkill.Nothing, aroundPro.ParentFrame.IndexX, aroundPro.ParentFrame.IndexY, aroundPro.InstanceID, aroundPro.InstanceID));
+            }
+            if (breakIceProducts.Count > 0)
+                Network_BreakIce(breakIceProducts.ToArray());
 
             List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
             if (nextMatches.Count <= 0)
@@ -1850,6 +1856,7 @@ public class InGameManager : MonoBehaviour
 
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
                         ground.name = "ground";
+                        ground.layer = LayerMask.NameToLayer("ProductOpp");
                         ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
                     }
                     curFrame.transform.SetParent(vg.transform);
@@ -2400,6 +2407,7 @@ public class InGameManager : MonoBehaviour
                     pro.InstanceID = info.nextInstID;
                     ProductIDs[pro.InstanceID] = pro;
                     pro.SetChocoBlock(0);
+                    pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                     pro.EventUnWrapChoco = () => {
                         Billboard.ChocoCount++;
                         EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
@@ -2471,6 +2479,7 @@ public class InGameManager : MonoBehaviour
                             products[idx].Combo = body.combo;
                             products[idx].DestroyImmediately();
                             Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                            newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                             newPro.InstanceID = body.products[idx].nextInstID;
                             ProductIDs[newPro.InstanceID] = newPro;
                             //newPro.transform.SetParent(parentFrame.VertFrames.transform);
@@ -2490,6 +2499,7 @@ public class InGameManager : MonoBehaviour
                             if (idx != 0)
                             {
                                 Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                                newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                                 newPro.InstanceID = body.products[idx].nextInstID;
                                 ProductIDs[newPro.InstanceID] = newPro;
                                 //newPro.transform.SetParent(parentFrame.VertFrames.transform);
@@ -2500,6 +2510,25 @@ public class InGameManager : MonoBehaviour
                         mRequestDrop = true;
                         EventMatched?.Invoke(products.ToArray());
                     }
+
+                    mNetMessages.RemoveFirst();
+                }
+            }
+            else if (body.cmd == PVPCommand.BreakIce)
+            {
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = ProductIDs[info.prvInstID];
+                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
+                        products.Add(pro);
+                }
+
+                if (products.Count != body.ArrayCount)
+                {
+                    foreach (Product pro in products)
+                        pro.BreakChocoBlock(body.combo);
 
                     mNetMessages.RemoveFirst();
                 }
@@ -2654,6 +2683,19 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = dropPause ? PVPCommand.DropPause : PVPCommand.DropResume;
         req.oppUserPk = InstPVP_Opponent.UserPk;
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+    }
+    private void Network_BreakIce(ProductInfo[] pros)
+    {
+        if (FieldType != GameFieldType.pvpPlayer)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.BreakIce;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = Billboard.CurrentCombo;
+        req.ArrayCount = pros.Length;
+        Array.Copy(pros, req.products, pros.Length);
         NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)

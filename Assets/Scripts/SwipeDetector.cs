@@ -32,8 +32,11 @@ public class SwipeDetector : MonoBehaviour
             Collider2D hit = Physics2D.OverlapPoint(worldPt);
             if (hit != null)
             {
-                mDownObject = hit.gameObject;
-                mDownPosition = worldPt;
+                if(hit.gameObject.GetComponentInParent<SwipeDetector>() != null)
+                {
+                    mDownObject = hit.gameObject;
+                    mDownPosition = worldPt;
+                }
             }
         }
         else if (Input.GetMouseButton(0))
