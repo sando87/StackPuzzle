@@ -28,8 +28,8 @@ public class MenuPVPReady : MonoBehaviour
 
         menu.mPlayer = player;
         menu.mOpponent = opponent;
-        
-        menu.Invoke("StartBattle", 3.0f);
+
+        menu.StartCoroutine(menu.StartBattle());
     }
 
     private void UpdateUserInfo(UserInfo player, UserInfo opponent)
@@ -40,11 +40,14 @@ public class MenuPVPReady : MonoBehaviour
         OpponentLevel.text = "Lv." + UserSetting.ToLevel(opponent.score);
     }
 
-    private void StartBattle()
+    private IEnumerator StartBattle()
     {
+        yield return new WaitForSeconds(1);
         StageInfo info = StageInfo.Load(0);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
+
+        yield return new WaitForSeconds(2);
 
         InGameManager.InstPVP_Player.InitProducts();
 
