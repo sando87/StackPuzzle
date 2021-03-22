@@ -68,7 +68,7 @@ public class MenuInGame : MonoBehaviour
             TargetType.gameObject.SetActive(false);
             TargetScoreText.gameObject.SetActive(true);
             TargetScoreText.text = info.GoalValue.ToString();
-            ScoreBarObj.ScorePerBar = info.GoalValue;
+            ScoreBarObj.ScorePerBar = Mathf.Min(info.GoalValue, UserSetting.ScorePerBar);
         }
         else
         {

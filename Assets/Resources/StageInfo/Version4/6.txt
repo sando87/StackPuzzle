@@ -1,7 +1,7 @@
 GoalType,Score
-GoalValue,1
+GoalValue,300
 TimeLimit,70
-ColorCount,5
+ColorCount,4
 XCount,5
 YCount,9
 Rows,0/0 0/0 0/0 0/0 0/0

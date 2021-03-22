@@ -277,6 +277,7 @@ public class Product : MonoBehaviour
         GetComponent<BoxCollider2D>().isTrigger = false;
         transform.localPosition = new Vector3(0, 0, -1);
         Renderer.maskInteraction = SpriteMaskInteraction.None;
+        Renderer.sortingOrder = 0;
     }
 
 

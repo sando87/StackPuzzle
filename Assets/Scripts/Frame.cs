@@ -22,7 +22,7 @@ public class Frame : MonoBehaviour
     public Product ChildProduct { get; set; }
     public bool IsCovered { get { return mCoverCount > 0; } }
 
-    public Action EventBreakCover;
+    public Action<Frame> EventBreakCover;
 
     // Start is called before the first frame update
     void Start()
@@ -70,7 +70,7 @@ public class Frame : MonoBehaviour
         mCoverCount = Mathf.Max(0, mCoverCount);
         CoverRenderer.sprite = Covers[mCoverCount];
         if (mCoverCount == 0 && backCount > 0)
-            EventBreakCover?.Invoke();
+            EventBreakCover?.Invoke(this);
     }
 
     public Frame Left()

@@ -39,6 +39,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ObstaclePrefab;
     public GameObject GroundPrefab;
 
+    public GameObject BreakStonesParticle;
     public GameObject ExplosionParticle;
     public GameObject MergeParticle;
     public GameObject StripeParticle;
@@ -155,6 +156,8 @@ public class InGameManager : MonoBehaviour
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFinishStageMode());
             mIsUserEventLock = false;
+            if(mStageInfo.TimeLimit > 0)
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
         }));
     }
     public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)
@@ -215,9 +218,10 @@ public class InGameManager : MonoBehaviour
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount);
-                mFrames[x, y].EventBreakCover = () => {
+                mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
-                    EventBreakTarget?.Invoke(mFrames[x, y].transform.position, StageGoalType.Cover);
+                    CreateBreakStoneEffect(frame.transform.position);
+                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
                 };
             }
         }
@@ -2115,7 +2119,7 @@ public class InGameManager : MonoBehaviour
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro == null || pro.IsLocked)
+            if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill != ProductSkill.Nothing)
                 continue;
 
             rets[ranIdx] = pro.ParentFrame;
@@ -2377,6 +2381,13 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    void CreateBreakStoneEffect(Vector2 startPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStone);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(BreakStonesParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
     void CreateParticle(GameObject prefab, Vector3 worldPos)
