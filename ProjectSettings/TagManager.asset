@@ -7,6 +7,7 @@ TagManager:
   - Item
   - on
   - off
+  - FxTemporaire
   layers:
   - Default
   - TransparentFX
@@ -17,9 +18,9 @@ TagManager:
   - 
   - 
   - Item
-  - 
-  - 
-  - 
+  - UIParticle
+  - Tutorial
+  - ProductOpp
   - 
   - 
   - 
@@ -44,6 +45,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: ProductOpp
+    uniqueID: 1652809215
+    locked: 0
   - name: BattleMaskMe
     uniqueID: 3007819399
     locked: 0
@@ -52,4 +56,10 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 58496801
+    locked: 0
+  - name: UIParticle
+    uniqueID: 133436885
+    locked: 0
+  - name: Tutorial
+    uniqueID: 3858233873
     locked: 0
