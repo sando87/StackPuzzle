@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 public class TutorialEventItem : TutorialEvent
 {
     private int Step = 0;
-    public GameObject MessageBox;
+    public TextMeshPro MessageBox;
     public GameObject BasePoint;
     public GameObject Hand;
     public GameObject Circle;
@@ -31,7 +32,7 @@ public class TutorialEventItem : TutorialEvent
 
             ShowBasePoint(false);
             SwipeBlock2.SetActive(false);
-            MessageBox.SetActive(false);
+            MessageBox.transform.parent.gameObject.SetActive(false);
             Anim.Play("TutorialHideAll", -1, 0);
 
             StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
@@ -39,6 +40,8 @@ public class TutorialEventItem : TutorialEvent
                 Anim.Play("tutorialDim", -1, 0);
                 ClickBlock.SetActive(false);
                 ClickItem.SetActive(true);
+                MessageBox.transform.parent.gameObject.SetActive(true);
+                MessageBox.text = "Click to use special block.";
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     ShowBasePoint(true);

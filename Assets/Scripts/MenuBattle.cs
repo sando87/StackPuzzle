@@ -89,11 +89,23 @@ public class MenuBattle : MonoBehaviour
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);
         };
+        InGameManager.InstPVP_Player.EventCombo = (combo) => {
+            if (combo <= 0)
+                ComboPlayer.BreakCombo();
+            else
+                ComboPlayer.SetNumber(combo);
+        };
         InGameManager.InstPVP_Opponent.EventMatched = (products) => {
             PVPScoreBarOpponent.SetScore(PVPScoreBarOpponent.CurrentScore + products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) => {
             FinishGame(!success);
+        };
+        InGameManager.InstPVP_Opponent.EventCombo = (combo) => {
+            if (combo <= 0)
+                ComboOpponent.BreakCombo();
+            else
+                ComboOpponent.SetNumber(combo);
         };
     }
 
@@ -189,4 +201,5 @@ public class MenuBattle : MonoBehaviour
 
         }
     }
+
 }

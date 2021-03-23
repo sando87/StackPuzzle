@@ -137,6 +137,9 @@ public class InGameManager : MonoBehaviour
 
     private void Update()
     {
+        if (mStageInfo == null)
+            return;
+
         if (IsIdle && !mPrevIdleState)
             EventEnterIdle?.Invoke();
 
@@ -2462,6 +2465,8 @@ public class InGameManager : MonoBehaviour
                 {
                     Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
                     Product target = pro.Dir(body.dir);
+                    if(body.skill == ProductSkill.Nothing)
+                        EventCombo?.Invoke(0);
 
                     mIsUserEventLock = true;
                     pro.Swipe(target, () => {
@@ -2487,6 +2492,7 @@ public class InGameManager : MonoBehaviour
                 else
                 {
                     Billboard.CurrentCombo = body.combo;
+                    EventCombo?.Invoke(Billboard.CurrentCombo);
 
                     int score = body.combo * body.ArrayCount;
 

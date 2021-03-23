@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 public class TutorialEventCombo : TutorialEvent
 {
     private int Step = 0;
-    public GameObject MessageBox;
+    public TextMeshPro MessageBox;
     public GameObject BasePoint;
     public GameObject Hand;
     public GameObject Circle;
@@ -39,6 +40,7 @@ public class TutorialEventCombo : TutorialEvent
 
         if (Step == 0)
         {
+            MessageBox.transform.parent.gameObject.SetActive(false);
             SwipeSubWindow.gameObject.SetActive(true);
             BasePoint.transform.localPosition = points[1];
             Anim.SetTrigger("up");
@@ -51,22 +53,31 @@ public class TutorialEventCombo : TutorialEvent
 
             SwipeSubWindow.SetActive(false);
             ShowBasePoint(false);
-            MessageBox.SetActive(false);
             Anim.Play("TutorialHideAll", -1, 0);
+
+            MessageBox.transform.parent.gameObject.SetActive(true);
+            MessageBox.text = "Check out your combos.";
 
             StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
             {
                 Anim.Play("tutorialDim", -1, 0);
 
+
                 ComboSet1.SetActive(false);
                 ComboSet2.SetActive(false);
                 ComboSet3.SetActive(false);
                 ComboDisplay.SetActive(true);
+
+                Vector3 pos = MenuInGame.Inst().GetComponentInChildren<NumbersUI>().transform.position;
+                ComboDisplay.transform.position = new Vector3(pos.x, pos.y, ComboDisplay.transform.position.z);
                 ComboDisplay.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     ShowBasePoint(true);
-                    BasePoint.transform.localPosition = points[3];
+                    Vector3 clickPos = ComboDisplay.transform.position;
+                    clickPos.z = BasePoint.transform.position.z;
+                    BasePoint.transform.position = clickPos;
                     Anim.SetTrigger("click");
                 }));
             }));
@@ -89,12 +100,14 @@ public class TutorialEventCombo : TutorialEvent
             EventUserAction?.Invoke(TutorialEventType.Up);
             SwipeSubWindow.SetActive(false);
             ShowBasePoint(false);
-            MessageBox.SetActive(false);
+            MessageBox.transform.parent.gameObject.SetActive(false);
             Anim.Play("TutorialHideAll", -1, 0);
 
             StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
             {
                 Anim.Play("tutorialDim", -1, 0);
+                MessageBox.transform.parent.gameObject.SetActive(true);
+                MessageBox.text = "Attach and place\nmatchable block sets.";
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     EnLightCombo();

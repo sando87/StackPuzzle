@@ -7,7 +7,6 @@ using UnityEngine.UI;
 
 public class TutorialEventItem2 : TutorialEvent
 {
-    public GameObject MessageBox;
     public GameObject BasePoint;
     public GameObject Hand;
     public GameObject Circle;
@@ -25,7 +24,6 @@ public class TutorialEventItem2 : TutorialEvent
             EventUserAction?.Invoke(TutorialEventType.Click);
 
             ShowBasePoint(false);
-            MessageBox.SetActive(false);
             Anim.Play("TutorialHideAll", -1, 0);
 
             StartCoroutine(UnityUtils.CallAfterSeconds(2.0f, () =>
