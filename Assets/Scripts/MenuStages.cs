@@ -130,6 +130,13 @@ public class MenuStages : MonoBehaviour
         }
     }
 
+    public void UpdateTopPanel()
+    {
+        HeartCount.text = Purchases.CountHeart().ToString();
+        GoldCount.text = Purchases.CountGold().ToString();
+        DiamondCount.text = Purchases.CountDiamond().ToString();
+    }
+
     private void QuitProgram()
     {
 #if PLATFORM_ANDROID

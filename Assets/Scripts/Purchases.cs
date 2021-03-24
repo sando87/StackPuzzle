@@ -4,6 +4,43 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public static class PurchaseItemTypeExtensions
+{
+    public static Sprite GetSprite(this PurchaseItemType type)
+    {
+        switch(type)
+        {
+            case PurchaseItemType.ExtendLimit: return Resources.Load<Sprite>("itemA");
+            case PurchaseItemType.RemoveIce: return Resources.Load<Sprite>("itemB");
+            case PurchaseItemType.MakeSkill1: return Resources.Load<Sprite>("itemC");
+        }
+        return null;
+    }
+    public static string GetDescription(this PurchaseItemType type)
+    {
+        switch (type)
+        {
+            case PurchaseItemType.ExtendLimit: return "itemA";
+            case PurchaseItemType.RemoveIce: return "itemB";
+            case PurchaseItemType.MakeSkill1: return "itemC";
+        }
+        return null;
+    }
+    public static int ToInt(this PurchaseItemType type)
+    {
+        return (int)type;
+    }
+    public static PurchaseItemType ToItemType(this int type)
+    {
+        return (PurchaseItemType)type;
+    }
+}
+
+public enum PurchaseItemType
+{
+    ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp
+}
+
 public class PurchaseInfo
 {
     public int random;
@@ -85,11 +122,11 @@ public class Purchases
         UpdatePurchaseInfo(mInfo);
         return true;
     }
-    public static bool ChargeHeart(int cnt, int cost)
+    public static bool ChargeHeart(int cnt, int diamond)
     {
-        if (mInfo.countDiamond < cost)
+        if (mInfo.countDiamond < diamond)
             return false;
-        mInfo.countDiamond -= cost;
+        mInfo.countDiamond -= diamond;
         mInfo.countHeart += cnt;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
@@ -163,33 +200,33 @@ public class Purchases
         mInfo.countDiamond += cnt;
         UpdatePurchaseInfo(mInfo);
     }
-    public static bool ChargeItemUseGold(int type, int cnt, int gold)
+    public static bool ChargeItemUseGold(PurchaseItemType type, int cnt, int gold)
     {
         if (mInfo.countGold < gold)
             return false;
         mInfo.countGold -= gold;
-        mInfo.countItem[type] += cnt;
+        mInfo.countItem[type.ToInt()] += cnt;
         UpdatePurchaseInfo(mInfo);
         return true;
     }
-    public static bool ChargeItemUseDia(int type, int cnt, int diamond)
+    public static bool ChargeItemUseDia(PurchaseItemType type, int cnt, int diamond)
     {
         if (mInfo.countDiamond < diamond)
             return false;
         mInfo.countDiamond -= diamond;
-        mInfo.countItem[type] += cnt;
+        mInfo.countItem[type.ToInt()] += cnt;
         UpdatePurchaseInfo(mInfo);
         return true;
     }
-    public static int CountItem(int type)
+    public static int CountItem(PurchaseItemType type)
     {
-        return mInfo.countItem[type];
+        return mInfo.countItem[type.ToInt()];
     }
-    public static bool UseItem(int type)
+    public static bool UseItem(PurchaseItemType type)
     {
-        if (mInfo.countItem[type] <= 0)
+        if (mInfo.countItem[type.ToInt()] <= 0)
             return false;
-        mInfo.countItem[type]--;
+        mInfo.countItem[type.ToInt()]--;
         UpdatePurchaseInfo(mInfo);
         return true;
     }

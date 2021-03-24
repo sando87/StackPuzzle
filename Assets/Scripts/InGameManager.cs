@@ -1377,6 +1377,57 @@ public class InGameManager : MonoBehaviour
     }
 
 
+    public void UseItemExtendsLimits()
+    {
+        if (mStageInfo.TimeLimit > 0)
+            mStartTime += 10; //10초 연장
+        else
+            Billboard.MoveCount -= 5; //5번 이동 추가
+    }
+    public void UseItemBreakce(int count)
+    {
+        for(int y = CountY - 1; y >= 0; y--)
+        {
+            for (int x = CountX - 1; x >= 0; x--)
+            {
+                Product pro = mFrames[x, y].ChildProduct;
+                if (pro == null || pro.IsLocked || !pro.IsChocoBlock)
+                    continue;
+
+                pro.BreakChocoBlock(Billboard.CurrentCombo);
+                count--;
+                if (count <= 0)
+                    return;
+            }
+        }
+    }
+    public void UseItemMakeSkill1(int count)
+    {
+        Frame[] frames = GetRandomIdleFrames(count);
+        foreach(Frame frame in frames)
+        {
+            Product pro = frame.ChildProduct;
+
+            int ran = UnityEngine.Random.Range(0, 3);
+            if (ran == 0)
+                pro.ChangeProductImage(ProductSkill.Horizontal);
+            else if (ran == 1)
+                pro.ChangeProductImage(ProductSkill.Vertical);
+            else
+                pro.ChangeProductImage(ProductSkill.Bomb);
+        }
+    }
+    public void UseItemMakeSkill2(int count)
+    {
+        Frame[] frames = GetRandomIdleFrames(count);
+        foreach (Frame frame in frames)
+        {
+            Product pro = frame.ChildProduct;
+            pro.ChangeProductImage(ProductSkill.SameColor);
+        }
+    }
+
+
     private Product[] FindSameColor(Product target)
     {
         List<Product> pros = new List<Product>();
