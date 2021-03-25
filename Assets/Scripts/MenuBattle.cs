@@ -19,6 +19,8 @@ public class MenuBattle : MonoBehaviour
     public TextMeshProUGUI PlayerScore;
     public TextMeshProUGUI OpponentName;
     public TextMeshProUGUI OpponentScore;
+    public GameObject PlayerRect;
+    public GameObject OpponentRect;
 
     private MenuMessageBox mMenu;
 

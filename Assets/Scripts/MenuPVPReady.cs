@@ -45,11 +45,17 @@ public class MenuPVPReady : MonoBehaviour
         yield return new WaitForSeconds(1);
         StageInfo info = StageInfo.Load(0);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
+        Vector3 pos = MenuBattle.Inst().OpponentRect.transform.position;
+        pos.z = InGameManager.InstPVP_Opponent.transform.position.z;
+        InGameManager.InstPVP_Opponent.transform.position = pos;
 
         yield return new WaitForSeconds(2);
 
         InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
         InGameManager.InstPVP_Player.InitProducts();
+        pos = MenuBattle.Inst().PlayerRect.transform.position;
+        pos.z = InGameManager.InstPVP_Player.transform.position.z;
+        InGameManager.InstPVP_Player.transform.position = pos;
 
         gameObject.SetActive(false);
         MenuBattle.PopUp();

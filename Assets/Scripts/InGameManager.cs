@@ -218,6 +218,7 @@ public class InGameManager : MonoBehaviour
                 GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
                 localFramePos.x = gridSize * x;
                 localFramePos.y = gridSize * y;
+                frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount);
@@ -2126,7 +2127,6 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator AnimShakeField(float intensity)
     {
-        GetComponent<Animator>().enabled = false;
         float dist = intensity;
         Vector3 startPos = transform.position;
         Vector3 dir = new Vector3(-1, -1, 0);
@@ -2139,7 +2139,6 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
         transform.position = startPos;
-        GetComponent<Animator>().enabled = true;
     }
     public int NextMatchCount(Product pro, SwipeDirection dir)
     {
