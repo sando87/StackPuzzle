@@ -66,13 +66,17 @@ namespace ServerApp
         public int AddNewUser(UserInfo user, string ipAddr)
         {
             if (user.userPk != -1)
-                return user.userPk;
+                return user.userPk; //기존 등록된 유저
 
             try
             {
                 UserInfo info = GetUser(user.deviceName);
                 if (info != null)
-                    return info.userPk;
+                {
+                    user.userPk = info.userPk;
+                    UpdateUserInfo(user);
+                    return user.userPk; //재설치 유저
+                }
 
                 using (var cmd = new NpgsqlCommand())
                 {
@@ -84,7 +88,7 @@ namespace ServerApp
                     {
                         if (reader.Read())
                         {
-                            return (int)reader["userPk"];
+                            return (int)reader["userPk"]; //최초 설치 및 접속 유저
                         }
                     }
                 }
@@ -280,6 +284,43 @@ namespace ServerApp
             catch (NpgsqlException ex) { LOG.warn(ex.Message); }
             catch (Exception ex) { LOG.warn(ex.Message); }
             return null;
+        }
+        public float GetRankingRate(int score)
+        {
+            try
+            {
+                using (var cmd = new NpgsqlCommand())
+                {
+                    int totalCount = 1;
+                    int highCount = 0;
+                    string query = String.Format("SELECT count(*) FROM users");
+                    cmd.Connection = mDBSession;
+                    cmd.CommandText = query;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            totalCount = (int)reader["count"];
+                        }
+                    }
+
+                    query = String.Format("SELECT count(*) FROM users WHERE score > {0}", score);
+                    cmd.Connection = mDBSession;
+                    cmd.CommandText = query;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            highCount = (int)reader["count"];
+                        }
+                    }
+
+                    return (float)highCount / totalCount;
+                }
+            }
+            catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+            catch (Exception ex) { LOG.warn(ex.Message); }
+            return 1;
         }
 
     }

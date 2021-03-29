@@ -20,6 +20,7 @@ public class SoundPlayer : MonoBehaviour
         }
     }
     public AudioSource Player;
+    public AudioSource PlayerBack;
 
     public AudioClip BackMusicMap;
     public AudioClip BackMusicInGame;
@@ -53,7 +54,8 @@ public class SoundPlayer : MonoBehaviour
 
     private void Awake()
     {
-        Player.mute = UserSetting.Mute;
+        Player.volume = UserSetting.VolumeSFX;
+        PlayerBack.volume = UserSetting.VolumeBackground;
     }
 
     private void Update()
@@ -75,11 +77,20 @@ public class SoundPlayer : MonoBehaviour
         return Player.mute;
     }
 
+    public void AdjustVolumeSFX(float volume)
+    {
+        Player.volume = volume;
+    }
+    public void AdjustVolumeBack(float volume)
+    {
+        PlayerBack.volume = volume;
+    }
+
     public void PlayBackMusic(AudioClip bkMusic)
     {
-        Player.clip = bkMusic;
-        Player.loop = true;
-        Player.Play();
+        PlayerBack.clip = bkMusic;
+        PlayerBack.loop = true;
+        PlayerBack.Play();
     }
 
 

@@ -68,6 +68,12 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
+        if(UserSetting.UserName.Length < UserSetting.NameLengthMin)
+        {
+            MenuSettings.EditUserName();
+            return;
+        }
+
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         //if (UserSetting.StageIsLocked(16))
         //{

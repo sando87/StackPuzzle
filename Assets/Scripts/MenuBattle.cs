@@ -130,7 +130,11 @@ public class MenuBattle : MonoBehaviour
         req.oppUserPk = InGameManager.InstPVP_Opponent.UserPk;
         req.success = success;
         req.userInfo = UserSetting.UserInfo;
-        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
+        {
+            PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
+            UserSetting.RankingRate = resBody.userInfo.rankingRate;
+        });
 
         if (success)
         {

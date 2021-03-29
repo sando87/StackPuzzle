@@ -12,18 +12,24 @@ public class MenuEditBox : MonoBehaviour
 
     private Action<bool, string> EventClick = null;
 
-    public static MenuEditBox PopUp(string message, Action<bool, string> onClick)
+    public static MenuEditBox PopUp(string message, string defaultText, Action<bool, string> onClick)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/EditName", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuEditBox box = objMenu.GetComponent<MenuEditBox>();
         box.EventClick = onClick;
         box.Message.text = message;
+        box.InputField.text = defaultText;
         return box;
     }
 
     public void OnOK()
     {
+        if(InputField.text.Length < UserSetting.NameLengthMin)
+        {
+            MenuInformBox.PopUp("Write at least 3 characters.");
+            return;
+        }
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         EventClick?.Invoke(true, InputField.text);
         Destroy(gameObject);

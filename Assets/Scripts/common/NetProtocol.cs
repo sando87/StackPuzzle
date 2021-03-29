@@ -145,6 +145,7 @@ public class UserInfo
     public int win = 0;
     public int lose = 0;
     public int total = 0;
+    public float rankingRate = 1;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
 }

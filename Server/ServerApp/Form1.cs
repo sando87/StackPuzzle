@@ -215,6 +215,8 @@ namespace ServerApp
         private void EndPVPGame(PVPInfo requestBody)
         {
             mMatchingUsers.Remove(requestBody.userInfo.userPk);
+            float rankingRate = DBManager.Inst().GetRankingRate(requestBody.userInfo.score);
+            requestBody.userInfo.rankingRate = rankingRate;
             DBManager.Inst().UpdateUserInfo(requestBody.userInfo);
         }
 

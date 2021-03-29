@@ -19,6 +19,24 @@ public class UserSetting
             UpdateUserInfo(mUserInfo);
         }
     }
+    public static float RankingRate
+    {
+        get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; }
+        set
+        {
+            mUserInfo.rankingRate = value;
+            UpdateUserInfo(mUserInfo);
+        }
+    }
+    public static string UserName
+    {
+        get { return mUserInfo == null ? "" : mUserInfo.userName; }
+        set
+        {
+            mUserInfo.userName = value;
+            UpdateUserInfo(mUserInfo);
+        }
+    }
     public static bool Win {
         set
         {
@@ -34,6 +52,16 @@ public class UserSetting
     {
         get { return PlayerPrefs.GetInt("userMute", 0) == 1; }
         set { PlayerPrefs.SetInt("userMute", value ? 1 : 0); }
+    }
+    public static float VolumeSFX
+    {
+        get { return PlayerPrefs.GetFloat("VolumeSFX", 1); }
+        set { PlayerPrefs.SetFloat("VolumeSFX", value); }
+    }
+    public static float VolumeBackground
+    {
+        get { return PlayerPrefs.GetFloat("VolumeBackground", 1); }
+        set { PlayerPrefs.SetFloat("VolumeBackground", value); }
     }
     public static int TutorialNumber
     {
@@ -64,6 +92,7 @@ public class UserSetting
         PlayerPrefs.SetString("StageStarCount", hexStr);
     }
 
+    public const int NameLengthMin = 3;
     public const int StageTotalCount = 100;
     public const float ComboMatchInterval = 0.3f; //콤보 매칭간 시간
     public const float MatchReadyInterval = 0.2f; //매칭되고 실제 터지기까지 시간
@@ -150,17 +179,11 @@ public class UserSetting
         else
         {
             UserInfo info = new UserInfo();
-            info.userPk = -1;
-            info.userName = "No Name";
-            info.score = 100;
-            info.win = 0;
-            info.lose = 0;
-            info.total = 0;
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
             return info;
         }
     }
-    public static UserInfo UpdateUserInfo(UserInfo info)
+    private static UserInfo UpdateUserInfo(UserInfo info)
     {
         if (mIsBotPlayer)
         {
@@ -196,6 +219,7 @@ public class UserSetting
                     if(isOK)
                     {
                         UserInfo virtualUser = new UserInfo();
+                        virtualUser.userName = "bot";
                         virtualUser.deviceName = deviceName;
                         string jsonUserInfo = JsonUtility.ToJson(virtualUser, true);
                         File.WriteAllText(fullname, jsonUserInfo);
