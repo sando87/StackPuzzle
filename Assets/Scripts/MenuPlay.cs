@@ -2,17 +2,22 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuPlay : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/StageDetail";
     private StageInfo mStageInfo;
+    private Button[] SelectedItems = new Button[3];
+    private int CurrentSelectItemIndex = 0;
 
     public TextMeshProUGUI StageLevel;
     public TextMeshProUGUI TargetValue;
     public TextMeshProUGUI TargetScore;
     public Image TargetType;
+    public GameObject ItemSlots;
+    public Button ItemSlotPrefab;
 
     public static void PopUp(StageInfo info)
     {
@@ -78,4 +83,68 @@ public class MenuPlay : MonoBehaviour
         if (!UserSetting.IsBotPlayer)
             Purchases.UseHeart();
     }
+
+    private PurchaseItemType[] ScanOwnedItems()
+    {
+        List<PurchaseItemType> rets = new List<PurchaseItemType>();
+        var items = System.Enum.GetValues(typeof(PurchaseItemType));
+        foreach (PurchaseItemType item in items)
+        {
+            if (item.GetCount() > 0)
+                rets.Add(item);
+        }
+        return rets.ToArray();
+    }
+
+    private void CreateItemButtons(PurchaseItemType[] items)
+    {
+        Button[] btns = ItemSlots.GetComponentsInChildren<Button>();
+        foreach (Button btn in btns)
+            Destroy(btn.gameObject);
+
+        foreach (PurchaseItemType item in items)
+        {
+            Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
+            slot.name = item.ToInt().ToString();
+            slot.GetComponent<Image>().sprite = item.GetSprite();
+            slot.onClick.AddListener(OnClickItem);
+        }
+    }
+
+    private void OnClickItem()
+    {
+        Button selBtn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        SelectedItems[CurrentSelectItemIndex] = selBtn;
+        CurrentSelectItemIndex = (CurrentSelectItemIndex + 1) % SelectedItems.Length;
+        UpdateItemButton();
+    }
+
+    private void UpdateItemButton()
+    {
+        Button[] btns = ItemSlots.GetComponentsInChildren<Button>();
+        foreach (Button btn in btns)
+        {
+            //Off
+        }
+
+        foreach (Button btn in SelectedItems)
+        {
+            //On
+        }
+    }
+
+    private PurchaseItemType[] GetSelectedItems()
+    {
+        List<PurchaseItemType> rets = new List<PurchaseItemType>();
+        foreach (Button btn in SelectedItems)
+        {
+            if (btn == null)
+                continue;
+
+            PurchaseItemType item = int.Parse(btn.name).ToItemType();
+            rets.Add(item);
+        }
+        return rets.ToArray();
+    }
+
 }

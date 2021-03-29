@@ -26,6 +26,10 @@ public static class PurchaseItemTypeExtensions
         }
         return null;
     }
+    public static int GetCount(this PurchaseItemType type)
+    {
+        return Purchases.CountItem(type);
+    }
     public static int ToInt(this PurchaseItemType type)
     {
         return (int)type;
@@ -194,6 +198,15 @@ public class Purchases
     {
         mInfo.countGold += gold;
         UpdatePurchaseInfo(mInfo);
+    }
+    public static bool PurchaseGold(int gold, int costDiamond)
+    {
+        if (mInfo.countDiamond < costDiamond)
+            return false;
+        mInfo.countGold += gold;
+        mInfo.countDiamond -= costDiamond;
+        UpdatePurchaseInfo(mInfo);
+        return true;
     }
     public static void PurchaseDiamond(int cnt)
     {
