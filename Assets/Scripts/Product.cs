@@ -196,9 +196,8 @@ public class Product : MonoBehaviour
     {
         if(IsDropping)
         {
-            float dropGravity = -50;
             Vector3 pos = transform.position;
-            DropSpeed += dropGravity * Time.deltaTime;
+            DropSpeed += UserSetting.ProductDropGravity * Time.deltaTime;
             pos.y += DropSpeed * Time.deltaTime;
             transform.position = pos;
         }

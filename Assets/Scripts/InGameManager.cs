@@ -22,10 +22,6 @@ public class InGameManager : MonoBehaviour
     public static InGameManager InstCurrent
     { get { if (mInstStage != null && mInstStage.gameObject.activeSelf) return mInstStage; else return mInstPVP_Player; } }
 
-    private const float durationDrop = 0.6f;
-    private const float intervalMatch = 0.5f;
-    private const float intervalDrop = 0.1f;
-    private const float durationMerge = intervalMatch + intervalDrop;
     private const string vgName = "VerticalGroup";
 
     public Sprite[] BackgroundImages;
@@ -393,7 +389,7 @@ public class InGameManager : MonoBehaviour
             if (nextMatches.Count <= 0)
                 break;
 
-            yield return new WaitForSeconds(intervalMatch);
+            yield return new WaitForSeconds(UserSetting.ComboMatchInterval);
 
             Billboard.CurrentCombo++;
             Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
@@ -413,7 +409,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(UserSetting.ComboMatchInterval);
 
         mStopDropping = false;
     }
@@ -472,7 +468,7 @@ public class InGameManager : MonoBehaviour
             return validProducts;
 
         mProductCount -= validProducts.Length;
-        StartCoroutine(DestroyProductDelay(validProducts, 0.2f, withLaserEffect));
+        StartCoroutine(DestroyProductDelay(validProducts, UserSetting.MatchReadyInterval, withLaserEffect));
 
         int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
         int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
@@ -537,7 +533,7 @@ public class InGameManager : MonoBehaviour
         }
 
         mProductCount -= matches.Length;
-        StartCoroutine(MergeProductDelay(matches, 0.2f, makeSkill));
+        StartCoroutine(MergeProductDelay(matches, UserSetting.MatchReadyInterval, makeSkill));
 
         int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
         int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
@@ -982,7 +978,7 @@ public class InGameManager : MonoBehaviour
                 break;
 
         KeepLoop:
-            yield return new WaitForSeconds(0.4f);
+            yield return new WaitForSeconds(UserSetting.SkillDestroyInterval);
         }
         mItemLooping = false;
     }
@@ -1027,7 +1023,7 @@ public class InGameManager : MonoBehaviour
                     MergeProducts(matchableProducts, nextSkill);
             }
             
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(UserSetting.AutoMatchInterval);
         }
         mIsAutoMatching = false;
     }
@@ -1843,7 +1839,7 @@ public class InGameManager : MonoBehaviour
         if (matches.Length <= UserSetting.MatchCount + 1)
             return ProductSkill.Nothing;
 
-        if (matches.Length >= UserSetting.MatchCount + 4)
+        if (matches.Length >= UserSetting.MatchCount + 3)
             return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
