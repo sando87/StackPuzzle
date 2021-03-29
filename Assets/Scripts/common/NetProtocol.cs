@@ -140,8 +140,8 @@ public class UserInfo
 {
     public int userPk = -1;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-    public string userName = "No Name";
-    public int score = 100;
+    public string userName = "";
+    public int score = 0;
     public int win = 0;
     public int lose = 0;
     public int total = 0;
