@@ -291,27 +291,27 @@ namespace ServerApp
             {
                 using (var cmd = new NpgsqlCommand())
                 {
-                    int totalCount = 1;
-                    int highCount = 0;
-                    string query = String.Format("SELECT count(*) FROM users");
+                    Int64 totalCount = 1;
+                    Int64 highCount = 0;
+                    string query = String.Format("SELECT count(*) as cnt FROM users");
                     cmd.Connection = mDBSession;
                     cmd.CommandText = query;
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            totalCount = (int)reader["count"];
+                            totalCount = (Int64)reader["cnt"];
                         }
                     }
 
-                    query = String.Format("SELECT count(*) FROM users WHERE score > {0}", score);
+                    query = String.Format("SELECT count(*) as cnt FROM users WHERE score > {0}", score);
                     cmd.Connection = mDBSession;
                     cmd.CommandText = query;
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            highCount = (int)reader["count"];
+                            highCount = (Int64)reader["cnt"];
                         }
                     }
 

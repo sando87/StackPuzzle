@@ -84,6 +84,7 @@ namespace ServerApp
                 {
                     case NetCMD.Undef: resBody = "Undefied Command"; break;
                     case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
@@ -119,6 +120,12 @@ namespace ServerApp
             requestBody.userPk = usePk;
             return requestBody;
         }
+        private UserInfo ProcUpdateUser(UserInfo requestBody)
+        {
+            DBManager.Inst().UpdateUserInfo(requestBody);
+            requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
+            return requestBody;
+        }
         private UserInfo ProcEditUserName(UserInfo requestBody)
         {
             DBManager.Inst().EditUserName(requestBody);
@@ -132,6 +139,7 @@ namespace ServerApp
         private UserInfo ProcGetUser(UserInfo requestBody)
         {
             requestBody = DBManager.Inst().GetUser(requestBody.userPk);
+            requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
             return requestBody;
         }
         private UserInfo ProcRenewScore(UserInfo requestBody)

@@ -1,18 +1,38 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MenuSettings : MonoBehaviour
 {
+    private static MenuSettings mInst = null;
     private const string UIObjName = "UISpace/CanvasPopup/Settings";
     private int mTouchCount = 0;
 
+    public Slider SoundSFX;
+    public Slider SoundBack;
+    public TextMeshProUGUI UserName;
+    public TextMeshProUGUI ExpLevel;
+    public TextMeshProUGUI Exp;
+    public Slider ExpBar;
+
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find(UIObjName);
-        objMenu.SetActive(true);
-        //objMenu.GetComponent<MenuSettings>().SoundOFF.gameObject.SetActive(UserSetting.Mute);
+        MenuSettings menu = GameObject.Find(UIObjName).GetComponent<MenuSettings>();
+        menu.gameObject.SetActive(true);
+        menu.SoundSFX.value = UserSetting.VolumeSFX;
+        menu.SoundBack.value = UserSetting.VolumeBackground;
+        menu.UserName.text = UserSetting.UserName;
+        menu.UpdateExpBar();
+    }
+
+
+    public static MenuSettings Inst()
+    {
+        if (mInst == null)
+            mInst = GameObject.Find(UIObjName).GetComponent<MenuSettings>();
+        return mInst;
     }
 
     public void OnClose()
@@ -78,21 +98,32 @@ public class MenuSettings : MonoBehaviour
                 {
                     UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
                     UserSetting.UserName = res.userName;
+                    MenuSettings.Inst().UserName.text = UserSetting.UserName;
                 });
             }
         });
     }
 
-    public void OnTouchVolumSFX(float volume)
+    public void OnTouchVolumSFX()
     {
-        UserSetting.VolumeSFX = volume;
-        SoundPlayer.Inst.AdjustVolumeSFX(volume);
+        UserSetting.VolumeSFX = SoundSFX.value;
+        SoundPlayer.Inst.AdjustVolumeSFX(SoundSFX.value);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
-    public void OnTouchVolumBack(float volume)
+    public void OnTouchVolumBack()
     {
-        UserSetting.VolumeBackground = volume;
-        SoundPlayer.Inst.AdjustVolumeBack(volume);
+        UserSetting.VolumeBackground = SoundBack.value;
+        SoundPlayer.Inst.AdjustVolumeBack(SoundBack.value);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+    private void UpdateExpBar()
+    {
+        int score = UserSetting.UserScore;
+        int level = UserSetting.ToLevel(score);
+        ExpLevel.text = level.ToString();
+        Exp.text = score.ToString();
+        int dd = score % UserSetting.ScorePerLevel;
+        float rate = (float)dd / UserSetting.ScorePerLevel;
+        ExpBar.normalizedValue = rate;
     }
 }

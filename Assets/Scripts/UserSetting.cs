@@ -13,7 +13,7 @@ public class UserSetting
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
     public static int UserScore
     {
-        get { return mUserInfo == null ? -1 : mUserInfo.score; }
+        get { return mUserInfo == null ? 0 : mUserInfo.score; }
         set {
             mUserInfo.score = value;
             UpdateUserInfo(mUserInfo);
@@ -147,7 +147,7 @@ public class UserSetting
     public static void Initialize()
     {
         mUserInfo = LoadUserInfo();
-        if(mUserInfo.userPk <= 0)
+        if (mUserInfo.userPk <= 0)
         {
             NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>
             {
@@ -157,6 +157,17 @@ public class UserSetting
 
                 mUserInfo = res;
                 UpdateUserInfo(mUserInfo);
+            });
+        }
+        else
+        {
+            NetClientApp.GetInstance().Request(NetCMD.GetUser, mUserInfo, (_body) =>
+            {
+                UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
+                if (res.userPk <= 0)
+                    return;
+
+                UserSetting.RankingRate = res.rankingRate;
             });
         }
     }
@@ -173,6 +184,7 @@ public class UserSetting
             info.win = PlayerPrefs.GetInt("win");
             info.lose = PlayerPrefs.GetInt("lose");
             info.total = PlayerPrefs.GetInt("total");
+            info.rankingRate = PlayerPrefs.GetFloat("rankingRate");
             info.deviceName = PlayerPrefs.GetString("deviceName");
             return info;
         }
@@ -199,6 +211,7 @@ public class UserSetting
             PlayerPrefs.SetInt("win", info.win);
             PlayerPrefs.SetInt("lose", info.lose);
             PlayerPrefs.SetInt("total", info.total);
+            PlayerPrefs.SetFloat("rankingRate", info.rankingRate);
             PlayerPrefs.SetString("deviceName", info.deviceName);
         }
         return info;
