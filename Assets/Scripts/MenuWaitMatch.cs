@@ -184,6 +184,7 @@ public class MenuWaitMatch : MonoBehaviour
         ResetMatchUI();
 
         gameObject.SetActive(false);
+        SoundPlayer.Inst.PlayerBack.Stop();
         MenuPVPReady.PopUp(UserSetting.UserInfo, opponentInfo.UserInfo);
     }
     private void FailMatch()

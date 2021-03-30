@@ -57,6 +57,7 @@ public class MenuPVPReady : MonoBehaviour
         pos.z = InGameManager.InstPVP_Player.transform.position.z;
         InGameManager.InstPVP_Player.transform.position = pos;
 
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         gameObject.SetActive(false);
         MenuBattle.PopUp();
     }

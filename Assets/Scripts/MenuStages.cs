@@ -38,6 +38,8 @@ public class MenuStages : MonoBehaviour
         Inst.gameObject.SetActive(true);
         Inst.StopCoroutine("UpdateHeartTimer");
         Inst.StartCoroutine("UpdateHeartTimer");
+        SoundPlayer.Inst.PlayerBack.Stop();
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
     }
     public static void Hide()
     {

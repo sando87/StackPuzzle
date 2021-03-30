@@ -148,13 +148,13 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
-            SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear);
         }
         else
         {
-            SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
             MenuFailed.PopUp();
         }

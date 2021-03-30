@@ -138,13 +138,13 @@ public class MenuBattle : MonoBehaviour
 
         if (success)
         {
-            SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
         }
         else
         {
-            SoundPlayer.Inst.Player.Stop();
+            SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
             MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
         }

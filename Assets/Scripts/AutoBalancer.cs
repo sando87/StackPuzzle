@@ -31,8 +31,8 @@ public class AutoBalancer : MonoBehaviour
         int counterLimit = 5;
         while (true)
         {
-            yield return new WaitForSeconds(0.1f);
-            
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 2));
+
             if (InGameManager.InstStage.gameObject.activeInHierarchy)
                 mgr = InGameManager.InstStage;
             else if (InGameManager.InstPVP_Player.gameObject.activeInHierarchy)
@@ -46,7 +46,7 @@ public class AutoBalancer : MonoBehaviour
                 if (counter > counterLimit)
                 {
                     counter = 0;
-                    counterLimit = UnityEngine.Random.Range(3, 7);
+                    counterLimit = UnityEngine.Random.Range(3, 5);
                     AutoClickNextProduct(mgr);
                 }
                 else

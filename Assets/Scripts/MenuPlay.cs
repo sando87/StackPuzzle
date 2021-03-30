@@ -71,7 +71,7 @@ public class MenuPlay : MonoBehaviour
             return;
         }
 
-        SoundPlayer.Inst.Player.Stop();
+        SoundPlayer.Inst.PlayerBack.Stop();
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         InGameManager.InstStage.StartGameInStageMode(mStageInfo, UserSetting.UserInfo);
         InGameManager.InstStage.InitProducts();

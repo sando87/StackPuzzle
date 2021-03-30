@@ -100,7 +100,7 @@ public class InGameManager : MonoBehaviour
     public GameObject ShieldSlot { get { return SkillSlots[0]; } }
     public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
     public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }                     
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }                     
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
