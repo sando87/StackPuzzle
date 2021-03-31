@@ -13,6 +13,11 @@ public class MenuStages : MonoBehaviour
     public TextMeshProUGUI HeartCount;
     public TextMeshProUGUI DiamondCount;
     public TextMeshProUGUI GoldCount;
+
+    public GameObject StatusGroup;
+    public GameObject BackButton;
+    public GameObject BottomGroup;
+
     private int mAutoNextStageNum = 1;
 
 
@@ -38,12 +43,22 @@ public class MenuStages : MonoBehaviour
         Inst.gameObject.SetActive(true);
         Inst.StopCoroutine("UpdateHeartTimer");
         Inst.StartCoroutine("UpdateHeartTimer");
+        Inst.StatusGroup.SetActive(true);
+        Inst.BackButton.SetActive(true);
+        Inst.BottomGroup.SetActive(true);
         SoundPlayer.Inst.PlayerBack.Stop();
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
     }
     public static void Hide()
     {
         Inst.gameObject.SetActive(false);
+        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
+    }
+    public static void HideHalf()
+    {
+        Inst.StatusGroup.SetActive(true);
+        Inst.BackButton.SetActive(false);
+        Inst.BottomGroup.SetActive(false);
         GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
     }
 
@@ -79,21 +94,37 @@ public class MenuStages : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuHeartShop.PopUp();
+        MenuGoldShop.Hide();
+        MenuDiamondShop.Hide();
+        MenuItemShop.Hide();
+        HideHalf();
     }
     public void OnShopGold()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuGoldShop.PopUp();
+        MenuHeartShop.Hide();
+        MenuDiamondShop.Hide();
+        MenuItemShop.Hide();
+        HideHalf();
     }
     public void OnShopDiamond()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuDiamondShop.PopUp();
+        MenuHeartShop.Hide();
+        MenuGoldShop.Hide();
+        MenuItemShop.Hide();
+        HideHalf();
     }
     public void OnShopItem()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuItemShop.PopUp();
+        MenuHeartShop.Hide();
+        MenuGoldShop.Hide();
+        MenuDiamondShop.Hide();
+        HideHalf();
     }
     public void OnInventory()
     {

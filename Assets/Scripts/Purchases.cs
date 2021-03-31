@@ -44,6 +44,19 @@ public static class PurchaseItemTypeExtensions
             default: return "Unknown Item.";
         }
     }
+    public static string GetName(this PurchaseItemType type)
+    {
+        switch (type)
+        {
+            case PurchaseItemType.ExtendLimit: return "Clover";
+            case PurchaseItemType.RemoveIce: return "Hammer";
+            case PurchaseItemType.MakeSkill1: return "Bomb";
+            case PurchaseItemType.MakeCombo: return "Egg";
+            case PurchaseItemType.MakeSkill2: return "Potion";
+            case PurchaseItemType.PowerUp: return "Star";
+            default: return "Unknown Item.";
+        }
+    }
     public static int GetCount(this PurchaseItemType type)
     {
         return Purchases.CountItem(type);
@@ -135,14 +148,9 @@ public class Purchases
         UpdateHeartTimer();
         return mInfo.countHeart;
     }
-    public static bool ChargeHeartLimit(int cnt)
+    public static bool IsHeartMax()
     {
-        mInfo.countHeart += cnt;
-        if (mInfo.countHeart > mInfo.maxHeart)
-            mInfo.countHeart = mInfo.maxHeart;
-        mInfo.useTimeTick = DateTime.Now.Ticks;
-        UpdatePurchaseInfo(mInfo);
-        return true;
+        return mInfo.countHeart >= mInfo.maxHeart;
     }
     public static bool ChargeHeart(int cnt, int diamond)
     {
@@ -150,12 +158,17 @@ public class Purchases
             return false;
         mInfo.countDiamond -= diamond;
         mInfo.countHeart += cnt;
+        if (mInfo.countHeart > mInfo.maxHeart)
+            mInfo.countHeart = mInfo.maxHeart;
         mInfo.useTimeTick = DateTime.Now.Ticks;
         UpdatePurchaseInfo(mInfo);
         return true;
     }
-    public static bool ChargeHeartInfinite()
+    public static bool ChargeHeartInfinite(int diamond)
     {
+        if (mInfo.countDiamond < diamond || IsInfinite())
+            return false;
+        mInfo.countDiamond -= diamond;
         mInfo.infiniteHeart = 1;
         mInfo.countHeart = mInfo.maxHeart;
         mInfo.useTimeTick = DateTime.Now.Ticks;
@@ -204,6 +217,10 @@ public class Purchases
         }
     }
 
+    public static bool IsInfinite()
+    {
+        return mInfo.infiniteHeart == 1;
+    }
     public static int CountGold()
     {
         return mInfo.countGold;

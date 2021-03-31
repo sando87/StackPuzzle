@@ -5,13 +5,18 @@ using UnityEngine.UI;
 
 public class MenuDiamondShop : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuDiamondShop";
+    private const string UIObjName = "UISpace/CanvasPopup/DiamondShop";
 
     
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
+    }
+    public static void Hide()
+    {
+        GameObject objMenu = GameObject.Find(UIObjName);
+        objMenu.SetActive(false);
     }
 
     public void OnClose()
@@ -23,6 +28,8 @@ public class MenuDiamondShop : MonoBehaviour
 
     public void OnRequestPurchaseDiamond(int realmoney)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
         MenuMessageBox.PopUp("Do you really want to buy diamonds?", true, (isOK) =>
         {
             if(isOK)
@@ -44,9 +51,7 @@ public class MenuDiamondShop : MonoBehaviour
             default: LOG.warn(); return;
         }
 
-        MenuInformBox.PopUp("Success Purchase : " + realmoney);
-
         MenuStages.Inst.UpdateTopPanel();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        MenuInformBox.PopUp("Success Purchase : " + realmoney);
     }
 }

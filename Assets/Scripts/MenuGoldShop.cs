@@ -7,12 +7,17 @@ using UnityEngine.UI;
 
 public class MenuGoldShop : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuGoldShop";
+    private const string UIObjName = "UISpace/CanvasPopup/GoldShop";
 
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
+    }
+    public static void Hide()
+    {
+        GameObject objMenu = GameObject.Find(UIObjName);
+        objMenu.SetActive(false);
     }
 
     public void OnClose()
@@ -24,20 +29,23 @@ public class MenuGoldShop : MonoBehaviour
 
     public void OnPurchaseGold()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         GameObject btnObj = EventSystem.current.currentSelectedGameObject;
         string goldText = btnObj.transform.Find("Text_Gold").GetComponent<TextMeshProUGUI>().text;
         int gold = int.Parse(goldText.Replace(",", ""));
         int costDiamond = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
-        bool ret = Purchases.PurchaseGold(gold, costDiamond);
-        if(!ret)
+        MenuMessageBox.PopUp(costDiamond + " Diamonds are used.", true, (isOK) =>
         {
-            MenuInformBox.PopUp("Not enough Diamonds.");
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAlarm);
-            return;
-        }
+            if(isOK)
+            {
+                if(Purchases.PurchaseGold(gold, costDiamond))
+                    MenuInformBox.PopUp("Success.");
+                else
+                    MenuInformBox.PopUp("Not enough Diamonds.");
 
-        MenuStages.Inst.UpdateTopPanel();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+                MenuStages.Inst.UpdateTopPanel();
+            }
+        });
     }
 }

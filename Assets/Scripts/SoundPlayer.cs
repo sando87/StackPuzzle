@@ -41,6 +41,7 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectBreakIce;
     public AudioClip EffectLevelComplete;
     public AudioClip EffectBreakStone;
+    public AudioClip EffectCashGold;
 
     public AudioClip[] MatchClip;
     public AudioClip[] DropClip;

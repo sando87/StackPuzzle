@@ -14,7 +14,7 @@ public class MenuInventory : MonoBehaviour
 
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject objMenu = GameObject.Find("UISpace").transform.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
         objMenu.GetComponent<MenuInventory>().Init();
     }

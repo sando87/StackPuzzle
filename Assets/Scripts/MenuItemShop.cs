@@ -7,20 +7,37 @@ using UnityEngine.UI;
 
 public class MenuItemShop : MonoBehaviour
 {
-    private const string UIObjName = "CanvasPopUp/MenuItemShop";
+    private const string UIObjName = "UISpace/CanvasPopup/ItemShop";
 
     public GameObject ItemStateParent;
     public GameObject ItemSlotPrefab;
+    private List<TextMeshProUGUI> ItemCounts = new List<TextMeshProUGUI>();
 
     public static void PopUp()
     {
-        GameObject objMenu = GameObject.Find("UIGroup").transform.Find(UIObjName).gameObject;
+        GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
         objMenu.GetComponent<MenuItemShop>().Init();
+    }
+    public static void Hide()
+    {
+        GameObject objMenu = GameObject.Find(UIObjName);
+        objMenu.SetActive(false);
     }
 
     public void Init()
     {
+        if(ItemCounts.Count <= 0)
+        {
+            int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
+            for (int i = 0; i < count; ++i)
+            {
+                PurchaseItemType type = i.ToItemType();
+                GameObject obj = Instantiate(ItemSlotPrefab, ItemStateParent.transform);
+                obj.transform.GetChild(0).GetComponent<Image>().sprite = type.GetSprite();
+                ItemCounts.Add(obj.GetComponentInChildren<TextMeshProUGUI>());
+            }
+        }
         UpdateState();
     }
     public void OnClose()
@@ -37,26 +54,40 @@ public class MenuItemShop : MonoBehaviour
         int cnt = int.Parse(itemCountText.Replace("x", ""));
         int cost = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
-        bool ret = Purchases.ChargeItemUseGold(type.ToItemType(), cnt, cost);
-        if (!ret)
+        if (Purchases.ChargeItemUseGold(type.ToItemType(), cnt, cost))
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCashGold);
+            MenuInformBox.PopUp("Success.");
+        }
+        else
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
             MenuInformBox.PopUp("Not enough Golds.");
+        }
 
         UpdateState();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
     public void OnChargeItem()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         GameObject btnObj = EventSystem.current.currentSelectedGameObject;
         int type = int.Parse(btnObj.name.Replace("ItemType", ""));
-        int cnt = int.Parse(btnObj.transform.Find("Text_Count").GetComponent<TextMeshProUGUI>().text);
+        string itemCountText = btnObj.transform.Find("Text_Count").GetComponent<TextMeshProUGUI>().text;
+        int cnt = int.Parse(itemCountText.Replace("x", ""));
         int cost = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
-        bool ret = Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost);
-        if (!ret)
-            MenuInformBox.PopUp("Not enough Diamonds.");
+        MenuMessageBox.PopUp(cost + " Diamonds are used.", true, (isOK) =>
+        {
+            if(isOK)
+            {
+                if(Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost))
+                    MenuInformBox.PopUp("Success.");
+                else
+                    MenuInformBox.PopUp("Not enough Diamonds.");
 
-        UpdateState();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+                UpdateState();
+            }
+        });
     }
     private void UpdateState()
     {
@@ -67,14 +98,10 @@ public class MenuItemShop : MonoBehaviour
     private void UpdateItemState()
     {
         int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
-        Image[] itemSlots = ItemStateParent.GetComponentsInChildren<Image>();
         for (int i = 0; i < count; ++i)
         {
             PurchaseItemType type = i.ToItemType();
-            GameObject obj = Instantiate(ItemSlotPrefab, ItemStateParent.transform);
-            Image img = obj.GetComponentInChildren<Image>();
-            img.sprite = type.GetSprite();
-            img.GetComponentInChildren<TextMeshProUGUI>().text = type.GetCount().ToString();
+            ItemCounts[i].text = type.GetCount().ToString();
         }
     }
 }

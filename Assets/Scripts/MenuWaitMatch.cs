@@ -189,7 +189,7 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void FailMatch()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAlarm);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
         ResetMatchUI();
     }
     private IEnumerator AutoMatch()
