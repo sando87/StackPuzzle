@@ -1,16 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuItemShop : MonoBehaviour
 {
     private const string UIObjName = "CanvasPopUp/MenuItemShop";
 
-    public Text CurrentItemA;
-    public Text CurrentItemB;
-    public Text CurrentItemC;
-    public Text CurrentItemD;
+    public GameObject ItemStateParent;
+    public GameObject ItemSlotPrefab;
 
     public static void PopUp()
     {
@@ -29,24 +29,13 @@ public class MenuItemShop : MonoBehaviour
         MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
-    public void OnChargeItem(GameObject item)
+    public void OnChargeItemUseGold()
     {
-        int type = int.Parse(item.name.Replace("ItemType", ""));
-        int cnt = int.Parse(item.transform.Find("ItemCount/Text").GetComponent<Text>().text);
-        int cost = int.Parse(item.transform.Find("BtnPurchase/Text").GetComponent<Text>().text);
-
-        bool ret = Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost);
-        if (!ret)
-            MenuInformBox.PopUp("Not enough Diamonds.");
-
-        UpdateState();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-    }
-    public void OnChargeItemUseGold(GameObject item)
-    {
-        int type = int.Parse(item.name.Replace("ItemType", ""));
-        int cnt = int.Parse(item.transform.Find("ItemCount/Text").GetComponent<Text>().text);
-        int cost = int.Parse(item.transform.Find("BtnPurchase/Text").GetComponent<Text>().text);
+        GameObject btnObj = EventSystem.current.currentSelectedGameObject;
+        int type = int.Parse(btnObj.name.Replace("ItemType", ""));
+        string itemCountText = btnObj.transform.Find("Text_Count").GetComponent<TextMeshProUGUI>().text;
+        int cnt = int.Parse(itemCountText.Replace("x", ""));
+        int cost = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
         bool ret = Purchases.ChargeItemUseGold(type.ToItemType(), cnt, cost);
         if (!ret)
@@ -55,12 +44,37 @@ public class MenuItemShop : MonoBehaviour
         UpdateState();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
+    public void OnChargeItem()
+    {
+        GameObject btnObj = EventSystem.current.currentSelectedGameObject;
+        int type = int.Parse(btnObj.name.Replace("ItemType", ""));
+        int cnt = int.Parse(btnObj.transform.Find("Text_Count").GetComponent<TextMeshProUGUI>().text);
+        int cost = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
+
+        bool ret = Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost);
+        if (!ret)
+            MenuInformBox.PopUp("Not enough Diamonds.");
+
+        UpdateState();
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
     private void UpdateState()
     {
         MenuStages.Inst.UpdateTopPanel();
-        CurrentItemA.text = Purchases.CountItem(0.ToItemType()).ToString();
-        CurrentItemB.text = Purchases.CountItem(1.ToItemType()).ToString();
-        CurrentItemC.text = Purchases.CountItem(2.ToItemType()).ToString();
-        CurrentItemD.text = Purchases.CountItem(3.ToItemType()).ToString();
+        UpdateItemState();
+    }
+
+    private void UpdateItemState()
+    {
+        int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
+        Image[] itemSlots = ItemStateParent.GetComponentsInChildren<Image>();
+        for (int i = 0; i < count; ++i)
+        {
+            PurchaseItemType type = i.ToItemType();
+            GameObject obj = Instantiate(ItemSlotPrefab, ItemStateParent.transform);
+            Image img = obj.GetComponentInChildren<Image>();
+            img.sprite = type.GetSprite();
+            img.GetComponentInChildren<TextMeshProUGUI>().text = type.GetCount().ToString();
+        }
     }
 }

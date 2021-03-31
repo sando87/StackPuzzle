@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuGoldShop : MonoBehaviour
@@ -20,8 +22,13 @@ public class MenuGoldShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
-    public void OnPurchaseGold(int gold, int costDiamond)
+    public void OnPurchaseGold()
     {
+        GameObject btnObj = EventSystem.current.currentSelectedGameObject;
+        string goldText = btnObj.transform.Find("Text_Gold").GetComponent<TextMeshProUGUI>().text;
+        int gold = int.Parse(goldText.Replace(",", ""));
+        int costDiamond = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
+
         bool ret = Purchases.PurchaseGold(gold, costDiamond);
         if(!ret)
         {
@@ -30,6 +37,7 @@ public class MenuGoldShop : MonoBehaviour
             return;
         }
 
+        MenuStages.Inst.UpdateTopPanel();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 }

@@ -6,25 +6,43 @@ using UnityEngine.UI;
 
 public static class PurchaseItemTypeExtensions
 {
+    [SerializeField]
+    public static Sprite[] ItemImages = null;
+
+    static PurchaseItemTypeExtensions()
+    {
+        int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
+        ItemImages = new Sprite[count];
+        for (int i = 0; i < count; ++i)
+        {
+            switch (i.ToItemType())
+            {
+                case PurchaseItemType.ExtendLimit: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_clover"); break;
+                case PurchaseItemType.RemoveIce: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_hammer"); break;
+                case PurchaseItemType.MakeSkill1: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_bomb"); break;
+                case PurchaseItemType.MakeCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_egg"); break;
+                case PurchaseItemType.MakeSkill2: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_potion_purple"); break;
+                case PurchaseItemType.PowerUp: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_star_red"); break;
+            }
+        }
+    }
+
     public static Sprite GetSprite(this PurchaseItemType type)
     {
-        switch(type)
-        {
-            case PurchaseItemType.ExtendLimit: return Resources.Load<Sprite>("itemA");
-            case PurchaseItemType.RemoveIce: return Resources.Load<Sprite>("itemB");
-            case PurchaseItemType.MakeSkill1: return Resources.Load<Sprite>("itemC");
-        }
-        return null;
+        return ItemImages[type.ToInt()];
     }
     public static string GetDescription(this PurchaseItemType type)
     {
         switch (type)
         {
-            case PurchaseItemType.ExtendLimit: return "itemA";
-            case PurchaseItemType.RemoveIce: return "itemB";
-            case PurchaseItemType.MakeSkill1: return "itemC";
+            case PurchaseItemType.ExtendLimit: return "Extends limits(Move/Time).";
+            case PurchaseItemType.RemoveIce: return "Break freezed blocks.";
+            case PurchaseItemType.MakeSkill1: return "Make skill blocks.";
+            case PurchaseItemType.MakeCombo: return "Make combo block.";
+            case PurchaseItemType.MakeSkill2: return "Make great skill block.";
+            case PurchaseItemType.PowerUp: return "Power UP!!";
+            default: return "Unknown Item.";
         }
-        return null;
     }
     public static int GetCount(this PurchaseItemType type)
     {

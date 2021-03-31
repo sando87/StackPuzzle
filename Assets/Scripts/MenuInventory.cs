@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,7 +10,7 @@ public class MenuInventory : MonoBehaviour
     private const string UIObjName = "CanvasPopUp/MenuInventory";
 
     public GameObject ItemSlots;
-    public Text ItemDescription;
+    public TextMeshProUGUI ItemDescription;
 
     public static void PopUp()
     {

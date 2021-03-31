@@ -79,24 +79,32 @@ public class MenuStages : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuHeartShop.PopUp();
-        Hide();
+    }
+    public void OnShopGold()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        MenuGoldShop.PopUp();
     }
     public void OnShopDiamond()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuDiamondShop.PopUp();
+    }
+    public void OnShopItem()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        MenuItemShop.PopUp();
+    }
+    public void OnInventory()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        MenuInventory.PopUp();
         Hide();
     }
     public void OnSettings()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         MenuSettings.PopUp();
-        Hide();
-    }
-    public void OnShopItem()
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        MenuItemShop.PopUp();
         Hide();
     }
     public void OnBattle()
