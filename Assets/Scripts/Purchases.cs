@@ -6,8 +6,11 @@ using UnityEngine.UI;
 
 public static class PurchaseItemTypeExtensions
 {
-    [SerializeField]
-    public static Sprite[] ItemImages = null;
+    private static Sprite LifeImage = null;
+    private static Sprite GoldImage = null;
+    private static Sprite DiaImage = null;
+    private static Sprite ChestImage = null;
+    private static Sprite[] ItemImages = null;
 
     static PurchaseItemTypeExtensions()
     {
@@ -25,6 +28,11 @@ public static class PurchaseItemTypeExtensions
                 case PurchaseItemType.PowerUp: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_star_red"); break;
             }
         }
+
+        LifeImage = Resources.Load<Sprite>("Images/life");
+        GoldImage = Resources.Load<Sprite>("Images/gold");
+        DiaImage = Resources.Load<Sprite>("Images/diamond");
+        ChestImage = Resources.Load<Sprite>("Images/chest");
     }
 
     public static Sprite GetSprite(this PurchaseItemType type)
@@ -69,6 +77,10 @@ public static class PurchaseItemTypeExtensions
     {
         return (PurchaseItemType)type;
     }
+    public static Sprite GetLifeSprite() { return LifeImage; }
+    public static Sprite GetGoldSprite() { return GoldImage; }
+    public static Sprite GetDiaSprite() { return DiaImage; }
+    public static Sprite GetChestSprite() { return ChestImage; }
 }
 
 public enum PurchaseItemType

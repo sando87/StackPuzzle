@@ -17,6 +17,8 @@ public class MenuComplete : MonoBehaviour
     public ScoreBar ScoreDisplay;
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
+    public GameObject RewardPrefab;
+    public GameObject RewardParent;
     private List<GameObject> Effects = new List<GameObject>();
     private int ScorePerCoin = UserSetting.ScorePerCoin;
 

@@ -29,6 +29,7 @@ public class StageInfo
     public int XCount = 0;
     public int YCount = 0;
     public int RandomSeed = -1;
+    public List<string> Rewards = new List<string>();
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
     public StageInfoCell[,] Field = null;
 
@@ -80,6 +81,7 @@ public class StageInfo
                 case "XCount": info.XCount = int.Parse(tokens[1]); break;
                 case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
                 case "Items": info.Items = Parse(tokens[1]); break;
+                case "Reward": info.Rewards.Add(tokens[1]); break;
                 case "Rows": info.ParseRow(--RowIndex, tokens[1]); break;
             }
         }
@@ -179,6 +181,56 @@ public class StageInfo
             default: break;
         }
         return type;
+    }
+    public Tuple<Sprite, int>[] GetRewardInfos()
+    {
+        List<Tuple<Sprite, int>> rets = new List<Tuple<Sprite, int>>();
+        foreach(string reward in Rewards)
+        {
+            string[] package = reward.Split(' ');
+            if (package.Length > 1)
+            {
+                rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetChestSprite(), 1));
+            }
+            else
+            {
+                string[] sub = reward.Split('/');
+                if (sub[0] == "life")
+                    rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetLifeSprite(), int.Parse(sub[1])));
+                else if (sub[0] == "gold")
+                   rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetGoldSprite(), int.Parse(sub[1])));
+                else if (sub[0] == "dia")
+                    rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetDiaSprite(), int.Parse(sub[1])));
+                else
+                {
+                    PurchaseItemType rewardType = int.Parse(sub[0]).ToItemType();
+                    rets.Add(new Tuple<Sprite, int>(rewardType.GetSprite(), int.Parse(sub[1])));
+                }
+            }
+        }
+        return rets.ToArray();
+    }
+    public void DoReward(string rewardPair)
+    {
+        string[] sub = rewardPair.Split('/');
+        if(sub.Length != 2)
+        {
+            LOG.error();
+            return;
+        }
+
+        int count = int.Parse(sub[1]);
+        if (sub[0] == "life")
+            Purchases.ChargeHeart(count, 0);
+        else if (sub[0] == "gold")
+            Purchases.AddGold(count);
+        else if (sub[0] == "dia")
+            Purchases.PurchaseDiamond(count);
+        else
+        {
+            PurchaseItemType rewardType = int.Parse(sub[0]).ToItemType();
+            Purchases.ChargeItemUseGold(rewardType, count, 0);
+        }
     }
     public string ToCSVString()
     {

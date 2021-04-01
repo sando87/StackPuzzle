@@ -3,6 +3,9 @@ GoalValue,80
 MoveLimit,25
 ColorCount,5
 RandomSeed,6
+Reward,gold/100
+Reward,dia/5
+Reward,1/1 2/1 3/1
 XCount,6
 YCount,7
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
