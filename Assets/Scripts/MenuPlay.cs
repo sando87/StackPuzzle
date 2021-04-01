@@ -9,8 +9,7 @@ public class MenuPlay : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/StageDetail";
     private StageInfo mStageInfo;
-    private Button[] SelectedItems = new Button[3];
-    private int CurrentSelectItemIndex = 0;
+    private LinkedList<Button> SelectedButtons = new LinkedList<Button>();
 
     public TextMeshProUGUI StageLevel;
     public TextMeshProUGUI TargetValue;
@@ -19,12 +18,16 @@ public class MenuPlay : MonoBehaviour
     public GameObject ItemSlots;
     public Button ItemSlotPrefab;
 
+    public static MenuPlay Inst()
+    {
+        return GameObject.Find(UIObjName).GetComponent<MenuPlay>();
+    }
     public static void PopUp(StageInfo info)
     {
         GameObject menuPlay = GameObject.Find(UIObjName);
+        menuPlay.SetActive(true);
         MenuPlay menu = menuPlay.GetComponent<MenuPlay>();
         menu.UpdateUIState(info);
-        menuPlay.SetActive(true);
         StageManager.Inst.gameObject.SetActive(false);
 
         if (UserSetting.IsBotPlayer)
@@ -53,6 +56,10 @@ public class MenuPlay : MonoBehaviour
             TargetType.sprite = info.GoalTypeImage;
             TargetValue.text = info.GoalValue.ToString();
         }
+
+        SelectedButtons.Clear();
+        PurchaseItemType[] items = ScanOwnedItems();
+        CreateItemButtons(items);
     }
 
     public void OnClose()
@@ -106,7 +113,8 @@ public class MenuPlay : MonoBehaviour
         {
             Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
             slot.name = item.ToInt().ToString();
-            slot.GetComponent<Image>().sprite = item.GetSprite();
+            slot.transform.GetChild(0).GetComponent<Image>().sprite = item.GetSprite();
+            slot.GetComponentInChildren<TextMeshProUGUI>().text = item.GetCount().ToString();
             slot.onClick.AddListener(OnClickItem);
         }
     }
@@ -114,33 +122,37 @@ public class MenuPlay : MonoBehaviour
     private void OnClickItem()
     {
         Button selBtn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        SelectedItems[CurrentSelectItemIndex] = selBtn;
-        CurrentSelectItemIndex = (CurrentSelectItemIndex + 1) % SelectedItems.Length;
-        UpdateItemButton();
+        if (IsChecked(selBtn))
+        {
+            SetCheck(selBtn, false);
+            SelectedButtons.Remove(selBtn);
+        }
+        else
+        {
+            if (SelectedButtons.Count >= 3)
+            {
+                SetCheck(SelectedButtons.First.Value, false);
+                SelectedButtons.RemoveFirst();
+            }
+            SetCheck(selBtn, true);
+            SelectedButtons.AddLast(selBtn);
+        }
     }
 
-    private void UpdateItemButton()
+    private bool IsChecked(Button btn)
     {
-        Button[] btns = ItemSlots.GetComponentsInChildren<Button>();
-        foreach (Button btn in btns)
-        {
-            //Off
-        }
-
-        foreach (Button btn in SelectedItems)
-        {
-            //On
-        }
+        return btn.transform.GetChild(0).GetChild(0).gameObject.activeSelf;
+    }
+    private void SetCheck(Button btn, bool isCheck)
+    {
+        btn.transform.GetChild(0).GetChild(0).gameObject.SetActive(isCheck);
     }
 
-    private PurchaseItemType[] GetSelectedItems()
+    public PurchaseItemType[] GetSelectedItems()
     {
         List<PurchaseItemType> rets = new List<PurchaseItemType>();
-        foreach (Button btn in SelectedItems)
+        foreach (Button btn in SelectedButtons)
         {
-            if (btn == null)
-                continue;
-
             PurchaseItemType item = int.Parse(btn.name).ToItemType();
             rets.Add(item);
         }

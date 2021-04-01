@@ -3,6 +3,7 @@ GoalValue,6
 MoveLimit,50
 ColorCount,5
 RandomSeed,4
+Reward,4/1 dia/4
 XCount,6
 YCount,7
 Rows,0/-1 0/-1 0/0 0/0 0/-1 0/-1

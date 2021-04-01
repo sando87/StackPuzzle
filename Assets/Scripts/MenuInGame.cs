@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -21,6 +22,8 @@ public class MenuInGame : MonoBehaviour
     public ScoreBar ScoreBarObj;
     public TextMeshProUGUI LevelCompleted;
     public TextMeshProUGUI LevelFailed;
+    public Sprite ItemEmptyImage;
+    public GameObject[] ItemSlots;
 
     public GameObject EffectParent;
     public GameObject ItemPrefab;
@@ -81,6 +84,26 @@ public class MenuInGame : MonoBehaviour
         ComboNumber.Clear();
         ScoreBarObj.Clear();
 
+        PurchaseItemType[] items = MenuPlay.Inst().GetSelectedItems();
+        for(int i = 0; i < ItemSlots.Length; ++i)
+        {
+            if (i < items.Length)
+            {
+                ItemSlots[i].name = items[i].ToInt().ToString();
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
+                ItemSlots[i].GetComponentInChildren<Image>().sprite = items[i].GetSprite();
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
+                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
+            }
+            else
+            {
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
+                ItemSlots[i].GetComponentInChildren<Image>().sprite = ItemEmptyImage;
+                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
+            }
+        }
+
         InGameManager.InstStage.EventBreakTarget = (pos, type) => {
             ReduceGoalValue(pos, type);
         };
@@ -122,6 +145,24 @@ public class MenuInGame : MonoBehaviour
         }
     }
 
+    public void OnClickItem()
+    {
+        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
+        switch(itemType)
+        {
+            case PurchaseItemType.ExtendLimit: InGameManager.InstStage.UseItemExtendsLimits(); break;
+            case PurchaseItemType.RemoveIce: InGameManager.InstStage.UseItemBreakce(5); break;
+            case PurchaseItemType.MakeSkill1: InGameManager.InstStage.UseItemMakeSkill1(5); break;
+            case PurchaseItemType.MakeSkill2: InGameManager.InstStage.UseItemMakeSkill2(5); break;
+            default: break;
+        }
+
+        Purchases.UseItem(itemType);
+        btn.GetComponent<Image>().color = Color.gray;
+        btn.enabled = false;
+    }
+
     public void ReduceLimit()
     {
         int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
@@ -137,6 +178,7 @@ public class MenuInGame : MonoBehaviour
             //int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
             float limitRate = InGameManager.InstStage.LimitRate;
             int starCount = limitRate < 0.6f ? 3 : (limitRate < 0.8f ? 2 : 1);
+            bool isFirstThreeStar = starCount == 3 && UserSetting.GetStageStarCount(mStageInfo.Num) < 3;
             Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 
@@ -150,7 +192,7 @@ public class MenuInGame : MonoBehaviour
 
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear, isFirstThreeStar);
         }
         else
         {

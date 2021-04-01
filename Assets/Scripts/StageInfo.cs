@@ -182,35 +182,35 @@ public class StageInfo
         }
         return type;
     }
-    public Tuple<Sprite, int>[] GetRewardInfos()
+    public Tuple<string, Sprite, int>[] GetRewardInfos()
     {
-        List<Tuple<Sprite, int>> rets = new List<Tuple<Sprite, int>>();
+        List<Tuple<string, Sprite, int>> rets = new List<Tuple<string, Sprite, int>>();
         foreach(string reward in Rewards)
         {
             string[] package = reward.Split(' ');
             if (package.Length > 1)
             {
-                rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetChestSprite(), 1));
+                rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetChestSprite(), 1));
             }
             else
             {
                 string[] sub = reward.Split('/');
                 if (sub[0] == "life")
-                    rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetLifeSprite(), int.Parse(sub[1])));
+                    rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetLifeSprite(), int.Parse(sub[1])));
                 else if (sub[0] == "gold")
-                   rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetGoldSprite(), int.Parse(sub[1])));
+                   rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetGoldSprite(), int.Parse(sub[1])));
                 else if (sub[0] == "dia")
-                    rets.Add(new Tuple<Sprite, int>(PurchaseItemTypeExtensions.GetDiaSprite(), int.Parse(sub[1])));
+                    rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetDiaSprite(), int.Parse(sub[1])));
                 else
                 {
                     PurchaseItemType rewardType = int.Parse(sub[0]).ToItemType();
-                    rets.Add(new Tuple<Sprite, int>(rewardType.GetSprite(), int.Parse(sub[1])));
+                    rets.Add(new Tuple<string, Sprite, int>(reward, rewardType.GetSprite(), int.Parse(sub[1])));
                 }
             }
         }
         return rets.ToArray();
     }
-    public void DoReward(string rewardPair)
+    public static void DoReward(string rewardPair)
     {
         string[] sub = rewardPair.Split('/');
         if(sub.Length != 2)

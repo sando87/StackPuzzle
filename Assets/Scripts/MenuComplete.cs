@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuComplete : MonoBehaviour
@@ -18,16 +19,17 @@ public class MenuComplete : MonoBehaviour
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
     public GameObject RewardPrefab;
+    public GameObject RewardPackPrefab;
     public GameObject RewardParent;
     private List<GameObject> Effects = new List<GameObject>();
     private int ScorePerCoin = UserSetting.ScorePerCoin;
 
-    public static void PopUp(int level, int starCount, int score, bool isFirstClear)
+    public static void PopUp(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
         GameObject menuComp = GameObject.Find(UIObjName);
 
         MenuComplete menu = menuComp.GetComponent<MenuComplete>();
-        menu.UpdateUIState(level, starCount, score, isFirstClear);
+        menu.UpdateUIState(level, starCount, score, isFirstClear, isFirstThreeStar);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoEnd());
@@ -39,7 +41,7 @@ public class MenuComplete : MonoBehaviour
         OnNext();
     }
 
-    private void UpdateUIState(int level, int starCount, int score, bool isFirstClear)
+    private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
         foreach (var effect in Effects)
             if(effect != null)
@@ -72,6 +74,24 @@ public class MenuComplete : MonoBehaviour
             coin = score / ScorePerCoin;
         }
         Purchases.AddGold(coin * UserSetting.GoldPerCoin);
+
+        if (isFirstThreeStar)
+        {
+            ClearRewards();
+            CreateRewordSlot(stageInfo, true);
+        }
+        else
+        {
+            if (UserSetting.GetStageStarCount(level) < 3)
+            {
+                ClearRewards();
+                CreateRewordSlot(stageInfo, false);
+            }
+            else
+            {
+                ClearRewards();
+            }
+        }
 
         StartCoroutine(AnimateReward(score));
         StartCoroutine(AnimateStars(starCount));
@@ -182,5 +202,70 @@ public class MenuComplete : MonoBehaviour
         StageManager.Inst.Activate(true);
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    private void ClearRewards()
+    {
+        for (int i = 1; i < RewardParent.transform.childCount; ++i)
+        {
+            GameObject obj = RewardParent.transform.GetChild(i).gameObject;
+            Destroy(obj);
+        }
+    }
+    private void CreateRewordSlot(StageInfo stageInfo, bool enabled)
+    {
+        var rewardInfos = stageInfo.GetRewardInfos();
+        foreach (var rewardInfo in rewardInfos)
+        {
+            string rewardString = rewardInfo.Item1;
+            Sprite rewardImage = rewardInfo.Item2;
+            int rewardCount = rewardInfo.Item3;
+
+            if (rewardImage == PurchaseItemTypeExtensions.GetChestSprite())
+            {
+                GameObject obj = Instantiate(RewardPackPrefab, RewardParent.transform);
+                obj.name = rewardString;
+                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
+                if (enabled)
+                {
+                    obj.GetComponent<Button>().onClick.AddListener(OnClickReward);
+                }
+                else
+                {
+                    obj.GetComponent<Button>().enabled = false;
+                    obj.GetComponent<Image>().color = Color.gray;
+                    obj.transform.GetChild(0).gameObject.SetActive(false);
+                    obj.transform.GetChild(1).gameObject.SetActive(false);
+                    obj.transform.GetChild(2).GetComponent<Image>().color = Color.gray;
+                }
+            }
+            else
+            {
+                GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
+                obj.name = rewardString;
+                obj.transform.GetChild(0).GetComponent<Image>().sprite = rewardImage;
+                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
+                if (enabled)
+                {
+                    StageInfo.DoReward(rewardString);
+                }
+                else
+                {
+                    obj.GetComponentInChildren<ParticleSystem>().gameObject.SetActive(false);
+                    obj.transform.GetChild(0).GetComponent<Image>().color = Color.gray;
+                }
+            }
+        }
+    }
+    private void OnClickReward()
+    {
+        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        string[] subRewards = btn.name.Split(' ');
+        foreach (string subReward in subRewards)
+            StageInfo.DoReward(subReward);
+
+        btn.transform.GetChild(0).gameObject.SetActive(false);
+        btn.transform.GetChild(1).gameObject.SetActive(false);
+        btn.enabled = false;
     }
 }
