@@ -134,18 +134,17 @@ public class MenuWaitMatch : MonoBehaviour
 
     private void RequestMatch()
     {
-        SkillPair[] skillMap = InGameManager.InstPVP_Player.SkillMapping;
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.userPk = UserSetting.UserPK;
         info.colorCount = 4.2f; // 4~6.0f
         info.UserInfo = UserSetting.UserInfo;
         info.isBotPlayer = UserSetting.UserInfo.deviceName.Contains("home") ? true : false;
         info.isDone = false;
-        info.skillBlue = skillMap[(int)ProductColor.Blue].Item1;
-        info.skillGreen = skillMap[(int)ProductColor.Green].Item1;
-        info.skillOrange = skillMap[(int)ProductColor.Orange].Item1;
-        info.skillPurple = skillMap[(int)ProductColor.Purple].Item1;
-        info.skillRed = skillMap[(int)ProductColor.Red].Item1;
+        info.skillBlue = PVPCommand.Undef;
+        info.skillGreen = PVPCommand.Undef;
+        info.skillOrange = PVPCommand.Undef;
+        info.skillPurple = PVPCommand.Undef;
+        info.skillRed = PVPCommand.Undef;
         info.skillYellow = PVPCommand.Undef;
 
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
