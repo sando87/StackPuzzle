@@ -11,6 +11,7 @@ public class Frame : MonoBehaviour
     public Sprite[] Covers;
     public SpriteRenderer[] Borders;
     public SpriteRenderer CoverRenderer;
+    public GameObject BreakStonesParticle;
 
     public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
     public InGameManager GameManager { get; private set; }
@@ -63,13 +64,15 @@ public class Frame : MonoBehaviour
     }
 
 
-    public void BreakCover(int combo)
+    public void BreakCover()
     {
-        int backCount = mCoverCount;
-        mCoverCount -= combo;
-        mCoverCount = Mathf.Max(0, mCoverCount);
+        if (mCoverCount <= 0)
+            return;
+
+        mCoverCount--;
         CoverRenderer.sprite = Covers[mCoverCount];
-        if (mCoverCount == 0 && backCount > 0)
+        CreateBreakStoneEffect();
+        if(mCoverCount <= 0)
             EventBreakCover?.Invoke(this);
     }
 
@@ -98,6 +101,14 @@ public class Frame : MonoBehaviour
         frame = Up(); if (frame != null && !frame.Empty) frames.Add(frame);
         frame = Down(); if (frame != null && !frame.Empty) frames.Add(frame);
         return frames.ToArray();
+    }
+    private void CreateBreakStoneEffect()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStone);
+        Vector3 start = new Vector3(transform.position.x, transform.position.y, -4.0f);
+        GameObject obj = Instantiate(BreakStonesParticle, transform);
+        obj.transform.position = start;
+        Destroy(obj, 1.0f);
     }
 
 }

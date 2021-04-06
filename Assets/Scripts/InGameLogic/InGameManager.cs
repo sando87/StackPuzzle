@@ -28,28 +28,14 @@ public class InGameManager : MonoBehaviour
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
-    public GameObject MaskPrefab;
-    public GameObject ComboNumPrefab;
-    public GameObject AttackPointPrefab;
     public GameObject ObstaclePrefab;
     public GameObject GroundPrefab;
 
-    public GameObject BreakStonesParticle;
     public GameObject ExplosionParticle;
-    public GameObject MergeParticle;
     public GameObject StripeParticle;
-    public GameObject SparkParticle;
     public GameObject LaserParticle;
-    public GameObject BombParticle;
-    public GameObject ShieldParticle;
-    public GameObject ScoreBuffParticle;
-    public GameObject CloudPrefab;
-    public GameObject UpsideDownParticle;
-    public GameObject RemoveBadEffectParticle;
     public AttackPoints AttackPointFrame;
     public GameObject AttackBullet;
-
-    public GameObject[] SkillSlots;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -86,9 +72,6 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public GameObject ShieldSlot { get { return SkillSlots[0]; } }
-    public GameObject ScoreBuffSlot { get { return SkillSlots[1]; } }
-    public GameObject UpsideDownSlot { get { return SkillSlots[2]; } }
     public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }                     
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
@@ -209,7 +192,6 @@ public class InGameManager : MonoBehaviour
                 mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount);
                 mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
-                    CreateBreakStoneEffect(frame.transform.position);
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
                 };
             }
@@ -280,24 +262,12 @@ public class InGameManager : MonoBehaviour
         if (!IsIdle || mIsFinished || !IsAllProductIdle())
             return;
 
-        SwipeDirection fixedDir = dir;
-        if (UpsideDownSlot.activeSelf)
-        {
-            switch (dir)
-            {
-                case SwipeDirection.UP: fixedDir = SwipeDirection.DOWN; break;
-                case SwipeDirection.DOWN: fixedDir = SwipeDirection.UP; break;
-                case SwipeDirection.LEFT: fixedDir = SwipeDirection.RIGHT; break;
-                case SwipeDirection.RIGHT: fixedDir = SwipeDirection.LEFT; break;
-            }
-        }
-
         Product product = swipeObj.GetComponent<Product>();
         if (product.IsLocked || product.IsChocoBlock)
             return;
 
         Product targetProduct = null;
-        switch (fixedDir)
+        switch (dir)
         {
             case SwipeDirection.UP: targetProduct = product.Up(); break;
             case SwipeDirection.DOWN: targetProduct = product.Down(); break;
@@ -1630,9 +1600,6 @@ public class InGameManager : MonoBehaviour
         for (int i = 0; i < cnt; ++i)
             Destroy(transform.GetChild(i).gameObject);
 
-        foreach (GameObject skill in SkillSlots)
-            skill.SetActive(false);
-
         EventBreakTarget = null;
         EventMatched = null;
         EventFinish = null;
@@ -1900,13 +1867,6 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
-        Destroy(obj, 1.0f);
-    }
-    private void CreateBreakStoneEffect(Vector2 startPos)
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStone);
-        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        GameObject obj = GameObject.Instantiate(BreakStonesParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
     #endregion

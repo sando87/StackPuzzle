@@ -274,6 +274,8 @@ MonoBehaviour:
   - {fileID: 4061620327859637863}
   - {fileID: 6935731792837153259}
   CoverRenderer: {fileID: 1952974921283480859}
+  BreakStonesParticle: {fileID: 7959498722363782789, guid: b9e6d1dc17baf74479e6fa53c6b62f6e,
+    type: 3}
 --- !u!1 &3014701231205370845
 GameObject:
   m_ObjectHideFlags: 0
@@ -380,7 +382,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3253792094397482227}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -2}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7467327917572669046}

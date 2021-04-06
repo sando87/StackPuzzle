@@ -64,6 +64,19 @@ public class ObjectPooling : MonoBehaviour
         ObjectPool[instID].Enqueue(poolObj);
     }
 
+    public void Destroy(GameObject obj, float time)
+    {
+        StartCoroutine(UnityUtils.CallAfterSeconds(time, () =>
+        {
+            ObjectPoolingable poolObj = obj.GetComponent<ObjectPoolingable>();
+            poolObj.IsDead = true;
+            int instID = poolObj.OriginPrefabInstanceID;
+            obj.transform.SetParent(transform);
+            obj.SetActive(false);
+            ObjectPool[instID].Enqueue(poolObj);
+        }));
+    }
+
     private void CreateNewObjects(GameObject prefab)
     {
         int instID = prefab.GetInstanceID();
@@ -72,7 +85,7 @@ public class ObjectPooling : MonoBehaviour
 
         for (int i = 0; i < ReserveSize; ++i)
         {
-            ObjectPoolingable newObj = Instantiate(prefab, transform).AddComponent<ObjectPoolingable>();
+            ObjectPoolingable newObj = GameObject.Instantiate(prefab, transform).AddComponent<ObjectPoolingable>();
             newObj.OriginPrefabInstanceID = instID;
             newObj.IsDead = true;
             newObj.gameObject.SetActive(false);

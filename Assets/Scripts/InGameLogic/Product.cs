@@ -149,7 +149,7 @@ public class Product : MonoBehaviour
         else
         {
             Frame parent = Detach(Manager.transform);
-            parent.BreakCover(Combo);
+            parent.BreakCover();
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
@@ -175,7 +175,7 @@ public class Product : MonoBehaviour
         
         IsDestroying = true;
         Frame parent = Detach(Manager.transform);
-        parent.BreakCover(Combo);
+        parent.BreakCover();
         StartCoroutine(AnimateDestroy());
 
         return parent;
