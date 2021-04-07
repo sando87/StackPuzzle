@@ -170,6 +170,8 @@ public class LogInfo
     public int userPk;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
     public string message;
+    public LogInfo(string msg) { userPk = -1; message = msg; }
+    public LogInfo() { userPk = -1; message = ""; }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

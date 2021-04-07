@@ -82,7 +82,7 @@ namespace ServerApp
                 object resBody = null;
                 switch (requestMsg.Cmd)
                 {
-                    case NetCMD.Undef: resBody = "Undefied Command"; break;
+                    case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
                     case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
@@ -94,7 +94,7 @@ namespace ServerApp
                     case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
-                    default: resBody = "Undefied Command"; break;
+                    default: resBody = new LogInfo("Undefied Command"); break;
                 }
 
                 if (resBody != null)
