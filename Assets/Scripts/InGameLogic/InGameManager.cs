@@ -1958,9 +1958,7 @@ public class InGameManager : MonoBehaviour
                         products.Add(pro);
                 }
                 
-                if (products.Count != body.ArrayCount)
-                    LOG.warn("Not Sync Destroy Products");
-                else
+                if (products.Count == body.ArrayCount)
                 {
                     Billboard.CurrentCombo = body.combo;
                     EventCombo?.Invoke(Billboard.CurrentCombo);

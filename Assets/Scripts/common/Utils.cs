@@ -8,26 +8,39 @@ public class Utils
 {
     static public byte[] Serialize(object obj)
     {
-        if (obj == null)
-            return null;
-
-        int size = Marshal.SizeOf(obj);
-        byte[] arr = new byte[size];
-        IntPtr ptr = Marshal.AllocHGlobal(size);
-        Marshal.StructureToPtr(obj, ptr, true);
-        Marshal.Copy(ptr, arr, 0, size);
-        Marshal.FreeHGlobal(ptr);
-        return arr;
+        try
+        {
+            int size = Marshal.SizeOf(obj);
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(obj, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+            return arr;
+        }
+        catch (Exception ex)
+        {
+            LOG.error(ex.Message);
+        }
+        return null;
     }
     static public T Deserialize<T>(ref byte[] data) where T : new()
     {
-        T str = new T();
-        int size = Marshal.SizeOf(str);
-        IntPtr ptr = Marshal.AllocHGlobal(size);
-        Marshal.Copy(data, 0, ptr, size);
-        str = (T)Marshal.PtrToStructure(ptr, str.GetType());
-        Marshal.FreeHGlobal(ptr);
-        return str;
+        try
+        {
+            T str = new T();
+            int size = Marshal.SizeOf(str);
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            Marshal.Copy(data, 0, ptr, size);
+            str = (T)Marshal.PtrToStructure(ptr, str.GetType());
+            Marshal.FreeHGlobal(ptr);
+            return str;
+        }
+        catch (Exception ex)
+        {
+            LOG.error(ex.Message);
+        }
+        return default;
     }
     //public static byte[] Serialize(object source)
     //{

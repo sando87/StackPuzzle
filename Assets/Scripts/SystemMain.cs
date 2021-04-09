@@ -18,7 +18,7 @@ public class SystemMain : MonoBehaviour
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         MenuStages.PopUp();
 
-        LOG.echo("Start StackPuzzle");
+        LOG.echo("Start MatchPop");
     }
 
     private void InitLogSystem()

@@ -34,6 +34,9 @@ public class MenuDiamondShop : MonoBehaviour
         {
             if(isOK)
             {
+                string log = "[Purchase Request] " + "Realmoney:" + realmoney;
+                LOG.echo(log);
+
                 //Call Purchase API
                 OnSccuessPurchaseDiamond(realmoney);
             }
@@ -48,10 +51,13 @@ public class MenuDiamondShop : MonoBehaviour
             case 5000: Purchases.PurchaseDiamond(50); break;
             case 10000: Purchases.PurchaseDiamond(100); break;
             case 15000: Purchases.PurchaseDiamond(150); break;
-            default: LOG.warn(); return;
+            default: LOG.warn(); break;
         }
 
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("Success Purchase : " + realmoney);
+
+        string log = "[Purchase Response] " + "Realmoney:" + realmoney + ", Dia:" + Purchases.CountDiamond();
+        LOG.echo(log);
     }
 }

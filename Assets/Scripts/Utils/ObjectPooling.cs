@@ -20,7 +20,7 @@ public class ObjectPooling : MonoBehaviour
 
     public GameObject Instantiate(GameObject prefab)
     {
-        if(!IsPrefab(prefab))
+        if(IsInstantiated(prefab))
         {
             LOG.error();
             return null;
@@ -37,7 +37,7 @@ public class ObjectPooling : MonoBehaviour
     }
     public GameObject Instantiate(GameObject prefab, Transform parent)
     {
-        if (!IsPrefab(prefab))
+        if (IsInstantiated(prefab))
         {
             LOG.error();
             return null;
@@ -92,8 +92,8 @@ public class ObjectPooling : MonoBehaviour
             ObjectPool[instID].Enqueue(newObj);
         }
     }
-    private bool IsPrefab(GameObject obj)
+    private bool IsInstantiated(GameObject obj)
     {
-        return obj.scene.rootCount == 0;
+        return obj.scene.rootCount > 0;
     }
 }

@@ -149,7 +149,7 @@ public class MenuBattle : MonoBehaviour
             MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
         }
 
-        string log = InGameManager.InstPVP_Player.GetBillboard().ToCSVString();
+        string log = "[PVP] " + (success ? "win:" : "lose:") + deltaExp + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
         LOG.echo(log);
 
         InGameManager.InstPVP_Player.CleanUpGame();

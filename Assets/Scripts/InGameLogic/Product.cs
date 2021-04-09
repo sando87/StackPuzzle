@@ -377,9 +377,6 @@ public class Product : MonoBehaviour
         if (Combo <= 0)
             return;
 
-        if (ParentFrame == null)
-            Debug.Log("asdf");
-
         Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -1);
         GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, ParentFrame.gameObject.transform);
         obj.GetComponent<Numbers>().Number = Combo;

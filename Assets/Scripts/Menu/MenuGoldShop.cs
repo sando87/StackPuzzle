@@ -40,7 +40,14 @@ public class MenuGoldShop : MonoBehaviour
             if(isOK)
             {
                 if(Purchases.PurchaseGold(gold, costDiamond))
+                {
                     MenuInformBox.PopUp("Success.");
+
+                    string log = "[Purchase Gold] "
+                    + "Gold:" + gold + "/" + Purchases.CountGold()
+                    + ", Dia:" + costDiamond + "/" + Purchases.CountDiamond();
+                    LOG.echo(log);
+                }
                 else
                     MenuInformBox.PopUp("Not enough Diamonds.");
 

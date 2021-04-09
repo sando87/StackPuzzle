@@ -47,52 +47,35 @@ public class NetProtocol
     }
     static public byte[] ToArray(Header msg, byte[] body)
     {
-        try
+        List<byte> buf = new List<byte>();
+        if (body == null)
         {
-            List<byte> buf = new List<byte>();
-            if (body == null)
-            {
-                msg.Length = HeadSize();
-                buf.AddRange(Utils.Serialize(msg));
-            }
-            else
-            {
-                msg.Length = HeadSize() + body.Length;
-                buf.AddRange(Utils.Serialize(msg));
-                buf.AddRange(body);
-            }
+            msg.Length = HeadSize();
+            buf.AddRange(Utils.Serialize(msg));
+        }
+        else
+        {
+            msg.Length = HeadSize() + body.Length;
+            buf.AddRange(Utils.Serialize(msg));
+            buf.AddRange(body);
+        }
 
-            return buf.ToArray();
-        }
-        catch(Exception ex)
-        {
-            LOG.warn(ex.Message);
-        }
-        return null;
+        return buf.ToArray();
     }
     static public Header ToMessage(byte[] buf, out byte[] body)
     {
-        try
+        int headSize = HeadSize();
+        Header msg = Utils.Deserialize<Header>(ref buf);
+        int bodyLen = buf.Length - headSize;
+        if (bodyLen > 0)
         {
-            int headSize = HeadSize();
-            Header msg = Utils.Deserialize<Header>(ref buf);
-            int bodyLen = buf.Length - headSize;
-            if (bodyLen > 0)
-            {
-                body = new byte[bodyLen];
-                Array.Copy(buf, headSize, body, 0, bodyLen);
-            }
-            else
-                body = null;
+            body = new byte[bodyLen];
+            Array.Copy(buf, headSize, body, 0, bodyLen);
+        }
+        else
+            body = null;
 
-            return msg;
-        }
-        catch (Exception ex)
-        {
-            LOG.warn(ex.Message);
-        }
-        body = null;
-        return null;
+        return msg;
     }
     static public List<byte[]> SplitBuffer(byte[] buffer)
     {

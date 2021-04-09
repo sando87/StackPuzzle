@@ -135,10 +135,11 @@ class LOG
         log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
         log.logType = "trace";
-        log.fileName = file;
+        log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = "trace";
+        log.message = "";
+        log.stackTrace = "";
         string msg = log.ToString();
         LogWriterConsole?.Invoke(msg);
         AddLog(msg);
@@ -154,10 +155,11 @@ class LOG
         log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
         log.logType = "echo";
-        log.fileName = file;
+        log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = "echo : " + val;
+        log.message = val.ToString();
+        log.stackTrace = "";
         string msg = log.ToString();
         LogWriterConsole?.Invoke(msg);
         AddLog(msg);
@@ -173,22 +175,17 @@ class LOG
         log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
         log.logType = "warn";
-        log.fileName = file;
+        log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        
-        if(val != null)
+        log.message = val == null ? "" : val;
+        log.stackTrace = "";
+
+        var st = new StackTrace();
+        foreach (var frame in st.GetFrames())
         {
-            log.message = "warn : " + val;
-        }
-        else
-        {
-            var st = new StackTrace();
-            foreach (var frame in st.GetFrames())
-            {
-                log.message += frame.GetMethod().ToString();
-                log.message += ",";
-            }
+            log.stackTrace += frame.GetMethod().Name;
+            log.stackTrace += ">";
         }
 
         string msg = log.ToString();
@@ -206,22 +203,17 @@ class LOG
         log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
         log.logType = "error";
-        log.fileName = file;
+        log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
+        log.message = val == null ? "" : val;
+        log.stackTrace = "";
 
-        if (val != null)
+        var st = new StackTrace();
+        foreach (var frame in st.GetFrames())
         {
-            log.message = "error : " + val;
-        }
-        else
-        {
-            var st = new StackTrace();
-            foreach (var frame in st.GetFrames())
-            {
-                log.message += frame.GetMethod().ToString();
-                log.message += ",";
-            }
+            log.stackTrace += frame.GetMethod().Name;
+            log.stackTrace += ">";
         }
 
         string msg = log.ToString();
@@ -240,8 +232,9 @@ class LogHeader
     public string funcName;
     public string lineNumber;
     public string message;
+    public string stackTrace;
     override public string ToString()
     {
-        return time + "," + threadID + "," + logType + "," + funcName + "," + lineNumber + "," + message;
+        return time + "," + threadID + "," + logType + "," + fileName + "," + funcName + "," + lineNumber + "," + message + "," + stackTrace;
     }
 }

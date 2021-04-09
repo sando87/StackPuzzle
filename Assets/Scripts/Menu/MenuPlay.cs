@@ -88,7 +88,12 @@ public class MenuPlay : MonoBehaviour
         gameObject.SetActive(false);
 
         if (!UserSetting.IsBotPlayer)
+        {
             Purchases.UseHeart();
+
+            string log = "[STAGE Start] " + "Stage:" + mStageInfo.Num + ", HeartCount:" + Purchases.CountHeart();
+            LOG.echo(log);
+        }
     }
 
     private PurchaseItemType[] ScanOwnedItems()

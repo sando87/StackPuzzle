@@ -169,8 +169,12 @@ public class MenuWaitMatch : MonoBehaviour
     void ReadyToFight(SearchOpponentInfo opponentInfo)
     {
         if (!UserSetting.IsBotPlayer)
+        {
             Purchases.UseHeart();
 
+            string log = "[PVP Start] " + "OppUserPK:" + opponentInfo.UserInfo.userPk + ", HeartCount:" + Purchases.CountHeart();
+            LOG.echo(log);
+        }
 
         //SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;
         //oppSkillMap[(int)ProductColor.Blue] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillBlue, GetSkillimage(opponentInfo.skillBlue));

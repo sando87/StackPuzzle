@@ -213,12 +213,6 @@ public class StageInfo
     public static void DoReward(string rewardPair)
     {
         string[] sub = rewardPair.Split('/');
-        if(sub.Length != 2)
-        {
-            LOG.error();
-            return;
-        }
-
         int count = int.Parse(sub[1]);
         if (sub[0] == "life")
             Purchases.ChargeHeart(count, 0);

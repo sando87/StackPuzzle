@@ -60,7 +60,14 @@ public class MenuHeartShop : MonoBehaviour
                     else
                     {
                         if (Purchases.ChargeHeart(20, diamond))
+                        {
                             MenuInformBox.PopUp("Success!!");
+
+                            string log = "[Charge Heart] "
+                            + "Dia:" + diamond + "/" + Purchases.CountDiamond()
+                            + ", Heart:" + Purchases.CountHeart();
+                            LOG.echo(log);
+                        }
                         else
                             MenuInformBox.PopUp("Not enough Diamonds.");
                     }
@@ -77,7 +84,14 @@ public class MenuHeartShop : MonoBehaviour
                 if (isOK)
                 {
                     if (Purchases.ChargeHeartInfinite(diamond))
+                    {
                         MenuInformBox.PopUp("Success!!");
+
+                        string log = "[Charge Heart] "
+                        + "Dia:" + diamond + "/" + Purchases.CountDiamond()
+                        + ", Heart:" + (Purchases.IsInfinite() ? "Infinite" : Purchases.CountHeart().ToString());
+                        LOG.echo(log);
+                    }
                     else
                     {
                         if (Purchases.IsInfinite())
@@ -104,5 +118,9 @@ public class MenuHeartShop : MonoBehaviour
 
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("finished playing video ");
+
+        string log = "[Charge Heart] "
+        + "Heart:" + sec + "/" + Purchases.CountHeart();
+        LOG.echo(log);
     }
 }

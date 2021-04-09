@@ -161,6 +161,9 @@ public class MenuInGame : MonoBehaviour
         Purchases.UseItem(itemType);
         btn.GetComponent<Image>().color = Color.gray;
         btn.enabled = false;
+
+        string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();
+        LOG.echo(log);
     }
 
     public void ReduceLimit()
@@ -190,19 +193,23 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
+            string log = "[STAGE] " + "success," + mStageInfo.Num + "," + starCount + "," + ScoreBarObj.CurrentScore;
+            LOG.echo(log);
+
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear, isFirstThreeStar);
         }
         else
         {
+            string log = "[STAGE] " + "failed," + mStageInfo.Num;
+            LOG.echo(log);
+
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
             MenuFailed.PopUp();
         }
 
-        string log = mStageInfo.ToCSVString() + "," + InGameManager.InstStage.GetBillboard().ToCSVString();
-        LOG.echo(log);
         InGameManager.InstStage.CleanUpGame();
         Hide();
     }
