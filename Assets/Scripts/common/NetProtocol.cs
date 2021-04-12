@@ -131,6 +131,7 @@ public class UserInfo
     public float rankingRate = 1;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
+    public bool IsBot { get { return deviceName.Contains("bot"); } }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
@@ -160,17 +161,9 @@ public class LogInfo
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo
 {
-    public int userPk;
-    public float colorCount;
-    public UserInfo UserInfo;
-    public bool isDone;
-    public bool isBotPlayer;
-    public PVPCommand skillBlue;
-    public PVPCommand skillGreen;
-    public PVPCommand skillOrange;
-    public PVPCommand skillPurple;
-    public PVPCommand skillRed;
-    public PVPCommand skillYellow;
+    public float DeltaScore;
+    public UserInfo MyUserInfo;
+    public UserInfo OppUserInfo;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

@@ -38,7 +38,7 @@ public class MenuWaitMatch : MonoBehaviour
         if(mIsSearching)
         {
             SearchOpponentInfo info = new SearchOpponentInfo();
-            info.userPk = UserSetting.UserPK;
+            info.MyUserInfo = UserSetting.UserInfo;
             NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
         }
 
@@ -54,7 +54,7 @@ public class MenuWaitMatch : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
 
         SearchOpponentInfo info = new SearchOpponentInfo();
-        info.userPk = UserSetting.UserPK;
+        info.MyUserInfo = UserSetting.UserInfo;
         NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
     }
 
@@ -132,47 +132,58 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
+    public void HandlerMatchingResult(Header head, byte[] body)
+    {
+        if (!gameObject.activeInHierarchy)
+            return;
+        if (!mIsSearching)
+            return;
+        if (head.Cmd != NetCMD.SearchOpponent)
+            return;
+
+        SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
+        if (res.OppUserInfo != null)
+            ReadyToFight(res);
+    }
     private void RequestMatch()
     {
-        SearchOpponentInfo info = new SearchOpponentInfo();
-        info.userPk = UserSetting.UserPK;
-        info.colorCount = 4.2f; // 4~6.0f
-        info.UserInfo = UserSetting.UserInfo;
-        info.isBotPlayer = UserSetting.UserInfo.deviceName.Contains("home") ? true : false;
-        info.isDone = false;
-        info.skillBlue = PVPCommand.Undef;
-        info.skillGreen = PVPCommand.Undef;
-        info.skillOrange = PVPCommand.Undef;
-        info.skillPurple = PVPCommand.Undef;
-        info.skillRed = PVPCommand.Undef;
-        info.skillYellow = PVPCommand.Undef;
-
-        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
-        {
-            SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
-            if (res.isDone && mIsSearching)
-            {
-                if (res.userPk == -1 || res.userPk == UserSetting.UserPK)
-                {
-                    FailMatch();
-
-                    if (UserSetting.IsBotPlayer)
-                        StartCoroutine(AutoMatch());
-                }
-                else
-                    ReadyToFight(res);
-            }
-            return;
-        });
+        StartCoroutine("_RequestMatch");
     }
 
-    void ReadyToFight(SearchOpponentInfo opponentInfo)
+    private IEnumerator _RequestMatch()
+    {
+        int deltaScore = 20;
+        while(deltaScore < 200)
+        {
+            SearchOpponentInfo info = new SearchOpponentInfo();
+            info.MyUserInfo = UserSetting.UserInfo;
+            info.OppUserInfo = null;
+            info.DeltaScore = deltaScore;
+
+            NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
+            {
+                SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
+                if (res.OppUserInfo != null && mIsSearching)
+                    ReadyToFight(res);
+            });
+
+            yield return new WaitForSeconds(2);
+            deltaScore += 20;
+        }
+
+        FailMatch();
+
+        if (UserSetting.IsBotPlayer)
+            StartCoroutine(AutoMatch());
+    }
+
+    void ReadyToFight(SearchOpponentInfo pvpInfo)
     {
         if (!UserSetting.IsBotPlayer)
         {
             Purchases.UseHeart();
 
-            string log = "[PVP Start] " + "OppUserPK:" + opponentInfo.UserInfo.userPk + ", HeartCount:" + Purchases.CountHeart();
+            string log = "[PVP Start] " + "OppUserPK:" + pvpInfo.OppUserInfo.userPk + ", HeartCount:" + Purchases.CountHeart();
             LOG.echo(log);
         }
 
@@ -188,7 +199,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         gameObject.SetActive(false);
         SoundPlayer.Inst.PlayerBack.Stop();
-        MenuPVPReady.PopUp(UserSetting.UserInfo, opponentInfo.UserInfo);
+        MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo);
     }
     private void FailMatch()
     {
@@ -209,6 +220,7 @@ public class MenuWaitMatch : MonoBehaviour
         BtnCancle.SetActive(false);
         UpdateUserInfo(UserSetting.UserInfo);
         StopCoroutine("WaitOpponent");
+        StopCoroutine("_RequestMatch");
     }
     private void UpdateUserInfo(UserInfo info)
     {
