@@ -44,8 +44,8 @@ public class NetClientApp : MonoBehaviour
 
     static public NetClientApp GetInstance()
     {
-        if(mInst == null)
-            mInst = GameObject.Find(GameObjectName).GetComponent<NetClientApp>();
+        if (mInst == null)
+            mInst = FindObjectOfType<NetClientApp>();
         return mInst;
     }
     public bool Request(NetCMD cmd, object body, Action<byte[]> response)

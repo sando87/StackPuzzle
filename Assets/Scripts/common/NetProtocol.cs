@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 public enum NetCMD
 {
     Undef, AddUser, UpdateUserInfo, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
-    SearchOpponent, StopMatching, PVP
+    SearchOpponent, StopMatching, PVP, HeartCheck
 }
 public enum PVPCommand
 {

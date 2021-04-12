@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ServerApp
 {
-    class RingBuffer
+    public class RingBuffer
     {
         private const int MAX_FIFO_SIZE = 1024 * 1024;
         private object lockObject = new object();

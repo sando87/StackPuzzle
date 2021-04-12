@@ -16,7 +16,6 @@ namespace ServerApp
         ServerModule mServer = new ServerModule();
         ConcurrentQueue<KeyValuePair<string, byte[]>> mMessages = new ConcurrentQueue<KeyValuePair<string, byte[]>>();
         Dictionary<int, MatchingInfo> mMatchingUsers = new Dictionary<int, MatchingInfo>();
-        Timer mTimerMessageHandler = new Timer();
         Timer mTimerMatchingSystem = new Timer();
         Header mCurrentRequestMsg = null;
         string mCurrentEndPoint = "";
@@ -31,22 +30,15 @@ namespace ServerApp
             LOG.LogWriterDB = null;
             LOG.LogWriterConsole = (msg) => { Console.WriteLine(msg); };
 
-            mTimerMessageHandler.Interval = 20;
-            mTimerMessageHandler.Tick += MTimer_Tick1;
-            mTimerMessageHandler.Start();
-
             mTimerMatchingSystem.Interval = 2000;
             mTimerMatchingSystem.Tick += MTimer_Tick2;
             mTimerMatchingSystem.Start();
         }
 
-        private void MTimer_Tick1(object sender, EventArgs e)
-        {
-            ProcessMessages();
-        }
         private void MTimer_Tick2(object sender, EventArgs e)
         {
             DoMatchingSystem();
+            ProcessMessages();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -59,6 +51,7 @@ namespace ServerApp
             mServer.EventRecvRow = null;
             mServer.EventRecvMsg = (byte[] data, string client) => {
                 mMessages.Enqueue(new KeyValuePair<string, byte[]>(client, data));
+                BeginInvoke(new Action(() => ProcessMessages()));
             };
             mServer.OpenServer(port);
         }
@@ -114,6 +107,12 @@ namespace ServerApp
 
 
 
+        private UserInfo ProcHeartCheck(UserInfo requestBody)
+        {
+            int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentEndPoint);
+            requestBody.userPk = usePk;
+            return requestBody;
+        }
         private UserInfo ProcAddUser(UserInfo requestBody)
         {
             int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentEndPoint);

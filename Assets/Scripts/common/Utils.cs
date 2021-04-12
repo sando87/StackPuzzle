@@ -40,7 +40,7 @@ public class Utils
         {
             LOG.error(ex.Message);
         }
-        return default;
+        return default(T);
     }
     //public static byte[] Serialize(object source)
     //{
