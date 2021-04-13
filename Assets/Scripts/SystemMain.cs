@@ -10,7 +10,7 @@ public class SystemMain : MonoBehaviour
 
         Application.targetFrameRate = 30;
 
-        NetClientApp.GetInstance().Connect(3);
+        NetClientApp.GetInstance().ConnectSync(3);
         UserSetting.Initialize();
         InitLogSystem();
         Purchases.Initialize();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace ServerApp
         ConcurrentQueue<KeyValuePair<string, byte[]>> mMessages = new ConcurrentQueue<KeyValuePair<string, byte[]>>();
         ConcurrentDictionary<string, SessionUser> mUsers = new ConcurrentDictionary<string, SessionUser>();
         string mCurrentEndPoint = "";
+        string mFileLogPath = "./Log/";
         Timer mTimer = new Timer();
 
         public Form1()
@@ -26,12 +28,33 @@ namespace ServerApp
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            try
+            {
+                DirectoryInfo di = new DirectoryInfo(mFileLogPath);
+                if (di.Exists == false)
+                    di.Create();
+            }
+            catch (Exception ex) { listBox1.Items.Add(ex.Message); }
+
             LOG.LogWriterDB = null;
-            LOG.LogWriterConsole = (msg) => { Console.WriteLine(msg); };
+            LOG.IsNetworkAlive = () => { return false; };
+            LOG.LogWriterConsole = (msg) => { WriteLog(msg); };
 
             mTimer.Interval = 5000;
             mTimer.Tick += MTimer_Tick;
             mTimer.Start();
+        }
+
+        private void WriteLog(string msg)
+        {
+            try
+            {
+                string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
+                StreamWriter writer = File.AppendText(mFileLogPath + filename);
+                writer.WriteLine(msg);
+                writer.Close();
+            }
+            catch (Exception ex) { listBox1.Items.Add(ex.Message); }
         }
 
         private void MTimer_Tick(object sender, EventArgs e)
@@ -62,6 +85,7 @@ namespace ServerApp
 
             btnOpen.Enabled = false;
             btnClose.Enabled = true;
+            listBox1.Items.Add("Open Server");
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -70,12 +94,18 @@ namespace ServerApp
 
             btnOpen.Enabled = true;
             btnClose.Enabled = false;
+            listBox1.Items.Add("Close Server");
         }
 
         private void ConnectedClient(string endPoint, bool isConnected)
         {
             if(isConnected)
+            {
+                if (mUsers.ContainsKey(endPoint))
+                    LOG.warn();
+
                 mUsers[endPoint] = new SessionUser(endPoint);
+            }
             else
                 DisconnectUser(endPoint);
         }
@@ -99,66 +129,70 @@ namespace ServerApp
             SessionUser[] users = new List<SessionUser>(mUsers.Values).ToArray();
             foreach(SessionUser user in users)
             {
-                if (user.IsPulseTimeout())
+                if (user.UserState == UserState.Matched && user.IsPulseTimeout())
+                {
+                    LOG.echo("DeadSession : " + user.Endpoint);
                     DisconnectUser(user.Endpoint);
+                }
             }
         }
 
         private void ProcessMessages()
         {
-            KeyValuePair<string, byte[]> pack = new KeyValuePair<string, byte[]>();
-            while(mMessages.TryDequeue(out pack))
+            try
             {
-                byte[] body = null;
-                Header requestMsg = NetProtocol.ToMessage(pack.Value, out body);
-
-                mCurrentEndPoint = pack.Key;
-                mUsers[mCurrentEndPoint].LastMessage = requestMsg;
-                mUsers[mCurrentEndPoint].LastPulseTime = DateTime.Now;
-
-                object resBody = null;
-                switch (requestMsg.Cmd)
+                KeyValuePair<string, byte[]> pack = new KeyValuePair<string, byte[]>();
+                while (mMessages.TryDequeue(out pack))
                 {
-                    case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
-                    case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.GetScores: resBody = ProcGetUsers(); break;
-                    case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
+                    byte[] body = null;
+                    Header requestMsg = NetProtocol.ToMessage(pack.Value, out body);
 
-                    case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                    case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                    case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
+                    mCurrentEndPoint = pack.Key;
+                    mUsers[mCurrentEndPoint].LastMessage = requestMsg;
+                    mUsers[mCurrentEndPoint].LastPulseTime = DateTime.Now;
 
-                    default: resBody = new LogInfo("Undefied Command"); break;
+                    object resBody = null;
+                    switch (requestMsg.Cmd)
+                    {
+                        case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
+                        case NetCMD.HeartCheck: resBody = Utils.Deserialize<UserInfo>(ref body); break;
+                        case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
+                        case NetCMD.GetScores: resBody = ProcGetUsers(); break;
+                        case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
+                        case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                        case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                        case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
+
+                        default: resBody = new LogInfo("Undefied Command"); break;
+                    }
+
+                    if (resBody != null)
+                    {
+                        Header responseMsg = new Header();
+                        responseMsg.Cmd = requestMsg.Cmd;
+                        responseMsg.RequestID = requestMsg.RequestID;
+                        responseMsg.Ack = 1;
+                        responseMsg.UserPk = requestMsg.UserPk;
+
+                        byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
+                        mServer.SendData(mCurrentEndPoint, responseData);
+                    }
                 }
-
-                if (resBody != null)
-                {
-                    Header responseMsg = new Header();
-                    responseMsg.Cmd = requestMsg.Cmd;
-                    responseMsg.RequestID = requestMsg.RequestID;
-                    responseMsg.Ack = 1;
-                    responseMsg.UserPk = requestMsg.UserPk;
-
-                    byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
-                    mServer.SendData(mCurrentEndPoint, responseData);
-                }
+            }
+            catch(Exception ex)
+            {
+                LOG.warn(ex.Message);
             }
         }
 
 
 
 
-        private UserInfo ProcHeartCheck(UserInfo requestBody)
-        {
-            int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentEndPoint);
-            requestBody.userPk = usePk;
-            return requestBody;
-        }
         private UserInfo ProcAddUser(UserInfo requestBody)
         {
             int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentEndPoint);
@@ -339,7 +373,7 @@ namespace ServerApp
             UserInfo = null;
             LastMessage = null;
         }
-        public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > 5; }
+        public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > 12; }
         public void SetOpp(string endPoint) { OppEndpoint = endPoint; UserState = UserState.Matched; }
         public void ReleaseOpp() { OppEndpoint = ""; UserState = UserState.Idle; }
     }

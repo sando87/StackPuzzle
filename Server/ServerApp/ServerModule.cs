@@ -104,6 +104,9 @@ namespace ServerApp
                 {
                     TcpClient tc = mListener.AcceptTcpClient();
                     ClientSession info = new ClientSession(tc);
+                    if (mClients.ContainsKey(info.endPoint))
+                        LOG.warn();
+
                     mClients[info.endPoint] = info;
                     EventConnect?.Invoke(info.endPoint);
                     info.streamReader.BeginRead(info.recvBuffer, 0, info.recvBuffer.Length, new AsyncCallback(HandlerReadData), info);
