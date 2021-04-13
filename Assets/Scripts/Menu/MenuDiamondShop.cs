@@ -10,6 +10,8 @@ public class MenuDiamondShop : MonoBehaviour
     
     public static void PopUp()
     {
+        NetClientApp.GetInstance().HeartCheck();
+
         GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
     }
@@ -29,6 +31,12 @@ public class MenuDiamondShop : MonoBehaviour
     public void OnRequestPurchaseDiamond(int realmoney)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        if (NetClientApp.GetInstance().IsDisconnected())
+        {
+            MenuNetConnector.PopUp();
+            return;
+        }
 
         MenuMessageBox.PopUp("Do you really want to buy diamonds?", true, (isOK) =>
         {

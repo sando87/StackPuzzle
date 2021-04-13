@@ -24,6 +24,8 @@ public class MenuWaitMatch : MonoBehaviour
 
     public static void PopUp()
     {
+        NetClientApp.GetInstance().HeartCheck();
+
         GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
@@ -64,7 +66,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuMessageBox.PopUp("Network Disconnected", false, null);
+            MenuNetConnector.PopUp();
             return;
         }
 

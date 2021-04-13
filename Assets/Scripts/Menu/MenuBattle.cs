@@ -109,11 +109,23 @@ public class MenuBattle : MonoBehaviour
             else
                 ComboOpponent.SetNumber(combo);
         };
+
+        StopCoroutine("CheckHeart");
+        StartCoroutine("CheckHeart");
     }
 
+    private IEnumerator CheckHeart()
+    {
+        while(true)
+        {
+            NetClientApp.GetInstance().HeartCheck();
+            yield return new WaitForSeconds(3);
+        }
+    }
 
     private void FinishGame(bool success)
     {
+        StopCoroutine("CheckHeart");
         int deltaExp = NextDeltaExp2(success, UserSetting.UserScore, InGameManager.InstPVP_Opponent.UserScore);
         if(deltaExp < 0)
         {

@@ -11,6 +11,8 @@ public class MenuHeartShop : MonoBehaviour
 
     public static void PopUp()
     {
+        NetClientApp.GetInstance().HeartCheck();
+
         GameObject objMenu = GameObject.Find(UIObjName);
         objMenu.SetActive(true);
     }
@@ -40,11 +42,23 @@ public class MenuHeartShop : MonoBehaviour
 
         if (type == 0)
         {
+            if (NetClientApp.GetInstance().IsDisconnected())
+            {
+                MenuNetConnector.PopUp();
+                return;
+            }
+
             //Call AD API
             Invoke("OnChargeHeartFromVideo", 2);
         }
         else if (type == 1)
         {
+            if (NetClientApp.GetInstance().IsDisconnected())
+            {
+                MenuNetConnector.PopUp();
+                return;
+            }
+
             //Call AD API
             Invoke("OnChargeHeartFromVideo", 4);
         }

@@ -85,52 +85,6 @@ public class NetClientApp : MonoBehaviour
                 return;
         });
     }
-    public void TryConnection(float timeout)
-    {
-        StartCoroutine("NetworkConnector", timeout);
-        
-    }
-    private IEnumerator NetworkConnector(float timeout)
-    {
-        MenuNetworkWait.PopUp("Connecting...");
-
-        Request(NetCMD.HeartCheck, UserSetting.UserInfo, (_body) =>
-        {
-            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-            if (res.userPk == UserSetting.UserPK)
-            {
-                MenuNetworkWait.Hide();
-                StopCoroutine("NetworkConnector");
-                return;
-            }
-        });
-
-        yield return new WaitForSeconds(1);
-        DisConnect();
-        yield return null;
-
-        TcpClient session = new TcpClient();
-        session.BeginConnect(ServerAddress, ServerPort, null, null);
-
-        float st = Time.realtimeSinceStartup;
-        while (Time.realtimeSinceStartup - st < timeout)
-        {
-            if (session.Connected)
-            {
-                mSession = session;
-                mStream = session.GetStream();
-                break;
-            }
-            yield return null;
-        }
-
-        MenuNetworkWait.Hide();
-        if (IsDisconnected())
-            MenuInformBox.PopUp("Connection failure.");
-        else
-            MenuInformBox.PopUp("Connection success.");
-    }
-
 
     public bool ConnectSync(int timeoutSec)
     {
@@ -158,7 +112,7 @@ public class NetClientApp : MonoBehaviour
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
         return false;
     }
-    public void ConnectASync(Action eventConnect)
+    public void ConnectASync(Action<bool> eventConnect)
     {
         if (mSession != null)
             return;
@@ -166,25 +120,37 @@ public class NetClientApp : MonoBehaviour
         try
         {
             TcpClient session = new TcpClient();
-            session.BeginConnect(ServerAddress, ServerPort, asyncRet => {
-                try
-                {
-                    TcpClient tcpclient = asyncRet.AsyncState as TcpClient;
-                    if (tcpclient.Client != null)
-                    {
-                        mSession = tcpclient;
-                        mStream = tcpclient.GetStream();
-                        tcpclient.EndConnect(asyncRet);
-                        eventConnect?.Invoke();
-                    }
-                }
-                catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
-                catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
-
-            }, null);
+            session.BeginConnect(ServerAddress, ServerPort, null, null);
+            StartCoroutine(CheckConnection(session, 10, eventConnect));
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
+    }
+    private IEnumerator CheckConnection(TcpClient tcpClient, float timeout, Action<bool> eventResult)
+    {
+        float time = 0;
+        while (time < timeout)
+        {
+            try
+            {
+                if (tcpClient.Connected)
+                {
+                    mSession = tcpClient;
+                    mStream = tcpClient.GetStream();
+                    break;
+                }
+            }
+            catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); break; }
+            catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); break; }
+
+            yield return null;
+            time += Time.deltaTime;
+        }
+
+        if (mSession == null)
+            eventResult?.Invoke(false);
+        else
+            eventResult?.Invoke(true);
     }
     public void DisConnect()
     {

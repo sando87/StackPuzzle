@@ -60,7 +60,7 @@ namespace ServerApp
         private void MTimer_Tick(object sender, EventArgs e)
         {
             ProcessMessages();
-            //CleanDeadSessions();
+            CleanDeadSessions();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -132,6 +132,14 @@ namespace ServerApp
                 if (user.UserState == UserState.Matched && user.IsPulseTimeout())
                 {
                     LOG.echo("DeadSession : " + user.Endpoint);
+                    user.UserInfo.score -= 20;
+                    if (user.UserInfo.score < 0)
+                        user.UserInfo.score = 0;
+                    user.UserInfo.lose++;
+                    user.UserInfo.total++;
+                    float rankingRate = DBManager.Inst().GetRankingRate(user.UserInfo.score);
+                    user.UserInfo.rankingRate = rankingRate;
+                    DBManager.Inst().UpdateUserInfo(user.UserInfo);
                     DisconnectUser(user.Endpoint);
                 }
             }
