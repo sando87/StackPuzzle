@@ -76,14 +76,15 @@ public class NetClientApp : MonoBehaviour
     {
         return mSession == null;
     }
-    public void HeartCheck()
+    public bool HeartCheck()
     {
-        Request(NetCMD.HeartCheck, UserSetting.UserInfo, (_body) =>
+        bool ret = Request(NetCMD.HeartCheck, UserSetting.UserInfo, (_body) =>
         {
             UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
             if (res.userPk == UserSetting.UserPK)
                 return;
         });
+        return ret;
     }
 
     public bool ConnectSync(int timeoutSec)

@@ -140,7 +140,7 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         if (!mIsSearching)
             return;
-        if (head.Cmd != NetCMD.SearchOpponent)
+        if (head.Ack == 1 || head.Cmd != NetCMD.SearchOpponent)
             return;
 
         SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
@@ -154,23 +154,23 @@ public class MenuWaitMatch : MonoBehaviour
 
     private IEnumerator _RequestMatch()
     {
-        int deltaScore = 20;
-        while(deltaScore < 200)
+        int deltaScore = 50;
+        while(deltaScore < 500)
         {
             SearchOpponentInfo info = new SearchOpponentInfo();
             info.MyUserInfo = UserSetting.UserInfo;
-            info.OppUserInfo = null;
+            info.OppUserInfo = new UserInfo();
             info.DeltaScore = deltaScore;
 
             NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
             {
                 SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
-                if (res.OppUserInfo != null && mIsSearching)
+                if (res.OppUserInfo.userPk != -1 && mIsSearching)
                     ReadyToFight(res);
             });
 
             yield return new WaitForSeconds(2);
-            deltaScore += 20;
+            deltaScore += 50;
         }
 
         FailMatch();

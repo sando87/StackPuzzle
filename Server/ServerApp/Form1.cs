@@ -281,8 +281,8 @@ namespace ServerApp
                     BypassToOppPlayer(requestBody);
                     break;
                 case PVPCommand.EndGame:
-                    EndPVPGame(requestBody);
                     BypassToOppPlayer(requestBody);
+                    EndPVPGame(requestBody);
                     break;
                 default:
                     BypassToOppPlayer(requestBody);
@@ -376,6 +376,7 @@ namespace ServerApp
         public SessionUser(string endPoint)
         {
             Endpoint = endPoint;
+            OppEndpoint = "";
             UserState = UserState.Idle;
             LastPulseTime = DateTime.Now;
             UserInfo = null;

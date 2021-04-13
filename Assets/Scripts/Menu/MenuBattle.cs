@@ -118,7 +118,9 @@ public class MenuBattle : MonoBehaviour
     {
         while(true)
         {
-            NetClientApp.GetInstance().HeartCheck();
+            if (!NetClientApp.GetInstance().HeartCheck())
+                FinishGame(false);
+
             yield return new WaitForSeconds(3);
         }
     }
@@ -142,11 +144,14 @@ public class MenuBattle : MonoBehaviour
         req.oppUserPk = InGameManager.InstPVP_Opponent.UserPk;
         req.success = success;
         req.userInfo = UserSetting.UserInfo;
-        NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
+        bool ret = NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
         {
             PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
             UserSetting.RankingRate = resBody.userInfo.rankingRate;
         });
+
+        if(!ret)
+            MenuInformBox.PopUp("Network Disconnected");
 
         if (success)
         {
