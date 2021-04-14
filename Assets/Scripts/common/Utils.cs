@@ -6,6 +6,29 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class Utils
 {
+    public const int ScorePerLevel = 50;
+    public static int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
+    public static int ToScore(int level) { return (level - 1) * ScorePerLevel; }
+    public static int CalcDeltaScore(bool isWin, int playerScore, int opponentScore)
+    {
+        if (isWin)
+        {
+            int level = Utils.ToLevel(playerScore);
+            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
+            float gap = (opponentScore - (playerScore - 100)) * 0.1f * weight;
+            float exp = gap < 2 ? 2 :(gap > 30 ? 30 : gap);
+            return (int)exp;
+        }
+        else
+        {
+            int level = Utils.ToLevel(playerScore);
+            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
+            float gap = (opponentScore - (playerScore + 100)) * 0.1f * weight;
+            float exp = gap < -30 ? -30 : (gap > -2 ? -2 : gap);
+            return (int)exp;
+        }
+    }
+
     static public byte[] Serialize(object obj)
     {
         try

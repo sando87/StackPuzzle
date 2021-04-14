@@ -22,12 +22,15 @@ public class NetClientApp : MonoBehaviour
     TcpClient mSession = null;
     NetworkStream mStream = null;
     private Int64 mRequestID = 0;
+    private DateTime mLastRequest = DateTime.Now;
+    private Action<bool> mEventConnection = null;
     private List<byte> mRecvBuffer = new List<byte>();
     Dictionary<Int64, Action<byte[]>> mHandlerTable = new Dictionary<Int64, Action<byte[]>>();
 
     [Serializable]
     public class UnityEventClick : UnityEvent<Header, byte[]> { }
     public UnityEventClick EventMessage = null;
+    public bool IsKeepConnection { get; set; } = false;
 
     private void OnDestroy()
     {
@@ -35,6 +38,11 @@ public class NetClientApp : MonoBehaviour
         DisConnect();
     }
 
+    private void Start()
+    {
+        StartCoroutine(CheckHeart());
+        StartCoroutine(CheckKeepSession());
+    }
     // Update is called once per frame
     void Update()
     {
@@ -48,9 +56,13 @@ public class NetClientApp : MonoBehaviour
             mInst = FindObjectOfType<NetClientApp>();
         return mInst;
     }
+    public bool IsDisconnected()
+    {
+        return mSession == null || !mSession.Connected;
+    }
     public bool Request(NetCMD cmd, object body, Action<byte[]> response)
     {
-        if (mSession == null)
+        if (IsDisconnected())
             return false;
 
         try
@@ -67,24 +79,12 @@ public class NetClientApp : MonoBehaviour
 
             if (response != null)
                 mHandlerTable[head.RequestID] = response;
+
+            mLastRequest = DateTime.Now;
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); return false; }
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); return false; }
         return true;
-    }
-    public bool IsDisconnected()
-    {
-        return mSession == null;
-    }
-    public bool HeartCheck()
-    {
-        bool ret = Request(NetCMD.HeartCheck, UserSetting.UserInfo, (_body) =>
-        {
-            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-            if (res.userPk == UserSetting.UserPK)
-                return;
-        });
-        return ret;
     }
 
     public bool ConnectSync(int timeoutSec)
@@ -94,19 +94,21 @@ public class NetClientApp : MonoBehaviour
 
         try
         {
-            TcpClient session = new TcpClient();
-            session.BeginConnect(ServerAddress, ServerPort, null, null);
+            mSession = new TcpClient();
+            mSession.BeginConnect(ServerAddress, ServerPort, null, null);
             float st = Time.realtimeSinceStartup;
             while(Time.realtimeSinceStartup - st < timeoutSec)
             {
-                if (session.Connected)
+                if (mSession.Connected)
                 {
-                    mSession = session;
-                    mStream = session.GetStream();
+                    mStream = mSession.GetStream();
+                    mLastRequest = DateTime.Now;
                     return true;
                 }
             }
 
+            mSession.Close();
+            mSession = null;
             throw new TimeoutException();
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
@@ -115,43 +117,48 @@ public class NetClientApp : MonoBehaviour
     }
     public void ConnectASync(Action<bool> eventConnect)
     {
+        mEventConnection = eventConnect;
         if (mSession != null)
             return;
 
         try
         {
-            TcpClient session = new TcpClient();
-            session.BeginConnect(ServerAddress, ServerPort, null, null);
-            StartCoroutine(CheckConnection(session, 10, eventConnect));
+            mSession = new TcpClient();
+            mSession.BeginConnect(ServerAddress, ServerPort, null, null);
+            StartCoroutine(CheckConnection(10));
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
     }
-    private IEnumerator CheckConnection(TcpClient tcpClient, float timeout, Action<bool> eventResult)
+    private IEnumerator CheckConnection(float timeout)
     {
         float time = 0;
         while (time < timeout)
         {
             try
             {
-                if (tcpClient.Connected)
-                {
-                    mSession = tcpClient;
-                    mStream = tcpClient.GetStream();
+                if (mSession.Connected)
                     break;
-                }
             }
-            catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); break; }
-            catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); break; }
+            catch (SocketException ex) { LOG.warn(ex.Message); break; }
+            catch (Exception ex) { LOG.warn(ex.Message); break; }
 
             yield return null;
             time += Time.deltaTime;
         }
 
-        if (mSession == null)
-            eventResult?.Invoke(false);
+        if (mSession.Connected)
+        {
+            mStream = mSession.GetStream();
+            mLastRequest = DateTime.Now;
+            mEventConnection?.Invoke(true);
+        }
         else
-            eventResult?.Invoke(true);
+        {
+            mSession.Close();
+            mSession = null;
+            mEventConnection?.Invoke(false);
+        }
     }
     public void DisConnect()
     {
@@ -233,5 +240,43 @@ public class NetClientApp : MonoBehaviour
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
 
     }
-    
+
+    private IEnumerator CheckHeart()
+    {
+        while (true)
+        {
+            try
+            {
+                if(!IsDisconnected())
+                {
+                    Header head = new Header();
+                    head.Cmd = NetCMD.HeartCheck;
+                    head.RequestID = mRequestID++;
+                    head.Ack = 0;
+                    head.UserPk = UserSetting.UserPK;
+
+                    byte[] data = NetProtocol.ToArray(head, Utils.Serialize(UserSetting.UserInfo));
+
+                    mStream.Write(data, 0, data.Length);
+                }
+            }
+            catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
+            catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
+
+            yield return new WaitForSeconds(NetProtocol.HeartCheckInterval);
+        }
+    }
+    private IEnumerator CheckKeepSession()
+    {
+        if (!IsKeepConnection)
+        {
+            if(!IsDisconnected())
+            {
+                if ((DateTime.Now - mLastRequest).TotalSeconds > NetProtocol.ClientSessionKeepTime)
+                    DisConnect();
+            }
+        }
+        yield return new WaitForSeconds(NetProtocol.ClientSessionKeepTime);
+    }
+
 }

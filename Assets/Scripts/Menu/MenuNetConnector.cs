@@ -9,11 +9,13 @@ public class MenuNetConnector : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/MenuNetConnector";
     public TextMeshProUGUI MessageText;
+    public Action EventConnect;
 
-    public static MenuNetConnector PopUp()
+    public static MenuNetConnector PopUp(Action eventConnect = null)
     {
         MenuNetConnector menu = GameObject.Find(UIObjName).GetComponent<MenuNetConnector>();
         menu.gameObject.SetActive(true);
+        menu.EventConnect = eventConnect;
         menu.Init();
         return menu;
     }
@@ -29,6 +31,7 @@ public class MenuNetConnector : MonoBehaviour
 
             if (isConnected)
             {
+                EventConnect?.Invoke();
                 MenuInformBox.PopUp("Connection success.");
                 StopCoroutine("UpdateConnectionMessage");
                 gameObject.SetActive(false);
@@ -62,6 +65,7 @@ public class MenuNetConnector : MonoBehaviour
 
     public void OnCancle()
     {
+        EventConnect = null;
         StopCoroutine("UpdateConnectionMessage");
         gameObject.SetActive(false);
     }

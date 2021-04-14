@@ -17,7 +17,7 @@ namespace ServerApp
         ServerModule mServer = new ServerModule();
         ConcurrentQueue<KeyValuePair<string, byte[]>> mMessages = new ConcurrentQueue<KeyValuePair<string, byte[]>>();
         ConcurrentDictionary<string, SessionUser> mUsers = new ConcurrentDictionary<string, SessionUser>();
-        string mCurrentEndPoint = "";
+        SessionUser mCurrentSession = null;
         string mFileLogPath = "./Log/";
         Timer mTimer = new Timer();
 
@@ -40,7 +40,7 @@ namespace ServerApp
             LOG.IsNetworkAlive = () => { return false; };
             LOG.LogWriterConsole = (msg) => { WriteLog(msg); };
 
-            mTimer.Interval = 5000;
+            mTimer.Interval = NetProtocol.ServerMatchingInterval;
             mTimer.Tick += MTimer_Tick;
             mTimer.Start();
         }
@@ -59,8 +59,9 @@ namespace ServerApp
 
         private void MTimer_Tick(object sender, EventArgs e)
         {
-            ProcessMessages();
             CleanDeadSessions();
+            ProcessMessages();
+            ProcessMathching();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -117,93 +118,82 @@ namespace ServerApp
 
             SessionUser user;
             mUsers.TryRemove(endPoint, out user);
-            if(user.OppEndpoint.Length > 0)
-            {
-                InformWinTo(mUsers[user.OppEndpoint], user);
-            }
+            if (user.MatchState == MatchingState.Matched)
+                UpdateUserPVPRecord(user, false);
             mServer.Disconnect(user.Endpoint);
         }
 
-        private void CleanDeadSessions()
-        {
-            SessionUser[] users = new List<SessionUser>(mUsers.Values).ToArray();
-            foreach(SessionUser user in users)
-            {
-                if (user.UserState == UserState.Matched && user.IsPulseTimeout())
-                {
-                    LOG.echo("DeadSession : " + user.Endpoint);
-                    user.UserInfo.score -= 20;
-                    if (user.UserInfo.score < 0)
-                        user.UserInfo.score = 0;
-                    user.UserInfo.lose++;
-                    user.UserInfo.total++;
-                    float rankingRate = DBManager.Inst().GetRankingRate(user.UserInfo.score);
-                    user.UserInfo.rankingRate = rankingRate;
-                    DBManager.Inst().UpdateUserInfo(user.UserInfo);
-                    DisconnectUser(user.Endpoint);
-                }
-            }
-        }
-
-        private void ProcessMessages()
+        private SessionUser GetUser(string endPoint)
         {
             try
             {
-                KeyValuePair<string, byte[]> pack = new KeyValuePair<string, byte[]>();
-                while (mMessages.TryDequeue(out pack))
-                {
-                    byte[] body = null;
-                    Header requestMsg = NetProtocol.ToMessage(pack.Value, out body);
-
-                    mCurrentEndPoint = pack.Key;
-                    mUsers[mCurrentEndPoint].LastMessage = requestMsg;
-                    mUsers[mCurrentEndPoint].LastPulseTime = DateTime.Now;
-
-                    object resBody = null;
-                    switch (requestMsg.Cmd)
-                    {
-                        case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
-                        case NetCMD.HeartCheck: resBody = Utils.Deserialize<UserInfo>(ref body); break;
-                        case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
-                        case NetCMD.GetScores: resBody = ProcGetUsers(); break;
-                        case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
-                        case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                        case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                        case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
-
-                        default: resBody = new LogInfo("Undefied Command"); break;
-                    }
-
-                    if (resBody != null)
-                    {
-                        Header responseMsg = new Header();
-                        responseMsg.Cmd = requestMsg.Cmd;
-                        responseMsg.RequestID = requestMsg.RequestID;
-                        responseMsg.Ack = 1;
-                        responseMsg.UserPk = requestMsg.UserPk;
-
-                        byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
-                        mServer.SendData(mCurrentEndPoint, responseData);
-                    }
-                }
+                return mUsers[endPoint];
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                LOG.warn(ex.Message);
+                LOG.echo(ex.Message);
             }
+            return null;
         }
 
 
 
+        private void ProcessMessages()
+        {
+            KeyValuePair<string, byte[]> pack = new KeyValuePair<string, byte[]>();
+            while (mMessages.TryDequeue(out pack))
+            {
+                byte[] body = null;
+                Header requestMsg = NetProtocol.ToMessage(pack.Value, out body);
 
+                mCurrentSession = GetUser(pack.Key);
+                if (mCurrentSession == null)
+                {
+                    LOG.echo(pack.Key);
+                    LOG.echo(requestMsg.Cmd);
+                    LOG.echo(body.Length);
+                    continue;
+                }
+
+                mCurrentSession.LastMessage = requestMsg;
+                mCurrentSession.LastPulseTime = DateTime.Now;
+
+                object resBody = null;
+                switch (requestMsg.Cmd)
+                {
+                    case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
+                    case NetCMD.HeartCheck: resBody = Utils.Deserialize<UserInfo>(ref body); break;
+                    case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.GetScores: resBody = ProcGetUsers(); break;
+                    case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
+                    case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                    case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
+                    case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
+
+                    default: resBody = new LogInfo("Undefied Command"); break;
+                }
+
+                if (resBody != null)
+                {
+                    Header responseMsg = new Header();
+                    responseMsg.Cmd = requestMsg.Cmd;
+                    responseMsg.RequestID = requestMsg.RequestID;
+                    responseMsg.Ack = 1;
+                    responseMsg.UserPk = requestMsg.UserPk;
+
+                    byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
+                    mServer.SendData(mCurrentSession.Endpoint, responseData);
+                }
+            }
+        }
         private UserInfo ProcAddUser(UserInfo requestBody)
         {
-            int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentEndPoint);
+            int usePk = DBManager.Inst().AddNewUser(requestBody, mCurrentSession.Endpoint);
             requestBody.userPk = usePk;
             return requestBody;
         }
@@ -244,29 +234,28 @@ namespace ServerApp
             DBManager.Inst().AddLog(requestBody);
             return requestBody;
         }
-
         private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody)
         {
-            SessionUser MySession = mUsers[mCurrentEndPoint];
-            MySession.UserState = UserState.Matching;
-            MySession.UserInfo = requestBody.MyUserInfo;
-            SessionUser OppSession = FindOpponent(requestBody.DeltaScore);
-            if (OppSession != null)
+            SessionUser MySession = mCurrentSession;
+            if (MySession.MatchState == MatchingState.FoundOpp && requestBody.State == MatchingState.FoundOppAck)
             {
-                MySession.SetOpp(OppSession.Endpoint);
-                OppSession.SetOpp(MySession.Endpoint);
-                requestBody.OppUserInfo = OppSession.UserInfo;
-                SendUserInfoTo(OppSession.Endpoint, MySession.UserInfo);
+                MySession.MatchState = MatchingState.FoundOppAck;
+            }
+            else
+            {
+                MySession.StartSearchOpp();
+                MySession.UserInfo = requestBody.MyUserInfo;
             }
             return requestBody;
         }
         private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
         {
-            mUsers[mCurrentEndPoint].ReleaseOpp();
+            mCurrentSession.ReleaseOpp();
             return requestBody;
         }
         private PVPInfo ProcPVPCommand(PVPInfo requestBody)
         {
+            bool isOK = false;
             switch (requestBody.cmd)
             {
                 case PVPCommand.StartGame:
@@ -278,112 +267,194 @@ namespace ServerApp
                 case PVPCommand.SkillBomb:
                 case PVPCommand.SkillIce:
                 case PVPCommand.SkillIceRes:
-                    BypassToOppPlayer(requestBody);
+                    isOK = BypassToOppPlayer(requestBody);
                     break;
                 case PVPCommand.EndGame:
-                    BypassToOppPlayer(requestBody);
-                    EndPVPGame(requestBody);
+                    isOK = BypassToOppPlayer(requestBody);
+                    requestBody.userInfo = EndPVPGame(requestBody);
                     break;
                 default:
-                    BypassToOppPlayer(requestBody);
+                    isOK = BypassToOppPlayer(requestBody);
                     break;
             }
+            requestBody.oppDisconnected = !isOK;
             return requestBody;
         }
-        private void BypassToOppPlayer(PVPInfo requestBody)
+        private UserInfo EndPVPGame(PVPInfo requestBody)
         {
-            SessionUser curSession = mUsers[mCurrentEndPoint];
-            if (curSession.OppEndpoint.Length > 0)
+            UserInfo renewUserInfo = UpdateUserPVPRecord(mCurrentSession, requestBody.success);
+            mCurrentSession.ReleaseOpp();
+            return renewUserInfo;
+        }
+        private bool BypassToOppPlayer(PVPInfo requestBody)
+        {
+            SessionUser oppSessoion = GetUser(mCurrentSession.OppEndpoint);
+            if(oppSessoion == null)
             {
-                Header responseMsg = new Header();
-                responseMsg.Cmd = NetCMD.PVP;
-                responseMsg.RequestID = -1;
-                responseMsg.Ack = 0;
-                responseMsg.UserPk = curSession.UserInfo.userPk;
-
-                byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(requestBody));
-                mServer.SendData(curSession.OppEndpoint, response);
+                LOG.echo(mCurrentSession.OppEndpoint);
+                return false;
             }
-        }
-        private void EndPVPGame(PVPInfo requestBody)
-        {
-            mUsers[mCurrentEndPoint].ReleaseOpp();
-            float rankingRate = DBManager.Inst().GetRankingRate(requestBody.userInfo.score);
-            requestBody.userInfo.rankingRate = rankingRate;
-            DBManager.Inst().UpdateUserInfo(requestBody.userInfo);
-        }
-
-        private SessionUser FindOpponent(float deltaScore)
-        {
-            SessionUser me = mUsers[mCurrentEndPoint];
-            foreach (var opp in mUsers)
-            {
-                SessionUser oppInfo = opp.Value;
-                if (oppInfo.UserState != UserState.Matching)
-                    continue;
-
-                if (me.UserInfo.IsBot && oppInfo.UserInfo.IsBot)
-                    continue;
-
-                if (me == oppInfo)
-                    continue;
-
-                if (Math.Abs(me.UserInfo.score - oppInfo.UserInfo.score) < deltaScore)
-                    return oppInfo;
-            }
-            return null;
-        }
-        private void SendUserInfoTo(string endPoint, UserInfo opponent)
-        {
-            SearchOpponentInfo body = new SearchOpponentInfo();
-            body.MyUserInfo = mUsers[endPoint].UserInfo;
-            body.OppUserInfo = opponent;
-            body.DeltaScore = 0;
-
-            Header responseMsg = new Header();
-            responseMsg.Cmd = NetCMD.SearchOpponent;
-            responseMsg.UserPk = mUsers[endPoint].UserInfo.userPk;
-
-            byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(body));
-            mServer.SendData(endPoint, response);
-        }
-        private void InformWinTo(SessionUser winUser, SessionUser loseUser)
-        {
-            PVPInfo body = new PVPInfo();
-            body.cmd = PVPCommand.EndGame;
-            body.oppUserPk = winUser.UserInfo.userPk;
-            body.success = false;
-            body.userInfo = loseUser.UserInfo;
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.PVP;
-            responseMsg.UserPk = loseUser.UserInfo.userPk;
+            responseMsg.UserPk = mCurrentSession.UserInfo.userPk;
+
+            byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(requestBody));
+            if(mServer.SendData(oppSessoion.Endpoint, response) <= 0)
+                return false;
+
+            return true;
+        }
+
+
+
+        private void ProcessMathching()
+        {
+            List<SessionUser> _waitUsers = new List<SessionUser>();
+            foreach (var each in mUsers)
+            {
+                if (each.Value.MatchState == MatchingState.TryMatching)
+                    _waitUsers.Add(each.Value);
+            }
+
+            SessionUser[] waitUsers = _waitUsers.ToArray();
+            foreach (SessionUser user in waitUsers)
+            {
+                SessionUser opp = FindOpponent(user, waitUsers);
+                if (opp != null)
+                    GetReadyMatching(user, opp);
+            }
+        }
+        async void GetReadyMatching(SessionUser userA, SessionUser userB)
+        {
+            userA.MatchState = MatchingState.FoundOpp;
+            userB.MatchState = MatchingState.FoundOpp;
+
+            SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, MatchingState.FoundOpp);
+            SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, MatchingState.FoundOpp);
+
+            await Task.Delay(NetProtocol.ServerMatchingInterval + 1000);
+
+            if (userA.MatchState == MatchingState.FoundOppAck && userB.MatchState == MatchingState.FoundOppAck)
+            {
+                userA.SetOpp(userB.Endpoint, userB.UserInfo.score);
+                userB.SetOpp(userA.Endpoint, userA.UserInfo.score);
+
+                SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, MatchingState.Matched);
+                SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, MatchingState.Matched);
+            }
+            else
+            {
+                userA.MatchState = MatchingState.TryMatching;
+                userB.MatchState = MatchingState.TryMatching;
+            }
+        }
+        private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingState state)
+        {
+            SessionUser destSession = GetUser(endPoint);
+            if(destSession == null)
+            {
+                LOG.echo(endPoint);
+                return;
+            }
+
+            SearchOpponentInfo body = new SearchOpponentInfo();
+            body.MyUserInfo = destSession.UserInfo;
+            body.OppUserInfo = opponent;
+            body.State = state;
+
+            Header responseMsg = new Header();
+            responseMsg.Cmd = NetCMD.SearchOpponent;
+            responseMsg.UserPk = destSession.UserInfo.userPk;
 
             byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(body));
-            mServer.SendData(winUser.Endpoint, response);
+            mServer.SendData(destSession.Endpoint, response);
         }
+        private SessionUser FindOpponent(SessionUser me, SessionUser[] list)
+        {
+            if (me.MatchState != MatchingState.TryMatching)
+                return null;
+
+            foreach (SessionUser opp in list)
+            {
+                if (opp.MatchState != MatchingState.TryMatching)
+                    continue;
+
+                if (me.UserInfo.IsBot && opp.UserInfo.IsBot)
+                    continue;
+
+                if (me == opp)
+                    continue;
+
+                float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
+                float deltaMyScore = (me.MatchingTime() + 1) * 50;
+                float deltaOppScore = (opp.MatchingTime() + 1) * 50;
+                if (scoreDelta < deltaMyScore && scoreDelta < deltaOppScore)
+                    return opp;
+            }
+            return null;
+        }
+
+
+        private void CleanDeadSessions()
+        {
+            SessionUser[] users = new List<SessionUser>(mUsers.Values).ToArray();
+            foreach (SessionUser user in users)
+            {
+                if (user.IsPulseTimeout())
+                {
+                    LOG.echo("DeadSession : " + user.Endpoint);
+                    DisconnectUser(user.Endpoint);
+                }
+            }
+        }
+
+        private UserInfo UpdateUserPVPRecord(SessionUser user, bool isWin)
+        {
+            int myScore = user.UserInfo.score;
+            int oppScore = user.OppScore;
+
+            int deltaScore = Utils.CalcDeltaScore(isWin, myScore, oppScore);
+
+            user.UserInfo.score += deltaScore;
+            user.UserInfo.score = Math.Max(user.UserInfo.score, 0);
+            if (isWin) user.UserInfo.win++;
+            if (!isWin) user.UserInfo.lose++;
+            user.UserInfo.total++;
+            float rankingRate = DBManager.Inst().GetRankingRate(user.UserInfo.score);
+            user.UserInfo.rankingRate = rankingRate;
+            DBManager.Inst().UpdateUserInfo(user.UserInfo);
+            return user.UserInfo;
+        }
+
     }
 
-    public enum UserState { None, Idle, Matching, Matched }
+
+
     public class SessionUser
     {
         public string Endpoint { get; private set; }
         public string OppEndpoint { get; private set; }
-        public UserState UserState { get; set; }
+        public int OppScore { get; private set; }
+        public MatchingState MatchState { get; set; }
         public DateTime LastPulseTime { get; set; }
         public UserInfo UserInfo { get; set; }
         public Header LastMessage { get; set; }
+        public DateTime MatchingStartTime { get; set; }
         public SessionUser(string endPoint)
         {
             Endpoint = endPoint;
             OppEndpoint = "";
-            UserState = UserState.Idle;
+            MatchState = MatchingState.Idle;
             LastPulseTime = DateTime.Now;
             UserInfo = null;
             LastMessage = null;
+            MatchingStartTime = DateTime.Now;
         }
-        public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > 12; }
-        public void SetOpp(string endPoint) { OppEndpoint = endPoint; UserState = UserState.Matched; }
-        public void ReleaseOpp() { OppEndpoint = ""; UserState = UserState.Idle; }
+        public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > NetProtocol.DeadSessionMaxTime; }
+        public void SetOpp(string endPoint, int oppScore) { OppEndpoint = endPoint; MatchState = MatchingState.Matched; OppScore = oppScore; }
+        public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; }
+        public void StartSearchOpp() { OppEndpoint = ""; MatchState = MatchingState.TryMatching; MatchingStartTime = DateTime.Now; }
+        public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
     }
 }

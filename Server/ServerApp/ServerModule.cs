@@ -81,6 +81,12 @@ namespace ServerApp
         }
         public int SendData(string endPoint, byte[] data)
         {
+            if (!mClients.ContainsKey(endPoint))
+            {
+                LOG.echo(endPoint);
+                return 0;
+            }
+
             try
             {
                 ClientSession info = mClients[endPoint];

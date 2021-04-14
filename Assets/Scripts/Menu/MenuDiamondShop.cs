@@ -10,15 +10,15 @@ public class MenuDiamondShop : MonoBehaviour
     
     public static void PopUp()
     {
-        NetClientApp.GetInstance().HeartCheck();
-
-        GameObject objMenu = GameObject.Find(UIObjName);
-        objMenu.SetActive(true);
+        MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
+        objMenu.gameObject.SetActive(true);
+        NetClientApp.GetInstance().IsKeepConnection = true;
     }
     public static void Hide()
     {
-        GameObject objMenu = GameObject.Find(UIObjName);
-        objMenu.SetActive(false);
+        MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
+        objMenu.gameObject.SetActive(false);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -26,6 +26,7 @@ public class MenuDiamondShop : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnRequestPurchaseDiamond(int realmoney)
@@ -68,4 +69,5 @@ public class MenuDiamondShop : MonoBehaviour
         string log = "[Purchase Response] " + "Realmoney:" + realmoney + ", Dia:" + Purchases.CountDiamond();
         LOG.echo(log);
     }
+
 }

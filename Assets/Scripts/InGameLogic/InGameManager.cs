@@ -2138,7 +2138,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
 
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Click(Product pro)
@@ -2154,7 +2154,7 @@ public class InGameManager : MonoBehaviour
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
         req.products[0].prvColor = pro.Color;
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
@@ -2171,7 +2171,7 @@ public class InGameManager : MonoBehaviour
         req.products[0].idxX = pro.ParentFrame.IndexX;
         req.products[0].idxY = pro.ParentFrame.IndexY;
         req.products[0].prvColor = pro.Color;
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect)
@@ -2187,7 +2187,7 @@ public class InGameManager : MonoBehaviour
         req.withLaserEffect = withLaserEffect;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Drop(bool dropPause)
@@ -2198,7 +2198,7 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = dropPause ? PVPCommand.DropPause : PVPCommand.DropResume;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_BreakIce(ProductInfo[] pros)
@@ -2212,7 +2212,7 @@ public class InGameManager : MonoBehaviour
         req.combo = Billboard.CurrentCombo;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
@@ -2225,7 +2225,7 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Create(ProductInfo[] pros)
@@ -2239,7 +2239,7 @@ public class InGameManager : MonoBehaviour
         req.combo = 0;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_FlushAttacks(ProductInfo[] pros)
@@ -2253,7 +2253,7 @@ public class InGameManager : MonoBehaviour
         req.combo = Billboard.CurrentCombo;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, null))
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             EventFinish?.Invoke(false);
     }
     private void Network_Skill(PVPCommand skill, ProductInfo[] infos, Frame startFrame = null)
@@ -2266,7 +2266,13 @@ public class InGameManager : MonoBehaviour
         Array.Copy(infos, req.products, infos.Length);
         req.idxX = startFrame == null ? 0 : startFrame.IndexX;
         req.idxY = startFrame == null ? 0 : startFrame.IndexY;
-        NetClientApp.GetInstance().Request(NetCMD.PVP, req, null);
+        NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck);
+    }
+    private void Network_PVPAck(byte[] _resBody)
+    {
+        PVPInfo res = Utils.Deserialize<PVPInfo>(ref _resBody);
+        if(res.oppDisconnected)
+            StartCoroutine("StartFinishing", true);
     }
     #endregion
 }

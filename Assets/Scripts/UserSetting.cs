@@ -11,42 +11,13 @@ public class UserSetting
     public static bool IsBotPlayer { get { return mIsBotPlayer; } }
     public static UserInfo UserInfo { get { return mUserInfo; } }
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
-    public static int UserScore
+    public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
+    public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }
+    public static string UserName { get { return mUserInfo == null ? "" : mUserInfo.userName; } }
+    public static void UpdateUserInfo(UserInfo info)
     {
-        get { return mUserInfo == null ? 0 : mUserInfo.score; }
-        set {
-            mUserInfo.score = value;
-            UpdateUserInfo(mUserInfo);
-        }
-    }
-    public static float RankingRate
-    {
-        get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; }
-        set
-        {
-            mUserInfo.rankingRate = value;
-            UpdateUserInfo(mUserInfo);
-        }
-    }
-    public static string UserName
-    {
-        get { return mUserInfo == null ? "" : mUserInfo.userName; }
-        set
-        {
-            mUserInfo.userName = value;
-            UpdateUserInfo(mUserInfo);
-        }
-    }
-    public static bool Win {
-        set
-        {
-            if (value)
-                mUserInfo.win++;
-            else
-                mUserInfo.lose++;
-            mUserInfo.total++;
-            UpdateUserInfo(mUserInfo);
-        }
+        mUserInfo = info;
+        SaveUserInfo(info);
     }
     public static bool Mute
     {
@@ -112,9 +83,6 @@ public class UserSetting
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
-    public const int ScorePerLevel = 50;
-    static public int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
-    static public int ToScore(int level) { return (level -1) * ScorePerLevel; }
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;
@@ -155,8 +123,7 @@ public class UserSetting
                 if (res.userPk <= 0)
                     return;
 
-                mUserInfo = res;
-                UpdateUserInfo(mUserInfo);
+                UpdateUserInfo(res);
             });
         }
         else
@@ -167,7 +134,7 @@ public class UserSetting
                 if (res.userPk <= 0)
                     return;
 
-                UserSetting.RankingRate = res.rankingRate;
+                UpdateUserInfo(res);
             });
         }
     }
@@ -195,7 +162,7 @@ public class UserSetting
             return info;
         }
     }
-    private static UserInfo UpdateUserInfo(UserInfo info)
+    private static UserInfo SaveUserInfo(UserInfo info)
     {
         if (mIsBotPlayer)
         {
@@ -257,8 +224,7 @@ public class UserSetting
                     if (res.userPk <= 0)
                         return;
 
-                    mUserInfo = res;
-                    UpdateUserInfo(mUserInfo);
+                    UpdateUserInfo(res);
                 });
             }
         }

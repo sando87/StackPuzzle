@@ -27,6 +27,11 @@ public enum ProductSkill
 
 public class NetProtocol
 {
+    public const int ClientSessionKeepTime = 3;
+    public const int HeartCheckInterval = 3;
+    public const int DeadSessionMaxTime = 10;
+    public const int ServerMatchingInterval = 1;
+
     public const UInt32 MAGIC = 0x12345678;
     public const int recvBufSize = 1024 * 64;
     static public int HeadSize()
@@ -158,10 +163,12 @@ public class LogInfo
     public LogInfo() { userPk = -1; message = ""; }
 }
 
+public enum MatchingState { None, Idle, TryMatching, FoundOpp, FoundOppAck, Matched }
+
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo
 {
-    public float DeltaScore;
+    public MatchingState State;
     public UserInfo MyUserInfo;
     public UserInfo OppUserInfo;
 }
@@ -180,6 +187,7 @@ public class PVPInfo
     public float colorCount;
     public bool withLaserEffect;
     public bool success;
+    public bool oppDisconnected = false;
     public ProductSkill skill;
     public SwipeDirection dir;
     public UserInfo userInfo;

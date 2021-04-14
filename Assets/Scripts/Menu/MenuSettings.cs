@@ -97,7 +97,7 @@ public class MenuSettings : MonoBehaviour
                 NetClientApp.GetInstance().Request(NetCMD.EditUserName, info, (_body) =>
                 {
                     UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                    UserSetting.UserName = res.userName;
+                    UserSetting.UpdateUserInfo(res);
                     MenuSettings.Inst().UserName.text = UserSetting.UserName;
                 });
             }
@@ -119,11 +119,11 @@ public class MenuSettings : MonoBehaviour
     private void UpdateExpBar()
     {
         int score = UserSetting.UserScore;
-        int level = UserSetting.ToLevel(score);
+        int level = Utils.ToLevel(score);
         ExpLevel.text = level.ToString();
         Exp.text = score.ToString();
-        int dd = score % UserSetting.ScorePerLevel;
-        float rate = (float)dd / UserSetting.ScorePerLevel;
+        int dd = score % Utils.ScorePerLevel;
+        float rate = (float)dd / Utils.ScorePerLevel;
         ExpBar.normalizedValue = rate;
     }
 }

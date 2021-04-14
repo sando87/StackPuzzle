@@ -24,8 +24,6 @@ public class MenuWaitMatch : MonoBehaviour
 
     public static void PopUp()
     {
-        NetClientApp.GetInstance().HeartCheck();
-
         GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
@@ -37,12 +35,10 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnClose()
     {
-        if(mIsSearching)
-        {
-            SearchOpponentInfo info = new SearchOpponentInfo();
-            info.MyUserInfo = UserSetting.UserInfo;
-            NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
-        }
+        NetClientApp.GetInstance().IsKeepConnection = false;
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.MyUserInfo = UserSetting.UserInfo;
+        NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
 
         mIsSearching = false;
         gameObject.SetActive(false);
@@ -66,7 +62,17 @@ public class MenuWaitMatch : MonoBehaviour
 
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuNetConnector.PopUp();
+            MenuNetConnector.PopUp(() =>
+            {
+                NetClientApp.GetInstance().Request(NetCMD.GetUser, UserSetting.UserInfo, (_body) =>
+                {
+                    UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
+                    if (res.userPk <= 0)
+                        return;
+
+                    UpdateUserInfo(res);
+                });
+            });
             return;
         }
 
@@ -90,11 +96,7 @@ public class MenuWaitMatch : MonoBehaviour
         //}
 #endif
 
-        UserInfo userInfo = UserSetting.LoadUserInfo();
-        if (userInfo.userPk <= 0)
-            StartCoroutine(WaitForAddingUserInfo());
-        else
-            RequestMatch();
+        RequestMatch();
 
         mIsSearching = true;
         BtnMatch.SetActive(false);
@@ -120,63 +122,31 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
-    IEnumerator WaitForAddingUserInfo()
-    {
-        int limit = 60;
-        while(0 < limit--)
-        {
-            yield return new WaitForSeconds(1);
-            if (UserSetting.UserPK > 0)
-            {
-                RequestMatch();
-                break;
-            }
-        }
-    }
-
     public void HandlerMatchingResult(Header head, byte[] body)
     {
-        if (!gameObject.activeInHierarchy)
-            return;
-        if (!mIsSearching)
-            return;
         if (head.Ack == 1 || head.Cmd != NetCMD.SearchOpponent)
             return;
 
         SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
-        if (res.OppUserInfo != null)
+        if (res.State == MatchingState.Matched)
             ReadyToFight(res);
-    }
-    private void RequestMatch()
-    {
-        StartCoroutine("_RequestMatch");
-    }
-
-    private IEnumerator _RequestMatch()
-    {
-        int deltaScore = 50;
-        while(deltaScore < 500)
+        else if(res.State == MatchingState.FoundOpp)
         {
             SearchOpponentInfo info = new SearchOpponentInfo();
             info.MyUserInfo = UserSetting.UserInfo;
-            info.OppUserInfo = new UserInfo();
-            info.DeltaScore = deltaScore;
-
-            NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (_body) =>
-            {
-                SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref _body);
-                if (res.OppUserInfo.userPk != -1 && mIsSearching)
-                    ReadyToFight(res);
-            });
-
-            yield return new WaitForSeconds(2);
-            deltaScore += 50;
+            info.OppUserInfo = res.OppUserInfo;
+            info.State = MatchingState.FoundOppAck;
+            NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
         }
-
-        FailMatch();
-
-        if (UserSetting.IsBotPlayer)
-            StartCoroutine(AutoMatch());
+    }
+    private void RequestMatch()
+    {
+        NetClientApp.GetInstance().IsKeepConnection = true;
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.MyUserInfo = UserSetting.UserInfo;
+        info.OppUserInfo = new UserInfo();
+        info.State = MatchingState.TryMatching;
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
     }
 
     void ReadyToFight(SearchOpponentInfo pvpInfo)
@@ -222,7 +192,6 @@ public class MenuWaitMatch : MonoBehaviour
         BtnCancle.SetActive(false);
         UpdateUserInfo(UserSetting.UserInfo);
         StopCoroutine("WaitOpponent");
-        StopCoroutine("_RequestMatch");
     }
     private void UpdateUserInfo(UserInfo info)
     {
@@ -241,11 +210,11 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void UpdateExpBar(int score)
     {
-        int level = UserSetting.ToLevel(score);
+        int level = Utils.ToLevel(score);
         ExpLevel.text = level.ToString();
         Exp.text = score.ToString();
-        int dd = score % UserSetting.ScorePerLevel;
-        float rate = (float)dd / UserSetting.ScorePerLevel;
+        int dd = score % Utils.ScorePerLevel;
+        float rate = (float)dd / Utils.ScorePerLevel;
         ExpBar.normalizedValue = rate;
     }
 

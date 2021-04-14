@@ -35,9 +35,9 @@ public class MenuPVPReady : MonoBehaviour
     private void UpdateUserInfo(UserInfo player, UserInfo opponent)
     {
         PlayerName.text = player.userName;
-        PlayerLevel.text = "Lv." + UserSetting.ToLevel(player.score);
+        PlayerLevel.text = "Lv." + Utils.ToLevel(player.score);
         OpponentName.text = opponent.userName;
-        OpponentLevel.text = "Lv." + UserSetting.ToLevel(opponent.score);
+        OpponentLevel.text = "Lv." + Utils.ToLevel(opponent.score);
     }
 
     private IEnumerator StartBattle()

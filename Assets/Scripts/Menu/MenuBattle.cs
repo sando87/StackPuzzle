@@ -109,35 +109,10 @@ public class MenuBattle : MonoBehaviour
             else
                 ComboOpponent.SetNumber(combo);
         };
-
-        StopCoroutine("CheckHeart");
-        StartCoroutine("CheckHeart");
     }
-
-    private IEnumerator CheckHeart()
-    {
-        while(true)
-        {
-            if (!NetClientApp.GetInstance().HeartCheck())
-                FinishGame(false);
-
-            yield return new WaitForSeconds(3);
-        }
-    }
-
     private void FinishGame(bool success)
     {
-        StopCoroutine("CheckHeart");
-        int deltaExp = NextDeltaExp2(success, UserSetting.UserScore, InGameManager.InstPVP_Opponent.UserScore);
-        if(deltaExp < 0)
-        {
-            int curLevel = UserSetting.ToLevel(UserSetting.UserScore);
-            int nextLevel = UserSetting.ToLevel(UserSetting.UserScore + deltaExp);
-            if (nextLevel < curLevel)
-                deltaExp = UserSetting.ToScore(curLevel) - UserSetting.UserScore;
-        }
-        UserSetting.UserScore += deltaExp;
-        UserSetting.Win = success;
+        int prevScore = UserSetting.UserScore;
 
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.EndGame;
@@ -147,7 +122,7 @@ public class MenuBattle : MonoBehaviour
         bool ret = NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
         {
             PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
-            UserSetting.RankingRate = resBody.userInfo.rankingRate;
+            UserSetting.UpdateUserInfo(resBody.userInfo);
         });
 
         if(!ret)
@@ -157,53 +132,21 @@ public class MenuBattle : MonoBehaviour
         {
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
+            MenuFinishBattle.PopUp(success, prevScore);
         }
         else
         {
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
-            MenuFinishBattle.PopUp(success, UserSetting.UserInfo, deltaExp);
+            MenuFinishBattle.PopUp(success, prevScore);
         }
 
-        string log = "[PVP] " + (success ? "win:" : "lose:") + deltaExp + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
+        string log = "[PVP] " + (success ? "win" : "lose") + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
         LOG.echo(log);
 
         InGameManager.InstPVP_Player.CleanUpGame();
         InGameManager.InstPVP_Opponent.CleanUpGame();
         Hide();
-    }
-    private int NextDeltaExp(bool isWin, int curScore, float colorCount)
-    {
-        float difficulty = (colorCount - 4.0f) * 5.0f;
-        float curX = curScore * 0.01f;
-        float degree = 90 - (Mathf.Atan(curX - difficulty) * Mathf.Rad2Deg);
-        float nextX = 0;
-        if (isWin)
-            nextX = curX + (degree / 1000.0f);
-        else
-            nextX = curX - ((180 - degree) / 1000.0f);
-
-        return (int)((nextX - curX) * 100.0f);
-    }
-    private int NextDeltaExp2(bool isWin, int playerScore, int opponentScore)
-    {
-        if (isWin)
-        {
-            int level = UserSetting.ToLevel(playerScore);
-            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
-            float gap = (opponentScore - (playerScore - 100)) * 0.1f;
-            float exp = Mathf.Clamp(gap * weight, 2, 30);
-            return (int)exp;
-        }
-        else
-        {
-            int level = UserSetting.ToLevel(playerScore);
-            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
-            float gap = (opponentScore - (playerScore + 100)) * 0.1f;
-            float exp = Mathf.Clamp(gap * weight, -30, -2);
-            return (int)exp;
-        }
     }
 
     public void OnClose()

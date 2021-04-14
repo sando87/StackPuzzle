@@ -11,15 +11,15 @@ public class MenuHeartShop : MonoBehaviour
 
     public static void PopUp()
     {
-        NetClientApp.GetInstance().HeartCheck();
-
-        GameObject objMenu = GameObject.Find(UIObjName);
-        objMenu.SetActive(true);
+        MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
+        objMenu.gameObject.SetActive(true);
+        NetClientApp.GetInstance().IsKeepConnection = true;
     }
     public static void Hide()
     {
-        GameObject objMenu = GameObject.Find(UIObjName);
-        objMenu.SetActive(false);
+        MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
+        objMenu.gameObject.SetActive(false);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -27,6 +27,7 @@ public class MenuHeartShop : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
     
     public void OnChargeHeart()
