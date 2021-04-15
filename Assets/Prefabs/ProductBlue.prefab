@@ -112,9 +112,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bf26f55954b2ac0479ab382c95c448ef, type: 3}
   Chocos:
   - {fileID: 21300000, guid: ade07bf068eabfd41bacdf2a76ab4473, type: 3}
-  - {fileID: 21300000, guid: 0984c0762497c7e498278b0bee0b7f6c, type: 3}
-  - {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
-  - {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
+  - {fileID: 21300000, guid: 08e398609ad6fd54dac7a23b637586c3, type: 3}
+  - {fileID: 21300000, guid: ba6ff97dfb80f0c43bb7c0c001c42204, type: 3}
+  - {fileID: 21300000, guid: 0b7b7e46c7d67454bbd39804054f9a71, type: 3}
   IceBreakSprites:
   - {fileID: 21300000, guid: 087ffa7e17791bc45bd99384fcf53c19, type: 3}
   - {fileID: 21300000, guid: 0e3771d780f52da469b76acdfd05d149, type: 3}
@@ -327,7 +327,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 0e6191d6a96e9464fa29976720c996e5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

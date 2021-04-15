@@ -349,25 +349,18 @@ public class Product : MonoBehaviour
         }
         Renderer.material.color = new Color(0, 0, 0, 0);
     }
-    IEnumerator AnimateTwinkle()
+    IEnumerator AnimateTwinkle(GameObject obj)
     {
-        Vector3 scale = transform.localScale;
-        Vector3 pos = transform.localPosition;
         float t = 0;
-        while (t < 0.2f)
+        SpriteRenderer ren = obj.GetComponent<SpriteRenderer>();
+        while (t < 0.4f)
         {
             int light = (int)(t * 10) % 2;
-            float posY = -10.0f * (t - 0.1f) * (t - 0.1f) + 0.1f;
-            Renderer.material.SetColor("_Color", new Color(1 - light, 1 - light, 1 - light, 0));
-            transform.localScale += new Vector3(light * 2 - 1, 1 - light * 2, 0) * 0.01f;
-            transform.localPosition += new Vector3(0, posY, 0);
+            ren.material.SetColor("_Color", new Color(1 - light, 1 - light, 1 - light, 0));
             t += Time.deltaTime;
             yield return null;
         }
-        Renderer.material.color = new Color(0, 0, 0, 0);
-        transform.localScale = scale;
-        transform.localPosition = pos;
-        transform.localRotation = Quaternion.identity;
+        ren.material.color = new Color(0, 0, 0, 0);
     }
 
     #region Support Functions
@@ -482,7 +475,11 @@ public class Product : MonoBehaviour
 
         int chocoLevel = int.Parse(ChocoBlock.name);
         if (combo < (chocoLevel - 1) * 3)
+        {
+            StartCoroutine(AnimateTwinkle(ChocoBlock));
             return false;
+        }
+            
 
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
@@ -493,7 +490,7 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimBreakChoco()
     {
-        IsBreakingChoco = true;
+        //IsBreakingChoco = true;
         SpriteRenderer ren = ChocoBlock.GetComponent<SpriteRenderer>();
         ChocoBlock.transform.localScale = new Vector3(1.2f, 1.2f, 1.0f);
         int idx = 0;
