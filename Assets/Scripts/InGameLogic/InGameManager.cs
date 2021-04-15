@@ -1096,7 +1096,7 @@ public class InGameManager : MonoBehaviour
                 StartCoroutine(FlushObstacles(rets));
                 if (products.Count < point)
                 {
-                    StartCoroutine("StartFinishing", false);
+                    StartFinish(false);
                     break;
                 }
 
@@ -1174,9 +1174,16 @@ public class InGameManager : MonoBehaviour
         return products;
     }
 
-    IEnumerator StartFinishing(bool isSuccess)
+    private void StartFinish(bool isSuccess)
     {
-        mIsFinished = true;
+        if(!mIsFinished)
+        {
+            mIsFinished = true;
+            StartCoroutine("_StartFinishing", isSuccess);
+        }
+    }
+    IEnumerator _StartFinishing(bool isSuccess)
+    {
         while (true)
         {
             if (IsIdle)
@@ -1230,14 +1237,14 @@ public class InGameManager : MonoBehaviour
                 EventRemainTime?.Invoke((int)remainTime);
                 if (remainTime < 0)
                 {
-                    StartCoroutine("StartFinishing", false);
+                    StartFinish(false);
                     break;
                 }
             }
 
             if (IsAchieveGoals())
             {
-                StartCoroutine("StartFinishing", true);
+                StartFinish(true);
                 break;
             }
 
@@ -1645,7 +1652,7 @@ public class InGameManager : MonoBehaviour
             Billboard.MoveCount++;
             EventReduceLimit?.Invoke();
             if (Billboard.MoveCount >= mStageInfo.MoveLimit)
-                StartCoroutine("StartFinishing", false);
+                StartFinish(false);
         }
     }
     private Frame[] GetRandomIdleFrames(int count)
@@ -1904,7 +1911,7 @@ public class InGameManager : MonoBehaviour
             if (body.cmd == PVPCommand.EndGame)
             {
                 mIsFinished = true;
-                Opponent.StartCoroutine("StartFinishing", true);
+                Opponent.StartFinish(true);
                 mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.StartGame)
@@ -2139,7 +2146,7 @@ public class InGameManager : MonoBehaviour
         Array.Copy(pros, req.products, pros.Length);
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Click(Product pro)
     {
@@ -2155,7 +2162,7 @@ public class InGameManager : MonoBehaviour
         req.products[0].idxY = pro.ParentFrame.IndexY;
         req.products[0].prvColor = pro.Color;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
     {
@@ -2172,7 +2179,7 @@ public class InGameManager : MonoBehaviour
         req.products[0].idxY = pro.ParentFrame.IndexY;
         req.products[0].prvColor = pro.Color;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect)
     {
@@ -2188,7 +2195,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Drop(bool dropPause)
     {
@@ -2199,7 +2206,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = dropPause ? PVPCommand.DropPause : PVPCommand.DropResume;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_BreakIce(ProductInfo[] pros)
     {
@@ -2213,7 +2220,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
     {
@@ -2226,7 +2233,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Create(ProductInfo[] pros)
     {
@@ -2240,7 +2247,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_FlushAttacks(ProductInfo[] pros)
     {
@@ -2254,7 +2261,7 @@ public class InGameManager : MonoBehaviour
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            EventFinish?.Invoke(false);
+            StartFinish(false);
     }
     private void Network_Skill(PVPCommand skill, ProductInfo[] infos, Frame startFrame = null)
     {
@@ -2271,8 +2278,8 @@ public class InGameManager : MonoBehaviour
     private void Network_PVPAck(byte[] _resBody)
     {
         PVPInfo res = Utils.Deserialize<PVPInfo>(ref _resBody);
-        if(res.oppDisconnected)
-            StartCoroutine("StartFinishing", true);
+        if (res.oppDisconnected)
+            StartFinish(true);
     }
     #endregion
 }

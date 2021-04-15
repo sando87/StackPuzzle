@@ -97,12 +97,13 @@ public class NetClientApp : MonoBehaviour
             mSession = new TcpClient();
             mSession.BeginConnect(ServerAddress, ServerPort, null, null);
             float st = Time.realtimeSinceStartup;
-            while(Time.realtimeSinceStartup - st < timeoutSec)
+            while (Time.realtimeSinceStartup - st < timeoutSec)
             {
                 if (mSession.Connected)
                 {
                     mStream = mSession.GetStream();
                     mLastRequest = DateTime.Now;
+                    LOG.echo(mSession.Client.LocalEndPoint.ToString());
                     return true;
                 }
             }
@@ -135,35 +136,33 @@ public class NetClientApp : MonoBehaviour
         float time = 0;
         while (time < timeout)
         {
-            try
-            {
-                if (mSession.Connected)
-                    break;
-            }
-            catch (SocketException ex) { LOG.warn(ex.Message); break; }
-            catch (Exception ex) { LOG.warn(ex.Message); break; }
+            if (mSession == null)
+                break;
+            else if (mSession.Connected)
+                break;
 
             yield return null;
             time += Time.deltaTime;
         }
 
-        if (mSession.Connected)
+        if (mSession != null && mSession.Connected)
         {
             mStream = mSession.GetStream();
             mLastRequest = DateTime.Now;
+            LOG.echo(mSession.Client.LocalEndPoint.ToString());
             mEventConnection?.Invoke(true);
         }
         else
         {
-            mSession.Close();
-            mSession = null;
+            DisConnect();
             mEventConnection?.Invoke(false);
         }
     }
     public void DisConnect()
     {
-        if(mStream != null)
+        if (mStream != null)
         {
+            LOG.echo(mSession.Client.LocalEndPoint.ToString());
             mStream.Close();
             mStream = null;
         }
@@ -180,7 +179,7 @@ public class NetClientApp : MonoBehaviour
 
     private void ReadRecvData()
     {
-        if (mSession == null)
+        if (mStream == null)
             return;
 
         try
@@ -247,7 +246,7 @@ public class NetClientApp : MonoBehaviour
         {
             try
             {
-                if(!IsDisconnected())
+                if (!IsDisconnected())
                 {
                     Header head = new Header();
                     head.Cmd = NetCMD.HeartCheck;
@@ -268,15 +267,18 @@ public class NetClientApp : MonoBehaviour
     }
     private IEnumerator CheckKeepSession()
     {
-        if (!IsKeepConnection)
+        while (true)
         {
-            if(!IsDisconnected())
+            if (!IsKeepConnection)
             {
-                if ((DateTime.Now - mLastRequest).TotalSeconds > NetProtocol.ClientSessionKeepTime)
-                    DisConnect();
+                if (!IsDisconnected())
+                {
+                    if ((DateTime.Now - mLastRequest).TotalSeconds > NetProtocol.ClientSessionKeepTime)
+                        DisConnect();
+                }
             }
+            yield return new WaitForSeconds(NetProtocol.ClientSessionKeepTime);
         }
-        yield return new WaitForSeconds(NetProtocol.ClientSessionKeepTime);
     }
 
 }

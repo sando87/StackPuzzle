@@ -20,6 +20,7 @@ namespace ServerApp
         SessionUser mCurrentSession = null;
         string mFileLogPath = "./Log/";
         Timer mTimer = new Timer();
+        object mLockObject = new object();
 
         public Form1()
         {
@@ -34,7 +35,7 @@ namespace ServerApp
                 if (di.Exists == false)
                     di.Create();
             }
-            catch (Exception ex) { listBox1.Items.Add(ex.Message); }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
 
             LOG.LogWriterDB = null;
             LOG.IsNetworkAlive = () => { return false; };
@@ -49,12 +50,15 @@ namespace ServerApp
         {
             try
             {
-                string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
-                StreamWriter writer = File.AppendText(mFileLogPath + filename);
-                writer.WriteLine(msg);
-                writer.Close();
+                lock (mLockObject)
+                {
+                    string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
+                    StreamWriter writer = File.AppendText(mFileLogPath + filename);
+                    writer.WriteLine(msg);
+                    writer.Close();
+                }
             }
-            catch (Exception ex) { listBox1.Items.Add(ex.Message); }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
         }
 
         private void MTimer_Tick(object sender, EventArgs e)
@@ -100,7 +104,7 @@ namespace ServerApp
 
         private void ConnectedClient(string endPoint, bool isConnected)
         {
-            if(isConnected)
+            if (isConnected)
             {
                 if (mUsers.ContainsKey(endPoint))
                     LOG.warn();
@@ -125,15 +129,12 @@ namespace ServerApp
 
         private SessionUser GetUser(string endPoint)
         {
-            try
+            if (!mUsers.ContainsKey(endPoint))
             {
-                return mUsers[endPoint];
+                LOG.echo(endPoint);
+                return null;
             }
-            catch (Exception ex)
-            {
-                LOG.echo(ex.Message);
-            }
-            return null;
+            return mUsers[endPoint];
         }
 
 
@@ -289,18 +290,15 @@ namespace ServerApp
         private bool BypassToOppPlayer(PVPInfo requestBody)
         {
             SessionUser oppSessoion = GetUser(mCurrentSession.OppEndpoint);
-            if(oppSessoion == null)
-            {
-                LOG.echo(mCurrentSession.OppEndpoint);
+            if (oppSessoion == null)
                 return false;
-            }
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.PVP;
             responseMsg.UserPk = mCurrentSession.UserInfo.userPk;
 
             byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(requestBody));
-            if(mServer.SendData(oppSessoion.Endpoint, response) <= 0)
+            if (mServer.SendData(oppSessoion.Endpoint, response) <= 0)
                 return false;
 
             return true;
@@ -352,7 +350,7 @@ namespace ServerApp
         private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingState state)
         {
             SessionUser destSession = GetUser(endPoint);
-            if(destSession == null)
+            if (destSession == null)
             {
                 LOG.echo(endPoint);
                 return;

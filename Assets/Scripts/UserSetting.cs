@@ -162,6 +162,17 @@ public class UserSetting
             return info;
         }
     }
+    public static void UpdateUserInfoFromServer()
+    {
+        NetClientApp.GetInstance().Request(NetCMD.GetUser, UserSetting.UserInfo, (_body) =>
+        {
+            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
+            if (res.userPk <= 0)
+                return;
+
+            UpdateUserInfo(res);
+        });
+    }
     private static UserInfo SaveUserInfo(UserInfo info)
     {
         if (mIsBotPlayer)

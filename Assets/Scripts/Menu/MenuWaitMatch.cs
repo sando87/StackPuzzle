@@ -24,6 +24,7 @@ public class MenuWaitMatch : MonoBehaviour
 
     public static void PopUp()
     {
+        NetClientApp.GetInstance().IsKeepConnection = true;
         GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
@@ -58,25 +59,19 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatch()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-
         if (NetClientApp.GetInstance().IsDisconnected())
         {
             MenuNetConnector.PopUp(() =>
             {
-                NetClientApp.GetInstance().Request(NetCMD.GetUser, UserSetting.UserInfo, (_body) =>
-                {
-                    UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                    if (res.userPk <= 0)
-                        return;
-
-                    UpdateUserInfo(res);
-                });
+                UserSetting.UpdateUserInfoFromServer();
+                OnMatch();
             });
             return;
         }
 
-        if(UserSetting.UserName.Length < UserSetting.NameLengthMin)
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        if (UserSetting.UserName.Length < UserSetting.NameLengthMin)
         {
             MenuSettings.EditUserName();
             return;
@@ -141,7 +136,6 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void RequestMatch()
     {
-        NetClientApp.GetInstance().IsKeepConnection = true;
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();

@@ -32,7 +32,6 @@ public class MenuNetConnector : MonoBehaviour
             if (isConnected)
             {
                 EventConnect?.Invoke();
-                MenuInformBox.PopUp("Connection success.");
                 StopCoroutine("UpdateConnectionMessage");
                 gameObject.SetActive(false);
             }

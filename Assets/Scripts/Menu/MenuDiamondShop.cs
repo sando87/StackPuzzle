@@ -18,7 +18,6 @@ public class MenuDiamondShop : MonoBehaviour
     {
         MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
         objMenu.gameObject.SetActive(false);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -31,13 +30,13 @@ public class MenuDiamondShop : MonoBehaviour
 
     public void OnRequestPurchaseDiamond(int realmoney)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuNetConnector.PopUp();
+            MenuNetConnector.PopUp(() => OnRequestPurchaseDiamond(realmoney));
             return;
         }
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
 
         MenuMessageBox.PopUp("Do you really want to buy diamonds?", true, (isOK) =>
         {

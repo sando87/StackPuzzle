@@ -19,7 +19,6 @@ public class MenuHeartShop : MonoBehaviour
     {
         MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
         objMenu.gameObject.SetActive(false);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -32,7 +31,6 @@ public class MenuHeartShop : MonoBehaviour
     
     public void OnChargeHeart()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         GameObject btnObj = EventSystem.current.currentSelectedGameObject;
         int type = int.Parse(btnObj.name.Replace("ItemType", ""));
 
@@ -45,27 +43,30 @@ public class MenuHeartShop : MonoBehaviour
         {
             if (NetClientApp.GetInstance().IsDisconnected())
             {
-                MenuNetConnector.PopUp();
+                MenuNetConnector.PopUp(() => OnChargeHeart());
                 return;
             }
 
             //Call AD API
             Invoke("OnChargeHeartFromVideo", 2);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         }
         else if (type == 1)
         {
             if (NetClientApp.GetInstance().IsDisconnected())
             {
-                MenuNetConnector.PopUp();
+                MenuNetConnector.PopUp(() => OnChargeHeart());
                 return;
             }
 
             //Call AD API
             Invoke("OnChargeHeartFromVideo", 4);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         }
         else if (type == 2)
         {
             int diamond = 5;
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             MenuMessageBox.PopUp(diamond + " Diamonds are used.", true, (isOK) =>
             {
                 if (isOK)
@@ -94,6 +95,7 @@ public class MenuHeartShop : MonoBehaviour
         else if (type == 3)
         {
             int diamond = 20;
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             MenuMessageBox.PopUp(diamond + " Diamonds are used.", true, (isOK) =>
             {
                 if (isOK)
