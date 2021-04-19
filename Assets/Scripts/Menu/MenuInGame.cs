@@ -113,6 +113,9 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventFinishPre = (success) => {
             ShowFinishMessage(success);
         };
+        InGameManager.InstStage.EventReward = (rewardCount) => {
+            StartCoroutine(AnimateRewardCounting(rewardCount));
+        };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
         };
@@ -289,6 +292,20 @@ public class MenuInGame : MonoBehaviour
             LevelCompleted.gameObject.SetActive(false);
             LevelFailed.gameObject.SetActive(true);
             LevelFailed.GetComponent<Animation>().Play();
+        }
+    }
+
+    private IEnumerator AnimateRewardCounting(int count)
+    {
+        int cnt = 0;
+        float curLimit = float.Parse(Limit.text);
+        float step = curLimit / count;
+        while (cnt < count)
+        {
+            curLimit -= step;
+            Limit.text = ((int)curLimit).ToString();
+            cnt++;
+            yield return new WaitForSeconds(0.1f);
         }
     }
 }

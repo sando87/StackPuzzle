@@ -96,6 +96,7 @@ public class InGameManager : MonoBehaviour
 
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventMatched;
+    public Action<int> EventReward;
     public Action<bool> EventFinish;
     public Action<bool> EventFinishPre;
     public Action<int> EventCombo;
@@ -510,7 +511,7 @@ public class InGameManager : MonoBehaviour
                     continue;
                 }
 
-                List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct });
+                List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct }, UserSetting.MatchCount + 1);
                 if (matches.Count <= 0)
                     continue;
 
@@ -767,13 +768,7 @@ public class InGameManager : MonoBehaviour
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
-                    List<Product> allSkillProducts = new List<Product>();
-                    foreach (Frame frame in mFrames)
-                        if (frame.ChildProduct != null && !frame.ChildProduct.IsLocked && frame.ChildProduct.Skill != ProductSkill.Nothing)
-                            allSkillProducts.Add(frame.ChildProduct);
-
-                    DestroyProducts(allSkillProducts.ToArray());
-                    StartCoroutine(DestroyProductClimax());
+                    StartCoroutine(DestroySameProductLoop());
                 }));
         }
     }
@@ -855,6 +850,35 @@ public class InGameManager : MonoBehaviour
             }
 
             yield return new WaitForSeconds(interval);
+        }
+        mIsAutoMatching = false;
+    }
+    IEnumerator DestroySameProductLoop()
+    {
+        mIsAutoMatching = true;
+        List<Product> sameSkills = new List<Product>();
+        foreach (Frame frame in mFrames)
+            if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor)
+                sameSkills.Add(frame.ChildProduct);
+
+        while(true)
+        {
+            Product target = null;
+            foreach (Product sameSkill in sameSkills)
+            {
+                if (sameSkill != null && !sameSkill.IsLocked)
+                {
+                    target = sameSkill;
+                    break;
+                }
+            }
+
+            if (target == null)
+                break;
+
+            Product[] pros = FindSameColor(target);
+            DestroyProducts(pros);
+            yield return new WaitForSeconds(UserSetting.SameSkillInterval);
         }
         mIsAutoMatching = false;
     }
@@ -1291,22 +1315,31 @@ public class InGameManager : MonoBehaviour
 
         return isSuccess;
     }
-    private void RewardRemainLimits()
+    private int RewardCount()
     {
-        float totalLimits = 0;
         if (mStageInfo.TimeLimit > 0)
         {
-            totalLimits = mStageInfo.TimeLimit - PlayTime;
+            float rate = PlayTime / mStageInfo.TimeLimit;
+            rate = 1 - Mathf.Clamp(rate, 0, 1);
+            int remains = (int)(rate * mFrames.Length * 0.5f);
+            return remains;
         }
         else
         {
-            totalLimits = mStageInfo.MoveLimit - Billboard.MoveCount;
+            int remains = mStageInfo.MoveLimit - Billboard.MoveCount;
+            return remains < 0 ? 0 : remains;
         }
+    }
+    private void RewardRemainLimits()
+    {
+        int remains = RewardCount();
+        if (remains <= 0)
+            return;
 
-        int remains = Mathf.Min((int)totalLimits, mFrames.Length / 2);
         Frame[] frames = GetRandomIdleFrames(remains);
         Product[] pros = ToProducts(frames);
-        float step = totalLimits / pros.Length;
+
+        EventReward?.Invoke(pros.Length);
 
         StartCoroutine(StartElectronicEffect(new Vector3(0, 3.5f, 0), pros,
             (pro) => {
@@ -1317,13 +1350,8 @@ public class InGameManager : MonoBehaviour
                     pro.ChangeProductImage(ProductSkill.Vertical);
                 else
                     pro.ChangeProductImage(ProductSkill.Bomb);
-
-                totalLimits -= step;
-                int limit = Mathf.Max(0, (int)totalLimits);
-                MenuInGame.Inst().Limit.text = limit.ToString();
             },
             () => {
-                MenuInGame.Inst().Limit.text = "0";
                 StartCoroutine(DestroySkillSimpleLoop());
             }));
     }
