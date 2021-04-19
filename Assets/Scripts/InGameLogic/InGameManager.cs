@@ -119,6 +119,8 @@ public class InGameManager : MonoBehaviour
     {
         MenuInformBox.PopUp("START!!");
         StartGame(info, userInfo);
+        if (info.TimeLimit > 0)
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
 
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
@@ -128,8 +130,9 @@ public class InGameManager : MonoBehaviour
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFinishStageMode());
             mIsUserEventLock = false;
-            if(mStageInfo.TimeLimit > 0)
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+            Animator anim = GetComponent<Animator>();
+            if (anim != null)
+                anim.enabled = false;
         }));
     }
     public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)
@@ -145,6 +148,9 @@ public class InGameManager : MonoBehaviour
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFlush());
             mIsUserEventLock = false;
+            Animator anim = GetComponent<Animator>();
+            if (anim != null)
+                anim.enabled = false;
         }));
     }
     public void StartGameInPVPOpponent(StageInfo info, UserInfo userInfo)
@@ -411,6 +417,7 @@ public class InGameManager : MonoBehaviour
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += validProducts.Length;
+        EventBreakTarget?.Invoke(validProducts[0].transform.position, StageGoalType.Score);
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
         EventMatched?.Invoke(validProducts);
@@ -472,6 +479,7 @@ public class InGameManager : MonoBehaviour
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += matches.Length;
+        EventBreakTarget?.Invoke(mainFrame.transform.position, StageGoalType.Score);
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
         EventMatched?.Invoke(matches);
@@ -2005,6 +2013,7 @@ public class InGameManager : MonoBehaviour
 
                     Billboard.CurrentScore += score;
                     Billboard.DestroyCount += body.ArrayCount;
+                    EventBreakTarget?.Invoke(transform.position, StageGoalType.Score);
 
                     Attack(curAttackCount - preAttackCount, products[0].transform.position);
 

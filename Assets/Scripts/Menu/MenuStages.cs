@@ -46,8 +46,6 @@ public class MenuStages : MonoBehaviour
         Inst.StatusGroup.SetActive(true);
         Inst.BackButton.SetActive(true);
         Inst.BottomGroup.SetActive(true);
-        SoundPlayer.Inst.PlayerBack.Stop();
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
     }
     public static void Hide()
     {

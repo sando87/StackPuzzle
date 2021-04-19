@@ -96,6 +96,23 @@ public class UnityUtils
                 break;
         }
     }
+    public static IEnumerator AnimateStandOut(GameObject obj)
+    {
+        Vector3 backup = new Vector3(1, 1, 1); //obj.transform.localScale;
+        Vector3 maxSize = backup * 1.2f;
+        float time = 0;
+        float duration = 0.2f;
+        float durationH = duration * 0.5f;
+        Vector3 coeff = ((backup - maxSize) / (durationH * durationH));
+        while (time < duration)
+        {
+            Vector3 size = coeff * (time - durationH) * (time - durationH) + maxSize;
+            obj.transform.localScale = size;
+            time += Time.deltaTime;
+            yield return null;
+        }
+        obj.transform.localScale = backup;
+    }
     public static float AccelPlus(float time, float duration)
     {
         return time * time / (duration * duration);

@@ -120,16 +120,18 @@ public class MenuInGame : MonoBehaviour
             FinishGame(success);
         };
         InGameManager.InstStage.EventReduceLimit = () => {
-            ReduceLimit();
+            ReduceMoveLimit();
         };
         InGameManager.InstStage.EventCombo = (combo) => {
             CurrentCombo = combo;
         };
         InGameManager.InstStage.EventRemainTime = (remainSec) => {
-            Limit.text = remainSec.ToString();
-        };
-        InGameManager.InstStage.EventRemainTime = (remainSec) => {
-            Limit.text = remainSec.ToString();
+            if(remainSec == 10 && Limit.text.Equals("00:11"))
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+                StartCoroutine(UnityUtils.AnimateStandOut(Limit.gameObject));
+            }
+            Limit.text = TimeToString(remainSec);
         };
     }
 
@@ -169,12 +171,21 @@ public class MenuInGame : MonoBehaviour
         LOG.echo(log);
     }
 
-    public void ReduceLimit()
+    public void ReduceMoveLimit()
     {
         int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
         remain = Mathf.Max(0, remain);
         Limit.text = remain.ToString();
-        //Limit.GetComponent<Animation>().Play("touch");
+    }
+
+    public string TimeToString(int second)
+    {
+        if (second < 0)
+            return "00:00";
+
+        int min = second / 60;
+        int sec = second % 60;
+        return string.Format("{0:00}:{1:00}", min, sec);
     }
 
     public void FinishGame(bool success)
@@ -221,6 +232,15 @@ public class MenuInGame : MonoBehaviour
         if (type != mStageInfo.GoalTypeEnum)
             return;
 
+        if(type == StageGoalType.Score)
+        {
+            int remainScore = mStageInfo.GoalValue - InGameManager.InstStage.Billboard.CurrentScore;
+            remainScore = Mathf.Max(remainScore, 0);
+            TargetScoreText.text = remainScore.ToString();
+            StartCoroutine(UnityUtils.AnimateStandOut(TargetScoreText.gameObject));
+            return;
+        }
+
         GameObject GoalTypeObj = GameObject.Instantiate(ItemPrefab, worldPos, Quaternion.identity, EffectParent.transform);
         Image img = GoalTypeObj.GetComponent<Image>();
         img.sprite = mStageInfo.GoalTypeImage;
@@ -229,7 +249,7 @@ public class MenuInGame : MonoBehaviour
             int value = int.Parse(TargetValue.text) - 1;
             value = Mathf.Max(0, value);
             TargetValue.text = value.ToString();
-            //TargetValue.GetComponent<Animation>().Play("touch");
+            StartCoroutine(UnityUtils.AnimateStandOut(TargetValue.transform.parent.gameObject));
         }));
     }
     IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
