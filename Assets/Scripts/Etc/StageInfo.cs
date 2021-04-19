@@ -258,7 +258,7 @@ public class StageInfo
         {
             string[] keyValue = columns[xIdx].Split('/');
             int productChocoCount = int.Parse(keyValue[0]);
-            int frameCoverCount = keyValue[0] == "x" ? -1 : int.Parse(keyValue[1]);
+            int frameCoverCount = keyValue[1] == "x" ? -1 : int.Parse(keyValue[1]);
             cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount);
         }
         BoardInfo.Add(cells);
