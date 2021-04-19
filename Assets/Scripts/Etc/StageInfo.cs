@@ -26,12 +26,13 @@ public class StageInfo
     public int MoveLimit = 0;
     public int TimeLimit = 0;
     public float ColorCount = 0;
-    public int XCount = 0;
-    public int YCount = 0;
+    public int XCount { get { return BoardInfo[0].Length; } }
+    public int YCount { get { return BoardInfo.Count; } }
     public int RandomSeed = -1;
     public List<string> Rewards = new List<string>();
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
-    public StageInfoCell[,] Field = null;
+    //public StageInfoCell[,] Field = null;
+    public List<StageInfoCell[]> BoardInfo = new List<StageInfoCell[]>();
 
     public static StageInfo Load(int stageNum)
     {
@@ -62,7 +63,6 @@ public class StageInfo
         StageInfo info = new StageInfo();
         info.Num = stageNum;
 
-        int RowIndex = 0;
         string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines)
         {
@@ -78,16 +78,24 @@ public class StageInfo
                 case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
                 case "RandomSeed": info.RandomSeed = int.Parse(tokens[1]); break;
-                case "XCount": info.XCount = int.Parse(tokens[1]); break;
-                case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
+                //case "XCount": info.XCount = int.Parse(tokens[1]); break;
+                //case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
                 case "Items": info.Items = Parse(tokens[1]); break;
                 case "Reward": info.Rewards.Add(tokens[1]); break;
-                case "Rows": info.ParseRow(--RowIndex, tokens[1]); break;
+                case "Rows": info.ParseRow(tokens[1]); break;
             }
         }
 
+        info.BoardInfo.Reverse();
         info.GoalTypeImage = TypeToImage(info.GoalType);
         info.GoalTypeEnum = StringToType(info.GoalType);
+        if(info.GoalValue <= 0)
+        {
+            if (info.GoalTypeEnum == StageGoalType.Choco)
+                info.GoalValue = info.GetChocoCount();
+            else if(info.GoalTypeEnum == StageGoalType.Cover)
+                info.GoalValue = info.GetCoverCount();
+        }
 
         return info;
     }
@@ -241,39 +249,60 @@ public class StageInfo
             + StageInfo.ItemToString(Items);
         return ret;
     }
-    public void ParseRow(int rowIndex, string row)
+    public void ParseRow(string row)
     {
-        if (Field == null)
-            Field = new StageInfoCell[XCount, YCount];
-
         string[] columns = row.Trim().Split(' ');
-        if (columns.Length != XCount || rowIndex < 0)
-            return;
+        StageInfoCell[] cells = new StageInfoCell[columns.Length];
 
-        for(int xIdx = 0; xIdx < columns.Length; ++xIdx)
+        for (int xIdx = 0; xIdx < columns.Length; ++xIdx)
         {
             string[] keyValue = columns[xIdx].Split('/');
-            Field[xIdx, rowIndex] = new StageInfoCell(int.Parse(keyValue[0]), int.Parse(keyValue[1]));
+            int productChocoCount = int.Parse(keyValue[0]);
+            int frameCoverCount = keyValue[0] == "x" ? -1 : int.Parse(keyValue[1]);
+            cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount);
         }
+        BoardInfo.Add(cells);
     }
     public string RowToString(int rowIndex)
     {
-        if (Field == null)
-            return "";
-
         string rowString = "";
         for (int xIdx = 0; xIdx < XCount; ++xIdx)
         {
-            rowString += Field[xIdx, rowIndex].ProductChocoCount.ToString() + "/" + Field[xIdx, rowIndex].FrameCoverCount.ToString() + " ";
+            StageInfoCell cell = GetCell(xIdx, rowIndex);
+            string frameCover = cell.FrameCoverCount < 0 ? "x" : cell.FrameCoverCount.ToString();
+            rowString += cell.ProductChocoCount.ToString() + "/" + frameCover + " ";
         }
         return rowString + "\r\n";
     }
     public StageInfoCell GetCell(int idxX, int idxY)
     {
-        if (Field == null || idxX < 0 || idxY < 0 || idxX >= XCount || idxY >= YCount)
-            return new StageInfoCell(0, 0);
-
-        return Field[idxX, idxY];
+        return BoardInfo[idxY][idxX];
+    }
+    public int GetChocoCount()
+    {
+        int count = 0;
+        foreach(StageInfoCell[] row in BoardInfo)
+        {
+            foreach(StageInfoCell cell in row)
+            {
+                if (cell.ProductChocoCount > 0)
+                    count++;
+            }
+        }
+        return count;
+    }
+    public int GetCoverCount()
+    {
+        int count = 0;
+        foreach (StageInfoCell[] row in BoardInfo)
+        {
+            foreach (StageInfoCell cell in row)
+            {
+                if (cell.FrameCoverCount > 0)
+                    count++;
+            }
+        }
+        return count;
     }
 
     public static void SaveDeefault(int stageNum)
