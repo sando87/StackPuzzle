@@ -485,7 +485,8 @@ public class Product : MonoBehaviour
         ChocoBlock.name = "0";
         EventUnWrapChoco?.Invoke();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
-        StartCoroutine(AnimBreakChoco());
+        //StartCoroutine(AnimBreakChoco());
+        StartCoroutine(AnimatePickedUp(ChocoBlock));
         return true;
     }
     IEnumerator AnimBreakChoco()
@@ -526,6 +527,23 @@ public class Product : MonoBehaviour
     {
         Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
         Renderer.sortingOrder = order;
+    }
+    private IEnumerator AnimatePickedUp(GameObject refObj)
+    {
+        float time = 0;
+        float duration = 3.0f;
+        Vector3 acc = new Vector3(0, -10.0f, 0);
+        Vector3 startVel = new Vector3(5.0f, 5.0f, 0);
+        GameObject obj = Instantiate(refObj, refObj.transform.position, Quaternion.identity, ParentFrame.transform);
+        obj.transform.localScale = refObj.transform.localScale;
+        while (time < duration)
+        {
+            obj.transform.position += (startVel * Time.deltaTime);
+            startVel += (acc * Time.deltaTime);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        Destroy(obj);
     }
 
     #endregion
