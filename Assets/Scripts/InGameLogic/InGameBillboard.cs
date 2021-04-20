@@ -23,6 +23,7 @@ public class InGameBillboard
         CoverCount = 0;
         ChocoCount = 0;
         CurrentScore = 0;
+        CurrentCombo = 1;
         DestroyCount = 0;
         MoveCount = 0;
         KeepCombo = 0;

@@ -220,7 +220,13 @@ public class InGameManager : MonoBehaviour
                     continue;
 
                 Product pro = CreateNewProduct(mFrames[x, y]);
-                pro.SetChocoBlock(mStageInfo.GetCell(x, y).ProductChocoCount);
+
+                int chocoCount = mStageInfo.GetCell(x, y).ProductChocoCount;
+                if (chocoCount == -1)
+                    pro.ChangeProductImage(ProductSkill.SameColor);
+                else if(chocoCount > 0)
+                    pro.SetChocoBlock(chocoCount);
+
                 pro.EventUnWrapChoco = () => {
                     Billboard.ChocoCount++;
                     EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);

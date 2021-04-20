@@ -257,7 +257,7 @@ public class StageInfo
         for (int xIdx = 0; xIdx < columns.Length; ++xIdx)
         {
             string[] keyValue = columns[xIdx].Split('/');
-            int productChocoCount = int.Parse(keyValue[0]);
+            int productChocoCount = keyValue[0] == "*" ? -1 : int.Parse(keyValue[0]);
             int frameCoverCount = keyValue[1] == "x" ? -1 : int.Parse(keyValue[1]);
             cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount);
         }
@@ -269,8 +269,9 @@ public class StageInfo
         for (int xIdx = 0; xIdx < XCount; ++xIdx)
         {
             StageInfoCell cell = GetCell(xIdx, rowIndex);
+            string productChoco = cell.FrameCoverCount < 0 ? "*" : cell.FrameCoverCount.ToString();
             string frameCover = cell.FrameCoverCount < 0 ? "x" : cell.FrameCoverCount.ToString();
-            rowString += cell.ProductChocoCount.ToString() + "/" + frameCover + " ";
+            rowString += productChoco + "/" + frameCover + " ";
         }
         return rowString + "\r\n";
     }
