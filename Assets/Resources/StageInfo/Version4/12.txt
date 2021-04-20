@@ -1,7 +1,7 @@
 #Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
 GoalType,Score
-GoalValue,300
-TimeLimit,120
+GoalValue,200
+TimeLimit,70
 ColorCount,5
 #Reward,gold/100
 #Reward,dia/5
