@@ -58,8 +58,10 @@ public class MenuPlay : MonoBehaviour
         }
 
         SelectedButtons.Clear();
-        PurchaseItemType[] items = ScanOwnedItems();
-        CreateItemButtons(items);
+        ClearItemButtons();
+        CreateItem1Buttons();
+        if (mStageInfo.Num > 80)
+            CreateItem2Buttons();
     }
 
     public void OnClose()
@@ -108,19 +110,50 @@ public class MenuPlay : MonoBehaviour
         return rets.ToArray();
     }
 
-    private void CreateItemButtons(PurchaseItemType[] items)
+    private void ClearItemButtons()
     {
         Button[] btns = ItemSlots.GetComponentsInChildren<Button>();
         foreach (Button btn in btns)
             Destroy(btn.gameObject);
-
-        foreach (PurchaseItemType item in items)
+    }
+    private void CreateItem1Buttons()
+    {
+        for(PurchaseItemType item = PurchaseItemType.ExtendLimit; item <= PurchaseItemType.MakeSkill1; item++)
         {
             Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
             slot.name = item.ToInt().ToString();
-            slot.transform.GetChild(0).GetComponent<Image>().sprite = item.GetSprite();
+            Image itemImageUI = slot.transform.GetChild(0).GetComponent<Image>();
+            itemImageUI.sprite = item.GetSprite();
             slot.GetComponentInChildren<TextMeshProUGUI>().text = item.GetCount().ToString();
-            slot.onClick.AddListener(OnClickItem);
+            if (item.GetCount() > 0)
+            {
+                slot.onClick.AddListener(OnClickItem);
+            }
+            else
+            {
+                itemImageUI.color = Color.gray;
+                slot.enabled = false;
+            }
+        }
+    }
+    private void CreateItem2Buttons()
+    {
+        for (PurchaseItemType item = PurchaseItemType.MakeCombo; item <= PurchaseItemType.PowerUp; item++)
+        {
+            Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
+            slot.name = item.ToInt().ToString();
+            Image itemImageUI = slot.transform.GetChild(0).GetComponent<Image>();
+            itemImageUI.sprite = item.GetSprite();
+            slot.GetComponentInChildren<TextMeshProUGUI>().text = item.GetCount().ToString();
+            if (item.GetCount() > 0)
+            {
+                slot.onClick.AddListener(OnClickItem);
+            }
+            else
+            {
+                itemImageUI.color = Color.gray;
+                slot.enabled = false;
+            }
         }
     }
 
