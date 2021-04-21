@@ -43,6 +43,7 @@ public class InGameManager : MonoBehaviour
     private StageInfo mStageInfo = null;
     private UserInfo mUserInfo = null;
     private bool mIsFinished = false;
+    private bool mIsItemEffect = false;
     private bool mIsAutoMatching = false;
     private bool mStopDropping = false;
     private bool mItemLooping = false;
@@ -74,7 +75,7 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }                     
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -928,9 +929,11 @@ public class InGameManager : MonoBehaviour
 
     public void UseItemExtendsLimits(Vector3 startWorldPos, Vector3 destWorldPos)
     {
+        mIsItemEffect = true;
         GameObject missile = GameObject.Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
-        StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.25f, () =>
+        StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
         {
+            mIsItemEffect = false;
             if (mStageInfo.TimeLimit > 0)
             {
                 mStartTime += 10; //10초 연장
@@ -946,46 +949,56 @@ public class InGameManager : MonoBehaviour
     }
     public void UseItemBreakce(Vector3 startWorldPos, int count)
     {
-        List<Product> icedProducts = new List<Product>();
-        for(int y = CountY - 1; y >= 0; y--)
-        {
-            for (int x = CountX - 1; x >= 0; x--)
+        mIsItemEffect = true;
+        Product[] icedBlocks = GetTopIceBlocks(count);
+        StartCoroutine(CreateMagnetProjectails(MissilePrefab, startWorldPos, icedBlocks,
+            (pro) =>
             {
-                Product pro = mFrames[x, y].ChildProduct;
-                if (pro == null || pro.IsLocked || !pro.IsChocoBlock)
-                    continue;
-
-                icedProducts.Add(pro);
-                //pro.BreakChocoBlock(Billboard.CurrentCombo);
-                if (icedProducts.Count >= count)
-                    return;
-            }
-        }
+                pro.BreakChocoBlock(Billboard.CurrentCombo);
+            },
+            () =>
+            {
+                mIsItemEffect = false;
+            }));
     }
-    public void UseItemMakeSkill1(int count)
+    public void UseItemMakeSkill1(Vector3 startWorldPos, int count)
     {
-        Frame[] frames = GetRandomIdleFrames(count);
-        foreach(Frame frame in frames)
-        {
-            Product pro = frame.ChildProduct;
+        mIsItemEffect = true;
+        Frame[] idleFrames = GetRandomIdleFrames(count);
+        Product[] idlePros = ToProducts(idleFrames);
+        StartCoroutine(CreateMagnetProjectails(TrailingPrefab, startWorldPos, idlePros,
+            (pro) =>
+            {
+                int ran = UnityEngine.Random.Range(0, 3);
+                if (ran == 0)
+                    pro.ChangeProductImage(ProductSkill.Horizontal);
+                else if (ran == 1)
+                    pro.ChangeProductImage(ProductSkill.Vertical);
+                else
+                    pro.ChangeProductImage(ProductSkill.Bomb);
 
-            int ran = UnityEngine.Random.Range(0, 3);
-            if (ran == 0)
-                pro.ChangeProductImage(ProductSkill.Horizontal);
-            else if (ran == 1)
-                pro.ChangeProductImage(ProductSkill.Vertical);
-            else
-                pro.ChangeProductImage(ProductSkill.Bomb);
-        }
+                pro.FlashProduct();
+            },
+            () =>
+            {
+                mIsItemEffect = false;
+            }));
     }
-    public void UseItemMakeSkill2(int count)
+    public void UseItemMakeSkill2(Vector3 startWorldPos, int count)
     {
-        Frame[] frames = GetRandomIdleFrames(count);
-        foreach (Frame frame in frames)
-        {
-            Product pro = frame.ChildProduct;
-            pro.ChangeProductImage(ProductSkill.SameColor);
-        }
+        mIsItemEffect = true;
+        Frame[] idleFrames = GetRandomIdleFrames(count);
+        Product[] idlePros = ToProducts(idleFrames);
+        StartCoroutine(CreateMagnetProjectails(TrailingPrefab, startWorldPos, idlePros,
+            (pro) =>
+            {
+                pro.ChangeProductImage(ProductSkill.SameColor);
+                pro.FlashProduct();
+            },
+            () =>
+            {
+                mIsItemEffect = false;
+            }));
     }
 
     private void Attack(int count, Vector3 fromPos)
@@ -1365,7 +1378,7 @@ public class InGameManager : MonoBehaviour
     private void RewardRemainLimits()
     {
         int remains = RewardCount();
-        if (remains <= 0)
+        if (remains <= 0 || FieldType != GameFieldType.Stage)
             return;
 
         remains = Mathf.Min(remains, (int)(GetProductCount() * 0.4f));
@@ -1373,9 +1386,9 @@ public class InGameManager : MonoBehaviour
         Product[] pros = ToProducts(frames);
 
         EventReward?.Invoke(pros.Length);
-
-        StartCoroutine(StartElectronicEffect(new Vector3(0, 3.5f, 0), pros,
-            (pro) => {
+        StartCoroutine(CreateDirectProjectails(TrailingPrefab, MenuInGame.Inst().Limit.transform.position, pros,
+            (pro) =>
+            {
                 int ran = UnityEngine.Random.Range(0, 3);
                 if (ran == 0)
                     pro.ChangeProductImage(ProductSkill.Horizontal);
@@ -1383,8 +1396,11 @@ public class InGameManager : MonoBehaviour
                     pro.ChangeProductImage(ProductSkill.Vertical);
                 else
                     pro.ChangeProductImage(ProductSkill.Bomb);
+
+                pro.FlashProduct();
             },
-            () => {
+            () =>
+            {
                 StartCoroutine(DestroySkillSimpleLoop());
             }));
     }
@@ -1599,6 +1615,25 @@ public class InGameManager : MonoBehaviour
         return frames.ToArray();
     }
 
+    private Product[] GetTopIceBlocks(int count)
+    {
+        List<Product> icedProducts = new List<Product>();
+        for (int y = CountY - 1; y >= 0; y--)
+        {
+            for (int x = CountX - 1; x >= 0; x--)
+            {
+                Product pro = mFrames[x, y].ChildProduct;
+                if (pro == null || pro.IsLocked || !pro.IsChocoBlock)
+                    continue;
+
+                icedProducts.Add(pro);
+                if (icedProducts.Count >= count)
+                    return icedProducts.ToArray();
+            }
+        }
+
+        return icedProducts.ToArray();
+    }
     public bool IsAllProductIdle()
     {
         for (int y = CountY - 1; y >= 0; --y)
@@ -1675,6 +1710,7 @@ public class InGameManager : MonoBehaviour
 
         AttackPointFrame.ResetPoints();
         mIsFinished = false;
+        mIsItemEffect = false;
         mIsDropping = false;
         mStopDropping = false;
         mItemLooping = false;
@@ -1937,9 +1973,52 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
-    public void StartAnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, Action eventEnd)
+    IEnumerator CreateDirectProjectails(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
     {
-        StartCoroutine(AnimateMagnet(obj, startDir, dest, eventEnd));
+        mItemLooping = true;
+        int endCount = 0;
+        foreach (Product obj in objs)
+        {
+            GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, obj.transform.position, 0.3f, () =>
+            {
+                endCount++;
+                eventEachEnd?.Invoke(obj);
+            }));
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        while (endCount < objs.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
+    }
+    IEnumerator CreateMagnetProjectails(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
+    {
+        mItemLooping = true;
+        float left = 1;
+        int endCount = 0;
+        foreach(Product obj in objs)
+        {
+            float rad = UnityEngine.Random.Range(-30, 30) * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            dir *= left;
+            GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
+            StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, () =>
+            {
+                endCount++;
+                eventEachEnd?.Invoke(obj);
+            }));
+            yield return new WaitForSeconds(0.1f);
+            left *= -1;
+        }
+
+        while (endCount < objs.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
     }
     IEnumerator AnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, Action eventEnd)
     {
@@ -1968,7 +2047,6 @@ public class InGameManager : MonoBehaviour
             if (Vector3.Dot(afterDir, dir) < 0)
             {
                 eventEnd?.Invoke();
-                Destroy(obj);
                 break;
             }
 

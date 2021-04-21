@@ -190,6 +190,10 @@ public class Product : MonoBehaviour
         }
         return null;
     }
+    public void FlashProduct()
+    {
+        StartCoroutine(AnimateFlash(1.3f));
+    }
 
     private void FixedUpdate()
     {
@@ -482,7 +486,7 @@ public class Product : MonoBehaviour
 
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
-        Animation.Play("next");
+        //Animation.Play("next");
         EventUnWrapChoco?.Invoke();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
         //StartCoroutine(AnimBreakChoco());
@@ -532,8 +536,8 @@ public class Product : MonoBehaviour
         float duration = 3.0f;
         Vector3 acc = new Vector3(0, -60.0f, 0);
         float x = UnityEngine.Random.Range(-3f, 3f);
-        float y = UnityEngine.Random.Range(20.0f, 30.0f);
-        float rot = y * 0.7f;
+        float y = UnityEngine.Random.Range(20.0f, 25.0f);
+        float rot = y * 0.5f;
         Vector3 startVel = new Vector3(x, y, 0);
         GameObject obj = Instantiate(ChocoBlock, ChocoBlock.transform.position, Quaternion.identity, ParentFrame.transform);
         obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
@@ -541,7 +545,7 @@ public class Product : MonoBehaviour
         while (time < duration)
         {
             obj.transform.position += (startVel * Time.deltaTime);
-            obj.transform.Rotate(Vector3.forward, rot);
+            obj.transform.Rotate(x < 0 ? Vector3.forward : Vector3.back, rot);
             startVel += (acc * Time.deltaTime);
             time += Time.deltaTime;
             yield return null;

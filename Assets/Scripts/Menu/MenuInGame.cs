@@ -27,7 +27,6 @@ public class MenuInGame : MonoBehaviour
     public GameObject[] ItemSlots;
 
     public GameObject EffectParent;
-    public GameObject ItemPrefab;
 
     public int Score { get { return ScoreBarObj.CurrentScore; } }
     public int RemainLimit { get { return int.Parse(Limit.text); } }
@@ -163,8 +162,12 @@ public class MenuInGame : MonoBehaviour
             case PurchaseItemType.RemoveIce:
                 InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.MakeSkill1: InGameManager.InstStage.UseItemMakeSkill1(5); break;
-            case PurchaseItemType.MakeSkill2: InGameManager.InstStage.UseItemMakeSkill2(5); break;
+            case PurchaseItemType.MakeSkill1:
+                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 5);
+                break;
+            case PurchaseItemType.MakeSkill2:
+                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 5);
+                break;
             default: break;
         }
 
@@ -252,14 +255,6 @@ public class MenuInGame : MonoBehaviour
             TargetValue.text = value.ToString();
             StartCoroutine(UnityUtils.AnimateStandOut(TargetValue.transform.parent.gameObject));
         }
-    }
-    public void LaunchTrailingParticle(Vector3 startWorldPos, Vector3 destWorldPos, Action eventEnd)
-    {
-        GameObject missile = GameObject.Instantiate(ItemPrefab, startWorldPos, Quaternion.identity, EffectParent.transform);
-        StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.25f, () =>
-        {
-            eventEnd?.Invoke();
-        }));
     }
     IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
     {
