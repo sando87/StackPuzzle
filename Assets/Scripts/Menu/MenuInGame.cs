@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -318,12 +319,27 @@ public class MenuInGame : MonoBehaviour
     private IEnumerator AnimateRewardCounting(int count)
     {
         int cnt = 0;
-        float curLimit = float.Parse(Limit.text);
+        float curLimit = 0;
+        if (mStageInfo.TimeLimit > 0)
+        {
+            string[] ms = Limit.text.Split(':');
+            int min = int.Parse(ms[0]);
+            int sec = int.Parse(ms[1]);
+            curLimit = min * 60.0f + sec;
+        }
+        else
+            curLimit = float.Parse(Limit.text);
+
         float step = curLimit / count;
         while (cnt < count)
         {
             curLimit -= step;
-            Limit.text = ((int)curLimit).ToString();
+
+            if (mStageInfo.TimeLimit > 0)
+                Limit.text = TimeToString((int)curLimit);
+            else
+                Limit.text = ((int)curLimit).ToString();
+
             cnt++;
             yield return new WaitForSeconds(0.1f);
         }

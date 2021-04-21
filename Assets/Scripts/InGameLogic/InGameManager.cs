@@ -1335,7 +1335,7 @@ public class InGameManager : MonoBehaviour
         {
             float rate = PlayTime / mStageInfo.TimeLimit;
             rate = 1 - Mathf.Clamp(rate, 0, 1);
-            int remains = (int)(rate * mFrames.Length * 0.5f);
+            int remains = (int)(rate * mFrames.Length);
             return remains;
         }
         else
@@ -1344,12 +1344,17 @@ public class InGameManager : MonoBehaviour
             return remains < 0 ? 0 : remains;
         }
     }
+    private int GetProductCount()
+    {
+        return GetComponentsInChildren<Product>().Length;
+    }
     private void RewardRemainLimits()
     {
         int remains = RewardCount();
         if (remains <= 0)
             return;
 
+        remains = Mathf.Min(remains, (int)(GetProductCount() * 0.4f));
         Frame[] frames = GetRandomIdleFrames(remains);
         Product[] pros = ToProducts(frames);
 

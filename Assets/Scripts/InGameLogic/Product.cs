@@ -32,9 +32,8 @@ public class Product : MonoBehaviour
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; private set; }
-    public bool IsBreakingChoco { get; private set; } = false;
     public bool SkillCasted { get; set; } = false;
-    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || IsBreakingChoco; } }
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
@@ -483,10 +482,11 @@ public class Product : MonoBehaviour
 
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
+        Animation.Play("next");
         EventUnWrapChoco?.Invoke();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
         //StartCoroutine(AnimBreakChoco());
-        StartCoroutine(AnimatePickedUp(ChocoBlock));
+        ParentFrame.StartCoroutine(AnimatePickedUp());
         return true;
     }
     IEnumerator AnimBreakChoco()
@@ -503,7 +503,6 @@ public class Product : MonoBehaviour
         }
         Animation.Play("swap");
         ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
-        IsBreakingChoco = false;
     }
     public void SetChocoBlock(int level, bool anim = false)
     {
@@ -515,7 +514,6 @@ public class Product : MonoBehaviour
         ChocoBlock.GetComponent<SpriteRenderer>().enabled = true;
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
         ChocoBlock.transform.localScale = Vector3.one;
-        IsBreakingChoco = false;
     }
     public void UnWrapChocoBlocksAroundFrame(Frame frame, int combo)
     {
@@ -528,17 +526,22 @@ public class Product : MonoBehaviour
         Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
         Renderer.sortingOrder = order;
     }
-    private IEnumerator AnimatePickedUp(GameObject refObj)
+    private IEnumerator AnimatePickedUp()
     {
         float time = 0;
         float duration = 3.0f;
-        Vector3 acc = new Vector3(0, -10.0f, 0);
-        Vector3 startVel = new Vector3(5.0f, 5.0f, 0);
-        GameObject obj = Instantiate(refObj, refObj.transform.position, Quaternion.identity, ParentFrame.transform);
-        obj.transform.localScale = refObj.transform.localScale;
+        Vector3 acc = new Vector3(0, -60.0f, 0);
+        float x = UnityEngine.Random.Range(-3f, 3f);
+        float y = UnityEngine.Random.Range(20.0f, 30.0f);
+        float rot = y * 0.7f;
+        Vector3 startVel = new Vector3(x, y, 0);
+        GameObject obj = Instantiate(ChocoBlock, ChocoBlock.transform.position, Quaternion.identity, ParentFrame.transform);
+        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
         while (time < duration)
         {
             obj.transform.position += (startVel * Time.deltaTime);
+            obj.transform.Rotate(Vector3.forward, rot);
             startVel += (acc * Time.deltaTime);
             time += Time.deltaTime;
             yield return null;
