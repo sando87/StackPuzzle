@@ -2,12 +2,11 @@
 GoalType,Choco
 #GoalValue,500
 TimeLimit,65
-ColorCount,4
+ColorCount,5
+Rows,1/0 1/0 0/0 0/0 0/0 0/0 0/0 0/0
+Rows,1/0 1/0 0/0 0/0 0/0 0/0 0/0 0/x
+Rows,1/0 1/0 0/0 0/0 0/0 0/0 0/x 0/x
+Rows,1/0 1/0 0/0 0/0 0/0 0/x 0/x 0/x
+Rows,1/0 1/0 0/0 0/x 0/x 0/x 0/x 0/x
+Rows,1/0 1/0 0/x 0/x 0/x 0/x 0/x 0/x
 Rows,1/0 0/x 0/x 0/x 0/x 0/x 0/x 0/x
-Rows,1/0 0/0 0/x 0/x 0/x 0/x 0/x 0/x
-Rows,1/0 0/0 0/0 0/x 0/x 0/x 0/x 0/x
-Rows,1/0 0/0 0/0 0/0 0/x 0/x 0/x 0/x
-Rows,1/0 0/0 0/0 0/0 0/0 0/x 0/x 0/x
-Rows,1/0 0/0 0/0 0/0 0/0 0/0 0/x 0/x
-Rows,1/0 0/0 0/0 0/0 0/0 0/0 0/0 0/x
-Rows,1/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0

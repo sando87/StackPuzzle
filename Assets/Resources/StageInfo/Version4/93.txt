@@ -1,14 +1,14 @@
 #Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
+#콤보 올리고 스킬 사용
 GoalType,Score
-GoalValue,500
-MoveLimit,20
-ColorCount,4
-Rows,0/x 0/x 0/0 0/x 0/x
-Rows,0/x 0/0 0/0 0/0 0/x
+GoalValue,1250
+TimeLimit,35
+ColorCount,5
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 */0 0/0 0/0
+Rows,0/0 0/0 */0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0

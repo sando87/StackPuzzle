@@ -2,12 +2,12 @@
 GoalType,Score
 GoalValue,230
 MoveLimit,25
-ColorCount,5
-Rows,0/0 0/0 0/0 0/x 0/x 0/x
-Rows,0/0 0/0 0/0 0/x 0/x 0/x
-Rows,0/0 0/0 0/0 0/x 0/x 0/x
+ColorCount,4
+Rows,0/0 0/0 0/0 0/0 0/x 0/x
+Rows,0/0 0/0 0/0 0/0 0/x 0/x
+Rows,0/0 0/0 0/0 0/0 0/x 0/x
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/x 0/x 0/x 0/0 0/0 0/0
-Rows,0/x 0/x 0/x 0/0 0/0 0/0
-Rows,0/x 0/x 0/x 0/0 0/0 0/0
+Rows,0/x 0/x 0/0 0/0 0/0 0/0
+Rows,0/x 0/x 0/0 0/0 0/0 0/0
+Rows,0/x 0/x 0/0 0/0 0/0 0/0
