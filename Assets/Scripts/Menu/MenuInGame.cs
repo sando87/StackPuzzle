@@ -28,7 +28,7 @@ public class MenuInGame : MonoBehaviour
 
     public GameObject EffectParent;
     public GameObject ItemPrefab;
-                                                
+
     public int Score { get { return ScoreBarObj.CurrentScore; } }
     public int RemainLimit { get { return int.Parse(Limit.text); } }
 
@@ -157,17 +157,21 @@ public class MenuInGame : MonoBehaviour
         PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
         switch(itemType)
         {
-            case PurchaseItemType.ExtendLimit: InGameManager.InstStage.UseItemExtendsLimits(); break;
-            case PurchaseItemType.RemoveIce: InGameManager.InstStage.UseItemBreakce(5); break;
+            case PurchaseItemType.ExtendLimit:
+                InGameManager.InstStage.UseItemExtendsLimits(btn.transform.position, Limit.transform.position);
+                break;
+            case PurchaseItemType.RemoveIce:
+                InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
+                break;
             case PurchaseItemType.MakeSkill1: InGameManager.InstStage.UseItemMakeSkill1(5); break;
             case PurchaseItemType.MakeSkill2: InGameManager.InstStage.UseItemMakeSkill2(5); break;
             default: break;
         }
 
-        Purchases.UseItem(itemType);
         btn.GetComponent<Image>().color = Color.gray;
         btn.enabled = false;
 
+        Purchases.UseItem(itemType);
         string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }
@@ -233,7 +237,7 @@ public class MenuInGame : MonoBehaviour
         if (type != mStageInfo.GoalTypeEnum)
             return;
 
-        if(type == StageGoalType.Score)
+        if (type == StageGoalType.Score)
         {
             int remainScore = mStageInfo.GoalValue - InGameManager.InstStage.Billboard.CurrentScore;
             remainScore = Mathf.Max(remainScore, 0);
@@ -241,16 +245,20 @@ public class MenuInGame : MonoBehaviour
             StartCoroutine(UnityUtils.AnimateStandOut(TargetScoreText.gameObject));
             return;
         }
-
-        GameObject GoalTypeObj = GameObject.Instantiate(ItemPrefab, worldPos, Quaternion.identity, EffectParent.transform);
-        Image img = GoalTypeObj.GetComponent<Image>();
-        img.sprite = mStageInfo.GoalTypeImage;
-        StartCoroutine(AnimateItem(GoalTypeObj, TargetValue.transform.position, () =>
+        else
         {
             int value = int.Parse(TargetValue.text) - 1;
             value = Mathf.Max(0, value);
             TargetValue.text = value.ToString();
             StartCoroutine(UnityUtils.AnimateStandOut(TargetValue.transform.parent.gameObject));
+        }
+    }
+    public void LaunchTrailingParticle(Vector3 startWorldPos, Vector3 destWorldPos, Action eventEnd)
+    {
+        GameObject missile = GameObject.Instantiate(ItemPrefab, startWorldPos, Quaternion.identity, EffectParent.transform);
+        StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.25f, () =>
+        {
+            eventEnd?.Invoke();
         }));
     }
     IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)

@@ -30,6 +30,8 @@ public class InGameManager : MonoBehaviour
     public GameObject FramePrefab2;
     public GameObject ObstaclePrefab;
     public GameObject GroundPrefab;
+    public GameObject TrailingPrefab;
+    public GameObject MissilePrefab;
 
     public GameObject ExplosionParticle;
     public GameObject StripeParticle;
@@ -174,7 +176,7 @@ public class InGameManager : MonoBehaviour
 
         int stageCountPerTheme = 20;
         int themeCount = 9;
-        int backImgIdx = (mStageInfo.Num % (stageCountPerTheme * themeCount)) / stageCountPerTheme;
+        int backImgIdx = ((mStageInfo.Num - 1) % (stageCountPerTheme * themeCount)) / stageCountPerTheme;
         backImgIdx = Math.Min(backImgIdx, BackgroundImages.Length - 1);
         BackgroundSprite.sprite = BackgroundImages[backImgIdx];
         float scale = Camera.main.orthographicSize / 10.24f; //10.24f는 배경 이미지 height의 절반
@@ -924,15 +926,27 @@ public class InGameManager : MonoBehaviour
         return null;
     }
 
-    public void UseItemExtendsLimits()
+    public void UseItemExtendsLimits(Vector3 startWorldPos, Vector3 destWorldPos)
     {
-        if (mStageInfo.TimeLimit > 0)
-            mStartTime += 10; //10초 연장
-        else
-            Billboard.MoveCount -= 5; //5번 이동 추가
+        GameObject missile = GameObject.Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
+        StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.25f, () =>
+        {
+            if (mStageInfo.TimeLimit > 0)
+            {
+                mStartTime += 10; //10초 연장
+                float remainTime = mStageInfo.TimeLimit - PlayTime;
+                EventRemainTime?.Invoke((int)remainTime);
+            }
+            else
+            {
+                Billboard.MoveCount -= 5; //5번 이동 추가
+                EventReduceLimit?.Invoke();
+            }
+        }));
     }
-    public void UseItemBreakce(int count)
+    public void UseItemBreakce(Vector3 startWorldPos, int count)
     {
+        List<Product> icedProducts = new List<Product>();
         for(int y = CountY - 1; y >= 0; y--)
         {
             for (int x = CountX - 1; x >= 0; x--)
@@ -941,9 +955,9 @@ public class InGameManager : MonoBehaviour
                 if (pro == null || pro.IsLocked || !pro.IsChocoBlock)
                     continue;
 
-                pro.BreakChocoBlock(Billboard.CurrentCombo);
-                count--;
-                if (count <= 0)
+                icedProducts.Add(pro);
+                //pro.BreakChocoBlock(Billboard.CurrentCombo);
+                if (icedProducts.Count >= count)
                     return;
             }
         }
@@ -1923,6 +1937,46 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
+    public void StartAnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, Action eventEnd)
+    {
+        StartCoroutine(AnimateMagnet(obj, startDir, dest, eventEnd));
+    }
+    IEnumerator AnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, Action eventEnd)
+    {
+        float dragFactor = 0.02f;
+        float destFactor = 0;
+        startDir.Normalize();
+        Tuple<Vector2, float> startSpeed = new Tuple<Vector2, float>(startDir, UnityEngine.Random.Range(30, 35));
+
+        while (true)
+        {
+            Vector3 curStartSpeed = startSpeed.Item1 * startSpeed.Item2;
+            Vector3 dir = dest - obj.transform.position;
+            dir.z = 0;
+            dir.Normalize();
+            Vector3 curSpeed = curStartSpeed + dir * destFactor;
+            obj.transform.position += curSpeed * Time.deltaTime;
+            obj.transform.Rotate(Vector3.forward, startSpeed.Item2 * 5.0f);
+
+            float nextSpeed = startSpeed.Item2 - (startSpeed.Item2 * startSpeed.Item2 * dragFactor);
+            nextSpeed = Mathf.Max(0, nextSpeed);
+            startSpeed = new Tuple<Vector2, float>(startSpeed.Item1, nextSpeed);
+
+            Vector3 afterDir = dest - obj.transform.position;
+            afterDir.z = 0;
+            afterDir.Normalize();
+            if (Vector3.Dot(afterDir, dir) < 0)
+            {
+                eventEnd?.Invoke();
+                Destroy(obj);
+                break;
+            }
+
+            destFactor += 0.7f;
+            yield return null;
+        }
+    }
+
     #endregion
 
     #region Network

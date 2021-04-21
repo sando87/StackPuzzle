@@ -1,0 +1,13 @@
+#Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
+GoalType,Cover
+#GoalValue,550
+TimeLimit,60
+ColorCount,5
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/1 0/1 0/1 0/1 0/0
+Rows,0/0 0/1 0/2 0/2 0/1 0/0
+Rows,0/0 0/1 0/2 0/2 0/1 0/0
+Rows,0/0 0/1 0/2 0/2 0/1 0/0
+Rows,0/0 0/1 0/2 0/2 0/1 0/0
+Rows,0/0 0/1 0/1 0/1 0/1 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0

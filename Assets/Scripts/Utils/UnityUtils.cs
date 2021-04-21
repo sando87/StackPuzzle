@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UnityUtils
 {
@@ -128,5 +129,173 @@ public class UnityUtils
     public static float DecelMinus(float time, float duration)
     {
         return (time - duration) * (time - duration) / (duration * duration);
+    }
+
+    //등속도로 목적지까지 움직인다.
+    public static IEnumerator MoveLinear(GameObject obj, Vector2 dest, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 startPos = obj.transform.position;
+        Vector2 dir = dest - startPos;
+        float distance = dir.magnitude;
+        dir.Normalize();
+        float speed = distance / duration;
+        while (time < duration)
+        {
+            Vector2 nextPos = startPos + (dir * speed * time);
+            obj.transform.SetPosition2D(nextPos);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.SetPosition2D(dest);
+        EventEnd?.Invoke();
+    }
+
+    //부드럽게 목적지까지 움직인다.(Cos 0~180도 파형)
+    public static IEnumerator MoveNatural(GameObject obj, Vector2 dest, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 startPos = obj.transform.position;
+        Vector2 dir = dest - startPos;
+        float distance = dir.magnitude;
+        dir.Normalize();
+        while (time < duration)
+        {
+            float rad = Mathf.PI * time / duration;
+            float curDist = (1 - Mathf.Cos(rad)) * 0.5f * distance;
+            Vector2 nextPos = startPos + (dir * curDist);
+            obj.transform.SetPosition2D(nextPos);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.SetPosition2D(dest);
+        EventEnd?.Invoke();
+    }
+
+    //가속하며 목적지까지 움직인다.
+    public static IEnumerator MoveAccelerate(GameObject obj, Vector2 dest, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 startPos = obj.transform.position;
+        Vector2 dir = dest - startPos;
+        float distance = dir.magnitude;
+        dir.Normalize();
+        while (time < duration)
+        {
+            float curDist = distance * time * time / (duration * duration);
+            Vector2 nextPos = startPos + (dir * curDist);
+            obj.transform.SetPosition2D(nextPos);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.SetPosition2D(dest);
+        EventEnd?.Invoke();
+    }
+
+    //감속하며 목적지까지 움직인다.
+    public static IEnumerator MoveDecelerate(GameObject obj, Vector2 dest, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 startPos = obj.transform.position;
+        Vector2 dir = dest - startPos;
+        float distance = dir.magnitude;
+        dir.Normalize();
+        while (time < duration)
+        {
+            float curDist = distance * (1 - ((time - duration) * (time - duration) / (duration * duration)));
+            Vector2 nextPos = startPos + (dir * curDist);
+            obj.transform.SetPosition2D(nextPos);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.SetPosition2D(dest);
+        EventEnd?.Invoke();
+    }
+
+    public static IEnumerator FadeOut(Image image, Action EventEnd = null)
+    {
+        float duration = 0.1f;
+        float time = 0;
+        Color oriColor = image.color;
+        Color curColor = oriColor;
+        image.gameObject.SetActive(true);
+        while (time < duration)
+        {
+            curColor.a = oriColor.a * (1 - time / duration);
+            image.color = curColor;
+            yield return null;
+            time += Time.deltaTime;
+        }
+
+        EventEnd?.Invoke();
+        image.color = oriColor;
+        image.gameObject.SetActive(false);
+    }
+    public static IEnumerator FadeIn(Image image, Action EventEnd = null)
+    {
+        float duration = 0.1f;
+        float time = 0;
+        Color oriColor = image.color;
+        Color curColor = oriColor;
+        image.gameObject.SetActive(true);
+        while (time < duration)
+        {
+            curColor.a = oriColor.a * time / duration;
+            image.color = curColor;
+            yield return null;
+            time += Time.deltaTime;
+        }
+        image.color = oriColor;
+        EventEnd?.Invoke();
+    }
+    public static IEnumerator UpSizing(GameObject obj, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 oriSize = obj.transform.localScale;
+        Vector2 curSize = oriSize;
+        obj.SetActive(true);
+        while (time < duration)
+        {
+            curSize = oriSize * time / duration;
+            obj.transform.localScale = new Vector3(curSize.x, curSize.y, 1);
+            yield return null;
+            time += Time.deltaTime;
+        }
+        obj.transform.localScale = oriSize;
+        EventEnd?.Invoke();
+    }
+    public static IEnumerator DownSizing(GameObject obj, float duration, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 oriSize = obj.transform.localScale;
+        Vector2 curSize = oriSize;
+        obj.SetActive(true);
+        while (time < duration)
+        {
+            curSize = oriSize * (1 - time / duration);
+            obj.transform.localScale = new Vector3(curSize.x, curSize.y, 1);
+            yield return null;
+            time += Time.deltaTime;
+        }
+
+        EventEnd?.Invoke();
+        obj.transform.localScale = oriSize;
+        obj.SetActive(false);
+    }
+
+}
+
+//c# 확장 메서드 방식
+public static class MyExtensions
+{
+    //transform.position = Vector2()를 하면 z값이 0으로 소실된다.
+    //z값 변경없이 편하게 x,y값만 바꿀 수 있도록 하기 위해 구현
+    public static void SetPosition2D(this Transform tr, Vector2 val)
+    {
+        tr.position = new Vector3(val.x, val.y, tr.position.z);
+    }
+    public static void SetLocalPosition2D(this Transform tr, Vector2 val)
+    {
+        tr.localPosition = new Vector3(val.x, val.y, tr.localPosition.z);
     }
 }
