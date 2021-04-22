@@ -30,6 +30,7 @@ public class InGameManager : MonoBehaviour
     public GameObject FramePrefab2;
     public GameObject ObstaclePrefab;
     public GameObject GroundPrefab;
+    public GameObject SimpleSpritePrefab;
     public GameObject TrailingPrefab;
     public GameObject MissilePrefab;
 
@@ -744,9 +745,11 @@ public class InGameManager : MonoBehaviour
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
 
+            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros,
+            StartCoroutine(CreateDirectProjectails2(TrailingPrefab, sameColor.transform.position, pros,
                 (pro) => {
+                    pro.FlashProduct();
                     pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
@@ -761,9 +764,11 @@ public class InGameManager : MonoBehaviour
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
 
+            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros,
+            StartCoroutine(CreateDirectProjectails2(TrailingPrefab, sameColor.transform.position, pros,
                 (pro) => {
+                    pro.FlashProduct();
                     pro.ChangeProductImage(ProductSkill.Bomb);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
@@ -777,9 +782,11 @@ public class InGameManager : MonoBehaviour
             List<Product> randomProducts = ScanRandomProducts(5);
             Product[] pros = randomProducts.ToArray();
 
+            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(StartElectronicEffect(sameColor.transform.position, pros,
+            StartCoroutine(CreateDirectProjectails2(TrailingPrefab, sameColor.transform.position, pros,
                 (pro) => {
+                    pro.FlashProduct();
                     pro.ChangeProductImage(ProductSkill.SameColor);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
@@ -1040,31 +1047,6 @@ public class InGameManager : MonoBehaviour
                 AttackPointFrame.AddPoints(1);
             }));
         }
-    }
-    IEnumerator AnimateThrowSide(GameObject obj, Action action = null)
-    {
-        float time = 0;
-        float duration = 1.0f;
-        Vector3 startPos = obj.transform.position;
-        Vector3 destPos = AttackPointFrame.transform.position;
-        Vector3 dir = destPos - startPos;
-        Vector3 offset = Vector3.zero;
-        Vector3 axisZ = new Vector3(0, 0, 1);
-        float slopeY = dir.y / (duration * duration);
-        float slopeX = -dir.x / (duration * duration);
-        while (time < duration)
-        {
-            float nowT = time - duration;
-            offset.x = slopeX * nowT * nowT + dir.x;
-            offset.y = slopeY * time * time;
-            obj.transform.position = startPos + offset;
-            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
-
-            time += Time.deltaTime;
-            yield return null;
-        }
-
-        action?.Invoke();
     }
     IEnumerator AnimateThrowOver(GameObject obj, Action action = null)
     {
@@ -1386,23 +1368,10 @@ public class InGameManager : MonoBehaviour
         Product[] pros = ToProducts(frames);
 
         EventReward?.Invoke(pros.Length);
-        StartCoroutine(CreateDirectProjectails(TrailingPrefab, MenuInGame.Inst().Limit.transform.position, pros,
-            (pro) =>
-            {
-                int ran = UnityEngine.Random.Range(0, 3);
-                if (ran == 0)
-                    pro.ChangeProductImage(ProductSkill.Horizontal);
-                else if (ran == 1)
-                    pro.ChangeProductImage(ProductSkill.Vertical);
-                else
-                    pro.ChangeProductImage(ProductSkill.Bomb);
-
-                pro.FlashProduct();
-            },
-            () =>
-            {
-                StartCoroutine(DestroySkillSimpleLoop());
-            }));
+        StartCoroutine(CreateRewardProducts(SimpleSpritePrefab, MenuInGame.Inst().Limit.transform.position, pros, () => 
+        {
+            StartCoroutine(DestroySkillSimpleLoop());
+        }));
     }
 
     #endregion
@@ -1973,6 +1942,32 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
+    IEnumerator CreateRewardProducts(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action eventEnd)
+    {
+        mItemLooping = true;
+        int endCount = 0;
+        foreach (Product obj in objs)
+        {
+            ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 5);
+            Sprite skillImage = obj.ToSkillImage(skillIndex);
+            GameObject effect = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
+            effect.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+            effect.GetComponent<SpriteRenderer>().sprite = skillImage;
+            StartCoroutine(AnimateThrowSide(effect, obj.transform.position, () =>
+            {
+                endCount++;
+                Destroy(effect);
+                obj.ChangeProductImage(skillIndex);
+            }));
+            yield return new WaitForSeconds(0.15f);
+        }
+
+        while (endCount < objs.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
+    }
     IEnumerator CreateDirectProjectails(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
     {
         mItemLooping = true;
@@ -1980,12 +1975,32 @@ public class InGameManager : MonoBehaviour
         foreach (Product obj in objs)
         {
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            StartCoroutine(UnityUtils.MoveDecelerate(projectail, obj.transform.position, 0.3f, () =>
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, obj.transform.position, 0.2f, () =>
             {
                 endCount++;
                 eventEachEnd?.Invoke(obj);
             }));
             yield return new WaitForSeconds(0.1f);
+        }
+
+        while (endCount < objs.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
+    }
+    IEnumerator CreateDirectProjectails2(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
+    {
+        mItemLooping = true;
+        int endCount = 0;
+        foreach (Product obj in objs)
+        {
+            GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, obj.transform.position, 0.2f, () =>
+            {
+                endCount++;
+                eventEachEnd?.Invoke(obj);
+            }));
         }
 
         while (endCount < objs.Length)
@@ -2053,6 +2068,30 @@ public class InGameManager : MonoBehaviour
             destFactor += 0.7f;
             yield return null;
         }
+    }
+    IEnumerator AnimateThrowSide(GameObject obj, Vector3 dest, Action eventEnd = null)
+    {
+        float time = 0;
+        float duration = 0.6f;
+        Vector3 startPos = obj.transform.position;
+        Vector3 dir = dest - startPos;
+        Vector3 offset = Vector3.zero;
+        Vector3 axisZ = new Vector3(0, 0, 1);
+        float slopeY = dir.y / (duration * duration);
+        float slopeX = -dir.x / (duration * duration);
+        while (time < duration)
+        {
+            float nowT = time - duration;
+            offset.x = slopeX * nowT * nowT + dir.x;
+            offset.y = slopeY * time * time;
+            obj.transform.position = startPos + offset;
+            obj.transform.Rotate(axisZ, 5.0f);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        eventEnd?.Invoke();
     }
 
     #endregion

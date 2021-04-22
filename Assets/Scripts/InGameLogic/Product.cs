@@ -552,6 +552,18 @@ public class Product : MonoBehaviour
         }
         Destroy(obj);
     }
+    public Sprite ToSkillImage(ProductSkill skill)
+    {
+        switch (skill)
+        {
+            case ProductSkill.Horizontal: return ImgHorizontal;
+            case ProductSkill.Vertical: return ImgVertical;
+            case ProductSkill.Bomb: return ImgBomb;
+            case ProductSkill.SameColor: return ImgSameColor;
+            default: break;
+        }
+        return null;
+    }
 
     #endregion
 }
