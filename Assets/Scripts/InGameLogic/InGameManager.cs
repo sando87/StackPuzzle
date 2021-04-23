@@ -298,6 +298,7 @@ public class InGameManager : MonoBehaviour
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
             mIsUserEventLock = true;
+            bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () => {
                 StartCoroutine(UpDownSizing(product.gameObject, 0.3f));
@@ -305,9 +306,16 @@ public class InGameManager : MonoBehaviour
                 StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
                 {
                     mIsUserEventLock = false;
-                    SwipeSkilledProducts(product, targetProduct);
+                    ShakeField(0.03f);
+                    if(!isSameColor)
+                        SwipeSkilledProducts(product, targetProduct);
                 }));
             });
+
+            if (isSameColor)
+            {
+                DestroySkillWithSamecolor(product, targetProduct);
+            }
         }
         else
         {
@@ -629,21 +637,18 @@ public class InGameManager : MonoBehaviour
     {
         if (main.Skill == ProductSkill.SameColor || sub.Skill == ProductSkill.SameColor)
         {
-            DestroySkillWithSamecolor(main, sub);
+            //DestroySkillWithSamecolor(main, sub);
         }
         else if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
         {
-            ShakeField(0.03f);
             DestroySkillBomb_Bomb(main, sub);
         }
         else if (main.Skill != ProductSkill.Bomb && sub.Skill != ProductSkill.Bomb)
         {
-            ShakeField(0.03f);
             DestroySkillStripe_Stripe(main, sub);
         }
         else
         {
-            ShakeField(0.03f);
             if (main.Skill == ProductSkill.Bomb)
                 DestroySkillBomb_Stripe(main, sub);
             else
@@ -746,7 +751,6 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
-            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
                 (frame) => {
@@ -767,7 +771,6 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
-            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
                 (frame) => {
@@ -787,7 +790,6 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
-            ShakeField(0.03f);
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
                 (frame) => {
@@ -964,7 +966,7 @@ public class InGameManager : MonoBehaviour
     {
         mIsItemEffect = true;
         Product[] icedBlocks = GetTopIceBlocks(count);
-        StartCoroutine(CreateMagnetMissiles(MissilePrefab, startWorldPos, icedBlocks,
+        StartCoroutine(CreateMagnetMissiles(startWorldPos, icedBlocks,
             (pro) =>
             {
                 pro.BreakChocoBlock(Billboard.CurrentCombo);
@@ -1022,7 +1024,7 @@ public class InGameManager : MonoBehaviour
 
         mIsItemEffect = true;
         mStopDropping = true;
-        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.1f, frames.ToArray(),
+        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.2f, frames.ToArray(),
             (frame) =>
             {
                 Product pro = frame.ChildProduct;
@@ -1040,7 +1042,7 @@ public class InGameManager : MonoBehaviour
     {
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
-        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, new Vector3(10, 10, 0), 0.35f, idleFrames, 
+        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, new Vector3(5, 5, 0), 0.35f, idleFrames, 
             (frame) => {
                 //Creat Bomb Effect
                 Product[] scan = ScanAroundProducts(frame, 1);
@@ -2070,7 +2072,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in frames)
         {
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.2f, () =>
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 1.0f, () =>
             {
                 endCount++;
                 eventEachEnd?.Invoke(frame);
@@ -2091,7 +2093,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in frames)
         {
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.2f, () =>
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.6f, () =>
             {
                 endCount++;
                 eventEachEnd?.Invoke(frame);
@@ -2130,7 +2132,7 @@ public class InGameManager : MonoBehaviour
         mItemLooping = false;
         eventEnd?.Invoke();
     }
-    IEnumerator CreateMagnetMissiles(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
+    IEnumerator CreateMagnetMissiles(Vector3 startWorldPos, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
     {
         mItemLooping = true;
         float left = 1;
@@ -2140,9 +2142,12 @@ public class InGameManager : MonoBehaviour
             float rad = UnityEngine.Random.Range(-30, 30) * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             dir *= left;
-            GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
+            GameObject projectail = Instantiate(MissilePrefab, startWorldPos, Quaternion.identity, transform);
             StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
             {
+                projectail.GetComponent<SpriteRenderer>().enabled = false;
+                projectail.transform.GetChild(1).gameObject.SetActive(true);
+                Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(obj);
             }));
@@ -2184,6 +2189,7 @@ public class InGameManager : MonoBehaviour
             afterDir.Normalize();
             if (Vector3.Dot(afterDir, dir) < 0)
             {
+                obj.transform.SetPosition2D(new Vector2(dest.x, dest.y));
                 eventEnd?.Invoke();
                 break;
             }

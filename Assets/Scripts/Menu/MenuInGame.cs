@@ -163,17 +163,17 @@ public class MenuInGame : MonoBehaviour
                 InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
                 break;
             case PurchaseItemType.MakeSkill1:
-                InGameManager.InstStage.UseItemMatch(btn.transform.position);
+                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
             case PurchaseItemType.MakeSkill2:
-                InGameManager.InstStage.UseItemMeteor(5);
+                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
             default: break;
         }
 
         btn.GetComponent<Image>().color = Color.gray;
         btn.enabled = false;
-
+        
         Purchases.UseItem(itemType);
         string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
