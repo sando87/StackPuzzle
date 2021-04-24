@@ -152,6 +152,7 @@ public class MenuInGame : MonoBehaviour
 
     public void OnClickItem()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
         PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
         switch(itemType)
@@ -173,8 +174,8 @@ public class MenuInGame : MonoBehaviour
 
         btn.GetComponent<Image>().color = Color.gray;
         btn.enabled = false;
-        
         Purchases.UseItem(itemType);
+
         string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }

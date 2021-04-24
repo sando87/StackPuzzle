@@ -42,6 +42,11 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectLevelComplete;
     public AudioClip EffectBreakStone;
     public AudioClip EffectCashGold;
+    public AudioClip EffectLaunchMissile;
+    public AudioClip EffectEndGameReward;
+    public AudioClip EffectStartBeam;
+    public AudioClip EffectEndBeam;
+    public AudioClip EffectLightBomb;
 
     public AudioClip[] MatchClip;
     public AudioClip[] DropClip;

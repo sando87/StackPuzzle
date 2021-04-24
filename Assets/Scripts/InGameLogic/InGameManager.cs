@@ -33,6 +33,7 @@ public class InGameManager : MonoBehaviour
     public GameObject SimpleSpritePrefab;
     public GameObject TrailingPrefab;
     public GameObject MissilePrefab;
+    public GameObject MeteorPrefab;
 
     public GameObject ExplosionParticle;
     public GameObject StripeParticle;
@@ -1004,7 +1005,7 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
-        StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
+        StartCoroutine(CreateMagnetTrails(TrailingPrefab, idlePros,
             (pro) =>
             {
                 pro.ChangeProductImage(ProductSkill.SameColor);
@@ -1042,9 +1043,9 @@ public class InGameManager : MonoBehaviour
     {
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
-        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, new Vector3(5, 5, 0), 0.35f, idleFrames, 
+        StartCoroutine(CreateMeteor(idleFrames, 
             (frame) => {
-                //Creat Bomb Effect
+                ShakeField(0.05f);
                 Product[] scan = ScanAroundProducts(frame, 1);
                 List<Product> rets = new List<Product>();
                 foreach (Product pro in scan)
@@ -2045,6 +2046,7 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Product obj in objs)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
             ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 5);
             Sprite skillImage = obj.ToSkillImage(skillIndex);
             GameObject effect = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
@@ -2052,6 +2054,7 @@ public class InGameManager : MonoBehaviour
             effect.GetComponent<SpriteRenderer>().sprite = skillImage;
             StartCoroutine(AnimateThrowSide(effect, obj.transform.position, () =>
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
                 endCount++;
                 Destroy(effect);
                 obj.ChangeProductImage(skillIndex);
@@ -2071,9 +2074,11 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Frame frame in frames)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
             StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 1.0f, () =>
             {
+                Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(frame);
             }));
@@ -2095,6 +2100,7 @@ public class InGameManager : MonoBehaviour
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
             StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.6f, () =>
             {
+                Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(frame);
             }));
@@ -2113,17 +2119,48 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach(Product obj in objs)
         {
-            float rad = UnityEngine.Random.Range(10, 40) * Mathf.Deg2Rad;
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
+            float rad = UnityEngine.Random.Range(-10, 45) * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             dir *= left;
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 60, () =>
+            StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam);
+                Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(obj);
             }));
             yield return new WaitForSeconds(0.1f);
             left *= -1;
+        }
+
+        while (endCount < objs.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
+    }
+    IEnumerator CreateMagnetTrails(GameObject prefab, Product[] objs, Action<Product> eventEachEnd, Action eventEnd)
+    {
+        mItemLooping = true;
+        int endCount = 0;
+        foreach (Product obj in objs)
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
+            float rad = UnityEngine.Random.Range(0, 360) * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            Vector3 startPos = dir * UnityEngine.Random.Range(2, 2.5f);
+            GameObject projectail = Instantiate(prefab, startPos, Quaternion.identity, transform);
+            //projectail.transform.GetChild(1).gameObject.SetActive(false);
+            StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam);
+                Destroy(projectail, 1.0f);
+                endCount++;
+                eventEachEnd?.Invoke(obj);
+            }));
+            yield return new WaitForSeconds(0.1f);
         }
 
         while (endCount < objs.Length)
@@ -2139,7 +2176,8 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Product obj in objs)
         {
-            float rad = UnityEngine.Random.Range(-30, 30) * Mathf.Deg2Rad;
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLaunchMissile);
+            float rad = UnityEngine.Random.Range(-10, 45) * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             dir *= left;
             GameObject projectail = Instantiate(MissilePrefab, startWorldPos, Quaternion.identity, transform);
@@ -2161,8 +2199,39 @@ public class InGameManager : MonoBehaviour
         mItemLooping = false;
         eventEnd?.Invoke();
     }
+    IEnumerator CreateMeteor(Frame[] frames, Action<Frame> eventEachEnd, Action eventEnd)
+    {
+        mItemLooping = true;
+        int endCount = 0;
+        foreach (Frame frame in frames)
+        {
+            Vector3 destPos = frame.transform.position;
+            Vector3 startPos = destPos + new Vector3(7, 7, 0);
+            GameObject meteor = Instantiate(MeteorPrefab, startPos, Quaternion.identity, transform);
+            StartCoroutine(UnityUtils.MoveAccelerate(meteor, destPos, 0.5f, () =>
+            {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLightBomb);
+                meteor.transform.GetChild(1).gameObject.SetActive(true);
+                meteor.transform.GetChild(2).gameObject.SetActive(true);
+                //meteor.GetComponentInChildren<Animator>().StartPlayback();
+                Destroy(meteor, 1.0f);
+
+                endCount++;
+                eventEachEnd?.Invoke(frame);
+            }));
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        while (endCount < frames.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
+    }
     IEnumerator AnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, float power, Action eventEnd)
     {
+        yield return null;
         float dragFactor = 0.02f;
         float destFactor = 0;
         startDir.Normalize();
