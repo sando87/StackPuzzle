@@ -7,11 +7,14 @@ using UnityEngine;
 public class Frame : MonoBehaviour
 {
     private int mCoverCount;
+    private int mBushIndex;
 
     public Sprite[] Covers;
+    public Sprite[] BushImages;
     public SpriteRenderer[] Borders;
     public SpriteRenderer CoverRenderer;
     public GameObject BreakStonesParticle;
+    public GameObject BushObject;
 
     public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
     public InGameManager GameManager { get; private set; }
@@ -22,6 +25,7 @@ public class Frame : MonoBehaviour
     public bool IsTop { get { return IndexY == GameManager.CountY - 1; } }
     public Product ChildProduct { get; set; }
     public bool IsCovered { get { return mCoverCount > 0; } }
+    public bool IsBushed { get { return mBushIndex > 0; } }
 
     public Action<Frame> EventBreakCover;
 
@@ -36,7 +40,7 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(InGameManager mgr, int idxX, int idxY, int coverCount)
+    public void Initialize(InGameManager mgr, int idxX, int idxY, int coverCount, int bushIndex = 0)
     {
         GameManager = mgr;
         IndexX = idxX;
@@ -55,6 +59,9 @@ public class Frame : MonoBehaviour
             mCoverCount = coverCount;
             CoverRenderer.sprite = Covers[mCoverCount];
         }
+
+        mBushIndex = bushIndex;
+        BushObject.SetActive(IsBushed);
     }
 
     public void ShowBorder(int pos)
@@ -109,6 +116,30 @@ public class Frame : MonoBehaviour
         GameObject obj = Instantiate(BreakStonesParticle, transform);
         obj.transform.position = start;
         Destroy(obj, 1.0f);
+    }
+
+    public void BreakBush(int combo)
+    {
+        int limitCombo = (mBushIndex - 1) * 3;
+        if (combo < limitCombo)
+        {
+            TouchBush();
+            return;
+        }
+            
+
+        mBushIndex = 0;
+        BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBush);
+        //create particle
+    }
+    public void TouchBush()
+    {
+        if (IsBushed)
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectTouchBush);
+            BushObject.GetComponent<Animator>().StartPlayback();
+        }
     }
 
 }

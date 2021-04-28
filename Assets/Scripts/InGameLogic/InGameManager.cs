@@ -201,7 +201,7 @@ public class InGameManager : MonoBehaviour
                 frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount);
+                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount, info.GetCell(x, y).FrameBushCount);
                 mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
@@ -226,12 +226,14 @@ public class InGameManager : MonoBehaviour
 
                 Product pro = CreateNewProduct(mFrames[x, y]);
 
-                int chocoCount = mStageInfo.GetCell(x, y).ProductChocoCount;
+                StageInfoCell cellInfo = mStageInfo.GetCell(x, y);
+                int chocoCount = cellInfo.ProductChocoCount;
                 if (chocoCount == -1)
                     pro.ChangeProductImage(ProductSkill.SameColor);
                 else if(chocoCount > 0)
                     pro.SetChocoBlock(chocoCount);
 
+                pro.InitCap(cellInfo.ProductCapCount);
                 pro.EventUnWrapChoco = () => {
                     Billboard.ChocoCount++;
                     EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
@@ -477,31 +479,41 @@ public class InGameManager : MonoBehaviour
 
         mProductCount += mergeProducts.Length;
     }
-    private void MergeProducts(Product[] matches, ProductSkill makeSkill)
+    private Product[] MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
         Frame mainFrame = matches[0].ParentFrame;
+
+        List<Product> rets = new List<Product>();
 
         int addedScore = 0;
         foreach (Product pro in matches)
         {
             Frame curFrame = pro.ParentFrame;
-            pro.ReadyForMerge(Billboard.CurrentCombo);
-            addedScore += Billboard.CurrentCombo;
+            if(pro.ReadyForMerge(Billboard.CurrentCombo))
+            {
+                addedScore += Billboard.CurrentCombo;
+                rets.Add(pro);
+            }
         }
 
-        mProductCount -= matches.Length;
-        StartCoroutine(MergeProductDelay(matches, UserSetting.MatchReadyInterval, makeSkill));
+        Product[] validProducts = rets.ToArray();
+        if (validProducts.Length <= 0)
+            return validProducts;
+
+        mProductCount -= validProducts.Length;
+        StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill));
 
         int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
         int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
-        Attack(curAttackCount - preAttackCount, matches[0].transform.position);
+        Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
 
         Billboard.CurrentScore += addedScore;
-        Billboard.DestroyCount += matches.Length;
+        Billboard.DestroyCount += validProducts.Length;
         EventBreakTarget?.Invoke(mainFrame.transform.position, StageGoalType.Score);
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
-        EventMatched?.Invoke(matches);
+        EventMatched?.Invoke(validProducts);
+        return validProducts;
     }
 
     private void DropNextProducts()
@@ -1079,7 +1091,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(-1);
+                AttackPointFrame.AddPoints(mStageInfo.Difficulty == MatchingLevel.Easy ? -3 : -1);
             }));
         }
         else if (FieldType == GameFieldType.pvpOpponent)
@@ -1095,7 +1107,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(1);
+                AttackPointFrame.AddPoints(mStageInfo.Difficulty == MatchingLevel.Easy ? 3 : 1);
             }));
         }
     }

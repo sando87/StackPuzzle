@@ -140,6 +140,7 @@ public class MenuWaitMatch : MonoBehaviour
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();
         info.State = MatchingState.TryMatching;
+        info.Level = MatchingLevel.Easy;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
     }
 
@@ -165,7 +166,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         gameObject.SetActive(false);
         SoundPlayer.Inst.PlayerBack.Stop();
-        MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo);
+        MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo, pvpInfo.Level);
     }
     private void FailMatch()
     {

@@ -11,6 +11,7 @@ public class Product : MonoBehaviour
     public SpriteRenderer Renderer;
     public Sprite[] Images;
     public Sprite[] Chocos;
+    public Sprite[] CapImages;
     public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
@@ -18,9 +19,13 @@ public class Product : MonoBehaviour
     public Sprite ImgSameColor;
     public Sprite ImgCombo;
     public GameObject ComboNumPrefab;
+    public GameObject CapObject;
+
 
     public Action EventUnWrapChoco;
 
+    public int CapIndex { get; private set; }
+    public bool IsCapped { get { return CapIndex > 0; } }
     public InGameManager Manager { get; set; }
     public Frame ParentFrame { get; private set; }
     public ProductSkill Skill { get; private set; }
@@ -131,6 +136,12 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForMerge(int combo)
     {
+        if(CapIndex > 0)
+        {
+            BreakCap();
+            return false;
+        }
+
         IsMerging = true;
         Combo = combo;
         CreateComboTextEffect();
@@ -157,6 +168,12 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForDestroy(int combo)
     {
+        if (CapIndex > 0)
+        {
+            BreakCap();
+            return false;
+        }
+
         if (IsDestroying)
             return false;
 
@@ -563,6 +580,28 @@ public class Product : MonoBehaviour
             default: break;
         }
         return null;
+    }
+
+    public void InitCap(int capIndex)
+    {
+        CapIndex = capIndex;
+        CapObject.SetActive(IsCapped);
+        CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
+    }
+    private void BreakCap()
+    {
+        if (CapIndex <= 0)
+            return;
+
+        CapIndex--;
+        CapObject.GetComponent<Animator>().StartPlayback();
+        Invoke("ChangeCapImage", 0.2f);
+    }
+    private void ChangeCapImage()
+    {
+        CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
+        CapObject.GetComponentInChildren<ParticleSystem>().Play();
+        CapObject.SetActive(IsCapped);
     }
 
     #endregion

@@ -18,12 +18,14 @@ public class MenuPVPReady : MonoBehaviour
 
     private UserInfo mPlayer = null;
     private UserInfo mOpponent = null;
+    private MatchingLevel mLevel = MatchingLevel.None;
 
-    public static void PopUp(UserInfo player, UserInfo opponent)
+    public static void PopUp(UserInfo player, UserInfo opponent, MatchingLevel level)
     {
         GameObject menuPlay = GameObject.Find(UIObjName);
         menuPlay.SetActive(true);
         MenuPVPReady menu = menuPlay.GetComponent<MenuPVPReady>();
+        menu.mLevel = level;
         menu.UpdateUserInfo(player, opponent);
 
         menu.mPlayer = player;
@@ -43,7 +45,7 @@ public class MenuPVPReady : MonoBehaviour
     private IEnumerator StartBattle()
     {
         yield return new WaitForSeconds(1);
-        StageInfo info = StageInfo.Load(0);
+        StageInfo info = StageInfo.Load((int)mLevel * -1);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         Vector3 pos = MenuBattle.Inst().OpponentRect.transform.position;
         pos.z = InGameManager.InstPVP_Opponent.transform.position.z;

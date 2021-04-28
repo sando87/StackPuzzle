@@ -8,11 +8,15 @@ public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, Item
 public class StageInfoCell
 {
     public int ProductChocoCount;
+    public int ProductCapCount;
     public int FrameCoverCount;
-    public StageInfoCell(int chocoCount, int CoverCount)
+    public int FrameBushCount;
+    public StageInfoCell(int chocoCount, int CoverCount, int capCount, int bushCount)
     {
         ProductChocoCount = chocoCount;
         FrameCoverCount = CoverCount;
+        ProductCapCount = capCount;
+        FrameBushCount = bushCount;
     }
 }
 public class StageInfo
@@ -28,6 +32,7 @@ public class StageInfo
     public float ColorCount = 0;
     public int XCount { get { return BoardInfo[0].Length; } }
     public int YCount { get { return BoardInfo.Count; } }
+    public MatchingLevel Difficulty { get { return Num >= 0 ? MatchingLevel.None : ((MatchingLevel)(-Num)); } }
     public int RandomSeed = -1;
     public List<string> Rewards = new List<string>();
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
@@ -257,9 +262,20 @@ public class StageInfo
         for (int xIdx = 0; xIdx < columns.Length; ++xIdx)
         {
             string[] keyValue = columns[xIdx].Split('/');
-            int productChocoCount = keyValue[0] == "*" ? -1 : int.Parse(keyValue[0]);
-            int frameCoverCount = keyValue[1] == "x" ? -1 : int.Parse(keyValue[1]);
-            cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount);
+            if(keyValue.Length == 2)
+            {
+                int productChocoCount = keyValue[0] == "*" ? -1 : int.Parse(keyValue[0]);
+                int frameCoverCount = keyValue[1] == "x" ? -1 : int.Parse(keyValue[1]);
+                cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount, 0, 0);
+            }
+            else if(keyValue.Length == 4)
+            {
+                int productCapCount = int.Parse(keyValue[0]);
+                int productChocoCount = keyValue[1] == "*" ? -1 : int.Parse(keyValue[0]);
+                int frameBushCount = int.Parse(keyValue[2]);
+                int frameCoverCount = keyValue[3] == "x" ? -1 : int.Parse(keyValue[1]);
+                cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount, productCapCount, frameBushCount);
+            }
         }
         BoardInfo.Add(cells);
     }
@@ -271,7 +287,7 @@ public class StageInfo
             StageInfoCell cell = GetCell(xIdx, rowIndex);
             string productChoco = cell.FrameCoverCount < 0 ? "*" : cell.FrameCoverCount.ToString();
             string frameCover = cell.FrameCoverCount < 0 ? "x" : cell.FrameCoverCount.ToString();
-            rowString += productChoco + "/" + frameCover + " ";
+            rowString += cell.ProductCapCount + "/" + productChoco + "/" + cell.FrameBushCount + "/" + frameCover + " ";
         }
         return rowString + "\r\n";
     }

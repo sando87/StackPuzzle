@@ -164,6 +164,7 @@ public class LogInfo
 }
 
 public enum MatchingState { None, Idle, TryMatching, FoundOpp, FoundOppAck, Matched }
+public enum MatchingLevel { None, Easy, Normal, Hard, Hell }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo
@@ -171,6 +172,7 @@ public class SearchOpponentInfo
     public MatchingState State;
     public UserInfo MyUserInfo;
     public UserInfo OppUserInfo;
+    public MatchingLevel Level;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

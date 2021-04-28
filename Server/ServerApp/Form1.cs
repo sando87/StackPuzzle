@@ -245,6 +245,7 @@ namespace ServerApp
             else
             {
                 MySession.StartSearchOpp();
+                MySession.MatchLevel = requestBody.Level;
                 MySession.UserInfo = requestBody.MyUserInfo;
             }
             return requestBody;
@@ -384,6 +385,9 @@ namespace ServerApp
                 if (me == opp)
                     continue;
 
+                if (me.MatchLevel != opp.MatchLevel)
+                    continue;
+
                 float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
                 float deltaMyScore = (me.MatchingTime() + 1) * 50;
                 float deltaOppScore = (opp.MatchingTime() + 1) * 50;
@@ -435,6 +439,7 @@ namespace ServerApp
         public string OppEndpoint { get; private set; }
         public int OppScore { get; private set; }
         public MatchingState MatchState { get; set; }
+        public MatchingLevel MatchLevel { get; set; }
         public DateTime LastPulseTime { get; set; }
         public UserInfo UserInfo { get; set; }
         public Header LastMessage { get; set; }

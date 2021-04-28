@@ -47,6 +47,9 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectStartBeam;
     public AudioClip EffectEndBeam;
     public AudioClip EffectLightBomb;
+    public AudioClip EffectTouchBush;
+    public AudioClip EffectBreakBush;
+    public AudioClip EffectBreakCap;
 
     public AudioClip[] MatchClip;
     public AudioClip[] DropClip;
