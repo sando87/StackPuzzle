@@ -8,6 +8,8 @@ public class InGameBillboard
     public int ItemSameColorCount;
     public int CoverCount;
     public int ChocoCount;
+    public int CapCount;
+    public int BushCount;
     public int CurrentScore;
     public int CurrentCombo;
     public int DestroyCount;
@@ -22,6 +24,8 @@ public class InGameBillboard
         ItemSameColorCount = 0;
         CoverCount = 0;
         ChocoCount = 0;
+        CapCount = 0;
+        BushCount = 0;
         CurrentScore = 0;
         CurrentCombo = 1;
         DestroyCount = 0;
@@ -38,6 +42,8 @@ public class InGameBillboard
         + ItemSameColorCount + ","
         + CoverCount + ","
         + ChocoCount + ","
+        + CapCount + ","
+        + BushCount + ","
         + CurrentScore + ","
         + DestroyCount + ","
         + MoveCount + ","

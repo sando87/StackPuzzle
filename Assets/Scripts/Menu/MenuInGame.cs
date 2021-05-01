@@ -166,8 +166,14 @@ public class MenuInGame : MonoBehaviour
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
+            case PurchaseItemType.MakeCombo:
+                InGameManager.InstStage.UseItemMatch(btn.transform.position);
+                break;
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.PowerUp:
+                InGameManager.InstStage.UseItemMeteor(5);
                 break;
             default: break;
         }

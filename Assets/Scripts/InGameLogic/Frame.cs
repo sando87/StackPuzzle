@@ -28,6 +28,7 @@ public class Frame : MonoBehaviour
     public bool IsBushed { get { return mBushIndex > 0; } }
 
     public Action<Frame> EventBreakCover;
+    public Action<Frame> EventBreakBush;
 
     // Start is called before the first frame update
     void Start()
@@ -61,7 +62,7 @@ public class Frame : MonoBehaviour
         }
 
         mBushIndex = bushIndex;
-        BushObject.SetActive(IsBushed);
+        InitBush();
     }
 
     public void ShowBorder(int pos)
@@ -120,26 +121,36 @@ public class Frame : MonoBehaviour
 
     public void BreakBush(int combo)
     {
+        if (!IsBushed)
+            return;
+
         int limitCombo = (mBushIndex - 1) * 3;
         if (combo < limitCombo)
-        {
-            TouchBush();
             return;
-        }
-            
 
         mBushIndex = 0;
+        BushObject.GetComponent<Animator>().enabled = false;
         BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
+        BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBush);
-        //create particle
+        Invoke("InitBush", 2.0f);
+        EventBreakBush?.Invoke(this);
     }
     public void TouchBush()
     {
         if (IsBushed)
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectTouchBush);
-            BushObject.GetComponent<Animator>().StartPlayback();
+            BushObject.GetComponent<Animator>().enabled = true;
+            BushObject.GetComponent<Animator>().Play("bush", -1, 0);
         }
+    }
+    private void InitBush()
+    {
+        BushObject.GetComponent<Animator>().enabled = false;
+        BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
+        BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(false);
+        BushObject.SetActive(IsBushed);
     }
 
 }

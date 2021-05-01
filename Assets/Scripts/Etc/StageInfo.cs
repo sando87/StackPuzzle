@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Android;
-public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco }
+public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco, Cap, Bush }
 public class StageInfoCell
 {
     public int ProductChocoCount;
@@ -100,6 +100,10 @@ public class StageInfo
                 info.GoalValue = info.GetChocoCount();
             else if(info.GoalTypeEnum == StageGoalType.Cover)
                 info.GoalValue = info.GetCoverCount();
+            else if (info.GoalTypeEnum == StageGoalType.Cap)
+                info.GoalValue = info.GetCapCount();
+            else if (info.GoalTypeEnum == StageGoalType.Bush)
+                info.GoalValue = info.GetBushCount();
         }
 
         return info;
@@ -170,6 +174,8 @@ public class StageInfo
             case "ItemSameColor": image = Resources.Load<Sprite>("Images/itemSameColor"); break;
             case "Cover": image = Resources.Load<Sprite>("Images/cover"); break;
             case "Choco": image = Resources.Load<Sprite>("Images/choco"); break;
+            case "Cap": image = Resources.Load<Sprite>("Images/cap"); break;
+            case "Bush": image = Resources.Load<Sprite>("Images/bush"); break;
             default: break;
         }
         return image;
@@ -191,6 +197,8 @@ public class StageInfo
             case "ItemSameColor": type = StageGoalType.ItemSameColor; break;
             case "Cover": type = StageGoalType.Cover; break;
             case "Choco": type = StageGoalType.Choco; break;
+            case "Cap": type = StageGoalType.Cap; break;
+            case "Bush": type = StageGoalType.Bush; break;
             default: break;
         }
         return type;
@@ -271,9 +279,9 @@ public class StageInfo
             else if(keyValue.Length == 4)
             {
                 int productCapCount = int.Parse(keyValue[0]);
-                int productChocoCount = keyValue[1] == "*" ? -1 : int.Parse(keyValue[0]);
+                int productChocoCount = keyValue[1] == "*" ? -1 : int.Parse(keyValue[1]);
                 int frameBushCount = int.Parse(keyValue[2]);
-                int frameCoverCount = keyValue[3] == "x" ? -1 : int.Parse(keyValue[1]);
+                int frameCoverCount = keyValue[3] == "x" ? -1 : int.Parse(keyValue[3]);
                 cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount, productCapCount, frameBushCount);
             }
         }
@@ -316,6 +324,32 @@ public class StageInfo
             foreach (StageInfoCell cell in row)
             {
                 if (cell.FrameCoverCount > 0)
+                    count++;
+            }
+        }
+        return count;
+    }
+    public int GetCapCount()
+    {
+        int count = 0;
+        foreach (StageInfoCell[] row in BoardInfo)
+        {
+            foreach (StageInfoCell cell in row)
+            {
+                if (cell.ProductCapCount > 0)
+                    count++;
+            }
+        }
+        return count;
+    }
+    public int GetBushCount()
+    {
+        int count = 0;
+        foreach (StageInfoCell[] row in BoardInfo)
+        {
+            foreach (StageInfoCell cell in row)
+            {
+                if (cell.FrameBushCount > 0)
                     count++;
             }
         }

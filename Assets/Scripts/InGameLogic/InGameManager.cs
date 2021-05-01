@@ -206,6 +206,10 @@ public class InGameManager : MonoBehaviour
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
                 };
+                mFrames[x, y].EventBreakBush = (frame) => {
+                    Billboard.BushCount++;
+                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
+                };
             }
         }
 
@@ -237,6 +241,10 @@ public class InGameManager : MonoBehaviour
                 pro.EventUnWrapChoco = () => {
                     Billboard.ChocoCount++;
                     EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
+                };
+                pro.EventUnWrapCap = () => {
+                    Billboard.CapCount++;
+                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Cap);
                 };
                 initProducts.Add(pro);
             }
@@ -1397,6 +1405,14 @@ public class InGameManager : MonoBehaviour
                 if (Billboard.ChocoCount >= targetCount)
                     isSuccess = true;
                 break;
+            case StageGoalType.Cap:
+                if (Billboard.CapCount >= targetCount)
+                    isSuccess = true;
+                break;
+            case StageGoalType.Bush:
+                if (Billboard.BushCount >= targetCount)
+                    isSuccess = true;
+                break;
         }
 
         return isSuccess;
@@ -2353,10 +2369,6 @@ public class InGameManager : MonoBehaviour
                     ProductIDs[pro.InstanceID] = pro;
                     pro.SetChocoBlock(0);
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                    pro.EventUnWrapChoco = () => {
-                        Billboard.ChocoCount++;
-                        EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
-                    };
                 }
 
                 mNetMessages.RemoveFirst();

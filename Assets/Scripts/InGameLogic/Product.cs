@@ -23,6 +23,7 @@ public class Product : MonoBehaviour
 
 
     public Action EventUnWrapChoco;
+    public Action EventUnWrapCap;
 
     public int CapIndex { get; private set; }
     public bool IsCapped { get { return CapIndex > 0; } }
@@ -124,6 +125,8 @@ public class Product : MonoBehaviour
     {
         Frame myFrame = Detach(Manager.transform);
         Frame targetFrame = targetProduct.Detach(Manager.transform);
+        myFrame.TouchBush();
+        targetFrame.TouchBush();
 
         AttachTo(targetFrame);
         targetProduct.AttachTo(myFrame);
@@ -136,16 +139,12 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForMerge(int combo)
     {
-        if(CapIndex > 0)
-        {
-            BreakCap();
-            return false;
-        }
-
         IsMerging = true;
         Combo = combo;
+        ParentFrame.TouchBush();
         CreateComboTextEffect();
 
+        Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
         return true;
     }
@@ -160,6 +159,7 @@ public class Product : MonoBehaviour
         {
             Frame parent = Detach(Manager.transform);
             parent.BreakCover();
+            parent.BreakBush(Combo);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
@@ -168,7 +168,7 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForDestroy(int combo)
     {
-        if (CapIndex > 0)
+        if(IsCapped)
         {
             BreakCap();
             return false;
@@ -179,9 +179,10 @@ public class Product : MonoBehaviour
 
         IsDestroying = true;
         Combo = combo;
+        ParentFrame.TouchBush();
         CreateComboTextEffect();
+        Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
-
         return true;
     }
     public Frame DestroyImmediately()
@@ -192,6 +193,7 @@ public class Product : MonoBehaviour
         IsDestroying = true;
         Frame parent = Detach(Manager.transform);
         parent.BreakCover();
+        parent.BreakBush(Combo);
         StartCoroutine(AnimateDestroy());
 
         return parent;
@@ -209,6 +211,7 @@ public class Product : MonoBehaviour
     }
     public void FlashProduct()
     {
+        Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
     }
 
@@ -354,7 +357,6 @@ public class Product : MonoBehaviour
     }
     IEnumerator AnimateFlash(float intensity)
     {
-        Animation.Play("spitout");
         float halfTime = 0.12f;
         float k = -intensity / (halfTime * halfTime);
         float t = 0;
@@ -401,7 +403,7 @@ public class Product : MonoBehaviour
     }
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (Color != color || IsChocoBlock || Skill != ProductSkill.Nothing || IsLocked)
+        if (Color != color || IsChocoBlock || IsCapped || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
         if (products.Contains(this))
@@ -490,6 +492,12 @@ public class Product : MonoBehaviour
 
     public bool BreakChocoBlock(int combo)
     {
+        if(IsCapped)
+        {
+            BreakCap();
+            return false;
+        }
+
         if (ChocoBlock.tag == "off")
             return false;
 
@@ -536,12 +544,6 @@ public class Product : MonoBehaviour
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
         ChocoBlock.transform.localScale = Vector3.one;
     }
-    public void UnWrapChocoBlocksAroundFrame(Frame frame, int combo)
-    {
-        Product[] around = GetAroundProducts(frame);
-        foreach(Product pro in around)
-            pro.BreakChocoBlock(combo);
-    }
     public void EnableMasking(int order)
     {
         Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
@@ -585,8 +587,10 @@ public class Product : MonoBehaviour
     public void InitCap(int capIndex)
     {
         CapIndex = capIndex;
-        CapObject.SetActive(IsCapped);
+        CapObject.GetComponent<Animator>().enabled = false;
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
+        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(false);
+        CapObject.SetActive(IsCapped);
     }
     private void BreakCap()
     {
@@ -594,14 +598,18 @@ public class Product : MonoBehaviour
             return;
 
         CapIndex--;
-        CapObject.GetComponent<Animator>().StartPlayback();
+        CapObject.GetComponent<Animator>().enabled = true;
+        CapObject.GetComponent<Animator>().Play("CapAnim", -1, 0);
+        CancelInvoke("ChangeCapImage");
         Invoke("ChangeCapImage", 0.2f);
+        if (CapIndex <= 0)
+            EventUnWrapCap?.Invoke();
     }
     private void ChangeCapImage()
     {
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
-        CapObject.GetComponentInChildren<ParticleSystem>().Play();
-        CapObject.SetActive(IsCapped);
+        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
+        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().Play();
     }
 
     #endregion
