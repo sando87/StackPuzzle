@@ -45,7 +45,7 @@ public class MenuPVPReady : MonoBehaviour
     private IEnumerator StartBattle()
     {
         yield return new WaitForSeconds(1);
-        StageInfo info = StageInfo.Load((int)mLevel * -1);
+        StageInfo info = StageInfo.Load(mLevel);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         Vector3 pos = MenuBattle.Inst().OpponentRect.transform.position;
         pos.z = InGameManager.InstPVP_Opponent.transform.position.z;

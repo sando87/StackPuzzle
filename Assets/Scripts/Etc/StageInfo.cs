@@ -32,7 +32,7 @@ public class StageInfo
     public float ColorCount = 0;
     public int XCount { get { return BoardInfo[0].Length; } }
     public int YCount { get { return BoardInfo.Count; } }
-    public MatchingLevel Difficulty { get { return Num >= 0 ? MatchingLevel.None : ((MatchingLevel)(-Num)); } }
+    public MatchingLevel Difficulty { get; private set; }
     public int RandomSeed = -1;
     public List<string> Rewards = new List<string>();
     public Dictionary<int, ProductSkill> Items = new Dictionary<int, ProductSkill>();
@@ -41,34 +41,39 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
+        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
+        if (ta == null || ta.text.Length == 0)
+            return null;
+
+        string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        StageInfo info = Load(lines);
+        info.Num = stageNum;
+        info.Difficulty = MatchingLevel.None;
+        return info;
+    }
+
+    public static StageInfo Load(MatchingLevel level)
+    {
+        string filename = level.ToString();
+        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + filename);
+        if (ta == null || ta.text.Length == 0)
+            return null;
+
+        string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        StageInfo info = Load(lines);
+        info.Num = 0;
+        info.Difficulty = level;
+        return info;
+    }
+
+    public static StageInfo Load(string[] lines)
+    {
 #if PLATFORM_ANDROID
         if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
             Permission.RequestUserPermission(Permission.ExternalStorageRead);
 #endif
 
-        //string fullname = GetPath() + stageNum + ".txt";
-        //if(!File.Exists(fullname)) //최초 실행시 한번만 수행됨(각 스테이지 정보를 기록한 파일들 Save)
-        //{
-        //    CreateStageInfoFolder();
-        //
-        //    StageInfo defInfo = new StageInfo();
-        //    defInfo.DefaultSetting(stageNum);
-        //    Save(defInfo);
-        //}
-        //
-        //string fileText = File.ReadAllText(fullname);
-        //if (fileText == null || fileText.Length == 0)
-        //    return null;
-
-        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version"+ Version + "/" + stageNum);
-        if (ta == null || ta.text.Length == 0)
-            return null;
-
-
         StageInfo info = new StageInfo();
-        info.Num = stageNum;
-
-        string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines)
         {
             string[] tokens = line.Split(',');

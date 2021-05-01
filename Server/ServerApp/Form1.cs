@@ -360,6 +360,7 @@ namespace ServerApp
             SearchOpponentInfo body = new SearchOpponentInfo();
             body.MyUserInfo = destSession.UserInfo;
             body.OppUserInfo = opponent;
+            body.Level = destSession.MatchLevel;
             body.State = state;
 
             Header responseMsg = new Header();

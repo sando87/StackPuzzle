@@ -1084,6 +1084,9 @@ public class InGameManager : MonoBehaviour
         if (count <= 0)
             return;
 
+        if (mStageInfo.Difficulty == MatchingLevel.Easy)
+            count *= 3;
+
         if (FieldType == GameFieldType.Stage)
             return;
         else if (FieldType == GameFieldType.pvpPlayer)
@@ -1099,7 +1102,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(mStageInfo.Difficulty == MatchingLevel.Easy ? -3 : -1);
+                AttackPointFrame.AddPoints(-1);
             }));
         }
         else if (FieldType == GameFieldType.pvpOpponent)
@@ -1115,7 +1118,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(mStageInfo.Difficulty == MatchingLevel.Easy ? 3 : 1);
+                AttackPointFrame.AddPoints(1);
             }));
         }
     }
