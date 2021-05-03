@@ -417,7 +417,7 @@ namespace ServerApp
             int myScore = user.UserInfo.score;
             int oppScore = user.OppScore;
 
-            int deltaScore = Utils.CalcDeltaScore(isWin, myScore, oppScore);
+            int deltaScore = Utils.CalcDeltaScore(isWin, myScore, oppScore, user.MatchLevel);
 
             user.UserInfo.score += deltaScore;
             user.UserInfo.score = Math.Max(user.UserInfo.score, 0);

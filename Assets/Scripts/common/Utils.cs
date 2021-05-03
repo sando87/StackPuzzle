@@ -7,14 +7,23 @@ using System.Runtime.Serialization.Formatters.Binary;
 public class Utils
 {
     public const int ScorePerLevel = 50;
+    public const int PlayerLevelMinEasy = 1;
+    public const int PlayerLevelMinNormal = 5;
+    public const int PlayerLevelMinHard = 30;
+    public const int PlayerLevelMinHell = 50;
+
     public static int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
     public static int ToScore(int level) { return (level - 1) * ScorePerLevel; }
-    public static int CalcDeltaScore(bool isWin, int playerScore, int opponentScore)
+    public static int CalcDeltaScore(bool isWin, int playerScore, int opponentScore, MatchingLevel matchlevel)
     {
+        int refLevel = matchlevel == MatchingLevel.Hard ? PlayerLevelMinHard : 
+            (matchlevel == MatchingLevel.Hell ? PlayerLevelMinHell : 0);
+
         int ret = 0;
         if (isWin)
         {
             int level = Utils.ToLevel(playerScore);
+            level = Math.Max(0, level - refLevel);
             float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
             float gap = (opponentScore - (playerScore - 100)) * 0.1f * weight;
             float exp = gap < 2 ? 2 :(gap > 30 ? 30 : gap);
@@ -23,6 +32,7 @@ public class Utils
         else
         {
             int level = Utils.ToLevel(playerScore);
+            level = Math.Max(0, level - refLevel);
             float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
             float gap = (opponentScore - (playerScore + 100)) * 0.1f * weight;
             float exp = gap < -30 ? -30 : (gap > -2 ? -2 : gap);
@@ -30,9 +40,14 @@ public class Utils
         }
 
 
-        int playerLevel = Utils.ToLevel(playerScore);
-        if (playerLevel < UserSetting.PlayerLevelMinNormal)
-            ret = (ret + 50) / 2; //초보(Easy)모드에서는 10~40점 획득
+        if (matchlevel == MatchingLevel.Easy)
+        {
+            int playerLevel = Utils.ToLevel(playerScore);
+            if (playerLevel < PlayerLevelMinNormal)
+                ret = (ret + 50) / 2; //뉴비들은 이기든 지든 10~40점 획득
+            else
+                ret = (int)(ret * 0.3f); //중급자가 Easy모드로 할 경우 획득 점수 낮추기
+        }
 
         return ret;
     }

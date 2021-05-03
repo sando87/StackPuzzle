@@ -100,7 +100,7 @@ public class MenuWaitMatch : MonoBehaviour
         else if (UserSetting.MatchLevel == MatchingLevel.Normal)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = UserSetting.PlayerLevelMinNormal;
+            int max = Utils.PlayerLevelMinNormal;
             if (pvpLevel < max)
             {
                 MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
@@ -110,7 +110,7 @@ public class MenuWaitMatch : MonoBehaviour
         else if (UserSetting.MatchLevel == MatchingLevel.Hard)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = UserSetting.PlayerLevelMinHard;
+            int max = Utils.PlayerLevelMinHard;
             if (pvpLevel < max)
             {
                 MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
@@ -120,7 +120,7 @@ public class MenuWaitMatch : MonoBehaviour
         else if (UserSetting.MatchLevel == MatchingLevel.Hell)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = UserSetting.PlayerLevelMinHell;
+            int max = Utils.PlayerLevelMinHell;
             if (pvpLevel < max)
             {
                 MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);

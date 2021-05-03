@@ -1511,6 +1511,7 @@ public class InGameManager : MonoBehaviour
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
                         ground.name = "ground";
                         ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
+                        ground.transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
                         if (FieldType == GameFieldType.pvpOpponent)
                             ground.layer = LayerMask.NameToLayer("ProductOpp");
                     }

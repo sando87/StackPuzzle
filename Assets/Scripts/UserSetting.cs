@@ -84,15 +84,11 @@ public class UserSetting
     public const float GridSize = 0.82f;
     public const int ScorePerBar = 140;
     public const int ScorePerSplitBar = 20;
-    public const float BattleOppResize = 1.0f;
+    public const float BattleOppResize = 0.5f;
     public const int HeartChargingIntervalMin = 5;
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
-    public const int PlayerLevelMinEasy = 1;
-    public const int PlayerLevelMinNormal = 5;
-    public const int PlayerLevelMinHard = 20;
-    public const int PlayerLevelMinHell = 30;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;
