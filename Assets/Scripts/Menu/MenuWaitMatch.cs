@@ -77,19 +77,46 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-        //if (UserSetting.StageIsLocked(16))
-        //{
-        //    MenuMessageBox.PopUp("Required\n15 Stages", false, null);
-        //    return;
-        //}
-        //
-        //if (Purchases.CountHeart() <= 0)
-        //{
-        //    MenuMessageBox.PopUp("No Life", false, null);
-        //    return;
-        //}
-#endif
+//#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
+        if (UserSetting.StageIsLocked(7))
+        {
+            MenuMessageBox.PopUp("Required\n7 Stages", false, null);
+            return;
+        }
+        else if (UserSetting.MatchLevel == MatchingLevel.Normal)
+        {
+            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
+            if (pvpLevel < 5)
+            {
+                MenuMessageBox.PopUp("Required\n5 Level", false, null);
+                return;
+            }
+        }
+        else if (UserSetting.MatchLevel == MatchingLevel.Hard)
+        {
+            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
+            if (pvpLevel < 20)
+            {
+                MenuMessageBox.PopUp("Required\n20 Level", false, null);
+                return;
+            }
+        }
+        else if (UserSetting.MatchLevel == MatchingLevel.Hell)
+        {
+            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
+            if (pvpLevel < 30)
+            {
+                MenuMessageBox.PopUp("Required\n30 Level", false, null);
+                return;
+            }
+        }
+
+        if (Purchases.CountHeart() <= 0)
+        {
+            MenuMessageBox.PopUp("No Life", false, null);
+            return;
+        }
+//#endif
 
         RequestMatch();
 
@@ -140,7 +167,7 @@ public class MenuWaitMatch : MonoBehaviour
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();
         info.State = MatchingState.TryMatching;
-        info.Level = MatchingLevel.Easy;
+        info.Level = UserSetting.MatchLevel;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
     }
 

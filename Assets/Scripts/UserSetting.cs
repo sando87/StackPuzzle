@@ -19,6 +19,11 @@ public class UserSetting
         mUserInfo = info;
         SaveUserInfo(info);
     }
+    public static MatchingLevel MatchLevel
+    {
+        get { return (MatchingLevel)PlayerPrefs.GetInt("matchLevel", 1); }
+        set { PlayerPrefs.SetInt("matchLevel", (int)value); }
+    }
     public static bool Mute
     {
         get { return PlayerPrefs.GetInt("userMute", 0) == 1; }
