@@ -89,6 +89,10 @@ public class UserSetting
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
+    public const int PlayerLevelMinEasy = 1;
+    public const int PlayerLevelMinNormal = 5;
+    public const int PlayerLevelMinHard = 20;
+    public const int PlayerLevelMinHell = 30;
 
     private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;

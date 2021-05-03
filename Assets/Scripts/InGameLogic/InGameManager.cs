@@ -325,6 +325,7 @@ public class InGameManager : MonoBehaviour
 
             if (isSameColor)
             {
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill);
                 DestroySkillWithSamecolor(product, targetProduct);
             }
         }
@@ -662,14 +663,17 @@ public class InGameManager : MonoBehaviour
         }
         else if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb2);
             DestroySkillBomb_Bomb(main, sub);
         }
         else if (main.Skill != ProductSkill.Bomb && sub.Skill != ProductSkill.Bomb)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2);
             DestroySkillStripe_Stripe(main, sub);
         }
         else
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2);
             if (main.Skill == ProductSkill.Bomb)
                 DestroySkillBomb_Stripe(main, sub);
             else
@@ -781,6 +785,7 @@ public class InGameManager : MonoBehaviour
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySkillSimpleLoop());
                 }));
@@ -801,6 +806,7 @@ public class InGameManager : MonoBehaviour
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySkillSimpleLoop());
                 }));
@@ -820,6 +826,7 @@ public class InGameManager : MonoBehaviour
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySameProductLoop());
                 }));
@@ -2059,14 +2066,14 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateStripeEffect(Vector2 startPos, bool isVertical)
     {
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe1);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(StripeParticle, start, isVertical ? Quaternion.Euler(0, 0, 90) : Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
     private void CreateExplosionEffect(Vector2 startPos)
     {
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb1);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);

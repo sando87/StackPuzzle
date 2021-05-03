@@ -17,6 +17,7 @@ public class MenuWaitMatch : MonoBehaviour
     public TextMeshProUGUI ExpLevel;
     public TextMeshProUGUI Exp;
     public TextMeshProUGUI WinLose;
+    public TextMeshProUGUI LevelText;
     public Slider ExpBar;
     public Image RankImage;
     public GameObject BtnMatch;
@@ -57,6 +58,19 @@ public class MenuWaitMatch : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.StopMatching, info, null);
     }
 
+    public void OnChangeLevel()
+    {
+        if (mIsSearching)
+            return;
+
+        int curLevel = (int)UserSetting.MatchLevel - 1;
+        int nextLevel = (curLevel + 1) % 4;
+        MatchingLevel nextLv = (MatchingLevel)(nextLevel + 1);
+        LevelText.text = nextLv.ToString();
+        UserSetting.MatchLevel = nextLv;
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
     public void OnMatch()
     {
         if (NetClientApp.GetInstance().IsDisconnected())
@@ -86,27 +100,30 @@ public class MenuWaitMatch : MonoBehaviour
         else if (UserSetting.MatchLevel == MatchingLevel.Normal)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            if (pvpLevel < 5)
+            int max = UserSetting.PlayerLevelMinNormal;
+            if (pvpLevel < max)
             {
-                MenuMessageBox.PopUp("Required\n5 Level", false, null);
+                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
                 return;
             }
         }
         else if (UserSetting.MatchLevel == MatchingLevel.Hard)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            if (pvpLevel < 20)
+            int max = UserSetting.PlayerLevelMinHard;
+            if (pvpLevel < max)
             {
-                MenuMessageBox.PopUp("Required\n20 Level", false, null);
+                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
                 return;
             }
         }
         else if (UserSetting.MatchLevel == MatchingLevel.Hell)
         {
             int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            if (pvpLevel < 30)
+            int max = UserSetting.PlayerLevelMinHell;
+            if (pvpLevel < max)
             {
-                MenuMessageBox.PopUp("Required\n30 Level", false, null);
+                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
                 return;
             }
         }
@@ -209,6 +226,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         mIsSearching = false;
         WaitText.text = "";
+        LevelText.text = UserSetting.MatchLevel.ToString();
         WaitText.gameObject.SetActive(false);
         BtnMatch.SetActive(true);
         BtnCancle.SetActive(false);
@@ -218,6 +236,8 @@ public class MenuWaitMatch : MonoBehaviour
     private void UpdateUserInfo(UserInfo info)
     {
         WinLose.text = info.win + " / " + info.lose;
+        int rank = (int)(info.rankingRate * 100.0f);
+        Ranking.text = "Top " + rank + "%";
         UpdateExpBar(info.score);
         //string text =
         //    "ID : #" + info.userPk + "\n" +
