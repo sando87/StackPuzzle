@@ -26,6 +26,7 @@ public static class PurchaseItemTypeExtensions
                 case PurchaseItemType.MakeCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_egg"); break;
                 case PurchaseItemType.MakeSkill2: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_potion_purple"); break;
                 case PurchaseItemType.PowerUp: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_star_red"); break;
+                default: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipment_equip_icon"); break; 
             }
         }
 
@@ -85,7 +86,7 @@ public static class PurchaseItemTypeExtensions
 
 public enum PurchaseItemType
 {
-    ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp
+    None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp
 }
 
 public class PurchaseInfo

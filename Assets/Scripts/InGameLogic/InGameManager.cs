@@ -90,6 +90,7 @@ public class InGameManager : MonoBehaviour
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
     public float GridSize { get { return UserSetting.GridSize * transform.localScale.x; } }
+    public MatchingLevel Difficulty { get { return mStageInfo.Difficulty; } }
     public Rect FieldWorldRect    {
         get {
             Rect rect = new Rect(Vector2.zero, new Vector2(GridSize * CountX, GridSize * CountY));
@@ -994,13 +995,18 @@ public class InGameManager : MonoBehaviour
     {
         mIsItemEffect = true;
         Product[] icedBlocks = GetTopIceBlocks(count);
+
+        List<ProductInfo> breakIceProducts = new List<ProductInfo>();
         StartCoroutine(CreateMagnetMissiles(startWorldPos, icedBlocks,
             (pro) =>
             {
-                pro.BreakChocoBlock(Billboard.CurrentCombo);
+                if (pro.BreakChocoBlock(Billboard.CurrentCombo))
+                    breakIceProducts.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
             },
             () =>
             {
+                if (breakIceProducts.Count > 0)
+                    Network_BreakIce(breakIceProducts.ToArray());
                 mIsItemEffect = false;
             }));
     }
@@ -1009,6 +1015,7 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
+        List<ProductInfo> netInfo = new List<ProductInfo>();
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
             (pro) =>
             {
@@ -1020,10 +1027,12 @@ public class InGameManager : MonoBehaviour
                 else
                     pro.ChangeProductImage(ProductSkill.Bomb);
 
+                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 pro.FlashProduct();
             },
             () =>
             {
+                Network_ChangeSkill(netInfo.ToArray());
                 mIsItemEffect = false;
             }));
     }
@@ -1032,14 +1041,17 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
+        List<ProductInfo> netInfo = new List<ProductInfo>();
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, idlePros,
             (pro) =>
             {
                 pro.ChangeProductImage(ProductSkill.SameColor);
+                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 pro.FlashProduct();
             },
             () =>
             {
+                Network_ChangeSkill(netInfo.ToArray());
                 mIsItemEffect = false;
             }));
     }

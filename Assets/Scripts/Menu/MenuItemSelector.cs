@@ -23,26 +23,21 @@ public class MenuItemSelector : MonoBehaviour
 
     public void UpdateItemSelector()
     {
-        Button[] slots = ItemSlotRoot.GetComponentsInChildren<Button>();
+        ItemButton[] slots = ItemSlotRoot.GetComponentsInChildren<ItemButton>();
         int itemTypeCount = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
         for(int i = 0; i < itemTypeCount; ++i)
         {
             PurchaseItemType type = (PurchaseItemType)i;
-            int itemCount = type.GetCount();
-            slots[i].name = i.ToString();
-            slots[i].GetComponent<Image>().sprite = type.GetSprite();
-            slots[i].GetComponentInChildren<TextMeshProUGUI>().text = itemCount.ToString();
-            if(itemCount > 0)
-                slots[i].onClick.AddListener(OnSelectItem);
+            slots[i].SetItem(type);
+            slots[i].onClick.AddListener(OnSelectItem);
         }
     }
 
     public void OnSelectItem()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-
-        Button curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        PurchaseItemType type = (PurchaseItemType)int.Parse(curBtn.name);
+        ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
+        PurchaseItemType type = curBtn.GetItem();
         EventSelectItem?.Invoke(type);
         Destroy(gameObject);
     }

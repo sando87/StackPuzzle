@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuBattle : MonoBehaviour
@@ -21,6 +22,8 @@ public class MenuBattle : MonoBehaviour
     public TextMeshProUGUI OpponentScore;
     public GameObject PlayerRect;
     public GameObject OpponentRect;
+    public GameObject Limit;
+    public GameObject[] ItemSlots;
 
     private MenuMessageBox mMenu;
 
@@ -74,7 +77,6 @@ public class MenuBattle : MonoBehaviour
         for (int i = 0; i < EffectParent.transform.childCount; ++i)
             Destroy(EffectParent.transform.GetChild(i).gameObject);
 
-
         mMenu = null;
         ComboPlayer.Clear();
         ComboOpponent.Clear();
@@ -84,6 +86,26 @@ public class MenuBattle : MonoBehaviour
         OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
         PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
         OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
+
+        PurchaseItemType[] items = MenuWaitMatch.Inst().GetSelectedItems();
+        for (int i = 0; i < ItemSlots.Length; ++i)
+        {
+            if (i < items.Length && InGameManager.InstPVP_Player.Difficulty != MatchingLevel.Easy)
+            {
+                ItemSlots[i].name = items[i].ToInt().ToString();
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
+                ItemSlots[i].GetComponentInChildren<Image>().sprite = items[i].GetSprite();
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
+                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
+            }
+            else
+            {
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
+                ItemSlots[i].GetComponentInChildren<Image>().sprite = PurchaseItemType.None.GetSprite();
+                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
+            }
+        }
 
         InGameManager.InstPVP_Player.EventMatched = (products) => {
             PVPScoreBarPlayer.SetScore(PVPScoreBarPlayer.CurrentScore + products[0].Combo * products.Length);
@@ -166,6 +188,42 @@ public class MenuBattle : MonoBehaviour
             });
 
         }
+    }
+
+    public void OnClickItem()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
+        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
+        switch (itemType)
+        {
+            case PurchaseItemType.ExtendLimit:
+                InGameManager.InstStage.UseItemExtendsLimits(btn.transform.position, Limit.transform.position);
+                break;
+            case PurchaseItemType.RemoveIce:
+                InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.MakeSkill1:
+                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.MakeCombo:
+                InGameManager.InstStage.UseItemMatch(btn.transform.position);
+                break;
+            case PurchaseItemType.MakeSkill2:
+                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.PowerUp:
+                InGameManager.InstStage.UseItemMeteor(5);
+                break;
+            default: break;
+        }
+
+        btn.GetComponent<Image>().color = Color.gray;
+        btn.enabled = false;
+        Purchases.UseItem(itemType);
+
+        string log = "[UseItem] " + "PVP:" + OpponentName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
+        LOG.echo(log);
     }
 
 }

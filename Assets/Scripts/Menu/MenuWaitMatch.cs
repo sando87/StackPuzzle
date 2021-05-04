@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
@@ -22,7 +23,6 @@ public class MenuWaitMatch : MonoBehaviour
     public Image RankImage;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
-    public PurchaseItemType[] Items = new PurchaseItemType[3];
 
     public static MenuWaitMatch Inst()
     {
@@ -75,6 +75,26 @@ public class MenuWaitMatch : MonoBehaviour
         LevelText.text = nextLv.ToString();
         UserSetting.MatchLevel = nextLv;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+    }
+
+    public void OnChangeItem()
+    {
+        if (mIsSearching)
+            return;
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
+        MenuItemSelector.PopUp((item) =>
+        {
+            if(item.GetCount() > 0)
+            {
+                curBtn.SetItem(item);
+            }
+            else
+            {
+                curBtn.SetItem(PurchaseItemType.None);
+            }
+        });
     }
 
     public void OnMatch()
@@ -167,6 +187,17 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
+    public PurchaseItemType[] GetSelectedItems()
+    {
+        Dictionary<PurchaseItemType, int> rets = new Dictionary<PurchaseItemType, int>();
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
+            if (btn.GetItem().GetCount() > 0)
+                rets[btn.GetItem()] = 1;
+
+        return new List<PurchaseItemType>(rets.Keys).ToArray();
+    }
+
     public void HandlerMatchingResult(Header head, byte[] body)
     {
         if (head.Ack == 1 || head.Cmd != NetCMD.SearchOpponent)
@@ -238,6 +269,9 @@ public class MenuWaitMatch : MonoBehaviour
         BtnCancle.SetActive(false);
         UpdateUserInfo(UserSetting.UserInfo);
         StopCoroutine("WaitOpponent");
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
+            btn.UpdateItem();
     }
     private void UpdateUserInfo(UserInfo info)
     {

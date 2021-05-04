@@ -29,7 +29,7 @@ public class MenuInventory : MonoBehaviour
         if (ItemCounts.Count <= 0)
         {
             int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
-            for (int i = 0; i < count; ++i)
+            for (int i = 1; i < count; ++i)
             {
                 PurchaseItemType type = i.ToItemType();
                 GameObject obj = Instantiate(ItemSlotPrefab, ItemSlots.transform);
@@ -55,7 +55,7 @@ public class MenuInventory : MonoBehaviour
     private void UpdateItemCount()
     {
         int count = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
-        for (int i = 0; i < count; ++i)
+        for (int i = 1; i < count; ++i)
         {
             PurchaseItemType type = i.ToItemType();
             ItemCounts[i].text = type.GetCount().ToString();
