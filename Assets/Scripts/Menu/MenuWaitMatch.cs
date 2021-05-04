@@ -22,6 +22,12 @@ public class MenuWaitMatch : MonoBehaviour
     public Image RankImage;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
+    public PurchaseItemType[] Items = new PurchaseItemType[3];
+
+    public static MenuWaitMatch Inst()
+    {
+        return GameObject.Find(UIObjName).GetComponent<MenuWaitMatch>();
+    }
 
     public static void PopUp()
     {
