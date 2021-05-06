@@ -29,6 +29,7 @@ public class InGameManager : MonoBehaviour
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
     public GameObject ObstaclePrefab;
+    public GameObject ClosePrefab;
     public GameObject GroundPrefab;
     public GameObject SimpleSpritePrefab;
     public GameObject TrailingPrefab;
@@ -153,6 +154,7 @@ public class InGameManager : MonoBehaviour
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFlush());
+            StartCoroutine(CheckFinishPvpTimer());
             mIsUserEventLock = false;
             Animator anim = GetComponent<Animator>();
             if (anim != null)
@@ -332,7 +334,6 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            EventCombo?.Invoke(0);
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () => {
@@ -1475,6 +1476,99 @@ public class InGameManager : MonoBehaviour
         }));
     }
 
+    IEnumerator CheckFinishPvpTimer()
+    {
+        int addedSec = mStageInfo.TimeLimit;
+        int timelimit = addedSec;
+        while (timelimit > 0)
+        {
+            float remainTime = timelimit - PlayTime;
+            EventRemainTime?.Invoke((int)remainTime);
+            if (remainTime < 0)
+            {
+                StartCoroutine(CloseProducts());
+                addedSec = (int)(addedSec * 0.7f);
+                timelimit += Mathf.Max(addedSec, 10);
+            }
+            yield return new WaitForSeconds(1);
+        }
+    }
+    IEnumerator CloseProducts()
+    {
+        while (!IsIdle)
+            yield return null;
+
+        List<Product> nextPros = GetNextCloseProducts(6);
+        if (nextPros.Count < 6)
+            StartFinish(false);
+
+        mIsFlushing = true;
+        List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
+        foreach (Product target in nextPros)
+        {
+            Vector3 startPos = target.ParentFrame.VertFrames.TopFrame.transform.position;
+            startPos.y += GridSize;
+            startPos.z = target.transform.position.z - 0.5f;
+            GameObject obj = Instantiate(ClosePrefab, startPos, Quaternion.identity, transform);
+            obstacles.Add(new Tuple<GameObject, Product>(obj, target));
+        }
+
+        float vel = 0;
+        while (true)
+        {
+            vel += 2;
+            bool isDone = true;
+            foreach (var each in obstacles)
+            {
+                GameObject obstacle = each.Item1;
+                Product destProduct = each.Item2;
+                if (destProduct.IsClosed || obstacle == null)
+                    continue;
+
+                isDone = false;
+                float deltaY = vel * Time.deltaTime;
+                if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
+                {
+                    destProduct.SetChocoBlock(99);
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce);
+                    Destroy(obstacle);
+                }
+                else
+                {
+                    obstacle.transform.position -= new Vector3(0, deltaY, 0);
+                }
+            }
+
+            if (isDone)
+                break;
+            else
+                yield return null;
+        }
+        ShakeField(0.05f);
+        mIsFlushing = false;
+    }
+    private List<Product> GetNextCloseProducts(int cnt)
+    {
+        List<Product> products = new List<Product>();
+        for (int y = 0; y < CountY; ++y)
+        {
+            for (int x = 0; x < CountX; ++x)
+            {
+                Frame frame = mFrames[x, y];
+                if (frame.Empty)
+                    continue;
+                Product pro = frame.ChildProduct;
+                if (pro == null || pro.IsClosed)
+                    continue;
+
+                products.Add(pro);
+                if (products.Count >= cnt)
+                    return products;
+            }
+        }
+        return products;
+    }
+
     #endregion
 
 
@@ -1498,6 +1592,7 @@ public class InGameManager : MonoBehaviour
     }
     private void InitDropGroupFrames()
     {
+        float oneBlockScale = FieldType == GameFieldType.pvpOpponent ? UserSetting.BattleOppResize : 1.0f;
         List<VerticalFrames> vf = new List<VerticalFrames>();
         VerticalFrames vg = null;
         for (int x = 0; x < CountX; ++x)
@@ -1523,7 +1618,7 @@ public class InGameManager : MonoBehaviour
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
                         ground.name = "ground";
                         ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
-                        ground.transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
+                        ground.transform.localScale = new Vector3(oneBlockScale, oneBlockScale, 1);
                         if (FieldType == GameFieldType.pvpOpponent)
                             ground.layer = LayerMask.NameToLayer("ProductOpp");
                     }
@@ -1535,7 +1630,7 @@ public class InGameManager : MonoBehaviour
         int maskOrder = 0;
         foreach (VerticalFrames group in vf)
         {
-            group.init(maskOrder);
+            group.init(maskOrder, oneBlockScale);
             maskOrder++;
         }
 
@@ -2406,8 +2501,6 @@ public class InGameManager : MonoBehaviour
                 {
                     Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
                     Product target = pro.Dir(body.dir);
-                    if(body.skill == ProductSkill.Nothing)
-                        EventCombo?.Invoke(0);
 
                     mIsUserEventLock = true;
                     pro.Swipe(target, () => {

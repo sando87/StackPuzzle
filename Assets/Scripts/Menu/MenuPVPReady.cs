@@ -46,18 +46,20 @@ public class MenuPVPReady : MonoBehaviour
     {
         yield return new WaitForSeconds(1);
         StageInfo info = StageInfo.Load(mLevel);
-        InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         Vector3 pos = MenuBattle.Inst().OpponentRect.transform.position;
-        pos.z = InGameManager.InstPVP_Opponent.transform.position.z;
-        InGameManager.InstPVP_Opponent.transform.position = pos;
-
+        InGameManager.InstPVP_Opponent.transform.SetPosition2D(pos);
+        InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
+        
         yield return new WaitForSeconds(2);
+
+        pos = MenuBattle.Inst().PlayerRect.transform.position;
+        InGameManager.InstPVP_Player.transform.SetPosition2D(pos);
+        pos = MenuBattle.Inst().AttackPointFrame.transform.position;
+        InGameManager.InstPVP_Player.AttackPointFrame.transform.SetPosition2D(pos);
 
         InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
         InGameManager.InstPVP_Player.InitProducts();
-        pos = MenuBattle.Inst().PlayerRect.transform.position;
-        pos.z = InGameManager.InstPVP_Player.transform.position.z;
-        InGameManager.InstPVP_Player.transform.position = pos;
+        
 
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         gameObject.SetActive(false);

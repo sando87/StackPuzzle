@@ -1,6 +1,6 @@
 GoalType,Score
 GoalValue,99999
-TimeLimit,0
+TimeLimit,50
 ColorCount,6
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0 0/0

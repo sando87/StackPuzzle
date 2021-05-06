@@ -271,7 +271,12 @@ public class MenuWaitMatch : MonoBehaviour
         StopCoroutine("WaitOpponent");
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
-            btn.UpdateItem();
+        {
+            if (btn.GetItem().GetCount() > 0)
+                btn.UpdateItem();
+            else
+                btn.SetItem(PurchaseItemType.None);
+        }
     }
     private void UpdateUserInfo(UserInfo info)
     {

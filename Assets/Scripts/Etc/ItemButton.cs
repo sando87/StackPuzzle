@@ -27,4 +27,12 @@ public class ItemButton : Button
         transform.GetChild(0).GetComponent<Image>().sprite = ItemType.GetSprite();
         transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = ItemType.GetCount().ToString();
     }
+
+    public void SetEnable(bool enable)
+    {
+        transform.GetChild(0).GetComponent<Image>().color = enable ? Color.white : Color.gray;
+        transform.GetChild(0).GetComponent<Image>().sprite = ItemType.GetSprite();
+        transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = ItemType.GetCount().ToString();
+        enabled = enable;
+    }
 }

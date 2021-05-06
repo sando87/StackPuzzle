@@ -22,8 +22,12 @@ public class MenuBattle : MonoBehaviour
     public TextMeshProUGUI OpponentScore;
     public GameObject PlayerRect;
     public GameObject OpponentRect;
-    public GameObject Limit;
-    public GameObject[] ItemSlots;
+    public TextMeshProUGUI PlayerLimit;
+    public TextMeshProUGUI OpponentLimit;
+    public GameObject AttackPointFrame;
+    public Sprite ItemEmptyImage;
+    public ItemButton[] PlayerItemSlots;
+    public ItemButton[] OpponentItemSlots;
 
     private MenuMessageBox mMenu;
 
@@ -88,22 +92,17 @@ public class MenuBattle : MonoBehaviour
         OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
         PurchaseItemType[] items = MenuWaitMatch.Inst().GetSelectedItems();
-        for (int i = 0; i < ItemSlots.Length; ++i)
+        for (int i = 0; i < PlayerItemSlots.Length; ++i)
         {
             if (i < items.Length && InGameManager.InstPVP_Player.Difficulty != MatchingLevel.Easy)
             {
-                ItemSlots[i].name = items[i].ToInt().ToString();
-                ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
-                ItemSlots[i].GetComponentInChildren<Image>().sprite = items[i].GetSprite();
-                ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
-                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
+                PlayerItemSlots[i].SetItem(items[i]);
+                PlayerItemSlots[i].SetEnable(true);
             }
             else
             {
-                ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
-                ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
-                ItemSlots[i].GetComponentInChildren<Image>().sprite = PurchaseItemType.None.GetSprite();
-                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
+                PlayerItemSlots[i].SetItem(PurchaseItemType.None);
+                PlayerItemSlots[i].SetEnable(false);
             }
         }
 
@@ -131,7 +130,21 @@ public class MenuBattle : MonoBehaviour
             else
                 ComboOpponent.SetNumber(combo);
         };
+        InGameManager.InstPVP_Player.EventRemainTime = (remainSec) => {
+            PlayerLimit.text = TimeToString(remainSec);
+        };
     }
+
+    public string TimeToString(int second)
+    {
+        if (second < 0)
+            return "00:00";
+
+        int min = second / 60;
+        int sec = second % 60;
+        return string.Format("{0:00}:{1:00}", min, sec);
+    }
+
     private void FinishGame(bool success)
     {
         int prevScore = UserSetting.UserScore;
@@ -193,33 +206,32 @@ public class MenuBattle : MonoBehaviour
     public void OnClickItem()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
+        ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
+        PurchaseItemType itemType = btn.GetItem();
         switch (itemType)
         {
             case PurchaseItemType.ExtendLimit:
-                InGameManager.InstStage.UseItemExtendsLimits(btn.transform.position, Limit.transform.position);
+                InGameManager.InstPVP_Player.UseItemExtendsLimits(btn.transform.position, PlayerLimit.transform.position);
                 break;
             case PurchaseItemType.RemoveIce:
-                InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
+                InGameManager.InstPVP_Player.UseItemBreakce(btn.transform.position, 10);
                 break;
             case PurchaseItemType.MakeSkill1:
-                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
+                InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
             case PurchaseItemType.MakeCombo:
-                InGameManager.InstStage.UseItemMatch(btn.transform.position);
+                InGameManager.InstPVP_Player.UseItemMatch(btn.transform.position);
                 break;
             case PurchaseItemType.MakeSkill2:
-                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
+                InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
             case PurchaseItemType.PowerUp:
-                InGameManager.InstStage.UseItemMeteor(5);
+                InGameManager.InstPVP_Player.UseItemMeteor(5);
                 break;
             default: break;
         }
 
-        btn.GetComponent<Image>().color = Color.gray;
-        btn.enabled = false;
+        btn.SetEnable(false);
         Purchases.UseItem(itemType);
 
         string log = "[UseItem] " + "PVP:" + OpponentName + ", Item:" + itemType + ", Count:" + itemType.GetCount();

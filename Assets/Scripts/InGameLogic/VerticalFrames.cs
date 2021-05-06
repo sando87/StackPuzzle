@@ -8,7 +8,7 @@ public class VerticalFrames : MonoBehaviour
     private Frame[] Frames = null;
     public int MaskOrder { get; private set; } = 0;
 
-    public void init(int maskOrder)
+    public void init(int maskOrder, float scale)
     {
         List<Frame> list = new List<Frame>();
         foreach (Transform child in transform)
@@ -28,7 +28,7 @@ public class VerticalFrames : MonoBehaviour
         mask.name = "Mask";
         mask.transform.SetParent(transform);
         mask.transform.position = centerPos;
-        mask.transform.localScale = new Vector3(UserSetting.BattleOppResize, list.Count * UserSetting.BattleOppResize, 1);
+        mask.transform.localScale = new Vector3(scale, list.Count * scale, 1);
         mask.sprite = Resources.Load<Sprite>("Images/spriteMask");
         mask.isCustomRangeActive = true;
         mask.frontSortingOrder = maskOrder + 1;

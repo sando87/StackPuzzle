@@ -18,6 +18,7 @@ public class Product : MonoBehaviour
     public Sprite ImgBomb;
     public Sprite ImgSameColor;
     public Sprite ImgCombo;
+    public Sprite ImgClosed;
     public GameObject ComboNumPrefab;
     public GameObject CapObject;
 
@@ -41,6 +42,7 @@ public class Product : MonoBehaviour
     public bool SkillCasted { get; set; } = false;
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
     public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
+    public bool IsClosed { get { return int.Parse(ChocoBlock.name) > Chocos.Length; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
     public void AttachTo(Frame parentFrame)
@@ -541,7 +543,7 @@ public class Product : MonoBehaviour
         ChocoBlock.tag = "on";
         ChocoBlock.name = level.ToString();
         ChocoBlock.GetComponent<SpriteRenderer>().enabled = true;
-        ChocoBlock.GetComponent<SpriteRenderer>().sprite = Chocos[level - 1];
+        ChocoBlock.GetComponent<SpriteRenderer>().sprite = level <= Chocos.Length ? Chocos[level - 1] : ImgClosed;
         ChocoBlock.transform.localScale = Vector3.one;
     }
     public void EnableMasking(int order)
