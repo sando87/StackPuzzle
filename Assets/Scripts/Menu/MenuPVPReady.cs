@@ -60,9 +60,8 @@ public class MenuPVPReady : MonoBehaviour
         InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
         InGameManager.InstPVP_Player.InitProducts();
         
-
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGame);
         gameObject.SetActive(false);
-        MenuBattle.PopUp();
+        MenuBattle.PopUp(info);
     }
 }

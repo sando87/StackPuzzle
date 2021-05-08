@@ -30,6 +30,7 @@ public class MenuBattle : MonoBehaviour
     public ItemButton[] OpponentItemSlots;
 
     private MenuMessageBox mMenu;
+    private StageInfo mStageInfo;
 
     private void Update()
     {
@@ -48,10 +49,10 @@ public class MenuBattle : MonoBehaviour
         return mInst;
     }
 
-    public static void PopUp()
+    public static void PopUp(StageInfo stageInfo)
     {
         Inst().gameObject.SetActive(true);
-        Inst().Init();
+        Inst().Init(stageInfo);
     }
 
     public static void Hide()
@@ -76,8 +77,10 @@ public class MenuBattle : MonoBehaviour
     }
 #endif
 
-    private void Init()
+    private void Init(StageInfo stageInfo)
     {
+        mStageInfo = stageInfo;
+
         for (int i = 0; i < EffectParent.transform.childCount; ++i)
             Destroy(EffectParent.transform.GetChild(i).gameObject);
 
@@ -241,13 +244,13 @@ public class MenuBattle : MonoBehaviour
         string log = "[UseItem] " + "PVP:" + OpponentName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }
-    IEnumerator DisplayOppTimeLimit(int timelimit)
+    IEnumerator DisplayOppTimeLimit(int _remain)
     {
-        int curRemain = timelimit;
-        while(curRemain >= 0)
+        int remain = _remain;
+        while (remain >= 0)
         {
-            OpponentLimit.text = TimeToString(curRemain);
-            curRemain--;
+            OpponentLimit.text = TimeToString(remain);
+            remain--;
             yield return new WaitForSeconds(1);
         }
     }

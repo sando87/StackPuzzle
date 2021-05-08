@@ -165,7 +165,6 @@ public class InGameManager : MonoBehaviour
     {
         StartGame(info, userInfo);
 
-        EventRemainTime?.Invoke(mStageInfo.TimeLimit);
         transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
         StartCoroutine(ProcessNetMessages());
     }
@@ -1481,9 +1480,12 @@ public class InGameManager : MonoBehaviour
     {
         int addedSec = mStageInfo.TimeLimit;
         int timelimit = addedSec;
+        float remainTime = timelimit - PlayTime;
+        Network_CloseProducts(new List<ProductInfo>().ToArray(), (int)remainTime);
+
         while (timelimit > 0)
         {
-            float remainTime = timelimit - PlayTime;
+            remainTime = timelimit - PlayTime;
             EventRemainTime?.Invoke((int)remainTime);
             if (remainTime < 0)
             {
@@ -1504,7 +1506,7 @@ public class InGameManager : MonoBehaviour
                     foreach (Product pro in nextPros)
                         nextClosePros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
 
-                    Network_CloseProducts(nextClosePros.ToArray(), timelimit);
+                    Network_CloseProducts(nextClosePros.ToArray(), (int)(timelimit - PlayTime));
                     StartCoroutine(CloseProducts(nextPros.ToArray()));
                 }
             }
@@ -2632,7 +2634,7 @@ public class InGameManager : MonoBehaviour
 
                 if (products.Count == body.ArrayCount)
                 {
-                    EventRemainTime?.Invoke(body.nextTimeLimit);
+                    EventRemainTime?.Invoke(body.remainTime);
                     StartCoroutine(CloseProducts(products.ToArray()));
 
                     mNetMessages.RemoveFirst();
@@ -2809,7 +2811,7 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_CloseProducts(ProductInfo[] pros, int timelimit)
+    private void Network_CloseProducts(ProductInfo[] pros, int remainTime)
     {
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
@@ -2818,7 +2820,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.CloseProducts;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
-        req.nextTimeLimit = timelimit;
+        req.remainTime = remainTime;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))

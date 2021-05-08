@@ -186,7 +186,7 @@ public class PVPInfo
     public int idxX;
     public int idxY;
     public int newDropCount;
-    public int nextTimeLimit;
+    public int remainTime;
     public float colorCount;
     public bool withLaserEffect;
     public bool success;
