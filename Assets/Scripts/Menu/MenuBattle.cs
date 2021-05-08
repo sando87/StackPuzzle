@@ -133,6 +133,10 @@ public class MenuBattle : MonoBehaviour
         InGameManager.InstPVP_Player.EventRemainTime = (remainSec) => {
             PlayerLimit.text = TimeToString(remainSec);
         };
+        InGameManager.InstPVP_Opponent.EventRemainTime = (remainSec) => {
+            StopCoroutine("DisplayOppTimeLimit");
+            StartCoroutine("DisplayOppTimeLimit", remainSec);
+        };
     }
 
     public string TimeToString(int second)
@@ -236,6 +240,16 @@ public class MenuBattle : MonoBehaviour
 
         string log = "[UseItem] " + "PVP:" + OpponentName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
+    }
+    IEnumerator DisplayOppTimeLimit(int timelimit)
+    {
+        int curRemain = timelimit;
+        while(curRemain >= 0)
+        {
+            OpponentLimit.text = TimeToString(curRemain);
+            curRemain--;
+            yield return new WaitForSeconds(1);
+        }
     }
 
 }

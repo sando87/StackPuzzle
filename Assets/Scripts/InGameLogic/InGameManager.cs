@@ -165,6 +165,7 @@ public class InGameManager : MonoBehaviour
     {
         StartGame(info, userInfo);
 
+        EventRemainTime?.Invoke(mStageInfo.TimeLimit);
         transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
         StartCoroutine(ProcessNetMessages());
     }
@@ -1486,22 +1487,32 @@ public class InGameManager : MonoBehaviour
             EventRemainTime?.Invoke((int)remainTime);
             if (remainTime < 0)
             {
-                StartCoroutine(CloseProducts());
+                while (!IsIdle)
+                    yield return null;
+
                 addedSec = (int)(addedSec * 0.7f);
                 timelimit += Mathf.Max(addedSec, 10);
+
+                List<Product> nextPros = GetNextCloseProducts(6);
+                if (nextPros.Count < 6)
+                {
+                    StartFinish(false);
+                }
+                else
+                {
+                    List<ProductInfo> nextClosePros = new List<ProductInfo>();
+                    foreach (Product pro in nextPros)
+                        nextClosePros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
+
+                    Network_CloseProducts(nextClosePros.ToArray(), timelimit);
+                    StartCoroutine(CloseProducts(nextPros.ToArray()));
+                }
             }
             yield return new WaitForSeconds(1);
         }
     }
-    IEnumerator CloseProducts()
+    IEnumerator CloseProducts(Product[] nextPros)
     {
-        while (!IsIdle)
-            yield return null;
-
-        List<Product> nextPros = GetNextCloseProducts(6);
-        if (nextPros.Count < 6)
-            StartFinish(false);
-
         mIsFlushing = true;
         List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
         foreach (Product target in nextPros)
@@ -2608,6 +2619,25 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.CloseProducts)
+            {
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = ProductIDs[info.prvInstID];
+                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
+                        products.Add(pro);
+                }
+
+                if (products.Count == body.ArrayCount)
+                {
+                    EventRemainTime?.Invoke(body.nextTimeLimit);
+                    StartCoroutine(CloseProducts(products.ToArray()));
+
+                    mNetMessages.RemoveFirst();
+                }
+            }
             else if (body.cmd == PVPCommand.DropPause)
             {
                 mStopDropping = true;
@@ -2774,6 +2804,21 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.BreakIce;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
+        req.ArrayCount = pros.Length;
+        Array.Copy(pros, req.products, pros.Length);
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
+            StartFinish(false);
+    }
+    private void Network_CloseProducts(ProductInfo[] pros, int timelimit)
+    {
+        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.CloseProducts;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = Billboard.CurrentCombo;
+        req.nextTimeLimit = timelimit;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
