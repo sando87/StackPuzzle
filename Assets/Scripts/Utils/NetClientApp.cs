@@ -1,22 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.NetworkInformation;
+using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class NetClientApp : MonoBehaviour
 {
     public static NetClientApp mInst = null;
-    public string ServerAddress = "localhost"; //"sjleeserver.iptime.org";
     public int ServerPort = 9435;
 
-    const string GameObjectName = "NetClientObject";
     const int recvBufSize = 1024 * 64;
 
     TcpClient mSession = null;
@@ -31,6 +25,18 @@ public class NetClientApp : MonoBehaviour
     public class UnityEventClick : UnityEvent<Header, byte[]> { }
     public UnityEventClick EventMessage = null;
     public bool IsKeepConnection { get; set; } = false;
+
+
+    private string GetServerAddr()
+    {
+        string serverAddr = "sjleeserver.iptime.org";
+        //string serverAddr = "ec2-3-35-208-197.ap-northeast-2.compute.amazonaws.com";
+        if (IsAccessableDomain(serverAddr))
+            return serverAddr;
+
+        return "27.117.158.3";
+        //return "3.35.208.197";
+    }
 
     private void OnDestroy()
     {
@@ -58,7 +64,7 @@ public class NetClientApp : MonoBehaviour
     }
     public bool IsDisconnected()
     {
-        return mSession == null || !mSession.Connected;
+        return mSession == null || !mSession.Connected || mStream == null;
     }
     public bool Request(NetCMD cmd, object body, Action<byte[]> response)
     {
@@ -95,7 +101,7 @@ public class NetClientApp : MonoBehaviour
         try
         {
             mSession = new TcpClient();
-            mSession.BeginConnect(ServerAddress, ServerPort, null, null);
+            mSession.BeginConnect(GetServerAddr(), ServerPort, null, null);
             float st = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - st < timeoutSec)
             {
@@ -116,7 +122,7 @@ public class NetClientApp : MonoBehaviour
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
         return false;
     }
-    public void ConnectASync(Action<bool> eventConnect)
+    public void ConnectASync(Action<bool> eventConnect, float timeout = 10)
     {
         mEventConnection = eventConnect;
         if (mSession != null)
@@ -125,8 +131,8 @@ public class NetClientApp : MonoBehaviour
         try
         {
             mSession = new TcpClient();
-            mSession.BeginConnect(ServerAddress, ServerPort, null, null);
-            StartCoroutine(CheckConnection(10));
+            mSession.BeginConnect(GetServerAddr(), ServerPort, null, null);
+            StartCoroutine(CheckConnection(timeout));
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
@@ -175,7 +181,6 @@ public class NetClientApp : MonoBehaviour
         mHandlerTable.Clear();
         mRequestID = 0;
     }
-
 
     private void ReadRecvData()
     {
@@ -279,6 +284,19 @@ public class NetClientApp : MonoBehaviour
             }
             yield return new WaitForSeconds(NetProtocol.ClientSessionKeepTime);
         }
+    }
+
+    public static bool IsAccessableDomain(string domain)
+    {
+        try
+        {
+            IPHostEntry entry = Dns.GetHostEntry(domain);
+            if (entry != null && entry.AddressList.Length > 0)
+                return true;
+        }
+        catch (SocketException ex) { LOG.warn(ex.Message); }
+        catch (Exception ex) { LOG.warn(ex.Message); }
+        return false;
     }
 
 }
