@@ -3,15 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class NetClientApp : MonoBehaviour
 {
+    const int recvBufSize = 1024 * 64;
+
     public static NetClientApp mInst = null;
     public int ServerPort = 9435;
-
-    const int recvBufSize = 1024 * 64;
+    private string ServerAddress = "sjleeserver.iptime.org"; //27.117.158.3
+    //private string ServerAddress = "ec2-3-35-208-197.ap-northeast-2.compute.amazonaws.com"; //3.35.208.197
 
     TcpClient mSession = null;
     NetworkStream mStream = null;
@@ -27,15 +30,11 @@ public class NetClientApp : MonoBehaviour
     public bool IsKeepConnection { get; set; } = false;
 
 
-    private string GetServerAddr()
+    static public NetClientApp GetInstance()
     {
-        string serverAddr = "sjleeserver.iptime.org";
-        //string serverAddr = "ec2-3-35-208-197.ap-northeast-2.compute.amazonaws.com";
-        if (IsAccessableDomain(serverAddr))
-            return serverAddr;
-
-        return "27.117.158.3";
-        //return "3.35.208.197";
+        if (mInst == null)
+            mInst = FindObjectOfType<NetClientApp>();
+        return mInst;
     }
 
     private void OnDestroy()
@@ -56,12 +55,6 @@ public class NetClientApp : MonoBehaviour
         ParseAndInvokeCallback();
     }
 
-    static public NetClientApp GetInstance()
-    {
-        if (mInst == null)
-            mInst = FindObjectOfType<NetClientApp>();
-        return mInst;
-    }
     public bool IsDisconnected()
     {
         return mSession == null || !mSession.Connected || mStream == null;
@@ -93,78 +86,46 @@ public class NetClientApp : MonoBehaviour
         return true;
     }
 
-    public bool ConnectSync(int timeoutSec)
+    public async void ConnectASync(Action<bool> eventConnect, float timeout = 10)
     {
-        if (mSession != null)
-            return true;
-
-        try
-        {
-            mSession = new TcpClient();
-            mSession.BeginConnect(GetServerAddr(), ServerPort, null, null);
-            float st = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup - st < timeoutSec)
-            {
-                if (mSession.Connected)
-                {
-                    mStream = mSession.GetStream();
-                    mLastRequest = DateTime.Now;
-                    LOG.echo(mSession.Client.LocalEndPoint.ToString());
-                    return true;
-                }
-            }
-
-            mSession.Close();
-            mSession = null;
-            throw new TimeoutException();
-        }
-        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
-        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
-        return false;
-    }
-    public void ConnectASync(Action<bool> eventConnect, float timeout = 10)
-    {
-        mEventConnection = eventConnect;
         if (mSession != null)
             return;
 
-        try
-        {
-            mSession = new TcpClient();
-            mSession.BeginConnect(GetServerAddr(), ServerPort, null, null);
-            StartCoroutine(CheckConnection(timeout));
-        }
-        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
-        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
-    }
-    private IEnumerator CheckConnection(float timeout)
-    {
-        float time = 0;
-        while (time < timeout)
-        {
-            if (mSession == null)
-                break;
-            else if (mSession.Connected)
-                break;
+        StartCoroutine("WaitTimeout", timeout);
+        mSession = new TcpClient();
+        var task1 = Task.Run(() => {
+            try
+            {
+                mSession.Connect(ServerAddress, ServerPort);
+                return mSession.Connected;
+            }
+            catch (SocketException ex) { LOG.warn(ex.Message); }
+            catch (Exception ex) { LOG.warn(ex.Message); }
+            return false;
+        });
 
-            yield return null;
-            time += Time.deltaTime;
-        }
+        await task1;
 
+        StopCoroutine("WaitTimeout");
         if (mSession != null && mSession.Connected)
         {
             mStream = mSession.GetStream();
             mLastRequest = DateTime.Now;
             LOG.echo(mSession.Client.LocalEndPoint.ToString());
-            mEventConnection?.Invoke(true);
+            eventConnect?.Invoke(true);
         }
         else
         {
             DisConnect();
-            mEventConnection?.Invoke(false);
+            eventConnect?.Invoke(false);
         }
     }
-    public void DisConnect()
+    private IEnumerator WaitTimeout(float timeout)
+    {
+        yield return new WaitForSeconds(timeout);
+        DisConnect();
+    }
+    private void DisConnect()
     {
         if (mStream != null)
         {

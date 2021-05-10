@@ -84,6 +84,7 @@ namespace Consolation
 
         bool isCollapsed;
         bool isVisible;
+        bool isInited = false;
         readonly List<Log> logs = new List<Log>();
         readonly ConcurrentQueue<Log> queuedLogs = new ConcurrentQueue<Log>();
 
@@ -103,15 +104,15 @@ namespace Consolation
 
         #region MonoBehaviour Messages
 
-        void OnDisable()
-        {
-            Application.logMessageReceivedThreaded -= HandleLogThreaded;
-        }
-
-        void OnEnable()
-        {
-            Application.logMessageReceivedThreaded += HandleLogThreaded;
-        }
+        //void OnDisable()
+        //{
+        //    Application.logMessageReceivedThreaded -= HandleLogThreaded;
+        //}
+        //
+        //void OnEnable()
+        //{
+        //    Application.logMessageReceivedThreaded += HandleLogThreaded;
+        //}
 
         void OnGUI()
         {
@@ -161,6 +162,15 @@ namespace Consolation
         }
 
         #endregion
+
+        public void Init()
+        {
+            if(!isInited)
+            {
+                isInited = true;
+                Application.logMessageReceivedThreaded += HandleLogThreaded;
+            }
+        }
 
         void DrawLog(Log log, GUIStyle logStyle, GUIStyle badgeStyle)
         {
