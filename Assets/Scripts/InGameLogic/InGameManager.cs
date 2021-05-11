@@ -2132,6 +2132,8 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator StartElectronicEffect(Vector3 _startPos, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
+        ShakeField(0.05f);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
         mItemLooping = true;
         Vector3 startPos = _startPos;
         while (true)
