@@ -89,10 +89,14 @@ public class MenuWaitMatch : MonoBehaviour
             if(item.GetCount() > 0)
             {
                 curBtn.SetItem(item);
+                int idx = curBtn.transform.GetSiblingIndex();
+                UserSetting.UserInfo.PvpItems[idx] = item;
             }
             else
             {
                 curBtn.SetItem(PurchaseItemType.None);
+                int idx = curBtn.transform.GetSiblingIndex();
+                UserSetting.UserInfo.PvpItems[idx] = PurchaseItemType.None;
             }
         });
     }
@@ -187,13 +191,12 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
-    public PurchaseItemType[] GetSelectedItems()
+    static public PurchaseItemType[] GetSelectedItems(UserInfo userInfo)
     {
         Dictionary<PurchaseItemType, int> rets = new Dictionary<PurchaseItemType, int>();
-        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
-        foreach (ItemButton btn in btns)
-            if (btn.GetItem().GetCount() > 0)
-                rets[btn.GetItem()] = 1;
+        foreach (PurchaseItemType item in userInfo.PvpItems)
+            if (item.GetCount() > 0)
+                rets[item] = 1;
 
         return new List<PurchaseItemType>(rets.Keys).ToArray();
     }
@@ -272,10 +275,17 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
         {
+            int idx = btn.transform.GetSiblingIndex();
             if (btn.GetItem().GetCount() > 0)
+            {
                 btn.UpdateItem();
+                UserSetting.UserInfo.PvpItems[idx] = btn.GetItem();
+            }
             else
+            {
                 btn.SetItem(PurchaseItemType.None);
+                UserSetting.UserInfo.PvpItems[idx] = PurchaseItemType.None;
+            }
         }
     }
     private void UpdateUserInfo(UserInfo info)

@@ -94,7 +94,7 @@ public class MenuBattle : MonoBehaviour
         PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
         OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
-        PurchaseItemType[] items = MenuWaitMatch.Inst().GetSelectedItems();
+        PurchaseItemType[] items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Player.UserInfo);
         for (int i = 0; i < PlayerItemSlots.Length; ++i)
         {
             if (i < items.Length && InGameManager.InstPVP_Player.Difficulty != MatchingLevel.Easy)
@@ -106,6 +106,21 @@ public class MenuBattle : MonoBehaviour
             {
                 PlayerItemSlots[i].SetItem(PurchaseItemType.None);
                 PlayerItemSlots[i].SetEnable(false);
+            }
+        }
+
+        items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Opponent.UserInfo);
+        for (int i = 0; i < OpponentItemSlots.Length; ++i)
+        {
+            if (i < items.Length && InGameManager.InstPVP_Opponent.Difficulty != MatchingLevel.Easy)
+            {
+                OpponentItemSlots[i].SetItem(items[i]);
+                OpponentItemSlots[i].SetEnable(true);
+            }
+            else
+            {
+                OpponentItemSlots[i].SetItem(PurchaseItemType.None);
+                OpponentItemSlots[i].SetEnable(false);
             }
         }
 
@@ -142,7 +157,7 @@ public class MenuBattle : MonoBehaviour
         };
     }
 
-    public string TimeToString(int second)
+    static public string TimeToString(int second)
     {
         if (second < 0)
             return "00:00";
@@ -150,6 +165,13 @@ public class MenuBattle : MonoBehaviour
         int min = second / 60;
         int sec = second % 60;
         return string.Format("{0:00}:{1:00}", min, sec);
+    }
+    static public int StringToSec(string timerText)
+    {
+        string[] piece = timerText.Split(':');
+        int min = int.Parse(piece[0]);
+        int sec = int.Parse(piece[1]);
+        return min * 60 + sec;
     }
 
     private void FinishGame(bool success)

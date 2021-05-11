@@ -84,11 +84,6 @@ public static class PurchaseItemTypeExtensions
     public static Sprite GetChestSprite() { return ChestImage; }
 }
 
-public enum PurchaseItemType
-{
-    None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp
-}
-
 public class PurchaseInfo
 {
     public int random;

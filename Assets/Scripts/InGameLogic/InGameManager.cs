@@ -975,6 +975,7 @@ public class InGameManager : MonoBehaviour
     public void UseItemExtendsLimits(Vector3 startWorldPos, Vector3 destWorldPos)
     {
         mIsItemEffect = true;
+        Network_UseItem(new ProductInfo[0], PurchaseItemType.ExtendLimit);
         GameObject missile = GameObject.Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
         StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
         {
@@ -997,6 +998,11 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Product[] icedBlocks = GetTopIceBlocks(count);
 
+        List<ProductInfo> netPros = new List<ProductInfo>();
+        foreach (Product target in icedBlocks)
+            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.RemoveIce);
+
         List<ProductInfo> breakIceProducts = new List<ProductInfo>();
         StartCoroutine(CreateMagnetMissiles(startWorldPos, icedBlocks,
             (pro) =>
@@ -1016,6 +1022,12 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
+
+        List<ProductInfo> netPros = new List<ProductInfo>();
+        foreach (Product target in idlePros)
+            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeSkill1);
+
         List<ProductInfo> netInfo = new List<ProductInfo>();
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
             (pro) =>
@@ -1042,6 +1054,12 @@ public class InGameManager : MonoBehaviour
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
+
+        List<ProductInfo> netPros = new List<ProductInfo>();
+        foreach (Product target in idlePros)
+            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeSkill2);
+
         List<ProductInfo> netInfo = new List<ProductInfo>();
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, idlePros,
             (pro) =>
@@ -1063,6 +1081,11 @@ public class InGameManager : MonoBehaviour
         foreach (Product[] matchedPros in matchesGroup)
             frames.Add(matchedPros[0].ParentFrame);
 
+        List<ProductInfo> netPros = new List<ProductInfo>();
+        foreach (Frame target in frames)
+            netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeMatch);
+
         mIsItemEffect = true;
         mStopDropping = true;
         StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.2f, frames.ToArray(),
@@ -1083,6 +1106,12 @@ public class InGameManager : MonoBehaviour
     {
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
+
+        List<ProductInfo> netPros = new List<ProductInfo>();
+        foreach (Frame target in idleFrames)
+            netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.Meteor);
+
         StartCoroutine(CreateMeteor(idleFrames, 
             (frame) => {
                 ShakeField(0.05f);
@@ -2640,6 +2669,23 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.UseItem)
+            {
+                List<Product> products = new List<Product>();
+                for (int i = 0; i < body.ArrayCount; ++i)
+                {
+                    ProductInfo info = body.products[i];
+                    Product pro = ProductIDs[info.prvInstID];
+                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
+                        products.Add(pro);
+                }
+
+                if (products.Count == body.ArrayCount)
+                {
+                    CastItemEffectOnOpponent(products.ToArray(), body.item);
+                    mNetMessages.RemoveFirst();
+                }
+            }
             else if (body.cmd == PVPCommand.DropPause)
             {
                 mStopDropping = true;
@@ -2687,6 +2733,63 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+        }
+    }
+    private void CastItemEffectOnOpponent(Product[] pros, PurchaseItemType item)
+    {
+        ItemButton[] itemSlots = MenuBattle.Inst().OpponentItemSlots;
+        Vector3 startWorldPos = itemSlots[0].transform.position;
+        foreach (ItemButton slot in itemSlots)
+        {
+            if (slot.GetItem() == item)
+            {
+                startWorldPos = slot.transform.position;
+                slot.SetEnable(false);
+                break;
+            }
+        }
+
+        if (item == PurchaseItemType.ExtendLimit)
+        {
+            Vector3 destWorldPos = MenuBattle.Inst().OpponentLimit.transform.position;
+            GameObject missile = Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
+            StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
+            {
+                if (mStageInfo.TimeLimit > 0)
+                {
+                    int remainSec = MenuBattle.StringToSec(MenuBattle.Inst().OpponentLimit.text);
+                    remainSec += 10; //10초 연장
+                    EventRemainTime?.Invoke(remainSec);
+                }
+            }));
+        }
+        else if (item == PurchaseItemType.RemoveIce)
+        {
+            StartCoroutine(CreateMagnetMissiles(startWorldPos, pros, null, null));
+        }
+        else if (item == PurchaseItemType.MakeSkill1)
+        {
+            StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, pros, null, null));
+        }
+        else if (item == PurchaseItemType.MakeSkill2)
+        {
+            StartCoroutine(CreateMagnetTrails(TrailingPrefab, pros, null, null));
+        }
+        else if (item == PurchaseItemType.MakeMatch)
+        {
+            List<Frame> frames = new List<Frame>();
+            foreach (Product pro in pros)
+                frames.Add(pro.ParentFrame);
+
+            StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.2f, frames.ToArray(), null, null));
+        }
+        else if (item == PurchaseItemType.Meteor)
+        {
+            List<Frame> frames = new List<Frame>();
+            foreach (Product pro in pros)
+                frames.Add(pro.ParentFrame);
+
+            StartCoroutine(CreateMeteor(frames.ToArray(), (frame) => { ShakeField(0.05f); }, null));
         }
     }
     private ProductInfo[] Serialize(Product[] pros)
@@ -2821,6 +2924,21 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.remainTime = remainTime;
+        req.ArrayCount = pros.Length;
+        Array.Copy(pros, req.products, pros.Length);
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
+            StartFinish(false);
+    }
+    private void Network_UseItem(ProductInfo[] pros, PurchaseItemType item)
+    {
+        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.UseItem;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.combo = Billboard.CurrentCombo;
+        req.item = item;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))

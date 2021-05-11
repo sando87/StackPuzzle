@@ -9,7 +9,7 @@ public enum NetCMD
 }
 public enum PVPCommand
 {
-    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, DropPause, DropResume, ChangeSkill, BreakIce, CloseProducts,
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, DropPause, DropResume, ChangeSkill, BreakIce, CloseProducts, UseItem,
     SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
 }
 public enum ProductColor
@@ -24,6 +24,10 @@ public enum ProductSkill
 {
     Nothing, Horizontal, Vertical, Bomb, SameColor
 };
+public enum PurchaseItemType
+{
+    None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp, MakeMatch, Meteor
+}
 
 public class NetProtocol
 {
@@ -137,6 +141,8 @@ public class UserInfo
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
     public bool IsBot { get { return deviceName.Contains("bot"); } }
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+    public PurchaseItemType[] PvpItems = new PurchaseItemType[3];
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
@@ -193,6 +199,7 @@ public class PVPInfo
     public bool oppDisconnected = false;
     public ProductSkill skill;
     public SwipeDirection dir;
+    public PurchaseItemType item;
     public UserInfo userInfo;
     public int ArrayCount;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
