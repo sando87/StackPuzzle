@@ -21,7 +21,7 @@ public class Product : MonoBehaviour
     public Sprite ImgClosed;
     public GameObject ComboNumPrefab;
     public GameObject CapObject;
-
+    public GameObject WaterDropParticle;
 
     public Action EventUnWrapChoco;
     public Action EventUnWrapCap;
@@ -196,6 +196,7 @@ public class Product : MonoBehaviour
         Frame parent = Detach(Manager.transform);
         parent.BreakCover();
         parent.BreakBush(Combo);
+        WaterDropParticle.SetActive(true);
         StartCoroutine(AnimateDestroy());
 
         return parent;
