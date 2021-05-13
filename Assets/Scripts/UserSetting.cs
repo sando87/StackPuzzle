@@ -19,6 +19,14 @@ public class UserSetting
         mUserInfo = info;
         SaveUserInfo(info);
     }
+    public static DateTime FirstLaunchDate
+    {
+        get
+        {
+            string ticks = PlayerPrefs.GetString("FirstLaunchDate", DateTime.Now.Ticks.ToString());
+            return new DateTime(long.Parse(ticks));
+        }
+    }
     public static MatchingLevel MatchLevel
     {
         get { return (MatchingLevel)PlayerPrefs.GetInt("matchLevel", 1); }

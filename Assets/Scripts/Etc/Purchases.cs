@@ -94,6 +94,7 @@ public class PurchaseInfo
     public int countDiamond;
     public int infiniteHeart;
     public int[] countItem = new int[16];
+    public int[] attendFlags = new int[30];
     public PurchaseInfo()
     {
         maxHeart = 20;
@@ -105,6 +106,8 @@ public class PurchaseInfo
 
         for (int i = 0; i < countItem.Length; ++i)
             countItem[i] = 0;
+        for (int i = 0; i < attendFlags.Length; ++i)
+            attendFlags[i] = 0;
     }
     public byte[] Serialize()
     {
@@ -119,6 +122,8 @@ public class PurchaseInfo
 
         for (int i = 0; i < countItem.Length; ++i)
             bytes.AddRange(BitConverter.GetBytes(countItem[i]));
+        for (int i = 0; i < attendFlags.Length; ++i)
+            bytes.AddRange(BitConverter.GetBytes(attendFlags[i]));
 
         return bytes.ToArray();
     }
@@ -134,12 +139,14 @@ public class PurchaseInfo
 
         for(int i = 0; i < countItem.Length; ++i)
             countItem[i] = BitConverter.ToInt32(data, 32 + i * 4);
+        for (int i = 0; i < attendFlags.Length; ++i)
+            attendFlags[i] = BitConverter.ToInt32(data, 96 + i * 4);
     }
 }
 
 public class Purchases
 {
-    private const string prefsKeyName = "pcInfo3";
+    private const string prefsKeyName = "pcInfo4";
     private static PurchaseInfo mInfo = null;
 
     public static void Initialize()
@@ -286,6 +293,18 @@ public class Purchases
         UpdatePurchaseInfo(mInfo);
         return true;
     }
+    public static void SetAttendFlag(int dayIdx)
+    {
+        if(dayIdx < mInfo.attendFlags.Length)
+            mInfo.attendFlags[dayIdx] = 1;
+    }
+    public static bool IsAttend(int dayIdx)
+    {
+        if (dayIdx < mInfo.attendFlags.Length)
+            return mInfo.attendFlags[dayIdx] == 1;
+        return false;
+    }
+
 
     private static PurchaseInfo LoadPurchaseInfo()
     {

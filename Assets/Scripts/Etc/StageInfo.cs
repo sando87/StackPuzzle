@@ -208,31 +208,35 @@ public class StageInfo
         }
         return type;
     }
+    public static Tuple<string, Sprite, int> StringToRewardInfo(string rewardText)
+    {
+        string[] package = rewardText.Split(' ');
+        if (package.Length > 1)
+        {
+            return new Tuple<string, Sprite, int>(rewardText, PurchaseItemTypeExtensions.GetChestSprite(), 1);
+        }
+        else
+        {
+            string[] sub = rewardText.Split('/');
+            if (sub[0] == "life")
+                return new Tuple<string, Sprite, int>(rewardText, PurchaseItemTypeExtensions.GetLifeSprite(), int.Parse(sub[1]));
+            else if (sub[0] == "gold")
+                return new Tuple<string, Sprite, int>(rewardText, PurchaseItemTypeExtensions.GetGoldSprite(), int.Parse(sub[1]));
+            else if (sub[0] == "dia")
+                return new Tuple<string, Sprite, int>(rewardText, PurchaseItemTypeExtensions.GetDiaSprite(), int.Parse(sub[1]));
+            else
+            {
+                PurchaseItemType rewardType = int.Parse(sub[0]).ToItemType();
+                return new Tuple<string, Sprite, int>(rewardText, rewardType.GetSprite(), int.Parse(sub[1]));
+            }
+        }
+    }
     public Tuple<string, Sprite, int>[] GetRewardInfos()
     {
         List<Tuple<string, Sprite, int>> rets = new List<Tuple<string, Sprite, int>>();
         foreach(string reward in Rewards)
         {
-            string[] package = reward.Split(' ');
-            if (package.Length > 1)
-            {
-                rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetChestSprite(), 1));
-            }
-            else
-            {
-                string[] sub = reward.Split('/');
-                if (sub[0] == "life")
-                    rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetLifeSprite(), int.Parse(sub[1])));
-                else if (sub[0] == "gold")
-                   rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetGoldSprite(), int.Parse(sub[1])));
-                else if (sub[0] == "dia")
-                    rets.Add(new Tuple<string, Sprite, int>(reward, PurchaseItemTypeExtensions.GetDiaSprite(), int.Parse(sub[1])));
-                else
-                {
-                    PurchaseItemType rewardType = int.Parse(sub[0]).ToItemType();
-                    rets.Add(new Tuple<string, Sprite, int>(reward, rewardType.GetSprite(), int.Parse(sub[1])));
-                }
-            }
+            rets.Add(StringToRewardInfo(reward));
         }
         return rets.ToArray();
     }
