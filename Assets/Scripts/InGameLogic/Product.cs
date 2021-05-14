@@ -613,6 +613,7 @@ public class Product : MonoBehaviour
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
         CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
         CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().Play();
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
     }
 
     #endregion
