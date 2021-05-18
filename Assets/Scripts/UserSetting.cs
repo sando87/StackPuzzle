@@ -80,7 +80,7 @@ public class UserSetting
     public const int StageTotalCount = 100;
     public const float SameSkillInterval = 0.3f; //SameSkill2 매칭 간격
     public const float ComboMatchInterval = 0.3f; //콤보 매칭간 시간
-    public const float MatchReadyInterval = 0.2f; //매칭되고 실제 터지기까지 시간
+    public const float MatchReadyInterval = 0.3f; //매칭되고 실제 터지기까지 시간
     public const float ProductDropGravity = -50.0f; //떨어지는 속도
     public const float AutoMatchInterval = 0.1f; //매칭후 자동 매칭간 시간
     public const float SkillDestroyInterval = 0.2f; //1단계 스킬블럭들 터지는 시간

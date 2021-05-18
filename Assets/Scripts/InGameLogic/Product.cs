@@ -144,7 +144,7 @@ public class Product : MonoBehaviour
         IsMerging = true;
         Combo = combo;
         ParentFrame.TouchBush();
-        CreateComboTextEffect();
+        ParentFrame.CreateComboTextEffect(Combo, Color);
 
         Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
@@ -182,8 +182,7 @@ public class Product : MonoBehaviour
         IsDestroying = true;
         Combo = combo;
         ParentFrame.TouchBush();
-        CreateComboTextEffect();
-        Animation.Play("spitout");
+        Animation.Play("destroy");
         StartCoroutine(AnimateFlash(1.3f));
         return true;
     }
@@ -193,6 +192,10 @@ public class Product : MonoBehaviour
             return null;
         
         IsDestroying = true;
+        Animation.Stop();
+        transform.localPosition = new Vector3(0, 0, -1);
+        transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        ParentFrame.CreateComboTextEffect(Combo, Color);
         Frame parent = Detach(Manager.transform);
         parent.BreakCover();
         parent.BreakBush(Combo);
@@ -514,11 +517,13 @@ public class Product : MonoBehaviour
 
         ChocoBlock.tag = "off";
         ChocoBlock.name = "0";
-        //Animation.Play("next");
+        StartCoroutine(AnimShake());
         EventUnWrapChoco?.Invoke();
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
-        //StartCoroutine(AnimBreakChoco());
-        ParentFrame.StartCoroutine(AnimatePickedUp());
+        StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
+            ParentFrame.StartCoroutine(AnimatePickedUp());
+        }));
         return true;
     }
     IEnumerator AnimBreakChoco()
@@ -586,6 +591,21 @@ public class Product : MonoBehaviour
         }
         return null;
     }
+    IEnumerator AnimShake()
+    {
+        float dist = 0.05f;
+        Vector3 startPos = transform.position;
+        Vector3 dir = new Vector3(0, -1, 0);
+        dir.Normalize();
+        while (dist > 0.01f)
+        {
+            transform.position = startPos + (dist * dir);
+            dist *= 0.7f;
+            dir *= -1;
+            yield return new WaitForSeconds(0.1f);
+        }
+        transform.position = startPos;
+    }
 
     public void InitCap(int capIndex)
     {
@@ -604,7 +624,7 @@ public class Product : MonoBehaviour
         CapObject.GetComponent<Animator>().enabled = true;
         CapObject.GetComponent<Animator>().Play("CapAnim", -1, 0);
         CancelInvoke("ChangeCapImage");
-        Invoke("ChangeCapImage", 0.2f);
+        Invoke("ChangeCapImage", UserSetting.MatchReadyInterval);
         if (CapIndex <= 0)
             EventUnWrapCap?.Invoke();
     }

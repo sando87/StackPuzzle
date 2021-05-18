@@ -15,6 +15,7 @@ public class Frame : MonoBehaviour
     public SpriteRenderer CoverRenderer;
     public GameObject BreakStonesParticle;
     public GameObject BushObject;
+    public GameObject ComboNumPrefab;
 
     public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
     public InGameManager GameManager { get; private set; }
@@ -29,6 +30,7 @@ public class Frame : MonoBehaviour
 
     public Action<Frame> EventBreakCover;
     public Action<Frame> EventBreakBush;
+    public Action<int> EventScoreText;
 
     // Start is called before the first frame update
     void Start()
@@ -151,6 +153,49 @@ public class Frame : MonoBehaviour
         BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
         BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(false);
         BushObject.SetActive(IsBushed);
+    }
+
+    public void CreateComboTextEffect(int combo, ProductColor color)
+    {
+        Color textColor = Color.white;
+        switch(color)
+        {
+            case ProductColor.Blue: textColor = Color.blue; break;
+            case ProductColor.Green: textColor = Color.green; break;
+            case ProductColor.Orange: textColor = new Color(1, 0.5f, 0, 1); break;
+            case ProductColor.Purple: textColor = Color.magenta; break;
+            case ProductColor.Red: textColor = Color.red; break;
+            case ProductColor.Yellow: textColor = Color.yellow; break;
+        }
+        StartCoroutine(_CreateComboTextEffect(combo, textColor));
+    }
+    IEnumerator _CreateComboTextEffect(int combo, Color textColor)
+    {
+        //Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -2.0f);
+        Vector3 startPos = transform.position + new Vector3(0, 0, -2.0f);
+        GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, transform);
+        Numbers numComp = obj.GetComponent<Numbers>();
+        numComp.Number = combo;
+        numComp.NumberColor = textColor;
+
+        float time = 0;
+        float duration = 0.3f;
+        Vector3 acc = new Vector3(0, -60.0f, 0);
+        Vector3 startVel = new Vector3(2, 10, 0);
+        while (time < duration)
+        {
+            obj.transform.position += (startVel * Time.deltaTime);
+            startVel += (acc * Time.deltaTime);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
+            EventScoreText?.Invoke(combo);
+            Destroy(obj);
+        }));
     }
 
 }

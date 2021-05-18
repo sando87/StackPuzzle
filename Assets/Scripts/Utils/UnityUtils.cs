@@ -132,7 +132,7 @@ public class UnityUtils
     }
 
     //등속도로 목적지까지 움직인다.
-    public static IEnumerator MoveLinear(GameObject obj, Vector2 dest, float duration, Action EventEnd = null)
+    public static IEnumerator MoveLinear(GameObject obj, Vector2 dest, float duration, float rotDeg, Action EventEnd = null)
     {
         float time = 0;
         Vector2 startPos = obj.transform.position;
@@ -144,10 +144,12 @@ public class UnityUtils
         {
             Vector2 nextPos = startPos + (dir * speed * time);
             obj.transform.SetPosition2D(nextPos);
+            obj.transform.Rotate(Vector3.back, rotDeg);
             yield return null;
             time += Time.deltaTime;
         }
         obj.transform.SetPosition2D(dest);
+        obj.transform.rotation = Quaternion.identity;
         EventEnd?.Invoke();
     }
 
@@ -282,12 +284,39 @@ public class UnityUtils
         obj.transform.localScale = oriSize;
         obj.SetActive(false);
     }
+    public static IEnumerator ReSizing(GameObject obj, float duration, Vector2 targetScale, Action EventEnd = null)
+    {
+        float time = 0;
+        Vector2 oriScale = obj.transform.localScale;
+        while (time < duration)
+        {
+            float rate = time / duration;
+            Vector2 nextSize = oriScale * (1 - rate) + targetScale * rate;
+            obj.transform.localScale = new Vector3(nextSize.x, nextSize.y, 1);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        EventEnd?.Invoke();
+    }
 
 }
 
 //c# 확장 메서드 방식
 public static class MyExtensions
 {
+    private static Sprite SkillImageVert = null;
+    private static Sprite SkillImageHori = null;
+    private static Sprite SkillImageBomb = null;
+    private static Sprite SkillImageSame = null;
+
+    static MyExtensions()
+    {
+        SkillImageVert = Resources.Load<Sprite>("Images/skillHori");
+        SkillImageHori = Resources.Load<Sprite>("Images/skillVert");
+        SkillImageBomb = Resources.Load<Sprite>("Images/skillBomb");
+        SkillImageSame = Resources.Load<Sprite>("Images/skillSame");
+    }
+
     //transform.position = Vector2()를 하면 z값이 0으로 소실된다.
     //z값 변경없이 편하게 x,y값만 바꿀 수 있도록 하기 위해 구현
     public static void SetPosition2D(this Transform tr, Vector2 val)
@@ -297,5 +326,16 @@ public static class MyExtensions
     public static void SetLocalPosition2D(this Transform tr, Vector2 val)
     {
         tr.localPosition = new Vector3(val.x, val.y, tr.localPosition.z);
+    }
+    public static Sprite GetSprite(this ProductSkill skill)
+    {
+        switch(skill)
+        {
+            case ProductSkill.Horizontal: return SkillImageHori;
+            case ProductSkill.Vertical: return SkillImageVert;
+            case ProductSkill.Bomb: return SkillImageBomb;
+            case ProductSkill.SameColor: return SkillImageSame;
+            default: return null;
+        }
     }
 }

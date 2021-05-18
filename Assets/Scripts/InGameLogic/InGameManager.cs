@@ -36,11 +36,13 @@ public class InGameManager : MonoBehaviour
     public GameObject MissilePrefab;
     public GameObject MeteorPrefab;
 
+    public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
     public GameObject StripeParticle;
     public GameObject LaserParticle;
     public AttackPoints AttackPointFrame;
     public GameObject AttackBullet;
+    public GameObject ScoreTextDest;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -50,6 +52,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsAutoMatching = false;
     private bool mStopDropping = false;
     private bool mItemLooping = false;
+    private bool mIsLightningSkill = false;
     private bool mIsDropping = false;
     private bool mIsUserEventLock = false;
     private bool mIsFlushing = false;
@@ -57,6 +60,7 @@ public class InGameManager : MonoBehaviour
     private bool mRequestDrop = false;
     private float mStartTime = 0;
     private int mProductCount = 0;
+    private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
 
@@ -78,7 +82,7 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }
+    public bool IsIdle { get { return !mStopDropping && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -103,7 +107,7 @@ public class InGameManager : MonoBehaviour
 
     public Action<Vector3, StageGoalType> EventBreakTarget;
     public Action<Product[]> EventMatched;
-    public Action<int> EventReward;
+    public Action<int, float> EventReward;
     public Action<bool> EventFinish;
     public Action<bool> EventFinishPre;
     public Action<int> EventCombo;
@@ -179,6 +183,7 @@ public class InGameManager : MonoBehaviour
         mUserInfo = userInfo;
         mRandomSeed = new System.Random(info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed);
         mProductCount = info.XCount * info.YCount;
+        mStartPos = transform.position;
 
         int stageCountPerTheme = 20;
         int themeCount = 9;
@@ -405,6 +410,8 @@ public class InGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
+        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit);
         List<ProductInfo> nextProducts = new List<ProductInfo>();
         foreach (Product pro in destroyedProducts)
         {
@@ -451,7 +458,6 @@ public class InGameManager : MonoBehaviour
         Billboard.DestroyCount += validProducts.Length;
         EventBreakTarget?.Invoke(validProducts[0].transform.position, StageGoalType.Score);
 
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
         EventMatched?.Invoke(validProducts);
         return validProducts;
     }
@@ -650,6 +656,7 @@ public class InGameManager : MonoBehaviour
         }
         else if (target.Skill == ProductSkill.SameColor)
         {
+            ShakeField(0.05f);
             Product[] pros = FindSameColor(target);
             StartCoroutine(StartElectronicEffect(target.transform.position, pros,
                 (pro) => {
@@ -756,13 +763,36 @@ public class InGameManager : MonoBehaviour
     }
     private void DestroySkillBomb_Bomb(Product productbombA, Product productbombB)
     {
-        Product[] pros = ScanAroundProducts(productbombB, 2);
-        CreateExplosionEffect(productbombB.transform.position);
+        List<Product> targetsA = new List<Product>();
+        List<Product> targetsB = new List<Product>();
+        for (int x = 0; x < CountX; ++x)
+        {
+            for (int y = CountY - 1; y >= 0; --y)
+            {
+                Frame frame = mFrames[x, y];
+                Product pro = frame.ChildProduct;
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                {
+                    if (y % 2 == 0)
+                        targetsA.Add(pro);
+                    else
+                        targetsB.Add(pro);
+                }
+            }
+        }
 
-        DestroyProducts(pros);
-        foreach (Product pro in pros)
-            if (pro != productbombA && pro != productbombB && pro.Skill != ProductSkill.Nothing)
-                DestroySkillChain(pro);
+        ShakeField(0.05f);
+
+        StartCoroutine(StartElectronicEffect(productbombA.transform.position, targetsA.ToArray(),
+            (pro) => {
+                DestroyProducts(new Product[1] { pro });
+            }, null));
+
+
+        StartCoroutine(StartElectronicEffect(productbombB.transform.position, targetsB.ToArray(),
+            (pro) => {
+                DestroyProducts(new Product[1] { pro });
+            }, null));
     }
     private void DestroySkillWithSamecolor(Product productA, Product productB)
     {
@@ -773,42 +803,38 @@ public class InGameManager : MonoBehaviour
 
         if (another.Skill == ProductSkill.Horizontal || another.Skill == ProductSkill.Vertical)
         {
-            List<Product> randomProducts = ScanRandomProducts(5);
+            List<Product> randomProducts = ScanRandomProducts(7);
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
+            StartCoroutine(CreateSmokeInterval(0.4f, frames,
                 (frame) => {
                     Product pro = frame.ChildProduct;
-                    pro.FlashProduct();
                     pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySkillSimpleLoop());
                 }));
         }
         else if (another.Skill == ProductSkill.Bomb)
         {
-            List<Product> randomProducts = ScanRandomProducts(5);
+            List<Product> randomProducts = ScanRandomProducts(7);
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
+            StartCoroutine(CreateSmokeInterval(0.4f, frames,
                 (frame) => {
                     Product pro = frame.ChildProduct;
-                    pro.FlashProduct();
                     pro.ChangeProductImage(ProductSkill.Bomb);
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySkillSimpleLoop());
                 }));
@@ -847,7 +873,23 @@ public class InGameManager : MonoBehaviour
                     Product pro = frame.ChildProduct;
                     if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked)
                     {
-                        DestroySkillNoChain(pro);
+                        if (pro.Skill == ProductSkill.SameColor)
+                        {
+                            ShakeField(0.05f);
+                            Product[] pros = FindSameColor(pro);
+                            StartCoroutine(StartElectronicEffect(pro.transform.position, pros,
+                                (each) => {
+                                    DestroyProducts(new Product[1] { each });
+                                }, null));
+
+                            while (mIsLightningSkill)
+                                yield return null;
+                        }
+                        else
+                        {
+                            DestroySkillNoChain(pro);
+                        }
+                        
                         goto KeepLoop;
                     }
                 }
@@ -964,11 +1006,11 @@ public class InGameManager : MonoBehaviour
             Product[] scan = ScanAroundProducts(target, 1);
             return DestroyProducts(scan);
         }
-        else if (target.Skill == ProductSkill.SameColor)
-        {
-            Product[] sameProducts = FindSameColor(target);
-            return DestroyProducts(sameProducts);
-        }
+        //else if (target.Skill == ProductSkill.SameColor)
+        //{
+        //    Product[] sameProducts = FindSameColor(target);
+        //    return DestroyProducts(sameProducts);
+        //}
         return null;
     }
 
@@ -1365,7 +1407,8 @@ public class InGameManager : MonoBehaviour
                         EventFinishPre?.Invoke(isSuccess);
                         yield return new WaitForSeconds(1);
 
-                        RewardRemainLimits();
+                        yield return StartCoroutine(LoopRewardProducts());
+
                         while (!IsIdle)
                             yield return null; //마지막 보상 스킬들 루틴 끝날때까지 기달...
 
@@ -1488,21 +1531,61 @@ public class InGameManager : MonoBehaviour
     {
         return GetComponentsInChildren<Product>().Length;
     }
-    private void RewardRemainLimits()
+    IEnumerator LoopRewardProducts()
     {
+        int rewardedCount = 0;
+        float interval = 0.15f;
         int remains = RewardCount();
-        if (remains <= 0 || FieldType != GameFieldType.Stage)
-            return;
-
         remains = Mathf.Min(remains, (int)(GetProductCount() * 0.4f));
-        Frame[] frames = GetRandomIdleFrames(remains);
-        Product[] pros = ToProducts(frames);
-
-        EventReward?.Invoke(pros.Length);
-        StartCoroutine(CreateRewardProducts(SimpleSpritePrefab, MenuInGame.Inst().Limit.transform.position, pros, () => 
+        EventReward?.Invoke(remains, interval);
+        Vector3 startWorldPos = MenuInGame.Inst().Limit.transform.position;
+        for(int i = 0; i < remains; ++i)
         {
-            StartCoroutine(DestroySkillSimpleLoop());
-        }));
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
+            GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
+            effect.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+            StartCoroutine(RewardEach(effect, () => { rewardedCount++; }));
+            yield return new WaitForSeconds(interval);
+        }
+
+        while (remains != rewardedCount)
+            yield return null;
+    }
+    IEnumerator RewardEach(GameObject obj, Action eventEnd)
+    {
+        ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 4);
+        obj.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
+
+        while (true)
+        {
+            Frame[] next = GetRandomIdleFrames(1);
+            if(next == null || next.Length <= 0)
+            {
+                yield return null;
+            }
+            else
+            {
+                Frame frame = next[0];
+                yield return StartCoroutine(UnityUtils.MoveLinear(obj, frame.transform.position, 0.5f, 50.0f));
+
+                Product pro = frame.ChildProduct;
+                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                {
+                    pro.ChangeProductImage(skillIndex);
+                    eventEnd?.Invoke();
+                    Destroy(obj);
+                    if (!mItemLooping)
+                        StartCoroutine(DestroySkillSimpleLoop());
+                    break;
+                }
+                else
+                {
+                    yield return StartCoroutine(UnityUtils.ReSizing(obj, 0.4f, new Vector2(1, 1)));
+                    yield return new WaitForSeconds(0.3f);
+                    yield return StartCoroutine(UnityUtils.ReSizing(obj, 0.2f, new Vector2(0.6f, 0.6f)));
+                }
+            }
+        }
     }
 
     IEnumerator CheckFinishPvpTimer()
@@ -1945,6 +2028,7 @@ public class InGameManager : MonoBehaviour
         mIsDropping = false;
         mStopDropping = false;
         mItemLooping = false;
+        mIsLightningSkill = false;
         mIsUserEventLock = false;
         mIsFlushing = false;
         mIsAutoMatching = false;
@@ -2112,6 +2196,7 @@ public class InGameManager : MonoBehaviour
     }
     private void ShakeField(float intensity)
     {
+        transform.position = mStartPos;
         StopCoroutine("AnimShakeField");
         StartCoroutine("AnimShakeField", intensity);
     }
@@ -2132,9 +2217,8 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator StartElectronicEffect(Vector3 _startPos, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
-        ShakeField(0.05f);
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
-        mItemLooping = true;
+        mIsLightningSkill = true;
         Vector3 startPos = _startPos;
         while (true)
         {
@@ -2170,7 +2254,7 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        mItemLooping = false;
+        mIsLightningSkill = false;
         eventEnd?.Invoke();
     }
     IEnumerator UpDownSizing(GameObject obj, float duration)
@@ -2230,30 +2314,22 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
-    IEnumerator CreateRewardProducts(GameObject prefab, Vector3 startWorldPos, Product[] objs, Action eventEnd)
+    private void CreateSmokeEffect(Vector2 startPos)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSmoke);
+        Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
+        GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
+        Destroy(obj, 1.0f);
+    }
+    IEnumerator CreateSmokeInterval(float interval, Frame[] frames, Action<Frame> eventEachEnd, Action eventEnd)
     {
         mItemLooping = true;
-        int endCount = 0;
-        foreach (Product obj in objs)
+        foreach (Frame frame in frames)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
-            ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 5);
-            Sprite skillImage = obj.ToSkillImage(skillIndex);
-            GameObject effect = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            effect.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-            effect.GetComponent<SpriteRenderer>().sprite = skillImage;
-            StartCoroutine(AnimateThrowSide(effect, obj.transform.position, () =>
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-                endCount++;
-                Destroy(effect);
-                obj.ChangeProductImage(skillIndex);
-            }));
-            yield return new WaitForSeconds(0.15f);
+            CreateSmokeEffect(frame.transform.position);
+            eventEachEnd?.Invoke(frame);
+            yield return new WaitForSeconds(interval);
         }
-
-        while (endCount < objs.Length)
-            yield return null;
 
         mItemLooping = false;
         eventEnd?.Invoke();

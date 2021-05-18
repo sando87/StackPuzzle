@@ -285,6 +285,8 @@ MonoBehaviour:
   BreakStonesParticle: {fileID: 7959498722363782789, guid: b9e6d1dc17baf74479e6fa53c6b62f6e,
     type: 3}
   BushObject: {fileID: 3546576869708924293}
+  ComboNumPrefab: {fileID: 898846607419276643, guid: 98df19bae1d6e254089fb46ab7f9b3ca,
+    type: 3}
 --- !u!1 &3014701231205370845
 GameObject:
   m_ObjectHideFlags: 0

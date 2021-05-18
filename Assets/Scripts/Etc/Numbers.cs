@@ -13,6 +13,7 @@ public class Numbers : MonoBehaviour
     public SpriteRenderer Third;
     public SpriteRenderer ThirdOutline;
 
+    public Color NumberColor = Color.white;
     public int Number = 321;
     public bool Outline = true;
     public float gap = 0.3f;
@@ -28,6 +29,7 @@ public class Numbers : MonoBehaviour
         if (Number < 10)
         {
             First.sprite = NumberImages[Number];
+            First.color = NumberColor;
             FirstOutline.sprite = NumberOutlineImages[Number];
             First.transform.position = transform.position;
 
@@ -41,7 +43,9 @@ public class Numbers : MonoBehaviour
         else if (Number < 100)
         {
             First.sprite = NumberImages[Number % 10];
+            First.color = NumberColor;
             Second.sprite = NumberImages[Number / 10];
+            Second.color = NumberColor;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
             SecondOutline.sprite = NumberOutlineImages[Number / 10];
@@ -62,8 +66,11 @@ public class Numbers : MonoBehaviour
         else if (Number < 1000)
         {
             First.sprite = NumberImages[Number % 10];
+            First.color = NumberColor;
             Second.sprite = NumberImages[(Number / 10) % 10];
+            Second.color = NumberColor;
             Third.sprite = NumberImages[Number / 100];
+            Third.color = NumberColor;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
             SecondOutline.sprite = NumberOutlineImages[(Number / 10) % 10];

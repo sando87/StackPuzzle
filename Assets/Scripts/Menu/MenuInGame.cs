@@ -113,8 +113,8 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventFinishPre = (success) => {
             ShowFinishMessage(success);
         };
-        InGameManager.InstStage.EventReward = (rewardCount) => {
-            StartCoroutine(AnimateRewardCounting(rewardCount));
+        InGameManager.InstStage.EventReward = (rewardCount, interval) => {
+            StartCoroutine(AnimateRewardCounting(rewardCount, interval));
         };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
@@ -326,22 +326,17 @@ public class MenuInGame : MonoBehaviour
         }
     }
 
-    private IEnumerator AnimateRewardCounting(int count)
+    private IEnumerator AnimateRewardCounting(int count, float interval)
     {
-        int cnt = 0;
+        int loopCnt = 0;
         float curLimit = 0;
         if (mStageInfo.TimeLimit > 0)
-        {
-            string[] ms = Limit.text.Split(':');
-            int min = int.Parse(ms[0]);
-            int sec = int.Parse(ms[1]);
-            curLimit = min * 60.0f + sec;
-        }
+            curLimit = MenuBattle.StringToSec(Limit.text);
         else
             curLimit = float.Parse(Limit.text);
 
         float step = curLimit / count;
-        while (cnt < count)
+        while (loopCnt < count)
         {
             curLimit -= step;
 
@@ -350,8 +345,8 @@ public class MenuInGame : MonoBehaviour
             else
                 Limit.text = ((int)curLimit).ToString();
 
-            cnt++;
-            yield return new WaitForSeconds(0.1f);
+            loopCnt++;
+            yield return new WaitForSeconds(interval);
         }
     }
 }
