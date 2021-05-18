@@ -14,12 +14,10 @@ public class MenuBattle : MonoBehaviour
     public GameObject EffectParent;
     public NumbersUI ComboPlayer;
     public NumbersUI ComboOpponent;
-    public ScoreBar PVPScoreBarPlayer;
-    public ScoreBar PVPScoreBarOpponent;
-    public TextMeshProUGUI PlayerName;
-    public TextMeshProUGUI PlayerScore;
-    public TextMeshProUGUI OpponentName;
-    public TextMeshProUGUI OpponentScore;
+    //public TextMeshProUGUI PlayerName;
+    //public TextMeshProUGUI PlayerScore;
+    //public TextMeshProUGUI OpponentName;
+    //public TextMeshProUGUI OpponentScore;
     public GameObject PlayerRect;
     public GameObject OpponentRect;
     public TextMeshProUGUI PlayerLimit;
@@ -87,12 +85,10 @@ public class MenuBattle : MonoBehaviour
         mMenu = null;
         ComboPlayer.Clear();
         ComboOpponent.Clear();
-        PVPScoreBarPlayer.Clear();
-        PVPScoreBarOpponent.Clear();
-        PlayerName.text = InGameManager.InstPVP_Player.UserInfo.userName;
-        OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
-        PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
-        OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
+        //PlayerName.text = InGameManager.InstPVP_Player.UserInfo.userName;
+        //OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
+        //PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
+        //OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
         PurchaseItemType[] items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Player.UserInfo);
         for (int i = 0; i < PlayerItemSlots.Length; ++i)
@@ -124,9 +120,6 @@ public class MenuBattle : MonoBehaviour
             }
         }
 
-        InGameManager.InstPVP_Player.EventMatched = (products) => {
-            PVPScoreBarPlayer.SetScore(PVPScoreBarPlayer.CurrentScore + products[0].Combo * products.Length);
-        };
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);
         };
@@ -135,9 +128,6 @@ public class MenuBattle : MonoBehaviour
                 ComboPlayer.BreakCombo();
             else
                 ComboPlayer.SetNumber(combo);
-        };
-        InGameManager.InstPVP_Opponent.EventMatched = (products) => {
-            PVPScoreBarOpponent.SetScore(PVPScoreBarOpponent.CurrentScore + products[0].Combo * products.Length);
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) => {
             FinishGame(!success);
@@ -262,8 +252,9 @@ public class MenuBattle : MonoBehaviour
 
         btn.SetEnable(false);
         Purchases.UseItem(itemType);
+        string oppName = InGameManager.InstPVP_Opponent.UserInfo.userName;
 
-        string log = "[UseItem] " + "PVP:" + OpponentName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
+        string log = "[UseItem] " + "PVP:" + oppName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }
     IEnumerator DisplayOppTimeLimit(int _remain)

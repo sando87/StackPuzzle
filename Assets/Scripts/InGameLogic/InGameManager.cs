@@ -190,7 +190,7 @@ public class InGameManager : MonoBehaviour
         int backImgIdx = ((mStageInfo.Num - 1) % (stageCountPerTheme * themeCount)) / stageCountPerTheme;
         backImgIdx = Math.Min(backImgIdx, BackgroundImages.Length - 1);
         BackgroundSprite.sprite = BackgroundImages[backImgIdx];
-        float scale = Camera.main.orthographicSize / 10.24f; //10.24f는 배경 이미지 height의 절반
+        float scale = Camera.main.orthographicSize / 1.28f; //1.28f는 배경 이미지 height의 절반
         BackgroundSprite.transform.localScale = new Vector3(scale, scale, 1);
 
         float gridSize = UserSetting.GridSize;
