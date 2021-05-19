@@ -48,8 +48,9 @@ public class MenuHeartShop : MonoBehaviour
             }
 
             //Call AD API
-            Invoke("OnChargeHeartFromVideo", 2);
+            //Invoke("OnChargeHeartFromVideo", 2);
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+            GoogleADMob.Inst.ShowRewardAd();
         }
         else if (type == 1)
         {
