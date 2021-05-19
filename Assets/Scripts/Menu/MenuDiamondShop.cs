@@ -69,4 +69,13 @@ public class MenuDiamondShop : MonoBehaviour
         LOG.echo(log);
     }
 
+    public void HandleOnPurchaseOK(UnityEngine.Purchasing.Product pro)
+    {
+        LOG.echo(pro.receipt);
+    }
+    public void HandleOnPurchaseError(UnityEngine.Purchasing.Product pro, UnityEngine.Purchasing.PurchaseFailureReason reason)
+    {
+        LOG.echo(reason.ToString());
+    }
+
 }
