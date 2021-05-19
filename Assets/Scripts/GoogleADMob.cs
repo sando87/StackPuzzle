@@ -33,7 +33,8 @@ public class GoogleADMob : MonoBehaviour
     {
         string adUnitId;
 #if UNITY_ANDROID
-        adUnitId = "ca-app-pub-3940256099942544/5224354917";
+        //adUnitId = "ca-app-pub-3940256099942544/5224354917";  //for test ID
+        adUnitId = "ca-app-pub-1906763424823821/9540811810";
 #elif UNITY_IPHONE
         adUnitId = "ca-app-pub-3940256099942544/1712485313";
 #else
