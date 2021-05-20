@@ -596,21 +596,10 @@ public class InGameManager : MonoBehaviour
     }
     private int StartToDropProducts()
     {
-        List<ProductInfo> droppedPros = new List<ProductInfo>();
         foreach(VerticalFrames group in mVerticalFrames)
-        {
-            Product[] prosA = group.StartToDropFloatingProducts();
-            foreach(Product pro in prosA)
-                droppedPros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, 0, 0, pro.InstanceID, pro.InstanceID));
+            group.StartToDrop();
 
-            Product[] prosB = group.StartToDropNewProducts();
-            foreach (Product pro in prosB)
-                droppedPros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, 0, 0, pro.InstanceID, pro.InstanceID));
-        }
-
-        //Network_Drop(droppedPros.ToArray());
-
-        return droppedPros.Count;
+        return 0;
     }
     private int CountDroppingProducts()
     {

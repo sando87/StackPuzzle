@@ -107,6 +107,83 @@ public class VerticalFrames : MonoBehaviour
         return droppedPros.ToArray();
     }
 
+    public void StartToDrop()
+    {
+        if (NewProducts.Count <= 0)
+            return;
+
+        Frame firstFrame = FindFirstEmptyFrame();
+        if (firstFrame == null)
+            return;
+
+        bool isLocked = IsLockedProduct(firstFrame);
+        if (isLocked)
+            return;
+
+        List<Product> targets = new List<Product>();
+        Product[] pros = GetComponentsInChildren<Product>();
+        foreach(Product pro in pros)
+        {
+            if (pro.transform.position.y > firstFrame.transform.position.y)
+                targets.Add(pro);
+        }
+        targets.Sort((lsh, rsh) => { return lsh.transform.position.y < rsh.transform.position.y ? -1 : 1; });
+        Vector3 topPosition = targets[targets.Count - 1].transform.position;
+        Product[] newPros = RepositionNewProducts(topPosition);
+        targets.AddRange(newPros);
+
+        Frame curFrame = firstFrame;
+        foreach(Product target in targets)
+        {
+            target.StartToDrop(curFrame);
+            curFrame = curFrame.Up();
+        }
+
+        NewProducts.Clear();
+    }
+    private Frame FindFirstEmptyFrame()
+    {
+        foreach(Frame frame in Frames)
+        {
+            if (!frame.Empty && frame.ChildProduct == null)
+                return frame;
+        }
+        return null;
+    }
+    private bool IsLockedProduct(Frame startFrame)
+    {
+        Frame curFrame = startFrame;
+        while (curFrame != null)
+        {
+            Product pro = curFrame.ChildProduct;
+            if(pro != null && pro.IsLocked)
+                return true;
+
+            curFrame = curFrame.Up();
+        }
+        return false;
+    }
+    private Product[] RepositionNewProducts(Vector3 topPosition)
+    {
+        List<Product> rets = new List<Product>();
+        if (NewProducts.Count <= 0)
+            return rets.ToArray();
+
+        InGameManager mgr = transform.parent.GetComponent<InGameManager>();
+        Vector3 startPos = topPosition;
+        startPos.y = Mathf.Max(startPos.y, TopFrame.transform.position.y);
+        Vector3 step = new Vector3(0, mgr.GridSize, 0);
+        foreach (Product pro in NewProducts)
+        {
+            startPos += step;
+            pro.gameObject.SetActive(true);
+            pro.transform.SetParent(transform);
+            pro.transform.position = startPos;
+            rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
+
     private Vector3 FindTopPosition()
     {
         Product[] pros = GetComponentsInChildren<Product>();

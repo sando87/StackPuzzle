@@ -31,7 +31,7 @@ public class Product : MonoBehaviour
     public InGameManager Manager { get; set; }
     public Frame ParentFrame { get; private set; }
     public ProductSkill Skill { get; private set; }
-    public float DropSpeed { get; set; }
+    public float DropSpeed { get; set; } = 0;
     public float Weight { get; set; }
     public int Combo { get; set; }
     public int InstanceID { get; set; }
@@ -256,6 +256,35 @@ public class Product : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
     }
+    public void StartToDrop(Frame frame)
+    {
+        if (ParentFrame != null)
+            Detach(ParentFrame.VertFrames.transform);
+
+        IsDropping = true;
+        StopCoroutine("DropToFrame");
+        StartCoroutine("DropToFrame", frame);
+    }
+    private IEnumerator DropToFrame(Frame destFrame)
+    {
+        Vector3 destPos = destFrame.transform.position;
+        while (transform.position.y > destPos.y)
+        {
+            NextSpeed();
+            float dy = DropSpeed * Time.deltaTime;
+            transform.position -= new Vector3(0, dy, 0);
+            yield return null;
+        }
+        transform.SetPosition2D(destPos);
+
+        DropEndToFrame(destFrame);
+    }
+    private float NextSpeed()
+    {
+        if (DropSpeed < 1)
+            DropSpeed += 0.1f;
+        return DropSpeed;
+    }
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (!IsDropping)
@@ -303,6 +332,15 @@ public class Product : MonoBehaviour
         AttachTo(curFrame);
         StopCoroutine("UpdateDropping");
         GetComponent<BoxCollider2D>().isTrigger = false;
+        transform.localPosition = new Vector3(0, 0, -1);
+        Renderer.maskInteraction = SpriteMaskInteraction.None;
+        Renderer.sortingOrder = 0;
+    }
+    private void DropEndToFrame(Frame frame)
+    {
+        DropSpeed = 0;
+        IsDropping = false;
+        AttachTo(frame);
         transform.localPosition = new Vector3(0, 0, -1);
         Renderer.maskInteraction = SpriteMaskInteraction.None;
         Renderer.sortingOrder = 0;
