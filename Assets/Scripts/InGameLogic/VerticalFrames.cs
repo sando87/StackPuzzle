@@ -128,7 +128,7 @@ public class VerticalFrames : MonoBehaviour
                 targets.Add(pro);
         }
         targets.Sort((lsh, rsh) => { return lsh.transform.position.y < rsh.transform.position.y ? -1 : 1; });
-        Vector3 topPosition = targets[targets.Count - 1].transform.position;
+        Vector3 topPosition = targets.Count > 0 ? targets[targets.Count - 1].transform.position : TopFrame.transform.position;
         Product[] newPros = RepositionNewProducts(topPosition);
         targets.AddRange(newPros);
 

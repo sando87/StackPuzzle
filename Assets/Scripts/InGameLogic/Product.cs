@@ -223,13 +223,13 @@ public class Product : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(IsDropping)
-        {
-            Vector3 pos = transform.position;
-            DropSpeed += UserSetting.ProductDropGravity * Time.deltaTime;
-            pos.y += DropSpeed * Time.deltaTime;
-            transform.position = pos;
-        }
+        //if(IsDropping)
+        //{
+        //    Vector3 pos = transform.position;
+        //    DropSpeed += UserSetting.ProductDropGravity * Time.deltaTime;
+        //    pos.y += DropSpeed * Time.deltaTime;
+        //    transform.position = pos;
+        //}
     }
     public void Drop()
     {
@@ -261,29 +261,29 @@ public class Product : MonoBehaviour
         if (ParentFrame != null)
             Detach(ParentFrame.VertFrames.transform);
 
-        IsDropping = true;
         StopCoroutine("DropToFrame");
         StartCoroutine("DropToFrame", frame);
     }
     private IEnumerator DropToFrame(Frame destFrame)
     {
+        IsDropping = true;
+        float acc = 40;
         Vector3 destPos = destFrame.transform.position;
-        while (transform.position.y > destPos.y)
+        while (true)
         {
-            NextSpeed();
+            DropSpeed += acc * Time.deltaTime;
+            LOG.echo(DropSpeed);
             float dy = DropSpeed * Time.deltaTime;
             transform.position -= new Vector3(0, dy, 0);
+            if (transform.position.y <= destPos.y)
+                break;
+
             yield return null;
         }
         transform.SetPosition2D(destPos);
 
+        IsDropping = false;
         DropEndToFrame(destFrame);
-    }
-    private float NextSpeed()
-    {
-        if (DropSpeed < 1)
-            DropSpeed += 0.1f;
-        return DropSpeed;
     }
     private void OnTriggerStay2D(Collider2D collision)
     {
@@ -339,8 +339,8 @@ public class Product : MonoBehaviour
     private void DropEndToFrame(Frame frame)
     {
         DropSpeed = 0;
-        IsDropping = false;
         AttachTo(frame);
+        Animation.Play("drop");
         transform.localPosition = new Vector3(0, 0, -1);
         Renderer.maskInteraction = SpriteMaskInteraction.None;
         Renderer.sortingOrder = 0;
