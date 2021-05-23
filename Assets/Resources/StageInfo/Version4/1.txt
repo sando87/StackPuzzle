@@ -1,11 +1,8 @@
 GoalType,Score
-GoalValue,20
+GoalValue,30
 MoveLimit,20
 ColorCount,6
-RandomSeed,7
-Reward,0/1
-XCount,5
-YCount,6
+RandomSeed,1155532165
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0

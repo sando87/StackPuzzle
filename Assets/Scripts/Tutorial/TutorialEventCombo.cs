@@ -17,19 +17,21 @@ public class TutorialEventCombo : TutorialEvent
     public GameObject ComboSet1;
     public GameObject ComboSet2;
     public GameObject ComboSet3;
+    public GameObject ComboSet4;
     public GameObject ComboDisplay;
 
     Vector3[] points = new Vector3[4]
     {
         new Vector3(1.8f, 4.3f, 0), //메시지 클릭 포인트
-        new Vector3(-0.41f, -1.64f, 0), //스와이프 블럭
-        new Vector3(2.05f, -2.46f, 0), //콤보 시작 클릭
-        new Vector3(1.6f, 5.5f, 0) //콤보 디스플레이 클릭
+        Vector3.zero, //new Vector3(-0.41f, -1.64f, 0), //스와이프 블럭
+        Vector3.zero, //new Vector3(2.05f, -2.46f, 0), //콤보 시작 클릭
+        Vector3.zero //new Vector3(1.6f, 5.0f, 0) //콤보 디스플레이 클릭
     };
 
     protected override void Start()
     {
         base.Start();
+        
         BasePoint.transform.localPosition = points[0];
     }
 
@@ -42,8 +44,9 @@ public class TutorialEventCombo : TutorialEvent
         {
             MessageBox.transform.parent.gameObject.SetActive(false);
             SwipeSubWindow.gameObject.SetActive(true);
-            BasePoint.transform.localPosition = points[1];
-            Anim.SetTrigger("up");
+            Vector2 pt = InGameManager.InstStage.Frame(0, 1).transform.position;
+            BasePoint.transform.SetLocalPosition2D(pt);
+            Anim.SetTrigger("down");
             Step++;
         }
         else if (Step == 2)
@@ -56,7 +59,8 @@ public class TutorialEventCombo : TutorialEvent
             Anim.Play("TutorialHideAll", -1, 0);
 
             MessageBox.transform.parent.gameObject.SetActive(true);
-            MessageBox.text = "Check out your combos.";
+            MessageBox.transform.parent.position += new Vector3(0, -0.5f, 0);
+            MessageBox.text = "Check out your combo.";
 
             StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
             {
@@ -66,11 +70,12 @@ public class TutorialEventCombo : TutorialEvent
                 ComboSet1.SetActive(false);
                 ComboSet2.SetActive(false);
                 ComboSet3.SetActive(false);
+                ComboSet4.SetActive(false);
                 ComboDisplay.SetActive(true);
 
                 Vector3 pos = MenuInGame.Inst().GetComponentInChildren<NumbersUI>().transform.position;
                 ComboDisplay.transform.position = new Vector3(pos.x, pos.y, ComboDisplay.transform.position.z);
-                ComboDisplay.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+                ComboDisplay.GetComponentInChildren<SpriteRenderer>().color = new Color(0, 0, 0, 0);
 
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
@@ -94,10 +99,10 @@ public class TutorialEventCombo : TutorialEvent
         if (obj != gameObject)
             return;
 
-        if (Step == 1 && dir == SwipeDirection.UP)
+        if (Step == 1 && dir == SwipeDirection.DOWN)
         {
             Step++;
-            EventUserAction?.Invoke(TutorialEventType.Up);
+            EventUserAction?.Invoke(TutorialEventType.Down);
             SwipeSubWindow.SetActive(false);
             ShowBasePoint(false);
             MessageBox.transform.parent.gameObject.SetActive(false);
@@ -119,17 +124,26 @@ public class TutorialEventCombo : TutorialEvent
     private void EnLightCombo()
     {
         ComboSet1.SetActive(true);
+        ComboSet1.transform.SetPosition2D(InGameManager.InstStage.Frame(0, 0).transform.position);
         StartCoroutine(FadeOut(ComboSet1, () =>
         {
             ComboSet2.SetActive(true);
+            ComboSet2.transform.SetPosition2D(InGameManager.InstStage.Frame(1, 1).transform.position);
             StartCoroutine(FadeOut(ComboSet2, () =>
             {
                 ComboSet3.SetActive(true);
+                ComboSet3.transform.SetPosition2D(InGameManager.InstStage.Frame(1, 4).transform.position);
                 StartCoroutine(FadeOut(ComboSet3, () =>
                 {
-                    ShowBasePoint(true);
-                    BasePoint.transform.localPosition = points[2];
-                    Anim.SetTrigger("click");
+                    ComboSet4.SetActive(true);
+                    ComboSet4.transform.SetPosition2D(InGameManager.InstStage.Frame(3, 4).transform.position);
+                    StartCoroutine(FadeOut(ComboSet4, () =>
+                    {
+                        ShowBasePoint(true);
+                        Vector2 pt = InGameManager.InstStage.Frame(0, 0).transform.position;
+                        BasePoint.transform.SetLocalPosition2D(pt);
+                        Anim.SetTrigger("click");
+                    }));
                 }));
             }));
         }));
@@ -161,7 +175,6 @@ public class TutorialEventCombo : TutorialEvent
     private IEnumerator FadeOut(GameObject obj, Action EventEnd)
     {
         List<SpriteRenderer> srs = new List<SpriteRenderer>();
-        srs.Add(obj.GetComponent<SpriteRenderer>());
         srs.AddRange(obj.GetComponentsInChildren<SpriteRenderer>());
         float targetAlpha = 0;
         float currentAlpha = srs[0].color.a;

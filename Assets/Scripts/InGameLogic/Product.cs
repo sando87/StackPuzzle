@@ -272,7 +272,6 @@ public class Product : MonoBehaviour
         while (true)
         {
             DropSpeed += acc * Time.deltaTime;
-            LOG.echo(DropSpeed);
             float dy = DropSpeed * Time.deltaTime;
             transform.position -= new Vector3(0, dy, 0);
             if (transform.position.y <= destPos.y)
