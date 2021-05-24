@@ -27,6 +27,7 @@ public class SoundPlayer : MonoBehaviour
 
     public AudioClip EffectButton1;
     public AudioClip EffectButton2;
+    public AudioClip EffectRewards;
     public AudioClip EffectSuccess;
     public AudioClip EffectGameOver;
     public AudioClip EffectAlarm;

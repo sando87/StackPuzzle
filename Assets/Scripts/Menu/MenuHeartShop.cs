@@ -8,17 +8,21 @@ using UnityEngine.UI;
 public class MenuHeartShop : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/LifeShop";
+    public TextMeshProUGUI AdsRewardA;
+    public TextMeshProUGUI AdsRewardB;
 
     public static void PopUp()
     {
         MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
         objMenu.gameObject.SetActive(true);
+        objMenu.StartCoroutine(objMenu.TimerCount());
         NetClientApp.GetInstance().IsKeepConnection = true;
     }
     public static void Hide()
     {
         MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
         objMenu.gameObject.SetActive(false);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -47,10 +51,18 @@ public class MenuHeartShop : MonoBehaviour
                 return;
             }
 
-            //Call AD API
-            //Invoke("OnChargeHeartFromVideo", 2);
+            if (!GoogleADMob.Inst.IsReady(AdsType.ChargeLifeA))
+            {
+                MenuInformBox.PopUp("Advertising Not Ready.");
+                return;
+            }
+
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            GoogleADMob.Inst.ShowRewardAd();
+            LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeA + "/" + Purchases.CountHeart());
+            GoogleADMob.Inst.Show(AdsType.ChargeLifeA, () =>
+            {
+                OnChargeHeartFromVideo(AdsType.ChargeLifeA);
+            });
         }
         else if (type == 1)
         {
@@ -60,9 +72,18 @@ public class MenuHeartShop : MonoBehaviour
                 return;
             }
 
-            //Call AD API
-            Invoke("OnChargeHeartFromVideo", 4);
+            if (!GoogleADMob.Inst.IsReady(AdsType.ChargeLifeB))
+            {
+                MenuInformBox.PopUp("Advertising Not Ready.");
+                return;
+            }
+
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+            LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeB + "/" + Purchases.CountHeart());
+            GoogleADMob.Inst.Show(AdsType.ChargeLifeB, () =>
+            {
+                OnChargeHeartFromVideo(AdsType.ChargeLifeB);
+            });
         }
         else if (type == 2)
         {
@@ -124,21 +145,34 @@ public class MenuHeartShop : MonoBehaviour
         }
     }
 
-    private void OnChargeHeartFromVideo()
+    private void OnChargeHeartFromVideo(AdsType type)
     {
-        int sec = 15;
-        switch (sec)
+        switch (type)
         {
-            case 15: Purchases.ChargeHeart(5, 0); break;
-            case 60: Purchases.ChargeHeart(20, 0); break;
+            case AdsType.ChargeLifeA: Purchases.ChargeHeart(5, 0); break;
+            case AdsType.ChargeLifeB: Purchases.ChargeHeart(20, 0); break;
             default: break;
         }
 
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectRewards);
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("finished playing video ");
 
-        string log = "[Charge Heart] "
-        + "Heart:" + sec + "/" + Purchases.CountHeart();
-        LOG.echo(log);
+        LOG.echo("[Response Charge Heart] " + type + "/" + Purchases.CountHeart());
+    }
+
+    private IEnumerator TimerCount()
+    {
+        double remainSec = 0;
+        while (true)
+        {
+            remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA);
+            AdsRewardA.text = remainSec <= 0 ? "15m" : MenuBattle.TimeToString((int)remainSec);
+
+            remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB);
+            AdsRewardB.text = remainSec <= 0 ? "60m" : MenuBattle.TimeToString((int)remainSec);
+
+            yield return new WaitForSeconds(1);
+        }
     }
 }

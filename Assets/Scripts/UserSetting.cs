@@ -52,6 +52,15 @@ public class UserSetting
         get { return PlayerPrefs.GetInt("TutorialNumber", 1); }
         set { PlayerPrefs.SetInt("TutorialNumber", value); }
     }
+    public static DateTime GetLastExcuteTime(AdsType type)
+    {
+        return new DateTime(long.Parse(PlayerPrefs.GetString(type.ToString(), "0")));
+    }
+    public static void SetLastExcuteTime(AdsType type, DateTime time)
+    {
+        PlayerPrefs.SetString(type.ToString(), time.Ticks.ToString());
+    }
+
     public static bool StageIsLocked(int stageNum)
     {
         byte cnt = StageStarCount[stageNum - 1];

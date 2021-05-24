@@ -18,6 +18,7 @@ public class MenuDiamondShop : MonoBehaviour
     {
         MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
         objMenu.gameObject.SetActive(false);
+        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
