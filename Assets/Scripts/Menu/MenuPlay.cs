@@ -9,14 +9,11 @@ public class MenuPlay : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/StageDetail";
     private StageInfo mStageInfo;
-    private LinkedList<Button> SelectedButtons = new LinkedList<Button>();
 
     public TextMeshProUGUI StageLevel;
     public TextMeshProUGUI TargetValue;
     public TextMeshProUGUI TargetScore;
     public Image TargetType;
-    public GameObject ItemSlots;
-    public Button ItemSlotPrefab;
 
     public static MenuPlay Inst()
     {
@@ -57,11 +54,15 @@ public class MenuPlay : MonoBehaviour
             TargetValue.text = info.GoalValue.ToString();
         }
 
-        SelectedButtons.Clear();
-        ClearItemButtons();
-        CreateItem1Buttons();
-        if (mStageInfo.Num > 80)
-            CreateItem2Buttons();
+
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
+        {
+            if (btn.GetItem().GetCount() > 0)
+                btn.UpdateItem();
+            else
+                btn.SetItem(PurchaseItemType.None);
+        }
     }
 
     public void OnClose()
@@ -110,73 +111,6 @@ public class MenuPlay : MonoBehaviour
         return rets.ToArray();
     }
 
-    private void ClearItemButtons()
-    {
-        Button[] btns = ItemSlots.GetComponentsInChildren<Button>();
-        foreach (Button btn in btns)
-            Destroy(btn.gameObject);
-    }
-    private void CreateItem1Buttons()
-    {
-        for(PurchaseItemType item = PurchaseItemType.ExtendLimit; item <= PurchaseItemType.MakeSkill1; item++)
-        {
-            Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
-            slot.name = item.ToInt().ToString();
-            Image itemImageUI = slot.transform.GetChild(0).GetComponent<Image>();
-            itemImageUI.sprite = item.GetSprite();
-            slot.GetComponentInChildren<TextMeshProUGUI>().text = item.GetCount().ToString();
-            if (item.GetCount() > 0)
-            {
-                slot.onClick.AddListener(OnClickItem);
-            }
-            else
-            {
-                itemImageUI.color = Color.gray;
-                slot.enabled = false;
-            }
-        }
-    }
-    private void CreateItem2Buttons()
-    {
-        for (PurchaseItemType item = PurchaseItemType.MakeCombo; item <= PurchaseItemType.PowerUp; item++)
-        {
-            Button slot = Instantiate(ItemSlotPrefab, ItemSlots.transform);
-            slot.name = item.ToInt().ToString();
-            Image itemImageUI = slot.transform.GetChild(0).GetComponent<Image>();
-            itemImageUI.sprite = item.GetSprite();
-            slot.GetComponentInChildren<TextMeshProUGUI>().text = item.GetCount().ToString();
-            if (item.GetCount() > 0)
-            {
-                slot.onClick.AddListener(OnClickItem);
-            }
-            else
-            {
-                itemImageUI.color = Color.gray;
-                slot.enabled = false;
-            }
-        }
-    }
-
-    private void OnClickItem()
-    {
-        Button selBtn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        if (IsChecked(selBtn))
-        {
-            SetCheck(selBtn, false);
-            SelectedButtons.Remove(selBtn);
-        }
-        else
-        {
-            if (SelectedButtons.Count >= 3)
-            {
-                SetCheck(SelectedButtons.First.Value, false);
-                SelectedButtons.RemoveFirst();
-            }
-            SetCheck(selBtn, true);
-            SelectedButtons.AddLast(selBtn);
-        }
-    }
-
     private bool IsChecked(Button btn)
     {
         return btn.transform.GetChild(0).GetChild(0).gameObject.activeSelf;
@@ -189,12 +123,26 @@ public class MenuPlay : MonoBehaviour
     public PurchaseItemType[] GetSelectedItems()
     {
         List<PurchaseItemType> rets = new List<PurchaseItemType>();
-        foreach (Button btn in SelectedButtons)
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
         {
-            PurchaseItemType item = int.Parse(btn.name).ToItemType();
-            rets.Add(item);
+            if(btn.GetItem().GetCount() > 0)
+                rets.Add(btn.GetItem());
         }
         return rets.ToArray();
+    }
+
+    public void OnChangeItem()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
+        MenuItemSelector.PopUp((item) =>
+        {
+            if (item.GetCount() > 0)
+                curBtn.SetItem(item);
+            else
+                curBtn.SetItem(PurchaseItemType.None);
+        });
     }
 
 }
