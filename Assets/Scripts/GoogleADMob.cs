@@ -19,6 +19,10 @@ public class GoogleADMob : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //ca-app-pub-3940256099942544~3347511713 test android
+        //ca-app-pub-3940256099942544~1458002511 test iOS
+        //ca-app-pub-1906763424823821~4446405417 prod Android
+
         // Initialize the Google Mobile Ads SDK.
         MobileAds.Initialize(initStatus => {
             InitAdsUnits();
@@ -30,14 +34,16 @@ public class GoogleADMob : MonoBehaviour
 #if UNITY_ANDROID
         //string adUnitId = "ca-app-pub-3940256099942544/5224354917";  //for rewardAds test ID
 
-        AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
-        //AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
-        //AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.RewardItem, new TimeSpan(0, 0, 0));
-        //AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
+        //AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
+        AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
+        AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/6300978111", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
+        AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/1033173712", AdsType.RewardItem, new TimeSpan(0, 0, 0));
+        AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/8691691433", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
 
-        foreach (var unit in AdsUnits)
-            unit.Value.Load();
+        //foreach (var unit in AdsUnits)
+        //    unit.Value.Load();
 
+        AdsUnits[AdsType.ChargeLifeA].Load();
 #elif UNITY_IPHONE
 #endif
     }
