@@ -15,6 +15,8 @@ public class GoogleADMob : MonoBehaviour
     public static GoogleADMob Inst { get { if (mInst == null) mInst = FindObjectOfType<GoogleADMob>(); return mInst; } }
 
     private Dictionary<AdsType, AdsUnit> AdsUnits = new Dictionary<AdsType, AdsUnit>();
+    private AdsType CurAdsType = AdsType.None;
+    private Action<bool> EventReward = null;
 
     // Start is called before the first frame update
     void Start()
@@ -56,11 +58,21 @@ public class GoogleADMob : MonoBehaviour
     {
         return AdsUnits[type].IsReady;
     }
-    public void Show(AdsType type, Action eventReward)
+    public void Show(AdsType type, Action<bool> eventReward)
     {
-        AdsUnits[type].Excute(eventReward);
+        CurAdsType = type;
+        EventReward = eventReward;
+        AdsUnits[type].Excute();
     }
-
+    private void OnEnable()
+    {
+        if(EventReward != null)
+        {
+            EventReward?.Invoke(AdsUnits[CurAdsType].RewardSuccess);
+            EventReward = null;
+            CurAdsType = AdsType.None;
+        }
+    }
 }
 
 public class AdsUnit
@@ -70,7 +82,7 @@ public class AdsUnit
     private TimeSpan CoolTime;
     private RewardedAd Unit;
     private DateTime LastTime;
-    private Action EventReward;
+    public bool RewardSuccess { get; private set; }
     public AdsUnit(string id, AdsType type, TimeSpan coolTime)
     {
         Type = type;
@@ -78,7 +90,7 @@ public class AdsUnit
         CoolTime = coolTime;
         Unit = null;
         LastTime = UserSetting.GetLastExcuteTime(type);
-        EventReward = null;
+        RewardSuccess = false;
     }
 
     public double RemainSec
@@ -90,19 +102,18 @@ public class AdsUnit
         }
     }
     public bool IsReady { get { return RemainSec == 0 && Unit != null && Unit.IsLoaded(); } }
-    public void Excute(Action eventReward)
+    public void Excute()
     {
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         if (!IsReady)
             return;
-
-        EventReward = eventReward;
+        
+        RewardSuccess = false;
         Unit.Show();
 #endif
     }
     public void Load()
     {
-        EventReward = null;
         Unit = new RewardedAd(AdsID);
 
         Unit.OnAdLoaded += HandleRewardedAdLoaded;
@@ -160,6 +171,6 @@ public class AdsUnit
 
         LastTime = DateTime.Now;
         UserSetting.SetLastExcuteTime(Type, LastTime);
-        EventReward?.Invoke();
+        RewardSuccess = true;
     }
 }

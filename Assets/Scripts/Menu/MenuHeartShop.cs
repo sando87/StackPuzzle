@@ -59,9 +59,10 @@ public class MenuHeartShop : MonoBehaviour
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeA + "/" + Purchases.CountHeart());
-            GoogleADMob.Inst.Show(AdsType.ChargeLifeA, () =>
+            GoogleADMob.Inst.Show(AdsType.ChargeLifeA, (rewardSuccess) =>
             {
-                OnChargeHeartFromVideo(AdsType.ChargeLifeA);
+                if(rewardSuccess)
+                    OnChargeHeartFromVideo(AdsType.ChargeLifeA);
             });
         }
         else if (type == 1)
@@ -80,9 +81,10 @@ public class MenuHeartShop : MonoBehaviour
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeB + "/" + Purchases.CountHeart());
-            GoogleADMob.Inst.Show(AdsType.ChargeLifeB, () =>
+            GoogleADMob.Inst.Show(AdsType.ChargeLifeB, (rewardSuccess) =>
             {
-                OnChargeHeartFromVideo(AdsType.ChargeLifeB);
+                if (rewardSuccess)
+                    OnChargeHeartFromVideo(AdsType.ChargeLifeB);
             });
         }
         else if (type == 2)
