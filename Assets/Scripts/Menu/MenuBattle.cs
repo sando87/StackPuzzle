@@ -93,7 +93,7 @@ public class MenuBattle : MonoBehaviour
         PurchaseItemType[] items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Player.UserInfo);
         for (int i = 0; i < PlayerItemSlots.Length; ++i)
         {
-            if (i < items.Length && InGameManager.InstPVP_Player.Difficulty != MatchingLevel.Easy)
+            if (i < items.Length)
             {
                 PlayerItemSlots[i].SetItem(items[i]);
                 PlayerItemSlots[i].SetEnable(true);

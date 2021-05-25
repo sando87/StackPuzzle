@@ -860,7 +860,7 @@ public class InGameManager : MonoBehaviour
                 {
                     Frame frame = mFrames[x, y];
                     Product pro = frame.ChildProduct;
-                    if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked)
+                    if (pro != null && pro.Skill != ProductSkill.Nothing && !pro.IsLocked && !pro.IsChocoBlock)
                     {
                         if (pro.Skill == ProductSkill.SameColor)
                         {
@@ -892,66 +892,12 @@ public class InGameManager : MonoBehaviour
         }
         mItemLooping = false;
     }
-    IEnumerator DestroyProductClimax()
-    {
-        mIsAutoMatching = true;
-        float time = 0;
-        float interval = 0.3f;
-        float limitTime = 5.0f;
-        int matchCount = UserSetting.MatchCount;
-        while (true)
-        {
-            time += Time.deltaTime;
-            bool isAllIdle = true;
-            Product[] matchableProducts = null;
-            foreach (Frame frame in mFrames)
-            {
-                if (frame.Empty)
-                    continue;
-
-                if (frame.ChildProduct == null || frame.ChildProduct.IsLocked)
-                {
-                    isAllIdle = false;
-                    continue;
-                }
-
-                List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct }, matchCount);
-                if (matches.Count <= 0)
-                    continue;
-
-                matchableProducts = matches[0];
-                isAllIdle = false;
-                break;
-            }
-
-            if (time > limitTime || isAllIdle)
-            {
-                time = 0;
-                interval -= 0.1f;
-                matchCount--;
-                limitTime -= 2.0f;
-                if (matchCount <= 1)
-                    break;
-            }
-            else if (matchableProducts != null)
-            {
-                ProductSkill nextSkill = CheckSkillable(matchableProducts);
-                if (nextSkill == ProductSkill.Nothing)
-                    DestroyProducts(matchableProducts);
-                else
-                    MergeProducts(matchableProducts, nextSkill);
-            }
-
-            yield return new WaitForSeconds(interval);
-        }
-        mIsAutoMatching = false;
-    }
     IEnumerator DestroySameProductLoop()
     {
         mIsAutoMatching = true;
         List<Product> sameSkills = new List<Product>();
         foreach (Frame frame in mFrames)
-            if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor)
+            if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor && !frame.ChildProduct.IsChocoBlock)
                 sameSkills.Add(frame.ChildProduct);
 
         while(true)
