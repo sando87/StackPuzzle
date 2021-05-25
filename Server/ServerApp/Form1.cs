@@ -37,7 +37,8 @@ namespace ServerApp
             }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
 
-            LOG.LogWriterDB = null;
+            LOG.LogStringWriterDB = (data) => { return false; };
+            LOG.LogBytesWriterDB = (data) => { return false; };
             LOG.IsNetworkAlive = () => { return false; };
             LOG.LogWriterConsole = (msg) => { WriteLog(msg); };
 
@@ -172,6 +173,7 @@ namespace ServerApp
                     case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.GetScores: resBody = ProcGetUsers(); break;
                     case NetCMD.AddLog: resBody = ProcAddLog(Utils.Deserialize<LogInfo>(ref body)); break;
+                    case NetCMD.AddLogFile: resBody = ProcAddLogFile(body); break;
                     case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
@@ -234,6 +236,23 @@ namespace ServerApp
         {
             DBManager.Inst().AddLog(requestBody);
             return requestBody;
+        }
+        private LogInfo ProcAddLogFile(byte[] requestBody)
+        {
+            LogFile fileMsg = new LogFile();
+            fileMsg.Deserialize(requestBody);
+            string[] logs = LOG.LogFileToString(fileMsg.data);
+
+            LogInfo info = new LogInfo();
+            info.userPk = fileMsg.userPk;
+            foreach (string log in logs)
+            {
+                info.message = log;
+                DBManager.Inst().AddLog(info);
+            }
+
+            info.message = "ok";
+            return info;
         }
         private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody)
         {

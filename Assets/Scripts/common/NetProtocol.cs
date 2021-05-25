@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 public enum NetCMD
 {
-    Undef, AddUser, UpdateUserInfo, EditUserName, GetUser, DelUser, AddLog, RenewScore, GetScores, 
+    Undef, AddUser, UpdateUserInfo, EditUserName, GetUser, DelUser, AddLog, AddLogFile, RenewScore, GetScores, 
     SearchOpponent, StopMatching, PVP, HeartCheck
 }
 public enum PVPCommand
@@ -27,6 +27,12 @@ public enum ProductSkill
 public enum PurchaseItemType
 {
     None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp, MakeMatch, Meteor
+}
+
+public interface ByteSerializer
+{
+    byte[] Serialize();
+    void Deserialize(byte[] bytes);
 }
 
 public class NetProtocol
@@ -167,6 +173,27 @@ public class LogInfo
     public string message;
     public LogInfo(string msg) { userPk = -1; message = msg; }
     public LogInfo() { userPk = -1; message = ""; }
+}
+
+public class LogFile : ByteSerializer
+{
+    public int userPk;
+    public byte[] data;
+
+    public byte[] Serialize()
+    {
+        List<byte> rets = new List<byte>();
+        rets.AddRange(BitConverter.GetBytes(userPk));
+        rets.AddRange(data);
+        return rets.ToArray();
+    }
+
+    public void Deserialize(byte[] bytes)
+    {
+        userPk = BitConverter.ToInt32(bytes, 0);
+        data = new byte[bytes.Length - 4];
+        Array.Copy(bytes, 4, data, 0, data.Length);
+    }
 }
 
 public enum MatchingState { None, Idle, TryMatching, FoundOpp, FoundOppAck, Matched }

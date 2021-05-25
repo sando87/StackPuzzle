@@ -68,11 +68,17 @@ public class MenuTitle : MonoBehaviour
     private void InitLogSystem()
     {
         LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
-        LOG.LogWriterDB = (msg) => {
+        LOG.LogStringWriterDB = (msg) => {
             LogInfo info = new LogInfo();
             info.userPk = UserSetting.UserPK;
             info.message = msg;
             return NetClientApp.GetInstance().Request(NetCMD.AddLog, info, null);
+        };
+        LOG.LogBytesWriterDB = (data) => {
+            LogFile info = new LogFile();
+            info.userPk = UserSetting.UserPK;
+            info.data = data;
+            return NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
         };
         LOG.Initialize(Application.persistentDataPath);
     }

@@ -13,7 +13,8 @@ class LOG
 {
     static public Func<bool> IsNetworkAlive;
     static public Action<string> LogWriterConsole;
-    static public Func<string, bool> LogWriterDB;
+    static public Func<string, bool> LogStringWriterDB;
+    static public Func<byte[], bool> LogBytesWriterDB;
 
     static private Thread mThread = null;
     static private bool mRunFlag = false;
@@ -28,13 +29,16 @@ class LOG
         if (IsNetworkAlive == null)
             IsNetworkAlive = () => { return false; };
 
+        if (LogStringWriterDB == null)
+            LogStringWriterDB = (data) => { return false; };
+
+        if (LogBytesWriterDB == null)
+            LogBytesWriterDB = (data) => { return false; };
+
         mFileLogPath = logPath + "/Log/";
         DirectoryInfo di = new DirectoryInfo(mFileLogPath);
         if (di.Exists == false)
             di.Create();
-
-        if(IsNetworkAlive())
-            FlushFileToDB();
 
         mRunFlag = true;
         mThread = new Thread(new ThreadStart(Run));
@@ -51,79 +55,91 @@ class LOG
     }
     static void Run()
     {
-        int counter = 0;
         while(mRunFlag)
         {
             Thread.Sleep(1000);
 
-            FlushQueue();
+            if (IsNetworkAlive())
+                WriteFilesToDB();
 
-            if (counter % 60 == 0)
+            string[] logs = FlushQueue();
+            if (IsNetworkAlive())
             {
-                if (IsNetworkAlive())
-                    FlushFileToDB();
+                if(!WriteLogsToDB(logs))
+                    WriteLogsToFile(logs);
             }
-
-            counter++;
+            else
+            {
+                WriteLogsToFile(logs);
+            }
         }
     }
     static void AddLog(string msg)
     {
-        if(mRunFlag)
-            mQueue.Enqueue(msg);
+        mQueue.Enqueue(msg);
     }
-    static void FlushQueue()
-    {
-        string msg = "";
-        bool isNetAlive = IsNetworkAlive() && LogWriterDB != null;
-        while (mQueue.TryDequeue(out msg))
-        {
-            if(isNetAlive)
-            {
-                if(LogWriterDB.Invoke(msg) == false)
-                {
-                    isNetAlive = false;
-                    FlushMessageToFile(msg);
-                }
-            }
-            else
-            {
-                FlushMessageToFile(msg);
-            }
-        }
-    }
-    static void FlushMessageToFile(string msg)
+    static void WriteLogsToFile(string[] logs)
     {
         try
         {
             string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
             StreamWriter writer = File.AppendText(mFileLogPath + filename);
-            writer.WriteLine(msg);
+            byte[] data = LogStringToByte(logs);
+            writer.Write(data);
             writer.Close();
         }
         catch
         {
-            LogWriterConsole?.Invoke(msg);
+            LogWriterConsole?.Invoke("Failed WriteLogsToFile");
         }
     }
-    static void FlushFileToDB()
+    static bool WriteLogsToDB(string[] logs)
     {
-        if (LogWriterDB == null)
-            return;
+        foreach (string log in logs)
+        {
+            if (!IsNetworkAlive())
+                return false;
 
+            if (!LogStringWriterDB.Invoke(log))
+                return false;
+        }
+        return true;
+    }
+    static void WriteFilesToDB()
+    {
         string[] filePaths = Directory.GetFiles(mFileLogPath);
         foreach(string file in filePaths)
         {
-            string[] lines = File.ReadAllLines(file);
-            foreach (string line in lines)
-            {
-                bool success = LogWriterDB.Invoke(line);
-                if (!success)
-                    return;
-            }
-            File.Delete(file);
+            if (!IsNetworkAlive())
+                break;
+
+            byte[] filedata = File.ReadAllBytes(file);
+            if(LogBytesWriterDB.Invoke(filedata))
+                File.Delete(file);
         }
     }
+    static string[] FlushQueue()
+    {
+        List<string> logs = new List<string>();
+        string msg = "";
+        while (mQueue.TryDequeue(out msg))
+            logs.Add(msg);
+
+        return logs.ToArray();
+    }
+
+    public static byte[] LogStringToByte(string[] logs)
+    {
+        string log = String.Join<string>("/r/n", logs);
+        return Encoding.UTF8.GetBytes(log);
+    }
+    public static string[] LogFileToString(byte[] bytes)
+    {
+        string log = Encoding.UTF8.GetString(bytes);
+        return log.Split(new char[] { '\r', '\n' });
+    }
+
+
 
     //디버깅용: 코드 흐름 추적을 위한 정보를 콘솔창에 남긴다.
     static public void trace(
@@ -235,6 +251,6 @@ class LogHeader
     public string stackTrace;
     override public string ToString()
     {
-        return time + "," + threadID + "," + logType + "," + fileName + "," + funcName + "," + lineNumber + "," + message + "," + stackTrace;
+        return time + "," + threadID + ",\t" + logType + ",\t" + fileName + ",\t" + funcName + ",\t" + lineNumber + ",\t" + message + ",\t" + stackTrace;
     }
 }

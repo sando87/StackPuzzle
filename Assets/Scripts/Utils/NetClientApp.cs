@@ -85,6 +85,32 @@ public class NetClientApp : MonoBehaviour
         catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); return false; }
         return true;
     }
+    public bool Request(NetCMD cmd, ByteSerializer body, Action<byte[]> response)
+    {
+        if (IsDisconnected())
+            return false;
+
+        try
+        {
+            Header head = new Header();
+            head.Cmd = cmd;
+            head.RequestID = mRequestID++;
+            head.Ack = 0;
+            head.UserPk = UserSetting.UserPK;
+
+            byte[] data = NetProtocol.ToArray(head, body.Serialize());
+
+            mStream.Write(data, 0, data.Length);
+
+            if (response != null)
+                mHandlerTable[head.RequestID] = response;
+
+            mLastRequest = DateTime.Now;
+        }
+        catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); return false; }
+        catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); return false; }
+        return true;
+    }
 
     public async void ConnectASync(Action<bool> eventConnect, float timeout = 10)
     {
