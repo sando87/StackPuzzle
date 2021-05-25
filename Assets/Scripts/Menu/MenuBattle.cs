@@ -90,35 +90,21 @@ public class MenuBattle : MonoBehaviour
         //PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
         //OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
-        PurchaseItemType[] items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Player.UserInfo);
-        for (int i = 0; i < PlayerItemSlots.Length; ++i)
+
+        PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
+        for(int i = 0; i < 3; ++i)
         {
-            if (i < items.Length)
-            {
-                PlayerItemSlots[i].SetItem(items[i]);
-                PlayerItemSlots[i].SetEnable(true);
-            }
-            else
-            {
-                PlayerItemSlots[i].SetItem(PurchaseItemType.None);
-                PlayerItemSlots[i].SetEnable(false);
-            }
+            PlayerItemSlots[i].SetItem(items[i]);
+            PlayerItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
         }
 
-        items = MenuWaitMatch.GetSelectedItems(InGameManager.InstPVP_Opponent.UserInfo);
-        for (int i = 0; i < OpponentItemSlots.Length; ++i)
+        items = InGameManager.InstPVP_Opponent.UserInfo.PvpItems;
+        for (int i = 0; i < 3; ++i)
         {
-            if (i < items.Length && InGameManager.InstPVP_Opponent.Difficulty != MatchingLevel.Easy)
-            {
-                OpponentItemSlots[i].SetItem(items[i]);
-                OpponentItemSlots[i].SetEnable(true);
-            }
-            else
-            {
-                OpponentItemSlots[i].SetItem(PurchaseItemType.None);
-                OpponentItemSlots[i].SetEnable(false);
-            }
+            OpponentItemSlots[i].SetItem(items[i]);
+            OpponentItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
         }
+
 
         InGameManager.InstPVP_Player.EventFinish = (success) => {
             FinishGame(success);

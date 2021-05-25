@@ -191,16 +191,6 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
-    static public PurchaseItemType[] GetSelectedItems(UserInfo userInfo)
-    {
-        Dictionary<PurchaseItemType, int> rets = new Dictionary<PurchaseItemType, int>();
-        foreach (PurchaseItemType item in userInfo.PvpItems)
-            if (item.GetCount() > 0)
-                rets[item] = 1;
-
-        return new List<PurchaseItemType>(rets.Keys).ToArray();
-    }
-
     public void HandlerMatchingResult(Header head, byte[] body)
     {
         if (head.Ack == 1 || head.Cmd != NetCMD.SearchOpponent)

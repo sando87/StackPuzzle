@@ -233,7 +233,7 @@ public class UserSetting
                     if(isOK)
                     {
                         UserInfo virtualUser = new UserInfo();
-                        virtualUser.userName = "bot";
+                        virtualUser.userName = deviceName;
                         virtualUser.deviceName = deviceName;
                         string jsonUserInfo = JsonUtility.ToJson(virtualUser, true);
                         File.WriteAllText(fullname, jsonUserInfo);
