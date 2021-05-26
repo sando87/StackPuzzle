@@ -165,10 +165,7 @@ namespace ServerApp
                 {
                     case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
                     case NetCMD.HeartCheck: resBody = Utils.Deserialize<UserInfo>(ref body); break;
-                    case NetCMD.AddUser: resBody = ProcAddUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.UpdateUserInfo: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.EditUserName: resBody = ProcEditUserName(Utils.Deserialize<UserInfo>(ref body)); break;
-                    case NetCMD.GetUser: resBody = ProcGetUser(Utils.Deserialize<UserInfo>(ref body)); break;
+                    case NetCMD.UpdateUser: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.GetScores: resBody = ProcGetUsers(); break;
@@ -202,7 +199,17 @@ namespace ServerApp
         }
         private UserInfo ProcUpdateUser(UserInfo requestBody)
         {
-            DBManager.Inst().UpdateUserInfo(requestBody);
+            UserInfo preUser = DBManager.Inst().GetUser(requestBody.deviceName);
+            if (preUser == null)
+            {
+                int newUserPk = DBManager.Inst().AddNewUser(requestBody, mCurrentSession.Endpoint);
+                requestBody.userPk = newUserPk;
+            }
+            else
+            {
+                int userPk = DBManager.Inst().UpdateUserInfo(requestBody);
+                requestBody.userPk = userPk;
+            }
             requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
             return requestBody;
         }

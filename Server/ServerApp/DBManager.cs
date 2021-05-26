@@ -65,19 +65,8 @@ namespace ServerApp
 
         public int AddNewUser(UserInfo user, string ipAddr)
         {
-            if (user.userPk != -1)
-                return user.userPk; //기존 등록된 유저
-
             try
             {
-                UserInfo info = GetUser(user.deviceName);
-                if (info != null)
-                {
-                    user.userPk = info.userPk;
-                    UpdateUserInfo(user);
-                    return user.userPk; //재설치 유저
-                }
-
                 using (var cmd = new NpgsqlCommand())
                 {
                     string query = String.Format("INSERT INTO users (userName, score, deviceName, ipAddress, firstTime, win, lose, total) VALUES ('{0}', {1}, '{2}', '{3}', now(), '{4}', '{5}', '{6}') RETURNING userPk",
@@ -97,25 +86,28 @@ namespace ServerApp
             catch (Exception ex) { LOG.warn(ex.Message); }
             return -1;
         }
-        public void UpdateUserInfo(UserInfo user)
+        public int UpdateUserInfo(UserInfo user)
         {
             try
             {
                 using (var cmd = new NpgsqlCommand())
                 {
-                    string query = String.Format("UPDATE users SET userName='{1}',score='{2}',win='{3}',lose='{4}',total='{5}' WHERE userPk = {0}",
-                        user.userPk, user.userName, user.score, user.win, user.lose, user.total);
+                    string query = String.Format("UPDATE users SET userName='{1}',score='{2}',win='{3}',lose='{4}',total='{5}' WHERE deviceName = {0}",
+                        user.deviceName, user.userName, user.score, user.win, user.lose, user.total);
                     cmd.Connection = mDBSession;
                     cmd.CommandText = query;
                     using (var reader = cmd.ExecuteReader())
                     {
-                        return;
+                        if (reader.Read())
+                        {
+                            return (int)reader["userPk"];
+                        }
                     }
                 }
             }
             catch (NpgsqlException ex) { LOG.warn(ex.Message); }
             catch (Exception ex) { LOG.warn(ex.Message); }
-            return;
+            return -1;
         }
         public void EditUserName(UserInfo user)
         {
