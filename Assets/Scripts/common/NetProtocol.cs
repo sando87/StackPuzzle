@@ -38,8 +38,8 @@ public interface ByteSerializer
 public class NetProtocol
 {
     public const int ClientSessionKeepTime = 3;
-    public const int HeartCheckInterval = 3;
-    public const int DeadSessionMaxTime = 10;
+    public const int HeartCheckInterval = 60;
+    public const int DeadSessionMaxTime = HeartCheckInterval * 5;
     public const int ServerMatchingInterval = 1;
 
     public const UInt32 MAGIC = 0x12345678;

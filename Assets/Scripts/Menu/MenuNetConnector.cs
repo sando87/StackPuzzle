@@ -24,25 +24,25 @@ public class MenuNetConnector : MonoBehaviour
     {
         MessageText.text = "Connecting";
         StartCoroutine("UpdateConnectionMessage");
-        NetClientApp.GetInstance().ConnectASync((isConnected) =>
-        {
-            if (!gameObject.activeInHierarchy)
-                return;
-
-            if (isConnected)
-            {
-                EventConnect?.Invoke();
-                StopCoroutine("UpdateConnectionMessage");
-                gameObject.SetActive(false);
-            }
-            else
-            {
-                MenuInformBox.PopUp("Connection failure.");
-                StopCoroutine("UpdateConnectionMessage");
-                gameObject.SetActive(false);
-            }
-            
-        });
+        //NetClientApp.GetInstance().ConnectASync((isConnected) =>
+        //{
+        //    if (!gameObject.activeInHierarchy)
+        //        return;
+        //
+        //    if (isConnected)
+        //    {
+        //        EventConnect?.Invoke();
+        //        StopCoroutine("UpdateConnectionMessage");
+        //        gameObject.SetActive(false);
+        //    }
+        //    else
+        //    {
+        //        MenuInformBox.PopUp("Connection failure.");
+        //        StopCoroutine("UpdateConnectionMessage");
+        //        gameObject.SetActive(false);
+        //    }
+        //    
+        //});
     }
 
     IEnumerator UpdateConnectionMessage()

@@ -138,6 +138,9 @@ public class UserSetting
     public static void Initialize()
     {
         mUserInfo = LoadUserInfo();
+    }
+    public static void SyncUserInfoToDB()
+    {
         if (mUserInfo.userPk <= 0)
         {
             NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>

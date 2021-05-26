@@ -22,23 +22,28 @@ public class MenuTitle : MonoBehaviour
         Application.targetFrameRate = 30;
 
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
-        NetClientApp.GetInstance().ConnectASync(OnNetConnected, mMaxTimeout);
+        NetClientApp.GetInstance().EventConnection = OnNetConnected;
+        InitLogSystem();
+        UserSetting.Initialize();
+        Purchases.Initialize();
+
         StartCoroutine("Loading");
     }
 
     public void OnNetConnected(bool isConnected)
     {
-        LOG.echo("Start MatchPop : NetConnection[" + isConnected + "]");
-        StopCoroutine("Loading");
-
-        UserSetting.Initialize();
-        InitLogSystem();
-        Purchases.Initialize();
-
-        LoadingBar.gameObject.SetActive(false);
-        StartText.gameObject.SetActive(true);
-        StartButton.gameObject.SetActive(true);
-        StartCoroutine(FlinkerStartText());
+        LOG.echo("NetConnection[" + isConnected + "]");
+        if(isConnected)
+            UserSetting.SyncUserInfoToDB();
+        
+        if(gameObject.activeInHierarchy)
+        {
+            StopCoroutine("Loading");
+            LoadingBar.gameObject.SetActive(false);
+            StartText.gameObject.SetActive(true);
+            StartButton.gameObject.SetActive(true);
+            StartCoroutine(FlinkerStartText());
+        }
     }
 
     IEnumerator Loading()

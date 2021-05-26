@@ -12,13 +12,11 @@ public class MenuDiamondShop : MonoBehaviour
     {
         MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
         objMenu.gameObject.SetActive(true);
-        NetClientApp.GetInstance().IsKeepConnection = true;
     }
     public static void Hide()
     {
         MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
         objMenu.gameObject.SetActive(false);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -26,14 +24,13 @@ public class MenuDiamondShop : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnRequestPurchaseDiamond(int realmoney)
     {
-        if (NetClientApp.GetInstance().IsDisconnected())
+        if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
-            MenuNetConnector.PopUp(() => OnRequestPurchaseDiamond(realmoney));
+            MenuInformBox.PopUp("Network NotReachable.");
             return;
         }
 

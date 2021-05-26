@@ -16,13 +16,11 @@ public class MenuHeartShop : MonoBehaviour
         MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
         objMenu.gameObject.SetActive(true);
         objMenu.StartCoroutine(objMenu.TimerCount());
-        NetClientApp.GetInstance().IsKeepConnection = true;
     }
     public static void Hide()
     {
         MenuHeartShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuHeartShop>();
         objMenu.gameObject.SetActive(false);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
 
     public void OnClose()
@@ -30,7 +28,6 @@ public class MenuHeartShop : MonoBehaviour
         gameObject.SetActive(false);
         MenuStages.PopUp();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
-        NetClientApp.GetInstance().IsKeepConnection = false;
     }
     
     public void OnChargeHeart()
@@ -45,9 +42,9 @@ public class MenuHeartShop : MonoBehaviour
 
         if (type == 0)
         {
-            if (NetClientApp.GetInstance().IsDisconnected())
+            if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuNetConnector.PopUp(() => OnChargeHeart());
+                MenuInformBox.PopUp("Network NotReachable.");
                 return;
             }
 
@@ -67,9 +64,9 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 1)
         {
-            if (NetClientApp.GetInstance().IsDisconnected())
+            if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuNetConnector.PopUp(() => OnChargeHeart());
+                MenuInformBox.PopUp("Network NotReachable.");
                 return;
             }
 
