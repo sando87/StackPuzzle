@@ -162,7 +162,7 @@ public class MenuBattle : MonoBehaviour
         bool ret = NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
         {
             PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
-            UserSetting.UpdateUserInfo(resBody.userInfo);
+            UserSetting.UpdateUserInfoToAll(resBody.userInfo);
         });
 
         if(!ret)

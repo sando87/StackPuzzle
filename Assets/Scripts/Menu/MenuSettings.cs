@@ -91,15 +91,9 @@ public class MenuSettings : MonoBehaviour
         {
             if (isOK)
             {
-                UserInfo info = new UserInfo();
-                info.userPk = UserSetting.UserPK;
+                UserInfo info = UserSetting.UserInfo;
                 info.userName = inputText;
-                NetClientApp.GetInstance().Request(NetCMD.EditUserName, info, (_body) =>
-                {
-                    UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                    UserSetting.UpdateUserInfo(res);
-                    MenuSettings.Inst().UserName.text = UserSetting.UserName;
-                });
+                UserSetting.UpdateUserInfoToAll(info);
             }
         });
     }

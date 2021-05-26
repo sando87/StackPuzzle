@@ -40,9 +40,9 @@ class LOG
         if (di.Exists == false)
             di.Create();
 
-        mRunFlag = true;
-        mThread = new Thread(new ThreadStart(Run));
-        mThread.Start();
+        //mRunFlag = true;
+        //mThread = new Thread(new ThreadStart(Run));
+        //mThread.Start();
     }
     static public void UnInitialize()
     {
@@ -59,21 +59,26 @@ class LOG
         {
             Thread.Sleep(1000);
 
-            if (IsNetworkAlive())
-                WriteFilesToDB();
-
-            string[] logs = FlushQueue();
-            if (IsNetworkAlive())
-            {
-                if(!WriteLogsToDB(logs))
-                    WriteLogsToFile(logs);
-            }
-            else
-            {
-                WriteLogsToFile(logs);
-            }
+            ProcessToFlushLog();
         }
     }
+    public static void ProcessToFlushLog()
+    {
+        if (IsNetworkAlive())
+            WriteFilesToDB();
+
+        string[] logs = FlushQueue();
+        if (IsNetworkAlive())
+        {
+            if (!WriteLogsToDB(logs))
+                WriteLogsToFile(logs);
+        }
+        else
+        {
+            WriteLogsToFile(logs);
+        }
+    }
+
     static void AddLog(string msg)
     {
         mQueue.Enqueue(msg);

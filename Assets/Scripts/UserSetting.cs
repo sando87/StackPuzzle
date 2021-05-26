@@ -14,11 +14,8 @@ public class UserSetting
     public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
     public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }
     public static string UserName { get { return mUserInfo == null ? "" : mUserInfo.userName; } }
-    public static void UpdateUserInfo(UserInfo info)
-    {
-        mUserInfo = info;
-        SaveUserInfo(info);
-    }
+    
+
     public static DateTime FirstLaunchDate
     {
         get
@@ -139,32 +136,22 @@ public class UserSetting
     {
         mUserInfo = LoadUserInfo();
     }
-    public static void SyncUserInfoToDB()
+    public static void UpdateUserInfoToAll(UserInfo info)
     {
-        if (mUserInfo.userPk <= 0)
+        mUserInfo = info;
+        bool ret = NetClientApp.GetInstance().Request(NetCMD.UpdateUser, info, (_body) =>
         {
-            NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>
-            {
-                UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                if (res.userPk <= 0)
-                    return;
+            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
+            if (res.userPk <= 0)
+                return;
 
-                UpdateUserInfo(res);
-            });
-        }
-        else
-        {
-            NetClientApp.GetInstance().Request(NetCMD.GetUser, mUserInfo, (_body) =>
-            {
-                UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                if (res.userPk <= 0)
-                    return;
+            mUserInfo = res;
+            SaveUserInfo(res);
+        });
 
-                UpdateUserInfo(res);
-            });
-        }
+        if(!ret)
+            SaveUserInfo(info);
     }
-
 
     public static UserInfo LoadUserInfo()
     {
@@ -187,17 +174,6 @@ public class UserSetting
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
             return info;
         }
-    }
-    public static void UpdateUserInfoFromServer()
-    {
-        NetClientApp.GetInstance().Request(NetCMD.GetUser, UserSetting.UserInfo, (_body) =>
-        {
-            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-            if (res.userPk <= 0)
-                return;
-
-            UpdateUserInfo(res);
-        });
     }
     private static UserInfo SaveUserInfo(UserInfo info)
     {
@@ -250,24 +226,15 @@ public class UserSetting
             if (fileText == null || fileText.Length == 0)
                 return;
                         
-            mUserInfo = JsonUtility.FromJson<UserInfo>(fileText);
+            UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
+            UpdateUserInfoToAll(info);
             mIsBotPlayer = true;
             AutoBalancer.AutoBalance = true;
-            if (mUserInfo.userPk <= 0)
-            {
-                NetClientApp.GetInstance().Request(NetCMD.AddUser, mUserInfo, (_body) =>
-                {
-                    UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-                    if (res.userPk <= 0)
-                        return;
-
-                    UpdateUserInfo(res);
-                });
-            }
         }
         else
         {
-            mUserInfo = LoadUserInfo();
+            UserInfo info = LoadUserInfo();
+            UpdateUserInfoToAll(info);
             mIsBotPlayer = false;
             AutoBalancer.AutoBalance = false;
         }

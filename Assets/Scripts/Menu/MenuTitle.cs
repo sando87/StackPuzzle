@@ -34,7 +34,7 @@ public class MenuTitle : MonoBehaviour
     {
         LOG.echo("NetConnection[" + isConnected + "]");
         if(isConnected)
-            UserSetting.SyncUserInfoToDB();
+            UserSetting.UpdateUserInfoToAll(UserSetting.UserInfo);
         
         if(gameObject.activeInHierarchy)
         {
