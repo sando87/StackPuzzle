@@ -42,8 +42,7 @@ public class GoogleADMob : MonoBehaviour
         AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.RewardItem, new TimeSpan(0, 0, 0));
         AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
 
-        foreach (var unit in AdsUnits)
-            unit.Value.Load();
+        StartCoroutine(CheckAdsUnitLoading());
 
 #elif UNITY_IPHONE
 #endif
@@ -53,23 +52,21 @@ public class GoogleADMob : MonoBehaviour
     {
         return (int)AdsUnits[type].RemainSec;
     }
-    public bool IsReady(AdsType type)
+    public bool IsLoaded(AdsType type)
     {
-        return AdsUnits[type].IsReady;
+        return AdsUnits[type].IsLoaded;
     }
     public void Show(AdsType type, Action<bool> eventReward)
     {
-        if(AdsUnits[type].IsReady)
-        {
-            CurAdsType = type;
-            EventReward = eventReward;
-            if (AdsUnits[type].Excute())
-            {
-                Paused = true;
-                StopCoroutine("CheckRewardResponse");
-                StartCoroutine("CheckRewardResponse");
-            }
-        }
+        if (!AdsUnits[type].IsLoaded)
+            return;
+
+        Paused = true;
+        CurAdsType = type;
+        EventReward = eventReward;
+        AdsUnits[type].Excute();
+        StopCoroutine("CheckRewardResponse");
+        StartCoroutine("CheckRewardResponse");
     }
     private IEnumerator CheckRewardResponse()
     {
@@ -85,8 +82,29 @@ public class GoogleADMob : MonoBehaviour
     {
         Paused = pause;
     }
+
+    private IEnumerator CheckAdsUnitLoading()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(3);
+
+            if (!NetClientApp.GetInstance().IsNetworkAlive)
+                continue;
+
+            foreach (var unit in AdsUnits)
+            {
+                if (unit.Value.State == AdsUnitState.UnLoaded)
+                    unit.Value.Load();
+            }
+        }
+    }
 }
 
+public enum AdsUnitState
+{
+    None, UnLoaded, Loading, Loaded, Showing
+}
 public class AdsUnit
 {
     private AdsType Type;
@@ -95,12 +113,14 @@ public class AdsUnit
     private RewardedAd Unit;
     private DateTime LastTime;
     public bool RewardSuccess { get; private set; }
+    public AdsUnitState State { get; private set; }
     public AdsUnit(string id, AdsType type, TimeSpan coolTime)
     {
         Type = type;
         AdsID = id;
         CoolTime = coolTime;
         Unit = null;
+        State = AdsUnitState.UnLoaded;
         LastTime = UserSetting.GetLastExcuteTime(type);
         RewardSuccess = false;
     }
@@ -113,22 +133,16 @@ public class AdsUnit
             return term > CoolTime ? 0 : CoolTime.TotalSeconds - term.TotalSeconds;
         }
     }
-    public bool IsReady { get { return RemainSec == 0 && Unit != null; } }
-    public bool Excute()
+    public bool IsLoaded { get { return Unit != null && State == AdsUnitState.Loaded && Unit.IsLoaded(); } }
+    public void Excute()
     {
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         if (Unit.IsLoaded())
         {
             RewardSuccess = false;
             Unit.Show();
-            return true;
-        }
-        else
-        {
-            Load();
         }
 #endif
-        return false;
     }
     public void Load()
     {
@@ -149,35 +163,40 @@ public class AdsUnit
 
         // Load the rewarded ad with the request.
         Unit.LoadAd(request);
+        State = AdsUnitState.Loading;
     }
 
 
     private void HandleRewardedAdLoaded(object sender, EventArgs args)
     {
         LOG.echo("[" + Type + "] HandleRewardedAdLoaded event received");
+        State = AdsUnitState.Loaded;
     }
 
     private void HandleRewardedAdFailedToLoad(object sender, AdErrorEventArgs args)
     {
         LOG.echo("[" + Type + "] HandleRewardedAdFailedToLoad event received with message: "
                 + args.Message);
+        State = AdsUnitState.UnLoaded;
     }
 
     private void HandleRewardedAdOpening(object sender, EventArgs args)
     {
         LOG.echo("[" + Type + "] HandleRewardedAdOpening event received");
+        State = AdsUnitState.Showing;
     }
 
     private void HandleRewardedAdFailedToShow(object sender, AdErrorEventArgs args)
     {
         LOG.echo("[" + Type + "] HandleRewardedAdFailedToShow event received with message: "
                  + args.Message);
+        State = AdsUnitState.UnLoaded;
     }
 
     private void HandleRewardedAdClosed(object sender, EventArgs args)
     {
         LOG.echo("[" + Type + "] HandleRewardedAdClosed event received");
-        Load();
+        State = AdsUnitState.UnLoaded;
     }
 
     private void HandleUserEarnedReward(object sender, Reward args)

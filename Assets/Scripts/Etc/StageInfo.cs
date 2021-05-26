@@ -41,7 +41,8 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
-        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
+        //TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
+        TextAsset ta = StageManager.Inst.LevelFiles[stageNum - 1];
         if (ta == null || ta.text.Length == 0)
             return null;
 
@@ -68,10 +69,10 @@ public class StageInfo
 
     public static StageInfo Load(string[] lines)
     {
-#if PLATFORM_ANDROID
-        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
-            Permission.RequestUserPermission(Permission.ExternalStorageRead);
-#endif
+//#if PLATFORM_ANDROID
+//        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+//            Permission.RequestUserPermission(Permission.ExternalStorageRead);
+//#endif
 
         StageInfo info = new StageInfo();
         foreach (string line in lines)

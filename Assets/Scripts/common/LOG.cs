@@ -68,6 +68,9 @@ class LOG
             WriteFilesToDB();
 
         string[] logs = FlushQueue();
+        if (logs.Length <= 0)
+            return;
+
         if (IsNetworkAlive())
         {
             if (!WriteLogsToDB(logs))
@@ -137,13 +140,13 @@ class LOG
 
     public static byte[] LogStringToByte(string[] logs)
     {
-        string log = String.Join<string>("\n", logs);
+        string log = String.Join<string>("\r\n", logs) + "\r\n";
         return Encoding.UTF8.GetBytes(log);
     }
     public static string[] LogFileToString(byte[] bytes)
     {
         string log = Encoding.UTF8.GetString(bytes);
-        return log.Split('\n');
+        return log.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
     }
 
 
@@ -201,7 +204,7 @@ class LOG
         log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = val == null ? "" : val;
+        log.message = val == null ? "" : val.Trim();
         log.stackTrace = "";
 
         var st = new StackTrace();
@@ -229,7 +232,7 @@ class LOG
         log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = val == null ? "" : val;
+        log.message = val == null ? "" : val.Trim();
         log.stackTrace = "";
 
         var st = new StackTrace();

@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum NetClientState
-{
-    None, Disconnected, Connecting, Connected
-}
-
 public class NetClientApp : MonoBehaviour
 {
     const int recvBufSize = 1024 * 64;
@@ -24,20 +19,14 @@ public class NetClientApp : MonoBehaviour
     TcpClient mSession = null;
     NetworkStream mStream = null;
     private Int64 mRequestID = 0;
+    private bool mIsTryingConnect = false;
     private List<byte> mRecvBuffer = new List<byte>();
     Dictionary<Int64, Action<byte[]>> mHandlerTable = new Dictionary<Int64, Action<byte[]>>();
-    private NetClientState State
-    {
-        get
-        {
-            return mSession == null ? NetClientState.Disconnected : (mStream != null ? NetClientState.Connected : NetClientState.Connecting);
-        }
-    }
 
     [Serializable]
     public class UnityEventClick : UnityEvent<Header, byte[]> { }
     public UnityEventClick EventMessage = null;
-    public Action<bool> EventConnection = null;
+    public Action EventConnection = null;
 
 
     static public NetClientApp GetInstance()
@@ -61,17 +50,17 @@ public class NetClientApp : MonoBehaviour
 
     void Update()
     {
-        if(State == NetClientState.Connected)
-        {
-            ReadRecvData();
-            ParseAndInvokeCallback();
-        }
+        if (IsDisconnected())
+            return;
+
+        ReadRecvData();
+        ParseAndInvokeCallback();
     }
 
     public bool IsNetworkAlive { get { return Application.internetReachability != NetworkReachability.NotReachable; } }
     public bool IsDisconnected()
     {
-        return State != NetClientState.Connected;
+        return mSession == null || !mSession.Connected || mStream == null;
     }
     public bool Request(NetCMD cmd, object body, Action<byte[]> response)
     {
@@ -124,11 +113,12 @@ public class NetClientApp : MonoBehaviour
         return true;
     }
 
-    private async void ConnectASync(float timeout = 20)
+    private async void ConnectASync(float timeout = 10)
     {
-        if (State != NetClientState.Disconnected)
+        if (mIsTryingConnect)
             return;
 
+        mIsTryingConnect = true;
         StartCoroutine("WaitTimeout", timeout);
         mSession = new TcpClient();
         var task1 = Task.Run(() => {
@@ -149,12 +139,13 @@ public class NetClientApp : MonoBehaviour
         {
             mStream = mSession.GetStream();
             LOG.echo(mSession.Client.LocalEndPoint.ToString());
-            EventConnection?.Invoke(true);
+            EventConnection?.Invoke();
         }
         else
         {
             DisConnect();
         }
+        mIsTryingConnect = false;
     }
     private IEnumerator WaitTimeout(float timeout)
     {
@@ -166,7 +157,6 @@ public class NetClientApp : MonoBehaviour
         if (mStream != null)
         {
             LOG.echo(mSession.Client.LocalEndPoint.ToString());
-            EventConnection?.Invoke(false);
             mStream.Close();
             mStream = null;
         }
@@ -249,7 +239,7 @@ public class NetClientApp : MonoBehaviour
         {
             try
             {
-                if (State == NetClientState.Connected)
+                if (!IsDisconnected())
                 {
                     Header head = new Header();
                     head.Cmd = NetCMD.HeartCheck;
@@ -274,12 +264,12 @@ public class NetClientApp : MonoBehaviour
         {
             if (Application.internetReachability == NetworkReachability.NotReachable)
             {
-                if (State == NetClientState.Connected)
+                if (!IsDisconnected())
                     DisConnect();
             }
             else
             {
-                if (State == NetClientState.Disconnected)
+                if (IsDisconnected())
                     ConnectASync();
             }
             

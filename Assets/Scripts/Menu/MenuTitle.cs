@@ -31,20 +31,24 @@ public class MenuTitle : MonoBehaviour
         StartCoroutine("Loading");
     }
 
-    public void OnNetConnected(bool isConnected)
+    public void OnNetConnected()
     {
-        LOG.echo("NetConnection[" + isConnected + "]");
-        if(isConnected)
-            UserSetting.UpdateUserInfoToAll(UserSetting.UserInfo);
+        LOG.echo("NetConnection[ OK ]");
+        UserSetting.UpdateUserInfoToAll(UserSetting.UserInfo);
         
         if(gameObject.activeInHierarchy)
         {
-            StopCoroutine("Loading");
-            LoadingBar.gameObject.SetActive(false);
-            StartText.gameObject.SetActive(true);
-            StartButton.gameObject.SetActive(true);
-            StartCoroutine(FlinkerStartText());
+            Ready();
         }
+    }
+
+    private void Ready()
+    {
+        StopCoroutine("Loading");
+        LoadingBar.gameObject.SetActive(false);
+        StartText.gameObject.SetActive(true);
+        StartButton.gameObject.SetActive(true);
+        StartCoroutine(FlinkerStartText());
     }
 
     IEnumerator Loading()
@@ -62,6 +66,8 @@ public class MenuTitle : MonoBehaviour
         }
         LoadingBar.value = 1.0f;
         loadingText.text = "100%";
+
+        Ready();
     }
 
     public void OnTouchScreen()

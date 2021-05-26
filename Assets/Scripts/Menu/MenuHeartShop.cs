@@ -48,9 +48,15 @@ public class MenuHeartShop : MonoBehaviour
                 return;
             }
 
-            if (!GoogleADMob.Inst.IsReady(AdsType.ChargeLifeA))
+            if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA) > 0)
             {
                 MenuInformBox.PopUp("Advertising Not Ready.");
+                return;
+            }
+
+            if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeA))
+            {
+                MenuInformBox.PopUp("Advertising Requested.\nPlease wait for a while.");
                 return;
             }
 
@@ -70,9 +76,15 @@ public class MenuHeartShop : MonoBehaviour
                 return;
             }
 
-            if (!GoogleADMob.Inst.IsReady(AdsType.ChargeLifeB))
+            if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB) > 0)
             {
                 MenuInformBox.PopUp("Advertising Not Ready.");
+                return;
+            }
+
+            if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeB))
+            {
+                MenuInformBox.PopUp("Advertising Requested.\nPlease wait for a while.");
                 return;
             }
 
