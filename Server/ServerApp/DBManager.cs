@@ -92,7 +92,7 @@ namespace ServerApp
             {
                 using (var cmd = new NpgsqlCommand())
                 {
-                    string query = String.Format("UPDATE users SET userName='{1}',score='{2}',win='{3}',lose='{4}',total='{5}' WHERE deviceName = {0}",
+                    string query = String.Format("UPDATE users SET userName='{1}',score='{2}',win='{3}',lose='{4}',total='{5}' WHERE deviceName = '{0}' RETURNING userPk",
                         user.deviceName, user.userName, user.score, user.win, user.lose, user.total);
                     cmd.Connection = mDBSession;
                     cmd.CommandText = query;

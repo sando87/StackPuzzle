@@ -21,10 +21,7 @@ public class MenuSettings : MonoBehaviour
     {
         MenuSettings menu = GameObject.Find(UIObjName).GetComponent<MenuSettings>();
         menu.gameObject.SetActive(true);
-        menu.SoundSFX.value = UserSetting.VolumeSFX;
-        menu.SoundBack.value = UserSetting.VolumeBackground;
-        menu.UserName.text = UserSetting.UserName;
-        menu.UpdateExpBar();
+        menu.UpdateUserInfoUI();
     }
 
 
@@ -94,6 +91,7 @@ public class MenuSettings : MonoBehaviour
                 UserInfo info = UserSetting.UserInfo;
                 info.userName = inputText;
                 UserSetting.UpdateUserInfoToAll(info);
+                MenuSettings.Inst().UpdateUserInfoUI();
             }
         });
     }
@@ -110,8 +108,12 @@ public class MenuSettings : MonoBehaviour
         SoundPlayer.Inst.AdjustVolumeBack(SoundBack.value);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
-    private void UpdateExpBar()
+    private void UpdateUserInfoUI()
     {
+        SoundSFX.value = UserSetting.VolumeSFX;
+        SoundBack.value = UserSetting.VolumeBackground;
+        UserName.text = UserSetting.UserName;
+
         int score = UserSetting.UserScore;
         int level = Utils.ToLevel(score);
         ExpLevel.text = level.ToString();

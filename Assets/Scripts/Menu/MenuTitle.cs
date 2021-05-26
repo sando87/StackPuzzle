@@ -18,6 +18,7 @@ public class MenuTitle : MonoBehaviour
             cig.Init();
 
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
+        LOG.echo("Start App");
 
         Application.targetFrameRate = 30;
 

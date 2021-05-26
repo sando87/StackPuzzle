@@ -88,10 +88,12 @@ class LOG
         try
         {
             string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
-            StreamWriter writer = File.AppendText(mFileLogPath + filename);
-            byte[] data = LogStringToByte(logs);
-            writer.Write(data);
-            writer.Close();
+            string path = mFileLogPath + filename;
+            using (var stream = new FileStream(path, FileMode.Append))
+            {
+                byte[] data = LogStringToByte(logs);
+                stream.Write(data, 0, data.Length);
+            }
         }
         catch
         {
@@ -135,13 +137,13 @@ class LOG
 
     public static byte[] LogStringToByte(string[] logs)
     {
-        string log = String.Join<string>("/r/n", logs);
+        string log = String.Join<string>("\n", logs);
         return Encoding.UTF8.GetBytes(log);
     }
     public static string[] LogFileToString(byte[] bytes)
     {
         string log = Encoding.UTF8.GetString(bytes);
-        return log.Split(new char[] { '\r', '\n' });
+        return log.Split('\n');
     }
 
 
