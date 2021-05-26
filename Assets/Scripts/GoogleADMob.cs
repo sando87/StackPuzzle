@@ -17,6 +17,7 @@ public class GoogleADMob : MonoBehaviour
     private Dictionary<AdsType, AdsUnit> AdsUnits = new Dictionary<AdsType, AdsUnit>();
     private AdsType CurAdsType = AdsType.None;
     private Action<bool> EventReward = null;
+    private bool Paused = false;
 
     // Start is called before the first frame update
     void Start()
@@ -36,16 +37,14 @@ public class GoogleADMob : MonoBehaviour
 #if UNITY_ANDROID
         //string adUnitId = "ca-app-pub-3940256099942544/5224354917";  //for rewardAds test ID
 
-        //AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
-        AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
-        AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/6300978111", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
-        AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/1033173712", AdsType.RewardItem, new TimeSpan(0, 0, 0));
-        AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/8691691433", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
+        AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
+        AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
+        AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.RewardItem, new TimeSpan(0, 0, 0));
+        AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
 
-        //foreach (var unit in AdsUnits)
-        //    unit.Value.Load();
+        foreach (var unit in AdsUnits)
+            unit.Value.Load();
 
-        AdsUnits[AdsType.ChargeLifeA].Load();
 #elif UNITY_IPHONE
 #endif
     }
@@ -60,18 +59,31 @@ public class GoogleADMob : MonoBehaviour
     }
     public void Show(AdsType type, Action<bool> eventReward)
     {
-        CurAdsType = type;
-        EventReward = eventReward;
-        AdsUnits[type].Excute();
-    }
-    private void OnEnable()
-    {
-        if(EventReward != null)
+        if(AdsUnits[type].IsReady)
         {
-            EventReward?.Invoke(AdsUnits[CurAdsType].RewardSuccess);
-            EventReward = null;
-            CurAdsType = AdsType.None;
+            CurAdsType = type;
+            EventReward = eventReward;
+            if (AdsUnits[type].Excute())
+            {
+                Paused = true;
+                StopCoroutine("CheckRewardResponse");
+                StartCoroutine("CheckRewardResponse");
+            }
         }
+    }
+    private IEnumerator CheckRewardResponse()
+    {
+        while(Paused)
+            yield return null;
+
+        EventReward?.Invoke(AdsUnits[CurAdsType].RewardSuccess);
+        EventReward = null;
+        CurAdsType = AdsType.None;
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        Paused = pause;
     }
 }
 
@@ -98,19 +110,25 @@ public class AdsUnit
         get
         {
             TimeSpan term = DateTime.Now - LastTime;
-            return term > CoolTime ? 0 : term.TotalSeconds;
+            return term > CoolTime ? 0 : CoolTime.TotalSeconds - term.TotalSeconds;
         }
     }
-    public bool IsReady { get { return RemainSec == 0 && Unit != null && Unit.IsLoaded(); } }
-    public void Excute()
+    public bool IsReady { get { return RemainSec == 0 && Unit != null; } }
+    public bool Excute()
     {
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-        if (!IsReady)
-            return;
-        
-        RewardSuccess = false;
-        Unit.Show();
+        if (Unit.IsLoaded())
+        {
+            RewardSuccess = false;
+            Unit.Show();
+            return true;
+        }
+        else
+        {
+            Load();
+        }
 #endif
+        return false;
     }
     public void Load()
     {
