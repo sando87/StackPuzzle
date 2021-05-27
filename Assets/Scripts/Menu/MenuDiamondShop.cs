@@ -1,13 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MenuDiamondShop : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/DiamondShop";
 
-    
     public static void PopUp()
     {
         MenuDiamondShop objMenu = GameObject.Find(UIObjName).GetComponent<MenuDiamondShop>();
@@ -19,6 +19,13 @@ public class MenuDiamondShop : MonoBehaviour
         objMenu.gameObject.SetActive(false);
     }
 
+    private void Start()
+    {
+        UnityEngine.Purchasing.IAPButton[] btns = GetComponentsInChildren<UnityEngine.Purchasing.IAPButton>();
+        foreach (UnityEngine.Purchasing.IAPButton btn in btns)
+            btn.IsOKPurchase = OnClickPurchase;
+    }
+
     public void OnClose()
     {
         gameObject.SetActive(false);
@@ -26,54 +33,45 @@ public class MenuDiamondShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
-    public void OnRequestPurchaseDiamond(int realmoney)
+    public bool OnClickPurchase(string productID)
     {
         if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
-            MenuInformBox.PopUp("Network NotReachable.");
-            return;
+            MenuMessageBox.PopUp("Network NotReachable.", false, null);
+            return false;
         }
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-
-        MenuMessageBox.PopUp("Do you really want to buy diamonds?", true, (isOK) =>
-        {
-            if(isOK)
-            {
-                string log = "[Purchase Request] " + "Realmoney:" + realmoney;
-                LOG.echo(log);
-
-                //Call Purchase API
-                OnSccuessPurchaseDiamond(realmoney);
-            }
-        });
+        LOG.echo("[Request Purchase] " + "ProductId:" + productID);
+        return true; //true 반환시 구매 진행
     }
-
-    public void OnSccuessPurchaseDiamond(int realmoney)
-    {
-        switch (realmoney)
-        {
-            case 1000: Purchases.PurchaseDiamond(10); break;
-            case 5000: Purchases.PurchaseDiamond(50); break;
-            case 10000: Purchases.PurchaseDiamond(100); break;
-            case 15000: Purchases.PurchaseDiamond(150); break;
-            default: LOG.warn(); break;
-        }
-
-        MenuStages.Inst.UpdateTopPanel();
-        MenuInformBox.PopUp("Success Purchase : " + realmoney);
-
-        string log = "[Purchase Response] " + "Realmoney:" + realmoney + ", Dia:" + Purchases.CountDiamond();
-        LOG.echo(log);
-    }
-
     public void HandleOnPurchaseOK(UnityEngine.Purchasing.Product pro)
     {
-        LOG.echo(pro.receipt);
+        LOG.echo(pro.definition.id);
+        OnSccuessPurchaseDiamond(pro.definition.id);
     }
     public void HandleOnPurchaseError(UnityEngine.Purchasing.Product pro, UnityEngine.Purchasing.PurchaseFailureReason reason)
     {
         LOG.echo(reason.ToString());
+        MenuMessageBox.PopUp(reason.ToString(), false, null);
+    }
+
+    public void OnSccuessPurchaseDiamond(string productID)
+    {
+        switch (productID)
+        {
+            case "test0001": Purchases.PurchaseDiamond(10); break;
+            case "test0002": Purchases.PurchaseDiamond(50); break;
+            case "test0003": Purchases.PurchaseDiamond(100); break;
+            case "test0004": Purchases.PurchaseDiamond(150); break;
+            default: LOG.warn(); break;
+        }
+
+        MenuStages.Inst.UpdateTopPanel();
+        MenuInformBox.PopUp("Success Purchase!!");
+
+        string log = "[Response Purchase] " + "ProductID:" + productID + ", CurrentTotalDia:" + Purchases.CountDiamond();
+        LOG.echo(log);
     }
 
 }

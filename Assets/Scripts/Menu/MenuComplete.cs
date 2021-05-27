@@ -261,11 +261,41 @@ public class MenuComplete : MonoBehaviour
     {
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
         string[] subRewards = btn.name.Split(' ');
-        foreach (string subReward in subRewards)
-            StageInfo.DoReward(subReward);
 
-        btn.transform.GetChild(0).gameObject.SetActive(false);
-        btn.transform.GetChild(1).gameObject.SetActive(false);
-        btn.enabled = false;
+        if (Purchases.IsAdsSkip())
+        {
+            foreach (string subReward in subRewards)
+                StageInfo.DoReward(subReward);
+
+            btn.transform.GetChild(0).gameObject.SetActive(false);
+            btn.transform.GetChild(1).gameObject.SetActive(false);
+            btn.enabled = false;
+            return;
+        }
+
+        if(!NetClientApp.GetInstance().IsNetworkAlive)
+        {
+            MenuMessageBox.PopUp("Network NotReachable.", false, null);
+            return;
+        }
+
+        if (!GoogleADMob.Inst.IsLoaded(AdsType.RewardItem))
+        {
+            MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
+            return;
+        }
+
+        GoogleADMob.Inst.Show(AdsType.RewardItem, (rewarded) =>
+        {
+            if(rewarded)
+            {
+                foreach (string subReward in subRewards)
+                    StageInfo.DoReward(subReward);
+
+                btn.transform.GetChild(0).gameObject.SetActive(false);
+                btn.transform.GetChild(1).gameObject.SetActive(false);
+                btn.enabled = false;
+            }
+        });
     }
 }

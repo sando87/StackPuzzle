@@ -5,8 +5,6 @@ using UnityEngine.UI;
 
 public class StageManager : MonoBehaviour
 {
-    public TextAsset[] LevelFiles = null;
-
     private static StageManager mInst = null;
     public static StageManager Inst
     {

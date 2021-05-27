@@ -228,6 +228,8 @@ public class MenuInGame : MonoBehaviour
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear, isFirstThreeStar);
+            InGameManager.InstStage.CleanUpGame();
+            Hide();
         }
         else
         {
@@ -236,11 +238,25 @@ public class MenuInGame : MonoBehaviour
 
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
-            MenuFailed.PopUp();
-        }
 
-        InGameManager.InstStage.CleanUpGame();
-        Hide();
+            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
+                && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
+                && !Purchases.IsAdsSkip())
+            {
+                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
+                {
+                    MenuFailed.PopUp();
+                    InGameManager.InstStage.CleanUpGame();
+                    Hide();
+                });
+            }
+            else
+            {
+                MenuFailed.PopUp();
+                InGameManager.InstStage.CleanUpGame();
+                Hide();
+            }
+        }
     }
     public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)
     {
@@ -349,4 +365,5 @@ public class MenuInGame : MonoBehaviour
             yield return new WaitForSeconds(interval);
         }
     }
+
 }

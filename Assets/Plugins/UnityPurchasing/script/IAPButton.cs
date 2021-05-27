@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using System.IO;
 using System.Collections.Generic;
+using System;
 
 namespace UnityEngine.Purchasing
 {
@@ -16,6 +17,8 @@ namespace UnityEngine.Purchasing
             Purchase,
             Restore
         }
+
+        public Func<string, bool> IsOKPurchase = null;
 
         [System.Serializable]
         public class OnPurchaseCompletedEvent : UnityEvent<Product>
@@ -102,6 +105,9 @@ namespace UnityEngine.Purchasing
 
         void PurchaseProduct()
         {
+            if (IsOKPurchase != null && !IsOKPurchase(productId))
+                return;
+
             if (buttonType == ButtonType.Purchase)
             {
                 Debug.Log("IAPButton.PurchaseProduct() with product ID: " + productId);

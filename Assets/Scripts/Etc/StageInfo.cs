@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Android;
+
 public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco, Cap, Bush }
+
 public class StageInfoCell
 {
     public int ProductChocoCount;
@@ -41,8 +42,7 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
-        //TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
-        TextAsset ta = StageManager.Inst.LevelFiles[stageNum - 1];
+        TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
         if (ta == null || ta.text.Length == 0)
             return null;
 
@@ -69,11 +69,6 @@ public class StageInfo
 
     public static StageInfo Load(string[] lines)
     {
-//#if PLATFORM_ANDROID
-//        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
-//            Permission.RequestUserPermission(Permission.ExternalStorageRead);
-//#endif
-
         StageInfo info = new StageInfo();
         foreach (string line in lines)
         {

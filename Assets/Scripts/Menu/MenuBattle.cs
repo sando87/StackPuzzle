@@ -168,25 +168,44 @@ public class MenuBattle : MonoBehaviour
         if(!ret)
             MenuInformBox.PopUp("Network Disconnected");
 
+        string log = "[PVP] " + (success?"win":"lose") + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
+        LOG.echo(log);
+
         if (success)
         {
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuFinishBattle.PopUp(success, prevScore);
+
+            InGameManager.InstPVP_Player.CleanUpGame();
+            InGameManager.InstPVP_Opponent.CleanUpGame();
+            Hide();
         }
         else
         {
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
-            MenuFinishBattle.PopUp(success, prevScore);
+
+            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
+                && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
+                && !Purchases.IsAdsSkip())
+            {
+                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
+                {
+                    MenuFinishBattle.PopUp(success, prevScore);
+                    InGameManager.InstPVP_Player.CleanUpGame();
+                    InGameManager.InstPVP_Opponent.CleanUpGame();
+                    Hide();
+                });
+            }
+            else
+            {
+                MenuFinishBattle.PopUp(success, prevScore);
+                InGameManager.InstPVP_Player.CleanUpGame();
+                InGameManager.InstPVP_Opponent.CleanUpGame();
+                Hide();
+            }
         }
-
-        string log = "[PVP] " + (success ? "win" : "lose") + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
-        LOG.echo(log);
-
-        InGameManager.InstPVP_Player.CleanUpGame();
-        InGameManager.InstPVP_Opponent.CleanUpGame();
-        Hide();
     }
 
     public void OnClose()

@@ -93,6 +93,7 @@ public class PurchaseInfo
     public int countGold;
     public int countDiamond;
     public int infiniteHeart;
+    public int adsSkip;
     public int[] countItem = new int[16];
     public int[] attendFlags = new int[30];
     public PurchaseInfo()
@@ -103,6 +104,7 @@ public class PurchaseInfo
         countGold = 200;
         countDiamond = 10;
         infiniteHeart = 0;
+        adsSkip = 0;
 
         for (int i = 0; i < countItem.Length; ++i)
             countItem[i] = 0;
@@ -119,6 +121,7 @@ public class PurchaseInfo
         bytes.AddRange(BitConverter.GetBytes(countGold));
         bytes.AddRange(BitConverter.GetBytes(countDiamond));
         bytes.AddRange(BitConverter.GetBytes(infiniteHeart));
+        bytes.AddRange(BitConverter.GetBytes(adsSkip));
 
         for (int i = 0; i < countItem.Length; ++i)
             bytes.AddRange(BitConverter.GetBytes(countItem[i]));
@@ -129,24 +132,28 @@ public class PurchaseInfo
     }
     public void DeSerialize(byte[] data)
     {
-        random = BitConverter.ToInt32(data, 0);
-        maxHeart = BitConverter.ToInt32(data, 4);
-        countHeart = BitConverter.ToInt32(data, 8);
-        useTimeTick = BitConverter.ToInt64(data, 12);
-        countGold =    BitConverter.ToInt32(data, 20);
-        countDiamond = BitConverter.ToInt32(data, 24);
-        infiniteHeart = BitConverter.ToInt32(data, 28);
+        int off = 0;
+        random = BitConverter.ToInt32(data, off); off += 4;
+        maxHeart = BitConverter.ToInt32(data, off); off += 4;
+        countHeart = BitConverter.ToInt32(data, off); off += 4;
+        useTimeTick = BitConverter.ToInt64(data, off); off += 8;
+        countGold =    BitConverter.ToInt32(data, off); off += 4;
+        countDiamond = BitConverter.ToInt32(data, off); off += 4;
+        infiniteHeart = BitConverter.ToInt32(data, off); off += 4;
+        adsSkip = BitConverter.ToInt32(data, off); off += 4;
 
-        for(int i = 0; i < countItem.Length; ++i)
-            countItem[i] = BitConverter.ToInt32(data, 32 + i * 4);
+        for (int i = 0; i < countItem.Length; ++i)
+            countItem[i] = BitConverter.ToInt32(data, off + i * 4);
+        off += 4 * countItem.Length;
         for (int i = 0; i < attendFlags.Length; ++i)
-            attendFlags[i] = BitConverter.ToInt32(data, 96 + i * 4);
+            attendFlags[i] = BitConverter.ToInt32(data, off + i * 4);
+        off += 4 * attendFlags.Length;
     }
 }
 
 public class Purchases
 {
-    private const string prefsKeyName = "pcInfo4";
+    private const string prefsKeyName = "pcInfo5";
     private static PurchaseInfo mInfo = null;
 
     public static void Initialize()
@@ -303,6 +310,15 @@ public class Purchases
         if (dayIdx < mInfo.attendFlags.Length)
             return mInfo.attendFlags[dayIdx] == 1;
         return false;
+    }
+    public static void PurchaseAdsSkip()
+    {
+        mInfo.adsSkip = 1;
+        UpdatePurchaseInfo(mInfo);
+    }
+    public static bool IsAdsSkip()
+    {
+        return mInfo.adsSkip == 1;
     }
 
 

@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Android;
 
 public class MenuTitle : MonoBehaviour
 {
@@ -13,6 +14,11 @@ public class MenuTitle : MonoBehaviour
 
     private void Awake()
     {
+#if PLATFORM_ANDROID
+        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+            Permission.RequestUserPermission(Permission.ExternalStorageRead);
+#endif
+
         Consolation.ConsoleInGame cig = FindObjectOfType<Consolation.ConsoleInGame>();
         if (cig != null)
             cig.Init();

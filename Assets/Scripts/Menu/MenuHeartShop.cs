@@ -44,19 +44,19 @@ public class MenuHeartShop : MonoBehaviour
         {
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuInformBox.PopUp("Network NotReachable.");
+                MenuMessageBox.PopUp("Network NotReachable.", false, null);
                 return;
             }
 
             if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA) > 0)
             {
-                MenuInformBox.PopUp("Advertising Not Ready.");
+                MenuMessageBox.PopUp("Ad Not Ready.", false, null);
                 return;
             }
 
             if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeA))
             {
-                MenuInformBox.PopUp("Advertising Requested.\nPlease wait for a while.");
+                MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
                 return;
             }
 
@@ -72,19 +72,19 @@ public class MenuHeartShop : MonoBehaviour
         {
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuInformBox.PopUp("Network NotReachable.");
+                MenuMessageBox.PopUp("Network NotReachable.", false, null);
                 return;
             }
 
             if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB) > 0)
             {
-                MenuInformBox.PopUp("Advertising Not Ready.");
+                MenuMessageBox.PopUp("Ad Not Ready.", false, null);
                 return;
             }
 
             if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeB))
             {
-                MenuInformBox.PopUp("Advertising Requested.\nPlease wait for a while.");
+                MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
                 return;
             }
 
