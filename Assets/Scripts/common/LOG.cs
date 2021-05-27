@@ -46,11 +46,10 @@ class LOG
     }
     static public void UnInitialize()
     {
-        if(mThread != null)
+        string[] logs = FlushQueue();
+        if (logs.Length > 0)
         {
-            mRunFlag = false;
-            mThread.Join();
-            mThread = null;
+            WriteLogsToFile(logs);
         }
     }
     static void Run()

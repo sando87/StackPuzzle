@@ -200,11 +200,6 @@ public class UserSetting
     {
         if (enable)
         {
-#if PLATFORM_ANDROID
-            if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
-                Permission.RequestUserPermission(Permission.ExternalStorageRead);
-#endif
-
             string fullname = Application.persistentDataPath + "/" + deviceName + ".json";
             if(!File.Exists(fullname))
             {

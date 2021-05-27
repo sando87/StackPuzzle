@@ -1233,7 +1233,7 @@ public class InGameManager : MonoBehaviour
         {
             if (AttackPointFrame.Points > 0
                 && Time.realtimeSinceStartup > AttackPointFrame.TouchedTime + UserSetting.ChocoFlushInterval
-                && IsAllProductIdle())
+                && IsIdle)
             {
                 int point = AttackPointFrame.Flush(UserSetting.FlushCount);
 
@@ -2350,8 +2350,8 @@ public class InGameManager : MonoBehaviour
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
             float rad = UnityEngine.Random.Range(0, 360) * Mathf.Deg2Rad;
-            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            Vector3 startPos = dir * UnityEngine.Random.Range(2, 2.5f);
+            Vector3 dir = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0);
+            Vector3 startPos = dir * UnityEngine.Random.Range(1.3f, 1.8f) + transform.position;
             GameObject projectail = Instantiate(prefab, startPos, Quaternion.identity, transform);
             //projectail.transform.GetChild(1).gameObject.SetActive(false);
             StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
@@ -2677,7 +2677,8 @@ public class InGameManager : MonoBehaviour
                 if (products.Count == body.ArrayCount)
                 {
                     EventRemainTime?.Invoke(body.remainTime);
-                    StartCoroutine(CloseProducts(products.ToArray()));
+                    if(products.Count > 0)
+                        StartCoroutine(CloseProducts(products.ToArray()));
 
                     mNetMessages.RemoveFirst();
                 }

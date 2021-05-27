@@ -11,7 +11,7 @@ public class LogWriter : MonoBehaviour
 
     private void OnDestroy()
     {
-        LOG.ProcessToFlushLog();
+        LOG.UnInitialize();
     }
 
     IEnumerator LoopWritingLog()

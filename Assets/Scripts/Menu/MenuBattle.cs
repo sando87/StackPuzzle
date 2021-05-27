@@ -125,11 +125,15 @@ public class MenuBattle : MonoBehaviour
                 ComboOpponent.SetNumber(combo);
         };
         InGameManager.InstPVP_Player.EventRemainTime = (remainSec) => {
-            PlayerLimit.text = TimeToString(remainSec);
+            if(gameObject.activeInHierarchy)
+                PlayerLimit.text = TimeToString(remainSec);
         };
         InGameManager.InstPVP_Opponent.EventRemainTime = (remainSec) => {
-            StopCoroutine("DisplayOppTimeLimit");
-            StartCoroutine("DisplayOppTimeLimit", remainSec);
+            if (gameObject.activeInHierarchy)
+            {
+                StopCoroutine("DisplayOppTimeLimit");
+                StartCoroutine("DisplayOppTimeLimit", remainSec);
+            }
         };
     }
 

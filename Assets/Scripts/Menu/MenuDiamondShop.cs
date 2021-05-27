@@ -35,6 +35,7 @@ public class MenuDiamondShop : MonoBehaviour
 
     public bool OnClickPurchase(string productID)
     {
+#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
             MenuMessageBox.PopUp("Network NotReachable.", false, null);
@@ -44,6 +45,9 @@ public class MenuDiamondShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         LOG.echo("[Request Purchase] " + "ProductId:" + productID);
         return true; //true 반환시 구매 진행
+#else
+        return false;
+#endif
     }
     public void HandleOnPurchaseOK(UnityEngine.Purchasing.Product pro)
     {

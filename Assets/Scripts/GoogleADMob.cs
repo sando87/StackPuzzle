@@ -36,15 +36,15 @@ public class GoogleADMob : MonoBehaviour
     {
 #if UNITY_ANDROID
         //string adUnitId = "ca-app-pub-3940256099942544/5224354917";  //for rewardAds test ID
-
         AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
         AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
         AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.RewardItem, new TimeSpan(0, 0, 0));
         AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
-
-        StartCoroutine(CheckAdsUnitLoading());
-
 #elif UNITY_IPHONE
+#endif
+
+#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
+        StartCoroutine(CheckAdsUnitLoading());
 #endif
     }
 

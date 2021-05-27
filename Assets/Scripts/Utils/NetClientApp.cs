@@ -38,7 +38,6 @@ public class NetClientApp : MonoBehaviour
 
     private void OnDestroy()
     {
-        LOG.UnInitialize();
         DisConnect();
     }
 
