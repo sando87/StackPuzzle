@@ -18,11 +18,11 @@ public class MenuWaitMatch : MonoBehaviour
     public TextMeshProUGUI ExpLevel;
     public TextMeshProUGUI Exp;
     public TextMeshProUGUI WinLose;
-    public TextMeshProUGUI LevelText;
     public Slider ExpBar;
     public Image RankImage;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
+    public Button[] LeagueLevelBtns;
 
     public static MenuWaitMatch Inst()
     {
@@ -37,7 +37,10 @@ public class MenuWaitMatch : MonoBehaviour
         menu.ResetMatchUI();
 
         if (UserSetting.IsBotPlayer)
+        {
+            UserSetting.MatchLevel = MatchingLevel.All;
             menu.StartCoroutine(menu.AutoMatch());
+        }
     }
 
     public void OnClose()
@@ -67,12 +70,16 @@ public class MenuWaitMatch : MonoBehaviour
         if (mIsSearching)
             return;
 
-        int curLevel = (int)UserSetting.MatchLevel - 1;
-        int nextLevel = (curLevel + 1) % 4;
-        MatchingLevel nextLv = (MatchingLevel)(nextLevel + 1);
-        LevelText.text = nextLv.ToString();
-        UserSetting.MatchLevel = nextLv;
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        int idx = btn.transform.GetSiblingIndex();
+        UserSetting.MatchLevel = (MatchingLevel)(idx + 1);
+        UpdateLeagueLevelButtons();
+    }
+
+    public void OnMatchFriend()
+    {
+        MenuMessageBox.PopUp("Not Ready", false, null);
     }
 
     public void OnChangeItem()
@@ -121,35 +128,13 @@ public class MenuWaitMatch : MonoBehaviour
             MenuMessageBox.PopUp("Required\n7 Stages", false, null);
             return;
         }
-        else if (UserSetting.MatchLevel == MatchingLevel.Normal)
+
+        MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
+        if (currentPossibleLeague < UserSetting.MatchLevel)
         {
-            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = Utils.PlayerLevelMinNormal;
-            if (pvpLevel < max)
-            {
-                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
-                return;
-            }
-        }
-        else if (UserSetting.MatchLevel == MatchingLevel.Hard)
-        {
-            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = Utils.PlayerLevelMinHard;
-            if (pvpLevel < max)
-            {
-                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
-                return;
-            }
-        }
-        else if (UserSetting.MatchLevel == MatchingLevel.Hell)
-        {
-            int pvpLevel = Utils.ToLevel(UserSetting.UserScore);
-            int max = Utils.PlayerLevelMinHell;
-            if (pvpLevel < max)
-            {
-                MenuMessageBox.PopUp("Required\n" + max + " Level", false, null);
-                return;
-            }
+            int levelForNext = Utils.LevelForNextLeague(UserSetting.UserScore);
+            MenuMessageBox.PopUp("Required\n" + levelForNext + " Level", false, null);
+            return;
         }
 
         if (Purchases.CountHeart() <= 0)
@@ -250,7 +235,6 @@ public class MenuWaitMatch : MonoBehaviour
     {
         mIsSearching = false;
         WaitText.text = "";
-        LevelText.text = UserSetting.MatchLevel.ToString();
         WaitText.gameObject.SetActive(false);
         BtnMatch.SetActive(true);
         BtnCancle.SetActive(false);
@@ -271,6 +255,7 @@ public class MenuWaitMatch : MonoBehaviour
                 UserSetting.UserInfo.PvpItems[idx] = PurchaseItemType.None;
             }
         }
+        UpdateLeagueLevelButtons();
     }
     private void UpdateUserInfo(UserInfo info)
     {
@@ -297,6 +282,35 @@ public class MenuWaitMatch : MonoBehaviour
         int dd = score % Utils.ScorePerLevel;
         float rate = (float)dd / Utils.ScorePerLevel;
         ExpBar.normalizedValue = rate;
+    }
+    private void UpdateLeagueLevelButtons()
+    {
+        foreach(Button btn in LeagueLevelBtns)
+        {
+            int idx = btn.transform.GetSiblingIndex();
+            MatchingLevel level = (MatchingLevel)(idx + 1);
+            if(level == UserSetting.MatchLevel)
+            {
+                btn.transform.GetChild(0).gameObject.SetActive(true);
+            }
+            else
+            {
+                btn.transform.GetChild(0).gameObject.SetActive(false);
+            }
+
+            if (level <= UserSetting.MaxLeagueLevel)
+            {
+                btn.GetComponent<Image>().color = Color.white;
+                btn.transform.GetChild(1).GetComponent<Image>().color = Color.white;
+                btn.enabled = true;
+            }
+            else
+            {
+                btn.GetComponent<Image>().color = Color.gray;
+                btn.transform.GetChild(1).GetComponent<Image>().color = Color.gray;
+                btn.enabled = false;
+            }
+        }
     }
 
     private ProductColor ToColor(string color)

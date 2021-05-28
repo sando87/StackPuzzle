@@ -24,6 +24,11 @@ public class UserSetting
             return new DateTime(long.Parse(ticks));
         }
     }
+    public static MatchingLevel MaxLeagueLevel
+    {
+        get { return (MatchingLevel)PlayerPrefs.GetInt("MaxLeagueLevel", 1); }
+        set { PlayerPrefs.SetInt("MaxLeagueLevel", (int)value); }
+    }
     public static MatchingLevel MatchLevel
     {
         get { return (MatchingLevel)PlayerPrefs.GetInt("matchLevel", 1); }

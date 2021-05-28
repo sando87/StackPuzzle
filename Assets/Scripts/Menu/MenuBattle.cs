@@ -167,6 +167,10 @@ public class MenuBattle : MonoBehaviour
         {
             PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
             UserSetting.UpdateUserInfoToAll(resBody.userInfo);
+
+            MatchingLevel currentLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
+            if (UserSetting.MaxLeagueLevel < currentLeague)
+                UserSetting.MaxLeagueLevel = currentLeague;
         });
 
         if(!ret)

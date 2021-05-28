@@ -1111,7 +1111,7 @@ public class InGameManager : MonoBehaviour
         if (count <= 0)
             return;
 
-        if (mStageInfo.Difficulty == MatchingLevel.Easy)
+        if (mStageInfo.Difficulty == MatchingLevel.Bronze)
             count *= 3;
 
         if (FieldType == GameFieldType.Stage)
@@ -1672,27 +1672,26 @@ public class InGameManager : MonoBehaviour
 
         mIsFlushing = false;
     }
-    private IEnumerator StartToPushStoneOpp(ProductInfo[] pros)
+    private IEnumerator StartToPushStoneOpp(ProductInfo[] pros, int count)
     {
         mIsFlushing = true;
-        int count = 0;
+        int completeCount = 0;
 
-        foreach(ProductInfo info in pros)
+        for(int i = 0; i < count; ++i)
         {
+            ProductInfo info = pros[i];
             VerticalFrames vf = mFrames[info.idxX, info.idxY].VertFrames;
-
-            count++;
             Product stonePro = CreateNewProduct();
             stonePro.SetChocoBlock(99);
             stonePro.InstanceID = info.nextInstID;
 
             StartCoroutine(vf.PushUpStone(stonePro, () =>
             {
-                count--;
+                completeCount++;
             }));
         }
 
-        while (count > 0)
+        while (count > completeCount)
             yield return null;
 
         mIsFlushing = false;
@@ -2760,9 +2759,9 @@ public class InGameManager : MonoBehaviour
                 if (IsAllProductIdle())
                 {
                     EventRemainTime?.Invoke(body.remainTime);
-                    if(body.products.Length > 0)
+                    if(body.ArrayCount > 0)
                     {
-                        StartCoroutine(StartToPushStoneOpp(body.products));
+                        StartCoroutine(StartToPushStoneOpp(body.products, body.ArrayCount));
                     }
 
                     mNetMessages.RemoveFirst();

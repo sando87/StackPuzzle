@@ -197,7 +197,7 @@ public class LogFile : ByteSerializer
 }
 
 public enum MatchingState { None, Idle, TryMatching, FoundOpp, FoundOppAck, Matched }
-public enum MatchingLevel { None, Easy, Normal, Hard, Hell }
+public enum MatchingLevel { None, Bronze, Silver, Gold, Master, All }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo

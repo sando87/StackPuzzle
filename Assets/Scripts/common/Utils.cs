@@ -12,12 +12,36 @@ public class Utils
     public const int PlayerLevelMinHard = 30;
     public const int PlayerLevelMinHell = 50;
 
+    public static int LevelForNextLeague(int score)
+    {
+        int level = ToLevel(score);
+        if (level < PlayerLevelMinNormal)
+            return PlayerLevelMinNormal;
+        else if (level < PlayerLevelMinHard)
+            return PlayerLevelMinHard;
+        else if (level < PlayerLevelMinHell)
+            return PlayerLevelMinHell;
+        else
+            return int.MaxValue;
+    }
+    public static MatchingLevel ToLeagueLevel(int score)
+    {
+        int level = ToLevel(score);
+        if (level < PlayerLevelMinNormal)
+            return MatchingLevel.Bronze;
+        else if (level < PlayerLevelMinHard)
+            return MatchingLevel.Silver;
+        else if (level < PlayerLevelMinHell)
+            return MatchingLevel.Gold;
+        else
+            return MatchingLevel.Master;
+    }
     public static int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
     public static int ToScore(int level) { return (level - 1) * ScorePerLevel; }
     public static int CalcDeltaScore(bool isWin, int playerScore, int opponentScore, MatchingLevel matchlevel)
     {
-        int refLevel = matchlevel == MatchingLevel.Hard ? PlayerLevelMinHard : 
-            (matchlevel == MatchingLevel.Hell ? PlayerLevelMinHell : 0);
+        int refLevel = matchlevel == MatchingLevel.Gold ? PlayerLevelMinHard : 
+            (matchlevel == MatchingLevel.Master ? PlayerLevelMinHell : 0);
 
         int ret = 0;
         if (isWin)
@@ -40,7 +64,7 @@ public class Utils
         }
 
 
-        if (matchlevel == MatchingLevel.Easy)
+        if (matchlevel == MatchingLevel.Bronze)
         {
             int playerLevel = Utils.ToLevel(playerScore);
             if (playerLevel < PlayerLevelMinNormal)

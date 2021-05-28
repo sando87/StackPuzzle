@@ -355,8 +355,8 @@ namespace ServerApp
             userA.MatchState = MatchingState.FoundOpp;
             userB.MatchState = MatchingState.FoundOpp;
 
-            SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, MatchingState.FoundOpp);
-            SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, MatchingState.FoundOpp);
+            SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, userB.MatchLevel, MatchingState.FoundOpp);
+            SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, userA.MatchLevel, MatchingState.FoundOpp);
 
             await Task.Delay(NetProtocol.ServerMatchingInterval + 1000);
 
@@ -365,8 +365,8 @@ namespace ServerApp
                 userA.SetOpp(userB.Endpoint, userB.UserInfo.score);
                 userB.SetOpp(userA.Endpoint, userA.UserInfo.score);
 
-                SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, MatchingState.Matched);
-                SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, MatchingState.Matched);
+                SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, userB.MatchLevel, MatchingState.Matched);
+                SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, userA.MatchLevel, MatchingState.Matched);
             }
             else
             {
@@ -374,7 +374,7 @@ namespace ServerApp
                 userB.MatchState = MatchingState.TryMatching;
             }
         }
-        private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingState state)
+        private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingLevel oppLevel, MatchingState state)
         {
             SessionUser destSession = GetUser(endPoint);
             if (destSession == null)
@@ -386,7 +386,7 @@ namespace ServerApp
             SearchOpponentInfo body = new SearchOpponentInfo();
             body.MyUserInfo = destSession.UserInfo;
             body.OppUserInfo = opponent;
-            body.Level = destSession.MatchLevel;
+            body.Level = destSession.MatchLevel != MatchingLevel.All ? destSession.MatchLevel : (oppLevel != MatchingLevel.All ? oppLevel : MatchingLevel.Silver);
             body.State = state;
 
             Header responseMsg = new Header();
@@ -412,8 +412,11 @@ namespace ServerApp
                 if (me == opp)
                     continue;
 
-                if (me.MatchLevel != opp.MatchLevel)
-                    continue;
+                if(me.MatchLevel != MatchingLevel.All && opp.MatchLevel != MatchingLevel.All)
+                {
+                    if (me.MatchLevel != opp.MatchLevel)
+                        continue;
+                }
 
                 float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
                 float deltaMyScore = (me.MatchingTime() + 1) * 50;
