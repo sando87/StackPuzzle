@@ -220,6 +220,14 @@ public class Product : MonoBehaviour
         Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
     }
+    public void Disappear()
+    {
+        IsDestroying = true;
+        Animation.Stop();
+        Detach(Manager.transform);
+        Manager.ProductIDs.Remove(InstanceID);
+        Destroy(gameObject);
+    }
 
     private void FixedUpdate()
     {

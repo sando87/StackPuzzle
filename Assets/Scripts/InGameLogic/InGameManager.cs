@@ -22,6 +22,7 @@ public class InGameManager : MonoBehaviour
     { get { if (mInstStage != null && mInstStage.gameObject.activeSelf) return mInstStage; else return mInstPVP_Player; } }
 
     private const string vgName = "VerticalGroup";
+    public const string vgGround = "ground";
 
     public Sprite[] BackgroundImages;
     public SpriteRenderer BackgroundSprite;
@@ -1628,6 +1629,39 @@ public class InGameManager : MonoBehaviour
         }
         return products;
     }
+    private Frame[] GetVaildFrames(int yIndex)
+    {
+        List<Frame> rets = new List<Frame>();
+        for (int x = 0; x < CountX; ++x)
+            if (!mFrames[x, yIndex].Empty)
+                rets.Add(mFrames[x, yIndex]);
+        return rets.ToArray();
+    }
+    private IEnumerator StartToPushStone(int refYIdx)
+    {
+        mIsFlushing = true;
+        int count = 0;
+        List<Product> rets = new List<Product>();
+        foreach (VerticalFrames vf in mVerticalFrames)
+        {
+            if(vf.BottomFrame.IndexY <= refYIdx && refYIdx <= vf.TopFrame.IndexY)
+            {
+                count++;
+                Product stonePro = CreateNewProduct();
+                stonePro.EnableMasking(vf.MaskOrder);
+                stonePro.SetChocoBlock(99);
+                StartCoroutine(vf.PushUpStone(stonePro, () =>
+                {
+                    count--;
+                }));
+            }
+        }
+
+        while(count > 0)
+            yield return null;
+
+        mIsFlushing = false;
+    }
 
     #endregion
 
@@ -1676,7 +1710,7 @@ public class InGameManager : MonoBehaviour
                         vf.Add(vg);
 
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
-                        ground.name = "ground";
+                        ground.name = vgGround;
                         ground.transform.position = curFrame.transform.position - new Vector3(0, GridSize, 0);
                         ground.transform.localScale = new Vector3(oneBlockScale, oneBlockScale, 1);
                         if (FieldType == GameFieldType.pvpOpponent)
@@ -2002,6 +2036,31 @@ public class InGameManager : MonoBehaviour
                 StartFinish(false);
         }
     }
+    private bool IsNoMoreMatchableProducts()
+    {
+        if (!IsIdle)
+            return false;
+
+        Dictionary<ProductColor, int> pros = new Dictionary<ProductColor, int>();
+        foreach (Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro == null || pro.IsChocoBlock || pro.IsCapped)
+                continue;
+
+            if (pro.Skill != ProductSkill.Nothing)
+                return false;
+
+            if (pros.ContainsKey(pro.Color))
+                pros[pro.Color]++;
+            else
+                pros[pro.Color] = 1;
+
+            if (pros[pro.Color] >= UserSetting.MatchCount)
+                return false;
+        }
+        return true;
+    }
     private Frame[] GetRandomIdleFrames(int count)
     {
         Dictionary<int, Frame> rets = new Dictionary<int, Frame>();
@@ -2099,7 +2158,7 @@ public class InGameManager : MonoBehaviour
         }
         return new List<Product>(aroundProducts.Keys);
     }
-    private Frame FrameOfWorldPos(float worldPosX, float worldPosY)
+    public Frame FrameOfWorldPos(float worldPosX, float worldPosY)
     {
         Rect worldRect = FieldWorldRect;
         if (worldPosX < worldRect.xMin || worldPosY < worldRect.yMin || worldRect.xMax < worldPosX || worldRect.yMax < worldPosY)

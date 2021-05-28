@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -105,6 +106,48 @@ public class VerticalFrames : MonoBehaviour
             }
         }
         return droppedPros.ToArray();
+    }
+    public IEnumerator PushUpStone(Product pro, Action eventEnd)
+    {
+        InGameManager mgr = GetComponentInParent<InGameManager>();
+        List<Product> pros = new List<Product>();
+        for(int i = Frames.Length - 1; i >= 0; ++i)
+            pros.Add(Frames[i].ChildProduct);
+
+        GameObject obj = transform.Find(InGameManager.vgGround).gameObject;
+        pro.transform.SetParent(obj.transform);
+        pro.transform.localScale = new Vector3(0, 0, -1);
+        pros.Add(pro);
+
+        float t = 0;
+        float due = 1;
+        while(t < due)
+        {
+            t += Time.deltaTime;
+            float rate = t / due;
+            foreach(Product target in pros)
+            {
+                target.transform.SetLocalPosition2D(new Vector2(0, rate * 0.82f));
+            }
+            yield return null;
+        }
+
+        foreach (Product target in pros)
+        {
+            Frame frame = mgr.FrameOfWorldPos(target.transform.position.x, target.transform.position.y);
+            if (frame == null || frame.Empty)
+            {
+                target.Disappear();
+            }
+            else
+            {
+                target.Detach(transform);
+                target.AttachTo(frame);
+                transform.SetLocalPosition2D(Vector2.zero);
+            }
+        }
+
+        eventEnd?.Invoke();
     }
 
     public void StartToDrop()
