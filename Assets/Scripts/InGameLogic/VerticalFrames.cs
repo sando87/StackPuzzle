@@ -111,13 +111,16 @@ public class VerticalFrames : MonoBehaviour
     {
         InGameManager mgr = GetComponentInParent<InGameManager>();
         List<Product> pros = new List<Product>();
-        for(int i = Frames.Length - 1; i >= 0; ++i)
+        for(int i = Frames.Length - 1; i >= 0; --i)
             pros.Add(Frames[i].ChildProduct);
 
         GameObject obj = transform.Find(InGameManager.vgGround).gameObject;
         pro.transform.SetParent(obj.transform);
-        pro.transform.localScale = new Vector3(0, 0, -1);
+        pro.transform.localPosition = new Vector3(0, 0, -1);
         pros.Add(pro);
+
+        foreach (Product target in pros)
+            target.EnableMasking(MaskOrder);
 
         float t = 0;
         float due = 1;
@@ -143,7 +146,8 @@ public class VerticalFrames : MonoBehaviour
             {
                 target.Detach(transform);
                 target.AttachTo(frame);
-                transform.SetLocalPosition2D(Vector2.zero);
+                target.transform.SetLocalPosition2D(Vector2.zero);
+                target.DisableMasking();
             }
         }
 

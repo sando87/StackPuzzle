@@ -340,8 +340,7 @@ public class Product : MonoBehaviour
         StopCoroutine("UpdateDropping");
         GetComponent<BoxCollider2D>().isTrigger = false;
         transform.localPosition = new Vector3(0, 0, -1);
-        Renderer.maskInteraction = SpriteMaskInteraction.None;
-        Renderer.sortingOrder = 0;
+        DisableMasking();
     }
     private void DropEndToFrame(Frame frame)
     {
@@ -349,8 +348,7 @@ public class Product : MonoBehaviour
         AttachTo(frame);
         Animation.Play("drop");
         transform.localPosition = new Vector3(0, 0, -1);
-        Renderer.maskInteraction = SpriteMaskInteraction.None;
-        Renderer.sortingOrder = 0;
+        DisableMasking();
     }
 
 
@@ -599,8 +597,20 @@ public class Product : MonoBehaviour
     }
     public void EnableMasking(int order)
     {
-        Renderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-        Renderer.sortingOrder = order;
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach(SpriteRenderer render in renders)
+        {
+            render.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+            render.sortingOrder = order;
+        }
+    }
+    public void DisableMasking()
+    {
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer render in renders)
+        {
+            render.maskInteraction = SpriteMaskInteraction.None;
+        }
     }
     private IEnumerator AnimatePickedUp()
     {

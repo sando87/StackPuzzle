@@ -1526,6 +1526,7 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckFinishPvpTimer()
     {
+        int stoneYIdx = 0;
         int addedSec = mStageInfo.TimeLimit;
         int timelimit = addedSec;
         float remainTime = timelimit - PlayTime;
@@ -1543,19 +1544,22 @@ public class InGameManager : MonoBehaviour
                 addedSec = (int)(addedSec * 0.7f);
                 timelimit += Mathf.Max(addedSec, 10);
 
-                List<Product> nextPros = GetNextCloseProducts(6);
-                if (nextPros.Count < 6)
+                if (stoneYIdx >= CountY)
                 {
                     StartFinish(false);
                 }
                 else
                 {
-                    List<ProductInfo> nextClosePros = new List<ProductInfo>();
-                    foreach (Product pro in nextPros)
-                        nextClosePros.Add(new ProductInfo(pro.Color, pro.Color, ProductSkill.Nothing, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
-
-                    Network_CloseProducts(nextClosePros.ToArray(), (int)(timelimit - PlayTime));
-                    StartCoroutine(CloseProducts(nextPros.ToArray()));
+                    StartCoroutine(StartToPushStone(stoneYIdx, (int)(timelimit - PlayTime)));
+                    stoneYIdx++;
+                }
+            }
+            else
+            {
+                if(IsNoMoreMatchableProducts())
+                {
+                    yield return new WaitForSeconds(1);
+                    StartFinish(false);
                 }
             }
             yield return new WaitForSeconds(1);
@@ -1637,19 +1641,23 @@ public class InGameManager : MonoBehaviour
                 rets.Add(mFrames[x, yIndex]);
         return rets.ToArray();
     }
-    private IEnumerator StartToPushStone(int refYIdx)
+    private IEnumerator StartToPushStone(int refYIdx, int remainTime)
     {
         mIsFlushing = true;
         int count = 0;
-        List<Product> rets = new List<Product>();
+
+        List<ProductInfo> nextClosePros = new List<ProductInfo>();
+
         foreach (VerticalFrames vf in mVerticalFrames)
         {
             if(vf.BottomFrame.IndexY <= refYIdx && refYIdx <= vf.TopFrame.IndexY)
             {
                 count++;
                 Product stonePro = CreateNewProduct();
-                stonePro.EnableMasking(vf.MaskOrder);
                 stonePro.SetChocoBlock(99);
+
+                nextClosePros.Add(new ProductInfo(stonePro.Color, stonePro.Color, ProductSkill.Nothing, vf.BottomFrame.IndexX, vf.BottomFrame.IndexY, stonePro.InstanceID, stonePro.InstanceID));
+
                 StartCoroutine(vf.PushUpStone(stonePro, () =>
                 {
                     count--;
@@ -1657,7 +1665,34 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        while(count > 0)
+        Network_CloseProducts(nextClosePros.ToArray(), remainTime);
+
+        while (count > 0)
+            yield return null;
+
+        mIsFlushing = false;
+    }
+    private IEnumerator StartToPushStoneOpp(ProductInfo[] pros)
+    {
+        mIsFlushing = true;
+        int count = 0;
+
+        foreach(ProductInfo info in pros)
+        {
+            VerticalFrames vf = mFrames[info.idxX, info.idxY].VertFrames;
+
+            count++;
+            Product stonePro = CreateNewProduct();
+            stonePro.SetChocoBlock(99);
+            stonePro.InstanceID = info.nextInstID;
+
+            StartCoroutine(vf.PushUpStone(stonePro, () =>
+            {
+                count--;
+            }));
+        }
+
+        while (count > 0)
             yield return null;
 
         mIsFlushing = false;
@@ -1721,11 +1756,9 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        int maskOrder = 0;
         foreach (VerticalFrames group in vf)
         {
-            group.init(maskOrder, oneBlockScale);
-            maskOrder++;
+            group.init(0, oneBlockScale);
         }
 
         mVerticalFrames = vf.ToArray();
@@ -2724,20 +2757,13 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.CloseProducts)
             {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.products[i];
-                    Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
+                if (IsAllProductIdle())
                 {
                     EventRemainTime?.Invoke(body.remainTime);
-                    if(products.Count > 0)
-                        StartCoroutine(CloseProducts(products.ToArray()));
+                    if(body.products.Length > 0)
+                    {
+                        StartCoroutine(StartToPushStoneOpp(body.products));
+                    }
 
                     mNetMessages.RemoveFirst();
                 }
