@@ -34,13 +34,14 @@ public class MenuWaitMatch : MonoBehaviour
         GameObject menuMatch = GameObject.Find(UIObjName);
         MenuWaitMatch menu = menuMatch.GetComponent<MenuWaitMatch>();
         menuMatch.SetActive(true);
+
+        if (UserSetting.IsBotPlayer)
+            UserSetting.MatchLevel = MatchingLevel.All;
+
         menu.ResetMatchUI();
 
         if (UserSetting.IsBotPlayer)
-        {
-            UserSetting.MatchLevel = MatchingLevel.All;
             menu.StartCoroutine(menu.AutoMatch());
-        }
     }
 
     public void OnClose()
@@ -130,7 +131,7 @@ public class MenuWaitMatch : MonoBehaviour
         }
 
         MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
-        if (currentPossibleLeague < UserSetting.MatchLevel)
+        if (currentPossibleLeague < UserSetting.MatchLevel && UserSetting.MatchLevel != MatchingLevel.All)
         {
             int levelForNext = Utils.LevelForNextLeague(UserSetting.UserScore);
             MenuMessageBox.PopUp("Required\n" + levelForNext + " Level", false, null);
