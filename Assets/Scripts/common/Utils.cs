@@ -185,4 +185,17 @@ public class Utils
         return output;
     }
 
+    private static int[] numbers = null;
+    private static int numbersIndex = 0;
+    public static void InitNextRan(int min, int max)
+    {
+        System.Random rnd = new System.Random();
+        numbers = Enumerable.Range(min, max).OrderBy(r => rnd.Next()).ToArray();
+        numbersIndex = 0;
+    }
+    public static int NextRan()
+    {
+        numbersIndex = (numbersIndex + 1) % numbers.Length;
+        return numbers[numbersIndex];
+    }
 }

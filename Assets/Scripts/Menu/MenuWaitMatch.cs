@@ -197,6 +197,31 @@ public class MenuWaitMatch : MonoBehaviour
         info.Level = UserSetting.MatchLevel;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
     }
+    private void RequestMatchMake()
+    {
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.MyUserInfo = UserSetting.UserInfo;
+        info.OppUserInfo = new UserInfo();
+        info.State = MatchingState.TryMatching;
+        info.Level = UserSetting.MatchLevel;
+        info.WithFriend = MatchingFriend.Make;
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (body) =>
+        {
+            SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
+            LOG.echo(res.RoomNumber);
+        });
+    }
+    private void RequestMatchJoin(int roomNumber)
+    {
+        SearchOpponentInfo info = new SearchOpponentInfo();
+        info.MyUserInfo = UserSetting.UserInfo;
+        info.OppUserInfo = new UserInfo();
+        info.State = MatchingState.TryMatching;
+        info.Level = UserSetting.MatchLevel;
+        info.WithFriend = MatchingFriend.Join;
+        info.RoomNumber = roomNumber;
+        NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
+    }
 
     void ReadyToFight(SearchOpponentInfo pvpInfo)
     {

@@ -200,6 +200,7 @@ public class LogFile : ByteSerializer
 
 public enum MatchingState { None, Idle, TryMatching, FoundOpp, FoundOppAck, Matched }
 public enum MatchingLevel { None, Bronze, Silver, Gold, Master, All }
+public enum MatchingFriend { None, Make, Join }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
 public class SearchOpponentInfo
@@ -208,6 +209,8 @@ public class SearchOpponentInfo
     public UserInfo MyUserInfo;
     public UserInfo OppUserInfo;
     public MatchingLevel Level;
+    public MatchingFriend WithFriend = MatchingFriend.None;
+    public int RoomNumber = -1;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

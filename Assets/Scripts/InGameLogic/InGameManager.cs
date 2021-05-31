@@ -276,9 +276,13 @@ public class InGameManager : MonoBehaviour
         Product pro = clickedObj.GetComponent<Product>();
         if(pro.Skill != ProductSkill.Nothing)
         {
-            pro.Animation.Play("swap");
-
-            DestroySkillChain(pro);
+            mIsUserEventLock = true;
+            pro.Animation.Play("destroy");
+            StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+            {
+                mIsUserEventLock = false;
+                DestroySkillChain(pro);
+            }));
         }
         else
         {

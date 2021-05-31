@@ -46,6 +46,8 @@ namespace ServerApp
             LOG.IsNetworkAlive = () => { return false; };
             LOG.LogWriterConsole = (msg) => { WriteLog(msg); };
 
+            Utils.InitNextRan(1132, 9978);
+
             mTimer.Interval = 1;
             mTimer.Tick += MTimer_Tick;
             mTimer.Start();
@@ -68,6 +70,7 @@ namespace ServerApp
         {
             CleanDeadSessions();
             ProcessMathching();
+            ProcessMathchingWithFriend();
         }
 
         private void MTimerForLog_Tick(object sender, EventArgs e)
@@ -282,16 +285,35 @@ namespace ServerApp
         private SearchOpponentInfo ProcSearchOpponent(SearchOpponentInfo requestBody)
         {
             SessionUser MySession = mCurrentSession;
-            if (MySession.MatchState == MatchingState.FoundOpp && requestBody.State == MatchingState.FoundOppAck)
+            if (requestBody.WithFriend != MatchingFriend.None)
             {
-                MySession.MatchState = MatchingState.FoundOppAck;
+                if (requestBody.WithFriend == MatchingFriend.Make)
+                {
+                    if (MySession.RoomNumber < 0)
+                        MySession.RoomNumber = Utils.NextRan();
+                    MySession.WithFriend = MatchingFriend.Make;
+                    requestBody.RoomNumber = MySession.RoomNumber;
+                }
+                else
+                {
+                    MySession.WithFriend = MatchingFriend.Join;
+                    MySession.RoomNumber = requestBody.RoomNumber;
+                }
             }
             else
             {
-                MySession.StartSearchOpp();
-                MySession.MatchLevel = requestBody.Level;
-                MySession.UserInfo = requestBody.MyUserInfo;
+                if (MySession.MatchState == MatchingState.FoundOpp && requestBody.State == MatchingState.FoundOppAck)
+                {
+                    MySession.MatchState = MatchingState.FoundOppAck;
+                }
+                else
+                {
+                    MySession.StartSearchOpp();
+                    MySession.MatchLevel = requestBody.Level;
+                    MySession.UserInfo = requestBody.MyUserInfo;
+                }
             }
+            
             return requestBody;
         }
         private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
@@ -351,6 +373,34 @@ namespace ServerApp
 
 
 
+        private void ProcessMathchingWithFriend()
+        {
+            foreach (var joiner in mUsers)
+            {
+                SessionUser joinUser = joiner.Value;
+                if (joinUser.WithFriend != MatchingFriend.Join)
+                    continue;
+
+                foreach (var maker in mUsers)
+                {
+                    SessionUser makeUser = maker.Value;
+                    if (makeUser.WithFriend != MatchingFriend.Make)
+                        continue;
+
+                    if(joinUser.RoomNumber == makeUser.RoomNumber)
+                    {
+                        mMonitoringInfo.pvpMatchingCount++;
+
+                        makeUser.SetOpp(joinUser.Endpoint, joinUser.UserInfo.score);
+                        joinUser.SetOpp(makeUser.Endpoint, makeUser.UserInfo.score);
+
+                        MatchingLevel level = makeUser.MatchLevel;
+                        SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, level, MatchingState.Matched);
+                        SendMatchingInfoTo(joinUser.Endpoint, makeUser.UserInfo, level, MatchingState.Matched);
+                    }
+                }
+            }
+        }
         private void ProcessMathching()
         {
             List<SessionUser> _waitUsers = new List<SessionUser>();
@@ -519,10 +569,12 @@ namespace ServerApp
         public int OppScore { get; private set; }
         public MatchingState MatchState { get; set; }
         public MatchingLevel MatchLevel { get; set; }
+        public MatchingFriend WithFriend { get; set; } = MatchingFriend.None;
         public DateTime LastPulseTime { get; set; }
         public UserInfo UserInfo { get; set; }
         public Header LastMessage { get; set; }
         public DateTime MatchingStartTime { get; set; }
+        public int RoomNumber { get; set; } = -1;
         public List<int> Pings = new List<int>();
         public SessionUser(string endPoint)
         {
@@ -535,8 +587,8 @@ namespace ServerApp
             MatchingStartTime = DateTime.Now;
         }
         public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > NetProtocol.DeadSessionMaxTime; }
-        public void SetOpp(string endPoint, int oppScore) { OppEndpoint = endPoint; MatchState = MatchingState.Matched; OppScore = oppScore; }
-        public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; }
+        public void SetOpp(string endPoint, int oppScore) { OppEndpoint = endPoint; MatchState = MatchingState.Matched; OppScore = oppScore; WithFriend = MatchingFriend.None; }
+        public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; WithFriend = MatchingFriend.None; }
         public void StartSearchOpp() { OppEndpoint = ""; MatchState = MatchingState.TryMatching; MatchingStartTime = DateTime.Now; }
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
     }
