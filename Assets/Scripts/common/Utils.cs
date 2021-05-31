@@ -38,42 +38,49 @@ public class Utils
     }
     public static int ToLevel(int score) { return (score / ScorePerLevel) + 1; }
     public static int ToScore(int level) { return (level - 1) * ScorePerLevel; }
+
+
     public static int CalcDeltaScore(bool isWin, int playerScore, int opponentScore, MatchingLevel matchlevel)
     {
-        int refLevel = matchlevel == MatchingLevel.Gold ? PlayerLevelMinHard : 
-            (matchlevel == MatchingLevel.Master ? PlayerLevelMinHell : 0);
+        /*
+         * #승리시 계산(리니어)
+         *  - lv 1~30: +40 ~ +10 (lv 1~30구간 상승되는 점수는 40-lv로 계산)
+         *  - lv 30~: Random +5~+10 고정
+         *  - 상대방점수가 나보다 높을시 2배 점수 획득
+         *  
+         * #패배시 계산
+         *  - lv 1~20: +20 ~ -20 (lv 1~20구간 감소되는 점수는 20-lv*2로 계산)
+         *  - lv 20~: Random -20~-25 고정
+         *  - 상대방점수는 무관
+         * */
 
-        int ret = 0;
+        int level = Utils.ToLevel(playerScore);
         if (isWin)
         {
-            int level = Utils.ToLevel(playerScore);
-            level = Math.Max(0, level - refLevel);
-            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
-            float gap = (opponentScore - (playerScore - 100)) * 0.1f * weight;
-            float exp = gap < 2 ? 2 :(gap > 30 ? 30 : gap);
-            ret = (int)exp;
+            if (level < 30)
+            {
+                int ret = 40 - level;
+                return new Random().Next(ret - 5, ret + 5);
+            }
+            else
+            {
+                int ret = new Random().Next(5, 10);
+                return opponentScore > playerScore ? ret * 2 : ret;
+            }
         }
         else
         {
-            int level = Utils.ToLevel(playerScore);
-            level = Math.Max(0, level - refLevel);
-            float weight = 20.0f / (level + 20); //level이 올라갈수록 얻는 경험치가 낮아지는 요소
-            float gap = (opponentScore - (playerScore + 100)) * 0.1f * weight;
-            float exp = gap < -30 ? -30 : (gap > -2 ? -2 : gap);
-            ret = (int)exp;
-        }
-
-
-        if (matchlevel == MatchingLevel.Bronze)
-        {
-            int playerLevel = Utils.ToLevel(playerScore);
-            if (playerLevel < PlayerLevelMinNormal)
-                ret = (ret + 50) / 2; //뉴비들은 이기든 지든 10~40점 획득
+            if (level < 20)
+            {
+                int ret = 20 - (level * 2);
+                return new Random().Next(ret - 5, ret + 5);
+            }
             else
-                ret = (int)(ret * 0.3f); //중급자가 Easy모드로 할 경우 획득 점수 낮추기
+            {
+                int ret = new Random().Next(-25, -20);
+                return ret;
+            }
         }
-
-        return ret;
     }
 
     static public byte[] Serialize(object obj)

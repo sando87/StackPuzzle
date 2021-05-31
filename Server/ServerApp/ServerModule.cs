@@ -49,6 +49,7 @@ namespace ServerApp
         public Func<byte[], int> Length;
         public Func<int> HeaderSize;
         public Action<byte[], int, string> EventRecvRow;
+        public Action<byte[], int, string> EventSendRow;
         public Action<byte[], string> EventRecvMsg;
         public Action<string> EventConnect;
         public Action<string> EventDisConnect;
@@ -92,6 +93,7 @@ namespace ServerApp
                 ClientSession info = mClients[endPoint];
                 info.streamWriter.Write(data, 0, data.Length);
                 info.streamWriter.Flush();
+                EventSendRow?.Invoke(data, data.Length, endPoint);
                 return data.Length;
             }
             catch (SocketException ex) { LOG.warn(ex.Message); Disconnect(endPoint); }

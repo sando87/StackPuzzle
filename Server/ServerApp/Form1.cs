@@ -15,12 +15,16 @@ namespace ServerApp
     public partial class Form1 : Form
     {
         ServerModule mServer = new ServerModule();
+        ServerMonitoringInfo mMonitoringInfo = new ServerMonitoringInfo();
         ConcurrentQueue<KeyValuePair<string, byte[]>> mMessages = new ConcurrentQueue<KeyValuePair<string, byte[]>>();
         ConcurrentDictionary<string, SessionUser> mUsers = new ConcurrentDictionary<string, SessionUser>();
         SessionUser mCurrentSession = null;
         string mFileLogPath = "./Log/";
         Timer mTimer = new Timer();
+        Timer mTimerForPVP = new Timer();
+        Timer mTimerForLog = new Timer();
         object mLockObject = new object();
+        Random mRandomForBotMatching = new Random();
 
         public Form1()
         {
@@ -42,31 +46,33 @@ namespace ServerApp
             LOG.IsNetworkAlive = () => { return false; };
             LOG.LogWriterConsole = (msg) => { WriteLog(msg); };
 
-            mTimer.Interval = NetProtocol.ServerMatchingInterval;
+            mTimer.Interval = 1;
             mTimer.Tick += MTimer_Tick;
             mTimer.Start();
-        }
 
-        private void WriteLog(string msg)
-        {
-            try
-            {
-                lock (mLockObject)
-                {
-                    string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
-                    StreamWriter writer = File.AppendText(mFileLogPath + filename);
-                    writer.WriteLine(msg);
-                    writer.Close();
-                }
-            }
-            catch (Exception ex) { Console.WriteLine(ex.Message); }
+            mTimerForPVP.Interval = NetProtocol.ServerMatchingInterval * 1000;
+            mTimerForPVP.Tick += MTimerForPVP_Tick;
+            mTimerForPVP.Start();
+
+            mTimerForLog.Interval = NetProtocol.ServerMonitoringInterval * 1000; //5min
+            mTimerForLog.Tick += MTimerForLog_Tick;
+            mTimerForLog.Start();
         }
 
         private void MTimer_Tick(object sender, EventArgs e)
         {
-            CleanDeadSessions();
             ProcessMessages();
+        }
+
+        private void MTimerForPVP_Tick(object sender, EventArgs e)
+        {
+            CleanDeadSessions();
             ProcessMathching();
+        }
+
+        private void MTimerForLog_Tick(object sender, EventArgs e)
+        {
+            ServerMonitoring();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -76,7 +82,12 @@ namespace ServerApp
             mServer.HeaderSize = () => { return NetProtocol.HeadSize(); };
             mServer.IsValid = (byte[] data) => { return NetProtocol.IsValid(data); };
             mServer.Length = (byte[] data) => { return NetProtocol.Length(data); };
-            mServer.EventRecvRow = null;
+            mServer.EventRecvRow = (data, len, addr) => {
+                mMonitoringInfo.networkReadBytes += len;
+            };
+            mServer.EventSendRow = (data, len, addr) => {
+                mMonitoringInfo.networkWriteBytes += len;
+            };
             mServer.EventRecvMsg = (byte[] data, string client) => {
                 mMessages.Enqueue(new KeyValuePair<string, byte[]>(client, data));
                 BeginInvoke(new Action(() => ProcessMessages()));
@@ -92,6 +103,7 @@ namespace ServerApp
             btnOpen.Enabled = false;
             btnClose.Enabled = true;
             listBox1.Items.Add("Open Server");
+            mMonitoringInfo.Reset();
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -164,7 +176,7 @@ namespace ServerApp
                 switch (requestMsg.Cmd)
                 {
                     case NetCMD.Undef: resBody = new LogInfo("Undefied Command"); break;
-                    case NetCMD.HeartCheck: resBody = Utils.Deserialize<UserInfo>(ref body); break;
+                    case NetCMD.HeartCheck: resBody = ProcHeartCheck(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.UpdateUser: resBody = ProcUpdateUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.DelUser: resBody = ProcDelUser(Utils.Deserialize<UserInfo>(ref body)); break;
                     case NetCMD.RenewScore: resBody = ProcRenewScore(Utils.Deserialize<UserInfo>(ref body)); break;
@@ -190,6 +202,12 @@ namespace ServerApp
                     mServer.SendData(mCurrentSession.Endpoint, responseData);
                 }
             }
+        }
+        private UserInfo ProcHeartCheck(UserInfo requestBody)
+        {
+            if (requestBody.NetworkLatency > 0)
+                mCurrentSession.Pings.Add(requestBody.NetworkLatency);
+            return requestBody;
         }
         private UserInfo ProcAddUser(UserInfo requestBody)
         {
@@ -358,10 +376,12 @@ namespace ServerApp
             SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, userB.MatchLevel, MatchingState.FoundOpp);
             SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, userA.MatchLevel, MatchingState.FoundOpp);
 
-            await Task.Delay(NetProtocol.ServerMatchingInterval + 1000);
+            await Task.Delay(NetProtocol.ServerMatchingInterval * 1000);
 
             if (userA.MatchState == MatchingState.FoundOppAck && userB.MatchState == MatchingState.FoundOppAck)
             {
+                mMonitoringInfo.pvpMatchingCount++;
+
                 userA.SetOpp(userB.Endpoint, userB.UserInfo.score);
                 userB.SetOpp(userA.Endpoint, userA.UserInfo.score);
 
@@ -398,15 +418,17 @@ namespace ServerApp
         }
         private SessionUser FindOpponent(SessionUser me, SessionUser[] list)
         {
-            if (me.MatchState != MatchingState.TryMatching)
+            if (me.UserInfo.IsBot || me.MatchState != MatchingState.TryMatching)
                 return null;
+
+            bool botSkip = me.MatchingTime() < mRandomForBotMatching.Next(100);
 
             foreach (SessionUser opp in list)
             {
                 if (opp.MatchState != MatchingState.TryMatching)
                     continue;
 
-                if (me.UserInfo.IsBot && opp.UserInfo.IsBot)
+                if (botSkip && opp.UserInfo.IsBot)
                     continue;
 
                 if (me == opp)
@@ -418,16 +440,29 @@ namespace ServerApp
                         continue;
                 }
 
+                float detectRange = (me.MatchingTime() + 1) * 50;
                 float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
-                float deltaMyScore = (me.MatchingTime() + 1) * 50;
-                float deltaOppScore = (opp.MatchingTime() + 1) * 50;
-                if (scoreDelta < deltaMyScore && scoreDelta < deltaOppScore)
+                if (scoreDelta < detectRange)
                     return opp;
             }
             return null;
         }
 
 
+        private void WriteLog(string msg)
+        {
+            try
+            {
+                lock (mLockObject)
+                {
+                    string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
+                    StreamWriter writer = File.AppendText(mFileLogPath + filename);
+                    writer.WriteLine(msg);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+        }
         private void CleanDeadSessions()
         {
             SessionUser[] users = new List<SessionUser>(mUsers.Values).ToArray();
@@ -440,7 +475,6 @@ namespace ServerApp
                 }
             }
         }
-
         private UserInfo UpdateUserPVPRecord(SessionUser user, bool isWin)
         {
             int myScore = user.UserInfo.score;
@@ -458,7 +492,22 @@ namespace ServerApp
             DBManager.Inst().UpdateUserInfo(user.UserInfo);
             return user.UserInfo;
         }
+        private void ServerMonitoring()
+        {
+            mMonitoringInfo.userCount = mUsers.Count;
+            foreach(var user in mUsers)
+            {
+                int sum = 0;
+                foreach (int latency in user.Value.Pings)
+                    sum += latency;
+                int avg = sum / user.Value.Pings.Count;
+                mMonitoringInfo.userPings.Add(avg.ToString());
+            }
 
+            string msg = mMonitoringInfo.ToMessage();
+            LOG.echo(msg);
+            mMonitoringInfo.Reset();
+        }
     }
 
 
@@ -474,6 +523,7 @@ namespace ServerApp
         public UserInfo UserInfo { get; set; }
         public Header LastMessage { get; set; }
         public DateTime MatchingStartTime { get; set; }
+        public List<int> Pings = new List<int>();
         public SessionUser(string endPoint)
         {
             Endpoint = endPoint;
@@ -489,5 +539,30 @@ namespace ServerApp
         public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; }
         public void StartSearchOpp() { OppEndpoint = ""; MatchState = MatchingState.TryMatching; MatchingStartTime = DateTime.Now; }
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
+    }
+
+    public class ServerMonitoringInfo
+    {
+        public int networkReadBytes;
+        public int networkWriteBytes;
+        public int userCount;
+        public int pvpMatchingCount;
+        public List<string> userPings = new List<string>();
+        
+        public void Reset()
+        {
+            networkReadBytes = 0;
+            networkWriteBytes = 0;
+            userCount = 0;
+            pvpMatchingCount = 0;
+            userPings.Clear();
+        }
+
+        public string ToMessage()
+        {
+            string pings = String.Join<string>("/", userPings);
+            //return "[read : 123] [write : 123] [user : 123] [pvp : 123] [pings : 25/15/35/25/36/47]";
+            return "[read : "+networkReadBytes+ "] [write : "+networkWriteBytes+ "] [user : "+userCount+ "] [pvp : "+pvpMatchingCount+ "] [pings : "+ pings + "]";
+        }
     }
 }

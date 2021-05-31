@@ -10,6 +10,7 @@ public class UserSetting
 {
     public static bool IsBotPlayer { get { return mIsBotPlayer; } }
     public static UserInfo UserInfo { get { return mUserInfo; } }
+    public static int Latency { set { mUserInfo.NetworkLatency = value; } }
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
     public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
     public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }

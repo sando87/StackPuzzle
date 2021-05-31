@@ -236,24 +236,20 @@ public class NetClientApp : MonoBehaviour
     {
         while (true)
         {
-            try
+            if (IsDisconnected())
             {
-                if (!IsDisconnected())
-                {
-                    Header head = new Header();
-                    head.Cmd = NetCMD.HeartCheck;
-                    head.RequestID = mRequestID++;
-                    head.Ack = 0;
-                    head.UserPk = UserSetting.UserPK;
-
-                    byte[] data = NetProtocol.ToArray(head, Utils.Serialize(UserSetting.UserInfo));
-
-                    mStream.Write(data, 0, data.Length);
-                }
+                UserSetting.Latency = -1;
             }
-            catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
-            catch (Exception ex) { LOG.warn(ex.Message); DisConnect(); }
-
+            else
+            {
+                DateTime reqTime = DateTime.Now;
+                Request(NetCMD.HeartCheck, UserSetting.UserInfo, (body) =>
+                {
+                    TimeSpan latency = DateTime.Now - reqTime;
+                    UserSetting.Latency = (int)latency.TotalSeconds;
+                });
+            }
+            
             yield return new WaitForSeconds(NetProtocol.HeartCheckInterval);
         }
     }
