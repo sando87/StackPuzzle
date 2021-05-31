@@ -393,6 +393,7 @@ namespace ServerApp
 
                         makeUser.SetOpp(joinUser.Endpoint, joinUser.UserInfo.score);
                         joinUser.SetOpp(makeUser.Endpoint, makeUser.UserInfo.score);
+                        joinUser.RoomNumber = -1;
 
                         MatchingLevel level = makeUser.MatchLevel;
                         SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, level, MatchingState.Matched);
@@ -547,10 +548,14 @@ namespace ServerApp
             mMonitoringInfo.userCount = mUsers.Count;
             foreach(var user in mUsers)
             {
-                int sum = 0;
-                foreach (int latency in user.Value.Pings)
-                    sum += latency;
-                int avg = sum / user.Value.Pings.Count;
+                int avg = 0;
+                if (user.Value.Pings.Count > 0)
+                {
+                    int sum = 0;
+                    foreach (int latency in user.Value.Pings)
+                        sum += latency;
+                    avg = sum / user.Value.Pings.Count;
+                }
                 mMonitoringInfo.userPings.Add(avg.ToString());
             }
 

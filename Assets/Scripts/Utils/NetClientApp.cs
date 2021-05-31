@@ -246,7 +246,7 @@ public class NetClientApp : MonoBehaviour
                 Request(NetCMD.HeartCheck, UserSetting.UserInfo, (body) =>
                 {
                     TimeSpan latency = DateTime.Now - reqTime;
-                    UserSetting.Latency = (int)latency.TotalSeconds;
+                    UserSetting.Latency = (int)(latency.TotalSeconds * 1000);
                 });
             }
             

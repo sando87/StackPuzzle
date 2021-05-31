@@ -1090,7 +1090,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6716a500bc5282a4689cf1d5891b7f37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Message: {fileID: 7475564507679868795}
+  Title: {fileID: 7475564506328828433}
   InputField: {fileID: 7475564506112493349}
 --- !u!1 &7475564507185846850
 GameObject:
@@ -1545,7 +1545,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7475564507679868794
 RectTransform:
   m_ObjectHideFlags: 0

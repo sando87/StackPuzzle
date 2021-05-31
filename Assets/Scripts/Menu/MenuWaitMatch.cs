@@ -13,6 +13,7 @@ public class MenuWaitMatch : MonoBehaviour
     private const string UIObjName = "UISpace/CanvasPopup/SearchBattle";
     private bool mIsSearching = false;
 
+    public TextMeshProUGUI RoomID;
     public TextMeshProUGUI WaitText;
     public TextMeshProUGUI Ranking;
     public TextMeshProUGUI ExpLevel;
@@ -20,6 +21,7 @@ public class MenuWaitMatch : MonoBehaviour
     public TextMeshProUGUI WinLose;
     public Slider ExpBar;
     public Image RankImage;
+    public GameObject BtnFriend;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
     public Button[] LeagueLevelBtns;
@@ -80,7 +82,49 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatchFriend()
     {
-        MenuMessageBox.PopUp("Not Ready", false, null);
+        if (NetClientApp.GetInstance().IsDisconnected())
+        {
+            MenuInformBox.PopUp("Server Disconnected.");
+            return;
+        }
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        if (UserSetting.UserName.Length < UserSetting.NameLengthMin)
+        {
+            MenuSettings.EditUserName();
+            return;
+        }
+
+        if (Purchases.CountHeart() <= 0)
+        {
+            MenuMessageBox.PopUp("No Life", false, null);
+            return;
+        }
+
+        MenuPVPFriend.PopUp((type, roomID) => 
+        {
+            if (type == MatchingFriend.None)
+                return;
+
+            if (type == MatchingFriend.Make)
+            {
+                RequestMatchMake();
+            }
+            else if(type == MatchingFriend.Join)
+            {
+                RequestMatchJoin(roomID);
+                RoomID.text = "Searching\n" + roomID;
+                RoomID.gameObject.SetActive(true);
+            }
+
+            mIsSearching = true;
+            BtnFriend.SetActive(false);
+            BtnMatch.SetActive(false);
+            BtnCancle.SetActive(true);
+
+            StartCoroutine("WaitOpponent");
+        });
     }
 
     public void OnChangeItem()
@@ -148,6 +192,7 @@ public class MenuWaitMatch : MonoBehaviour
         RequestMatch();
 
         mIsSearching = true;
+        BtnFriend.SetActive(false);
         BtnMatch.SetActive(false);
         BtnCancle.SetActive(true);
 
@@ -208,7 +253,8 @@ public class MenuWaitMatch : MonoBehaviour
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (body) =>
         {
             SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
-            LOG.echo(res.RoomNumber);
+            RoomID.text = "Room ID\n" + res.RoomNumber;
+            RoomID.gameObject.SetActive(true);
         });
     }
     private void RequestMatchJoin(int roomNumber)
@@ -262,6 +308,9 @@ public class MenuWaitMatch : MonoBehaviour
         mIsSearching = false;
         WaitText.text = "";
         WaitText.gameObject.SetActive(false);
+        RoomID.text = "";
+        RoomID.gameObject.SetActive(false);
+        BtnFriend.SetActive(true);
         BtnMatch.SetActive(true);
         BtnCancle.SetActive(false);
         UpdateUserInfo(UserSetting.UserInfo);
