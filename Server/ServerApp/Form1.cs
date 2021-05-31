@@ -289,15 +289,22 @@ namespace ServerApp
             {
                 if (requestBody.WithFriend == MatchingFriend.Make)
                 {
-                    if (MySession.RoomNumber < 0)
+                    if (requestBody.RoomNumber < 0)
                         MySession.RoomNumber = Utils.NextRan();
+                    else
+                        MySession.RoomNumber = requestBody.RoomNumber;
+
                     MySession.WithFriend = MatchingFriend.Make;
                     requestBody.RoomNumber = MySession.RoomNumber;
+                    MySession.MatchLevel = requestBody.Level;
+                    MySession.UserInfo = requestBody.MyUserInfo;
                 }
                 else
                 {
                     MySession.WithFriend = MatchingFriend.Join;
                     MySession.RoomNumber = requestBody.RoomNumber;
+                    MySession.MatchLevel = requestBody.Level;
+                    MySession.UserInfo = requestBody.MyUserInfo;
                 }
             }
             else
@@ -393,11 +400,10 @@ namespace ServerApp
 
                         makeUser.SetOpp(joinUser.Endpoint, joinUser.UserInfo.score);
                         joinUser.SetOpp(makeUser.Endpoint, makeUser.UserInfo.score);
-                        joinUser.RoomNumber = -1;
+                        joinUser.MatchLevel = makeUser.MatchLevel;
 
-                        MatchingLevel level = makeUser.MatchLevel;
-                        SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, level, MatchingState.Matched);
-                        SendMatchingInfoTo(joinUser.Endpoint, makeUser.UserInfo, level, MatchingState.Matched);
+                        SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, makeUser.MatchLevel, MatchingState.Matched);
+                        SendMatchingInfoTo(joinUser.Endpoint, makeUser.UserInfo, makeUser.MatchLevel, MatchingState.Matched);
                     }
                 }
             }
@@ -593,7 +599,7 @@ namespace ServerApp
         }
         public bool IsPulseTimeout() { return (DateTime.Now - LastPulseTime).TotalSeconds > NetProtocol.DeadSessionMaxTime; }
         public void SetOpp(string endPoint, int oppScore) { OppEndpoint = endPoint; MatchState = MatchingState.Matched; OppScore = oppScore; WithFriend = MatchingFriend.None; }
-        public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; WithFriend = MatchingFriend.None; }
+        public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; WithFriend = MatchingFriend.None; RoomNumber = -1; }
         public void StartSearchOpp() { OppEndpoint = ""; MatchState = MatchingState.TryMatching; MatchingStartTime = DateTime.Now; }
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
     }

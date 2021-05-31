@@ -8,13 +8,15 @@ using UnityEngine.UI;
 public class MenuPVPFriend : MonoBehaviour
 {
     private Action<MatchingFriend, int> EventClick = null;
+    private int mDefaultJoinID = -1;
 
-    public static MenuPVPFriend PopUp(Action<MatchingFriend, int> eventClick)
+    public static MenuPVPFriend PopUp(int defaultJoinID, Action<MatchingFriend, int> eventClick)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MenuPVPFriend", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuPVPFriend box = objMenu.GetComponent<MenuPVPFriend>();
         box.EventClick = eventClick;
+        box.mDefaultJoinID = defaultJoinID;
         return box;
     }
 
@@ -27,7 +29,7 @@ public class MenuPVPFriend : MonoBehaviour
     public void OnJoin()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        MenuEditBox.PopUp("Write Room ID", "1234", (isOK, inputText) =>
+        MenuEditBox.PopUp("Write Room ID", mDefaultJoinID.ToString(), (isOK, inputText) =>
         {
             if(isOK)
             {

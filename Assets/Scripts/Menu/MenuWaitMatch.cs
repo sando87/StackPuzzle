@@ -12,6 +12,8 @@ public class MenuWaitMatch : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasPopup/SearchBattle";
     private bool mIsSearching = false;
+    private int mRoonMakeID = -1;
+    private int mRoonJoinID = 1234;
 
     public TextMeshProUGUI RoomID;
     public TextMeshProUGUI WaitText;
@@ -102,7 +104,7 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        MenuPVPFriend.PopUp((type, roomID) => 
+        MenuPVPFriend.PopUp(mRoonJoinID, (type, roomID) => 
         {
             if (type == MatchingFriend.None)
                 return;
@@ -113,6 +115,7 @@ public class MenuWaitMatch : MonoBehaviour
             }
             else if(type == MatchingFriend.Join)
             {
+                mRoonJoinID = roomID;
                 RequestMatchJoin(roomID);
                 RoomID.text = "Searching\n" + roomID;
                 RoomID.gameObject.SetActive(true);
@@ -250,9 +253,11 @@ public class MenuWaitMatch : MonoBehaviour
         info.State = MatchingState.TryMatching;
         info.Level = UserSetting.MatchLevel;
         info.WithFriend = MatchingFriend.Make;
+        info.RoomNumber = mRoonMakeID;
         NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, (body) =>
         {
             SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
+            mRoonMakeID = res.RoomNumber;
             RoomID.text = "Room ID\n" + res.RoomNumber;
             RoomID.gameObject.SetActive(true);
         });
