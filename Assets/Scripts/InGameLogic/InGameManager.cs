@@ -278,7 +278,7 @@ public class InGameManager : MonoBehaviour
         {
             mIsUserEventLock = true;
             pro.Animation.Play("destroy");
-            StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+            StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
             {
                 mIsUserEventLock = false;
                 DestroySkillChain(pro);
@@ -325,22 +325,23 @@ public class InGameManager : MonoBehaviour
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () => {
-                StartCoroutine(UpDownSizing(product.gameObject, 0.3f));
-                StartCoroutine(UpDownSizing(targetProduct.gameObject, 0.3f));
-                StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+                if (isSameColor)
                 {
                     mIsUserEventLock = false;
-                    ShakeField(0.03f);
-                    if(!isSameColor)
-                        SwipeSkilledProducts(product, targetProduct);
-                }));
+                    DestroySkillWithSamecolor(product, targetProduct);
+                }
+                else
+                {
+                    StartCoroutine(UpDownSizing(product.gameObject, 0.3f));
+                    StartCoroutine(UpDownSizing(targetProduct.gameObject, 0.3f));
+                    StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+                    {
+                        mIsUserEventLock = false;
+                        ShakeField(0.03f);
+                        DestroySkillNormal_Normal(product, targetProduct);
+                    }));
+                }
             });
-
-            if (isSameColor)
-            {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill);
-                DestroySkillWithSamecolor(product, targetProduct);
-            }
         }
         else
         {
@@ -658,13 +659,12 @@ public class InGameManager : MonoBehaviour
                 }, null));
         }
     }
-    private void SwipeSkilledProducts(Product main, Product sub)
+    private void DestroySkillNormal_Normal(Product main, Product sub)
     {
         if (main.Skill == ProductSkill.SameColor || sub.Skill == ProductSkill.SameColor)
-        {
-            //DestroySkillWithSamecolor(main, sub);
-        }
-        else if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
+            return;
+
+        if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb2);
             DestroySkillBomb_Bomb(main, sub);
@@ -800,13 +800,10 @@ public class InGameManager : MonoBehaviour
             List<Product> randomProducts = ScanRandomProducts(7);
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
-            Frame[] frames = ToFrames(pros);
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(CreateSmokeInterval(0.4f, frames,
-                (frame) => {
-                    Product pro = frame.ChildProduct;
-                    pro.ChangeProductImage(UnityEngine.Random.Range(0, 2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical);
+            StartCoroutine(CreateProductBullets(sameColor, 0.2f, false, pros,
+                (pro) => {
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
@@ -819,13 +816,10 @@ public class InGameManager : MonoBehaviour
             List<Product> randomProducts = ScanRandomProducts(7);
             randomProducts.Add(sameColor);
             Product[] pros = randomProducts.ToArray();
-            Frame[] frames = ToFrames(pros);
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
-            StartCoroutine(CreateSmokeInterval(0.4f, frames,
-                (frame) => {
-                    Product pro = frame.ChildProduct;
-                    pro.ChangeProductImage(ProductSkill.Bomb);
+            StartCoroutine(CreateProductBullets(sameColor, 0.2f, true, pros,
+                (pro) => {
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
@@ -839,20 +833,54 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill);
+            ShakeField(0.1f);
+
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
                 (frame) => {
                     Product pro = frame.ChildProduct;
-                    pro.FlashProduct();
                     pro.ChangeProductImage(ProductSkill.SameColor);
+                    pro.FlashProduct();
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
+                    //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySameProductLoop());
                 }));
         }
+    }
+    IEnumerator CreateProductBullets(Product startPro, float interval, bool isBomb, Product[] destPros, Action<Product> eventEach, Action eventEnd)
+    {
+        mItemLooping = true;
+        Vector3 startWorldPos = startPro.transform.position;
+        int count = 0;
+        foreach (Product pro in destPros)
+        {
+            startPro.Animation.Play("flinch");
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
+            GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
+            effect.transform.localScale = new Vector3(0.75f, 0.75f, 1);
+
+            ProductSkill skillIndex = isBomb ? ProductSkill.Bomb : (ProductSkill)UnityEngine.Random.Range(1, 3);
+            effect.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
+
+            StartCoroutine(UnityUtils.MoveLinear(effect, pro.transform.position, 0.3f, 50.0f, () =>
+            {
+                count++;
+                Destroy(effect);
+                pro.ChangeProductImage(skillIndex);
+                eventEach?.Invoke(pro);
+            }));
+            yield return new WaitForSeconds(interval);
+        }
+
+        while (count < destPros.Length)
+            yield return null;
+
+        mItemLooping = false;
+        eventEnd?.Invoke();
     }
     IEnumerator DestroySkillSimpleLoop()
     {
@@ -2290,12 +2318,15 @@ public class InGameManager : MonoBehaviour
     IEnumerator UpDownSizing(GameObject obj, float duration)
     {
         float time = 0;
+        Vector3 localPos = obj.transform.localPosition;
+        localPos.z -= 0.01f;
+        obj.transform.localPosition = localPos;
         Vector2 oriSize = obj.transform.localScale;
         Vector2 curSize = oriSize;
         while (time < duration)
         {
             float halfTime = duration / 2;
-            float rate = (-1 / (halfTime * halfTime)) * (time - halfTime) * (time - halfTime) + 1;
+            float rate = (-1 / (halfTime * halfTime)) * (time - halfTime) * (time - halfTime) + 2;
             curSize = oriSize * (1 + rate);
             obj.transform.localScale = new Vector3(curSize.x, curSize.y, 1);
             yield return null;
@@ -2394,7 +2425,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in frames)
         {
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
-            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.6f, () =>
+            StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 0.1f, () =>
             {
                 Destroy(projectail, 1.0f);
                 endCount++;
