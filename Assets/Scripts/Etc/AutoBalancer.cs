@@ -240,36 +240,36 @@ public class AutoBalancer : MonoBehaviour
     }
     private float NextDelaySec()
     {
-        if(BotLevel < 0)
-            return UnityEngine.Random.Range(2, 5);
+        if (BotLevel < 0)
+            return UnityEngine.Random.Range(3, 7);
 
         switch (BotLevel)
         {
-            case 0: return UnityEngine.Random.Range(2, 5);
-            case 1: return UnityEngine.Random.Range(1.5f, 4);
-            case 2: return UnityEngine.Random.Range(1, 3);
-            case 3: return UnityEngine.Random.Range(1, 2);
+            case 0: return UnityEngine.Random.Range(3, 7);
+            case 1: return UnityEngine.Random.Range(2.5f, 6);
+            case 2: return UnityEngine.Random.Range(2, 5);
+            case 3: return UnityEngine.Random.Range(2, 3.5f);
             case 4: return UnityEngine.Random.Range(0.7f, 1.5f);
-            case 5: return UnityEngine.Random.Range(0.5f, 1);
-            default: break; 
+            case 5: return UnityEngine.Random.Range(0.3f, 0.5f);
+            default: break;
         }
-        return UnityEngine.Random.Range(0.5f, 1);
+        return UnityEngine.Random.Range(0.3f, 0.5f);
     }
     private int NextSwipeCount()
     {
         if (BotLevel < 0)
-            return UnityEngine.Random.Range(0, 2);
+            return UnityEngine.Random.Range(0, 1);
 
         switch (BotLevel)
         {
-            case 0: return UnityEngine.Random.Range(0, 2);
-            case 1: return UnityEngine.Random.Range(0, 3);
-            case 2: return UnityEngine.Random.Range(1, 3);
-            case 3: return UnityEngine.Random.Range(2, 4);
+            case 0: return UnityEngine.Random.Range(0, 1);
+            case 1: return UnityEngine.Random.Range(0, 2);
+            case 2: return UnityEngine.Random.Range(0, 3);
+            case 3: return UnityEngine.Random.Range(1, 4);
             case 4: return UnityEngine.Random.Range(2, 5);
-            case 5: return UnityEngine.Random.Range(3, 6);
+            case 5: return UnityEngine.Random.Range(4, 6);
             default: break;
         }
-        return UnityEngine.Random.Range(3, 6);
+        return UnityEngine.Random.Range(4, 6);
     }
 }

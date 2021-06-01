@@ -364,8 +364,15 @@ namespace ServerApp
         }
         private UserInfo EndPVPGame(PVPInfo requestBody)
         {
-            UserInfo renewUserInfo = UpdateUserPVPRecord(mCurrentSession, requestBody.success);
-            mCurrentSession.ReleaseOpp();
+            UserInfo renewUserInfo = null;
+            if (mCurrentSession.MatchState == MatchingState.Matched)
+            {
+                renewUserInfo = UpdateUserPVPRecord(mCurrentSession, requestBody.success);
+                mCurrentSession.ReleaseOpp();
+            }
+            else
+                renewUserInfo = DBManager.Inst().GetUser(requestBody.userInfo.userPk);
+
             return renewUserInfo;
         }
         private bool BypassToOppPlayer(PVPInfo requestBody)
