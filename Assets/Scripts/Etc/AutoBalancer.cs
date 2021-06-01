@@ -28,6 +28,7 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancer()
     {
+        yield return null;
         ParseBotLevel();
         InGameManager mgr = null;
         int counter = 0;
@@ -66,7 +67,9 @@ public class AutoBalancer : MonoBehaviour
                 {
                     counter = 0;
                     counterLimit = NextSwipeCount();
-                    AutoClickNextProduct(mgr);
+                    if(!AutoClickNextProduct(mgr))
+                        AutoSwipeNextProduct(mgr);
+
                     continue;
                 }
 
@@ -136,7 +139,7 @@ public class AutoBalancer : MonoBehaviour
 
         return false;
     }
-    void AutoClickNextProduct(InGameManager mgr)
+    bool AutoClickNextProduct(InGameManager mgr)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
@@ -153,7 +156,7 @@ public class AutoBalancer : MonoBehaviour
                 if(pro.Skill != ProductSkill.Nothing)
                 {
                     mgr.OnClick(pro.gameObject);
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -162,12 +165,12 @@ public class AutoBalancer : MonoBehaviour
                     if (matchedList.Count >= UserSetting.MatchCount)
                     {
                         mgr.OnClick(pro.gameObject);
-                        return;
+                        return true;
                     }
                 }
-
             }
         }
+        return false;
     }
 
     private Product FindSkill2(InGameManager mgr, ref SwipeDirection dir)
@@ -240,36 +243,30 @@ public class AutoBalancer : MonoBehaviour
     }
     private float NextDelaySec()
     {
-        if (BotLevel < 0)
-            return UnityEngine.Random.Range(3, 7);
-
         switch (BotLevel)
         {
-            case 0: return UnityEngine.Random.Range(3, 7);
-            case 1: return UnityEngine.Random.Range(2.5f, 6);
-            case 2: return UnityEngine.Random.Range(2, 5);
-            case 3: return UnityEngine.Random.Range(2, 3.5f);
-            case 4: return UnityEngine.Random.Range(0.7f, 1.5f);
-            case 5: return UnityEngine.Random.Range(0.3f, 0.5f);
+            case 0: return UnityEngine.Random.Range(5, 10);
+            case 1: return UnityEngine.Random.Range(5, 7);
+            case 2: return UnityEngine.Random.Range(3, 8);
+            case 3: return UnityEngine.Random.Range(3, 5);
+            case 4: return UnityEngine.Random.Range(1, 3);
+            case 5: return UnityEngine.Random.Range(0.5f, 1);
             default: break;
         }
-        return UnityEngine.Random.Range(0.3f, 0.5f);
+        return UnityEngine.Random.Range(2, 7);
     }
     private int NextSwipeCount()
     {
-        if (BotLevel < 0)
-            return UnityEngine.Random.Range(0, 1);
-
         switch (BotLevel)
         {
             case 0: return UnityEngine.Random.Range(0, 1);
-            case 1: return UnityEngine.Random.Range(0, 2);
-            case 2: return UnityEngine.Random.Range(0, 3);
-            case 3: return UnityEngine.Random.Range(1, 4);
-            case 4: return UnityEngine.Random.Range(2, 5);
-            case 5: return UnityEngine.Random.Range(4, 6);
+            case 1: return UnityEngine.Random.Range(0, 4);
+            case 2: return UnityEngine.Random.Range(3, 5);
+            case 3: return UnityEngine.Random.Range(3, 9);
+            case 4: return UnityEngine.Random.Range(5, 7);
+            case 5: return UnityEngine.Random.Range(5, 10);
             default: break;
         }
-        return UnityEngine.Random.Range(4, 6);
+        return UnityEngine.Random.Range(3, 7);
     }
 }

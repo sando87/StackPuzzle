@@ -140,9 +140,6 @@ public class UserSetting
 
     public static void Initialize()
     {
-        if (InitUserAsBotPlayer())
-            return;
-
         mUserInfo = LoadUserInfo();
     }
     public static void AddNewUserInfoToServer()
@@ -246,24 +243,26 @@ public class UserSetting
             string fileText = File.ReadAllText(fullname);
             if (fileText == null || fileText.Length == 0)
                 return;
-                        
+
+
+            mIsBotPlayer = true;
             UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
             UpdateUserInfoToLocal(info);
+            AutoBalancer.AutoBalance = true;
 
-            if(!NetClientApp.GetInstance().IsDisconnected())
+            if (!NetClientApp.GetInstance().IsDisconnected())
             {
                 if (UserSetting.UserPK < 0)
                     UserSetting.AddNewUserInfoToServer();
                 else
                     UserSetting.LoadUserInfoFromServer();
             }
-
-            mIsBotPlayer = true;
-            AutoBalancer.AutoBalance = true;
         }
         else
         {
-            UserInfo info = LoadUserInfo();
+            mIsBotPlayer = false;
+            mUserInfo = LoadUserInfo();
+            AutoBalancer.AutoBalance = false;
 
             if (!NetClientApp.GetInstance().IsDisconnected())
             {
@@ -273,34 +272,7 @@ public class UserSetting
                     UserSetting.LoadUserInfoFromServer();
             }
 
-            mIsBotPlayer = false;
-            AutoBalancer.AutoBalance = false;
         }
-    }
-    public static bool InitUserAsBotPlayer()
-    {
-        //WINDOWS PC환경에서만 수행
-#if UINITY_STANDALONE_WIN
-        LOG.trace();
-        string[] files = Directory.GetFiles("./", "*.json");
-        if (files != null && files.Length > 0)
-        {
-            string fullname = files[0];
-            string fileText = File.ReadAllText(fullname);
-            if (fileText == null || fileText.Length == 0)
-                return false;
-                        
-            UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
-            if (info == null)
-                return false;
-
-            UpdateUserInfoToLocal(info);
-            mIsBotPlayer = true;
-            AutoBalancer.AutoBalance = true;
-            return true;
-        }
-#endif
-        return false;
     }
 
 }

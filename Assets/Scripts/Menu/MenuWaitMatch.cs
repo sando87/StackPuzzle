@@ -226,8 +226,10 @@ public class MenuWaitMatch : MonoBehaviour
 
         SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
         if (res.State == MatchingState.Matched)
+        {
             ReadyToFight(res);
-        else if(res.State == MatchingState.FoundOpp)
+        }
+        else if (res.State == MatchingState.FoundOpp)
         {
             SearchOpponentInfo info = new SearchOpponentInfo();
             info.MyUserInfo = UserSetting.UserInfo;

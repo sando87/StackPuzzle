@@ -207,7 +207,7 @@ public class InGameManager : MonoBehaviour
                 GameObject frameObj = GameObject.Instantiate((x + y) % 2 == 0 ? FramePrefab1 : FramePrefab2, transform, false);
                 localFramePos.x = gridSize * x;
                 localFramePos.y = gridSize * y;
-                frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
+                //frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount, info.GetCell(x, y).FrameBushCount);
