@@ -35,6 +35,7 @@ public class MenuFinishBattle : MonoBehaviour
 
     private IEnumerator AnimateExp(int prevScore)
     {
+        UpdateExpBar(prevScore);
         while (prevScore == UserSetting.UserScore)
             yield return null;
 
@@ -46,7 +47,7 @@ public class MenuFinishBattle : MonoBehaviour
         UpdateExpBar(score);
         while (score != toScore)
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.05f);
             score += toScore > fromScore ? 1 : -1;
             if(prvLevel < Utils.ToLevel(score))
             {

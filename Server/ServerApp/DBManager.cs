@@ -128,25 +128,6 @@ namespace ServerApp
             catch (Exception ex) { LOG.warn(ex.Message); }
             return;
         }
-        public void RenewUserScore(int userPk, int score)
-        {
-            try
-            {
-                using (var cmd = new NpgsqlCommand())
-                {
-                    string query = String.Format("UPDATE users SET score={1} WHERE userPk = {0}", userPk, score);
-                    cmd.Connection = mDBSession;
-                    cmd.CommandText = query;
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        return;
-                    }
-                }
-            }
-            catch (NpgsqlException ex) { LOG.warn(ex.Message); }
-            catch (Exception ex) { LOG.warn(ex.Message); }
-            return;
-        }
         public void DeleteUser(int userPk)
         {
             try

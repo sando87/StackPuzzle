@@ -40,7 +40,10 @@ public class MenuTitle : MonoBehaviour
     public void OnNetConnected()
     {
         LOG.echo("NetConnection[ OK ]");
-        UserSetting.UpdateUserInfoToAll(UserSetting.UserInfo);
+        if (UserSetting.UserInfo.userPk < 0)
+            UserSetting.AddNewUserInfoToServer();
+        else
+            UserSetting.LoadUserInfoFromServer();
         
         if(gameObject.activeInHierarchy)
         {

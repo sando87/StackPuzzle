@@ -60,7 +60,7 @@ public class MenuSettings : MonoBehaviour
         {
             string currentDeviceName = UserSetting.UserInfo.deviceName;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuEditBox.PopUp("DeviceName(off:disable)", currentDeviceName,(isOK, inputText) =>
+            MenuEditBox.PopUp("DeviceName\n(off:disable)", currentDeviceName,(isOK, inputText) =>
             {
                 if(isOK)
                 {
@@ -88,9 +88,7 @@ public class MenuSettings : MonoBehaviour
         {
             if (isOK)
             {
-                UserInfo info = UserSetting.UserInfo;
-                info.userName = inputText;
-                UserSetting.UpdateUserInfoToAll(info);
+                UserSetting.EditUserName(inputText);
                 MenuSettings.Inst().UpdateUserInfoUI();
             }
         });

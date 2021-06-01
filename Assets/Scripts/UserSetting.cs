@@ -140,23 +140,43 @@ public class UserSetting
 
     public static void Initialize()
     {
+        if (InitUserAsBotPlayer())
+            return;
+
         mUserInfo = LoadUserInfo();
     }
-    public static void UpdateUserInfoToAll(UserInfo info)
+    public static void AddNewUserInfoToServer()
     {
-        mUserInfo = info;
-        bool ret = NetClientApp.GetInstance().Request(NetCMD.UpdateUser, info, (_body) =>
+        NetClientApp.GetInstance().Request(NetCMD.AddUser, UserSetting.UserInfo, (_body) =>
         {
             UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
-            if (res.userPk <= 0)
+            if (res == null || res.userPk <= 0)
                 return;
 
-            mUserInfo = res;
-            SaveUserInfo(res);
+            UpdateUserInfoToLocal(res);
         });
+    }
+    public static void LoadUserInfoFromServer()
+    {
+        NetClientApp.GetInstance().Request(NetCMD.UpdateUser, UserSetting.UserInfo, (_body) =>
+        {
+            UserInfo res = Utils.Deserialize<UserInfo>(ref _body);
+            if (res == null || res.userPk != mUserInfo.userPk)
+                return;
 
-        if(!ret)
-            SaveUserInfo(info);
+            UpdateUserInfoToLocal(res);
+        });
+    }
+    public static void EditUserName(string name)
+    {
+        mUserInfo.userName = name;
+        SaveUserInfo(mUserInfo);
+        NetClientApp.GetInstance().Request(NetCMD.EditName, UserSetting.UserInfo, null);
+    }
+    public static void UpdateUserInfoToLocal(UserInfo info)
+    {
+        mUserInfo = info;
+        SaveUserInfo(info);
     }
 
     public static UserInfo LoadUserInfo()
@@ -228,17 +248,59 @@ public class UserSetting
                 return;
                         
             UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
-            UpdateUserInfoToAll(info);
+            UpdateUserInfoToLocal(info);
+
+            if(!NetClientApp.GetInstance().IsDisconnected())
+            {
+                if (UserSetting.UserPK < 0)
+                    UserSetting.AddNewUserInfoToServer();
+                else
+                    UserSetting.LoadUserInfoFromServer();
+            }
+
             mIsBotPlayer = true;
             AutoBalancer.AutoBalance = true;
         }
         else
         {
             UserInfo info = LoadUserInfo();
-            UpdateUserInfoToAll(info);
+
+            if (!NetClientApp.GetInstance().IsDisconnected())
+            {
+                if (UserSetting.UserPK < 0)
+                    UserSetting.AddNewUserInfoToServer();
+                else
+                    UserSetting.LoadUserInfoFromServer();
+            }
+
             mIsBotPlayer = false;
             AutoBalancer.AutoBalance = false;
         }
+    }
+    public static bool InitUserAsBotPlayer()
+    {
+        //WINDOWS PC환경에서만 수행
+#if UINITY_STANDALONE_WIN
+        LOG.trace();
+        string[] files = Directory.GetFiles("./", "*.json");
+        if (files != null && files.Length > 0)
+        {
+            string fullname = files[0];
+            string fileText = File.ReadAllText(fullname);
+            if (fileText == null || fileText.Length == 0)
+                return false;
+                        
+            UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
+            if (info == null)
+                return false;
+
+            UpdateUserInfoToLocal(info);
+            mIsBotPlayer = true;
+            AutoBalancer.AutoBalance = true;
+            return true;
+        }
+#endif
+        return false;
     }
 
 }
