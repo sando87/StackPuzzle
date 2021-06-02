@@ -65,7 +65,7 @@ public class MenuInGame : MonoBehaviour
         mStageInfo = info;
 
         PauseButton.gameObject.SetActive(true);
-        SkipButton.gameObject.SetActive(true);
+        SkipButton.gameObject.SetActive(false);
         LevelCompleted.gameObject.SetActive(false);
         LevelFailed.gameObject.SetActive(false);
         Limit.text = info.MoveLimit.ToString();
@@ -152,7 +152,7 @@ public class MenuInGame : MonoBehaviour
         }
         set
         {
-            if (value <= 0)
+            if (value <= NumbersUI.ZeroNumber)
                 ComboNumber.BreakCombo();
             else
                 ComboNumber.SetNumber(value);

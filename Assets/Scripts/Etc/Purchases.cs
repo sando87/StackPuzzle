@@ -20,12 +20,12 @@ public static class PurchaseItemTypeExtensions
         {
             switch (i.ToItemType())
             {
-                case PurchaseItemType.ExtendLimit: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_clover"); break;
-                case PurchaseItemType.RemoveIce: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_hammer"); break;
-                case PurchaseItemType.MakeSkill1: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_bomb"); break;
-                case PurchaseItemType.MakeCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_egg"); break;
-                case PurchaseItemType.MakeSkill2: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_potion_purple"); break;
-                case PurchaseItemType.PowerUp: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipicon_sample_star_red"); break;
+                case PurchaseItemType.ExtendLimit: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_time"); break;
+                case PurchaseItemType.RemoveIce: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_missile"); break;
+                case PurchaseItemType.MakeSkill1: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_bombs"); break;
+                case PurchaseItemType.MakeCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_up"); break;
+                case PurchaseItemType.MakeSkill2: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_same"); break;
+                case PurchaseItemType.PowerUp: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_arrow"); break;
                 default: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipment_equip_icon"); break; 
             }
         }
@@ -57,12 +57,12 @@ public static class PurchaseItemTypeExtensions
     {
         switch (type)
         {
-            case PurchaseItemType.ExtendLimit: return "Clover";
-            case PurchaseItemType.RemoveIce: return "Hammer";
+            case PurchaseItemType.ExtendLimit: return "TimeKeeper";
+            case PurchaseItemType.RemoveIce: return "Missile";
             case PurchaseItemType.MakeSkill1: return "Bomb";
-            case PurchaseItemType.MakeCombo: return "Egg";
-            case PurchaseItemType.MakeSkill2: return "Potion";
-            case PurchaseItemType.PowerUp: return "Star";
+            case PurchaseItemType.MakeCombo: return "Combo";
+            case PurchaseItemType.MakeSkill2: return "Rainbow";
+            case PurchaseItemType.PowerUp: return "Arrow";
             default: return "Unknown Item.";
         }
     }

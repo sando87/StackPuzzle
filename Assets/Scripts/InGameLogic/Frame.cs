@@ -207,20 +207,21 @@ public class Frame : MonoBehaviour
     IEnumerator DisappearGoingUP(GameObject obj, float duration)
     {
         float time = 0;
-        SpriteRenderer renderer = obj.GetComponent<SpriteRenderer>();
-        Color color = renderer.color;
+        //SpriteRenderer renderer = obj.GetComponent<SpriteRenderer>();
+        //Color color = renderer.color;
         float startSpeed = 5;
         while (time < duration)
         {
             float rate = time / duration;
-            color.a = 1 - rate;
-            renderer.color = color;
+            //color.a = 1 - rate;
+            //renderer.color = color;
             startSpeed -= 10 * Time.deltaTime;
             startSpeed = Mathf.Max(0, startSpeed);
             obj.transform.position += new Vector3(0, startSpeed * Time.deltaTime, 0);
             time += Time.deltaTime;
             yield return null;
         }
+        Destroy(obj);
     }
 
 }

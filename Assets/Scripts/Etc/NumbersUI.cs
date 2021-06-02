@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class NumbersUI : MonoBehaviour
 {
+    public const int ZeroNumber = 1;
     public Animation Anim;
     public Sprite[] NumberImages;
     public Sprite[] NumberOutlineImages;
@@ -19,7 +20,7 @@ public class NumbersUI : MonoBehaviour
 
     private bool Outline = true;
     private float gap = 0.5f;
-    private int Number = 0;
+    private int Number = ZeroNumber;
 
     public int GetNumber() { return Number; }
     public void SetNumber(int num)
@@ -32,8 +33,8 @@ public class NumbersUI : MonoBehaviour
 
         if (num >= 1000)
             Number = 999;
-        else if (num < 0)
-            Number = 0;
+        else if (num < ZeroNumber)
+            Number = ZeroNumber;
         else
             Number = num;
 
@@ -107,10 +108,10 @@ public class NumbersUI : MonoBehaviour
 
     public void BreakCombo()
     {
-        if (Number <= 0)
+        if (Number <= ZeroNumber)
             return;
 
-        Number = 0;
+        Number = ZeroNumber;
         if (gameObject.activeSelf)
         {
             StopCoroutine("Disappear");
@@ -159,7 +160,7 @@ public class NumbersUI : MonoBehaviour
 
     public void Clear()
     {
-        Number = 0;
+        Number = ZeroNumber;
         transform.localPosition = Vector3.zero;
         gameObject.SetActive(false);
     }

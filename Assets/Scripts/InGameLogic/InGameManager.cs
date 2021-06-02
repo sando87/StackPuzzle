@@ -59,6 +59,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
     private bool mRequestDrop = false;
+    private bool mUseCombo = false;
     private float mStartTime = 0;
     private int mProductCount = 0;
     private Vector3 mStartPos = Vector3.zero;
@@ -122,8 +123,15 @@ public class InGameManager : MonoBehaviour
         if (mStageInfo == null)
             return;
 
-        if (IsIdle && !mPrevIdleState)
+        if (IsIdle && !mPrevIdleState && IsAllProductIdle())
+        {
+            if (mUseCombo && !mIsFinished)
+            {
+                mUseCombo = false;
+                ComboReset();
+            }
             EventEnterIdle?.Invoke();
+        }
 
         mPrevIdleState = IsIdle;
         DropNextProducts();
@@ -280,6 +288,7 @@ public class InGameManager : MonoBehaviour
         Product pro = clickedObj.GetComponent<Product>();
         if(pro.Skill != ProductSkill.Nothing)
         {
+            mUseCombo = true;
             RemoveLimit();
             mIsUserEventLock = true;
             pro.Animation.Play("destroy");
@@ -298,7 +307,6 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                ComboReset();
                 StartCoroutine(DoMatchingCycle(matches[0]));
                 RemoveLimit();
             }
@@ -327,6 +335,7 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
+            mUseCombo = true;
             mIsUserEventLock = true;
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
@@ -366,7 +375,7 @@ public class InGameManager : MonoBehaviour
     IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
         mStopDropping = true;
-        ComboUp();
+        ComboReset();
 
         List<Frame> nextScanFrames = new List<Frame>();
         nextScanFrames.AddRange(ToFrames(firstMatches));
@@ -632,8 +641,6 @@ public class InGameManager : MonoBehaviour
             foreach (Product pro in pros)
                 if (pro != target && pro.Skill != ProductSkill.Nothing)
                     DestroySkillChain(pro);
-
-            ComboReset();
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
@@ -643,8 +650,6 @@ public class InGameManager : MonoBehaviour
             foreach (Product pro in pros)
                 if (pro != target && pro.Skill != ProductSkill.Nothing)
                     DestroySkillChain(pro);
-
-            ComboReset();
         }
         else if (target.Skill == ProductSkill.Bomb)
         {
@@ -654,8 +659,6 @@ public class InGameManager : MonoBehaviour
             foreach (Product pro in pros)
                 if (pro != target && pro.Skill != ProductSkill.Nothing)
                     DestroySkillChain(pro);
-
-            ComboReset();
         }
         else if (target.Skill == ProductSkill.SameColor)
         {
@@ -664,10 +667,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(StartElectronicEffect(target.transform.position, pros,
                 (pro) => {
                     DestroyProducts(new Product[1] { pro });
-                }, 
-                () => {
-                    ComboReset();
-                }));
+                }, null));
         }
     }
 
@@ -685,7 +685,6 @@ public class InGameManager : MonoBehaviour
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2);
             DestroySkillStripe_Stripe(main, sub);
-            ComboReset();
         }
         else
         {
@@ -694,8 +693,6 @@ public class InGameManager : MonoBehaviour
                 DestroySkillBomb_Stripe(main, sub);
             else
                 DestroySkillBomb_Stripe(sub, main);
-
-            ComboReset();
         }
     }
     private void DestroySkillBomb_Stripe(Product productbomb, Product productStripe)
@@ -792,27 +789,16 @@ public class InGameManager : MonoBehaviour
 
         ShakeField(0.05f);
 
-        int tmp = 0;
         StartCoroutine(StartElectronicEffect(productbombA.transform.position, targetsA.ToArray(),
             (pro) => {
                 DestroyProducts(new Product[1] { pro });
-            }, 
-            () => {
-                tmp++;
-                if (tmp > 1)
-                    ComboReset();
-            }));
+            }, null));
 
 
         StartCoroutine(StartElectronicEffect(productbombB.transform.position, targetsB.ToArray(),
             (pro) => {
                 DestroyProducts(new Product[1] { pro });
-            }, 
-            () => {
-                tmp++;
-                if (tmp > 1)
-                    ComboReset();
-            }));
+            }, null));
     }
 
     private void DestroySkillWithSamecolor(Product productA, Product productB)
@@ -950,7 +936,6 @@ public class InGameManager : MonoBehaviour
             KeepLoop:
             yield return new WaitForSeconds(UserSetting.SkillDestroyInterval);
         }
-        ComboReset();
         mItemLooping = false;
     }
     private Product[] DestroySkillNoChain(Product target)
@@ -1028,7 +1013,6 @@ public class InGameManager : MonoBehaviour
             DestroyProducts(pros);
             yield return new WaitForSeconds(UserSetting.SameSkillInterval);
         }
-        ComboReset();
         mIsAutoMatching = false;
     }
 
@@ -2021,7 +2005,7 @@ public class InGameManager : MonoBehaviour
     }
     private void ComboReset()
     {
-        Billboard.CurrentCombo = 0;
+        Billboard.CurrentCombo = 1;
         EventCombo?.Invoke(Billboard.CurrentCombo);
     }
     private Product[] GetTopIceBlocks(int count)
@@ -2132,6 +2116,7 @@ public class InGameManager : MonoBehaviour
         mRandomSeed = null;
         mStartTime = 0;
         mProductCount = 0;
+        mUseCombo = false;
 
         ProductIDs.Clear();
         Billboard.Reset(this);
