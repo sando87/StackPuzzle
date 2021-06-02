@@ -25,10 +25,11 @@ public class MenuInGame : MonoBehaviour
     public TextMeshProUGUI LevelFailed;
     public Sprite ItemEmptyImage;
     public GameObject[] ItemSlots;
+    public Button PauseButton;
+    public Button SkipButton;
 
     public GameObject EffectParent;
 
-    public int Score { get { return ScoreBarObj.CurrentScore; } }
     public int RemainLimit { get { return int.Parse(Limit.text); } }
 
     private void Update()
@@ -63,15 +64,17 @@ public class MenuInGame : MonoBehaviour
 
         mStageInfo = info;
 
+        PauseButton.gameObject.SetActive(true);
+        SkipButton.gameObject.SetActive(true);
         LevelCompleted.gameObject.SetActive(false);
         LevelFailed.gameObject.SetActive(false);
         Limit.text = info.MoveLimit.ToString();
+        ScoreBarObj.ScorePerBar = UserSetting.ScorePerBar;
         if (info.GoalTypeEnum == StageGoalType.Score)
         {
             TargetType.gameObject.SetActive(false);
             TargetScoreText.gameObject.SetActive(true);
             TargetScoreText.text = info.GoalValue.ToString();
-            ScoreBarObj.ScorePerBar = Mathf.Min(info.GoalValue, UserSetting.ScorePerBar);
         }
         else
         {
@@ -79,7 +82,6 @@ public class MenuInGame : MonoBehaviour
             TargetType.gameObject.SetActive(true);
             TargetType.sprite = info.GoalTypeImage;
             TargetValue.text = info.GoalValue.ToString();
-            ScoreBarObj.ScorePerBar = UserSetting.ScorePerBar;
         }
         ComboNumber.Clear();
         ScoreBarObj.Clear();
@@ -107,8 +109,8 @@ public class MenuInGame : MonoBehaviour
         InGameManager.InstStage.EventBreakTarget = (pos, type) => {
             ReduceGoalValue(pos, type);
         };
-        InGameManager.InstStage.EventMatched = (products) => {
-            ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + products[0].Combo * products.Length);
+        InGameManager.InstStage.EventScore = (score) => {
+            ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + score);
         };
         InGameManager.InstStage.EventFinishPre = (success) => {
             ShowFinishMessage(success);
@@ -118,6 +120,13 @@ public class MenuInGame : MonoBehaviour
         };
         InGameManager.InstStage.EventFinish = (success) => {
             FinishGame(success);
+        };
+        InGameManager.InstStage.EventFinishFirst = (success) => {
+            if (success)
+            {
+                PauseButton.gameObject.SetActive(false);
+                SkipButton.gameObject.SetActive(true);
+            }
         };
         InGameManager.InstStage.EventReduceLimit = () => {
             ReduceMoveLimit();
@@ -323,6 +332,11 @@ public class MenuInGame : MonoBehaviour
                 }
             });
         }
+    }
+
+    public void OnSkip()
+    {
+        FinishGame(true);
     }
 
     private void ShowFinishMessage(bool isComplete)

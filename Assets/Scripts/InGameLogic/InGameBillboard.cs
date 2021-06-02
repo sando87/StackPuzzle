@@ -2,6 +2,7 @@
 
 public class InGameBillboard
 {
+    public InGameManager Mgr;
     public int MaxCombo;
     public int ItemOneMoreCount;
     public int ItemKeepComboCount;
@@ -16,8 +17,9 @@ public class InGameBillboard
     public int MoveCount;
     public int KeepCombo;
     public byte[] ComboCounter = new byte[1024];
-    public void Reset()
+    public void Reset(InGameManager mgr)
     {
+        Mgr = mgr;
         MaxCombo = 0;
         ItemOneMoreCount = 0;
         ItemKeepComboCount = 0;

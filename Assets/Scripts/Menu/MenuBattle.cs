@@ -194,25 +194,10 @@ public class MenuBattle : MonoBehaviour
             SoundPlayer.Inst.PlayerBack.Stop();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
-            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
-                && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
-                && !Purchases.IsAdsSkip())
-            {
-                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
-                {
-                    MenuFinishBattle.PopUp(success, prevScore);
-                    InGameManager.InstPVP_Player.CleanUpGame();
-                    InGameManager.InstPVP_Opponent.CleanUpGame();
-                    Hide();
-                });
-            }
-            else
-            {
-                MenuFinishBattle.PopUp(success, prevScore);
-                InGameManager.InstPVP_Player.CleanUpGame();
-                InGameManager.InstPVP_Opponent.CleanUpGame();
-                Hide();
-            }
+            MenuFinishBattle.PopUp(success, prevScore);
+            InGameManager.InstPVP_Player.CleanUpGame();
+            InGameManager.InstPVP_Opponent.CleanUpGame();
+            Hide();
         }
     }
 

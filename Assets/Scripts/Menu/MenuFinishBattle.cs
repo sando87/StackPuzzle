@@ -13,6 +13,7 @@ public class MenuFinishBattle : MonoBehaviour
     public Slider ExpBar;
     public TextMeshProUGUI Level;
     public TextMeshProUGUI Exp;
+    private bool IsWin = false;
 
     public static void PopUp(bool win, int prevScore)
     {
@@ -25,6 +26,7 @@ public class MenuFinishBattle : MonoBehaviour
 
     private void Init(bool win, int prevScore)
     {
+        IsWin = win;
         WinEffect.SetActive(win);
         LoseEffect.SetActive(!win);
         StartCoroutine("AnimateExp", prevScore);
@@ -69,15 +71,40 @@ public class MenuFinishBattle : MonoBehaviour
 
     public void OnOK()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        StopCoroutine("AnimateExp");
-        StopCoroutine("AutoNext");
-        gameObject.SetActive(false);
-        MenuWaitMatch.PopUp();
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
+        NextMenu();
     }
 
     public void OnClose()
+    {
+        NextMenu();
+    }
+
+
+    private void NextMenu()
+    {
+        if (IsWin)
+        {
+            //이겼을때 광고 스킵
+            GoNext();
+        }
+        else
+        {
+            //졌을때 광고 재생
+            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
+                    && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
+                    && !Purchases.IsAdsSkip())
+            {
+                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
+                {
+                    GoNext();
+                });
+            }
+            else //졌지만 보여줄 광고가 없을때 스킵
+                GoNext();
+        }
+    }
+
+    private void GoNext()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         StopCoroutine("AnimateExp");

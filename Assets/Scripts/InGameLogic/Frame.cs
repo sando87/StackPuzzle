@@ -192,10 +192,35 @@ public class Frame : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
-            EventScoreText?.Invoke(combo);
-            Destroy(obj);
-        }));
+        if (GameManager.FieldType == GameFieldType.Stage)
+        {
+            StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
+                EventScoreText?.Invoke(combo);
+                Destroy(obj);
+            }));
+        }
+        else
+        {
+            StartCoroutine(DisappearGoingUP(obj, 0.5f));
+        }
+    }
+    IEnumerator DisappearGoingUP(GameObject obj, float duration)
+    {
+        float time = 0;
+        SpriteRenderer renderer = obj.GetComponent<SpriteRenderer>();
+        Color color = renderer.color;
+        float startSpeed = 5;
+        while (time < duration)
+        {
+            float rate = time / duration;
+            color.a = 1 - rate;
+            renderer.color = color;
+            startSpeed -= 10 * Time.deltaTime;
+            startSpeed = Mathf.Max(0, startSpeed);
+            obj.transform.position += new Vector3(0, startSpeed * Time.deltaTime, 0);
+            time += Time.deltaTime;
+            yield return null;
+        }
     }
 
 }

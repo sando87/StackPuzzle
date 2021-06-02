@@ -50,11 +50,7 @@ public class MenuComplete : MonoBehaviour
 
         StageInfo stageInfo = StageInfo.Load(level);
 
-        if (stageInfo.GoalTypeEnum == StageGoalType.Score)
-            ScoreDisplay.ScorePerBar = stageInfo.GoalValue;
-        else
-            ScoreDisplay.ScorePerBar = UserSetting.ScorePerBar;
-
+        ScoreDisplay.ScorePerBar = UserSetting.ScorePerBar;
         ScoreDisplay.Clear();
         ScoreDisplay.SetScore(score);
         StageLevel.text = "STAGE " + level.ToString() + " Clear!!";
