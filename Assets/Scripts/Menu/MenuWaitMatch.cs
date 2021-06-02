@@ -231,11 +231,14 @@ public class MenuWaitMatch : MonoBehaviour
         }
         else if (res.State == MatchingState.FoundOpp)
         {
-            SearchOpponentInfo info = new SearchOpponentInfo();
-            info.MyUserInfo = UserSetting.UserInfo;
-            info.OppUserInfo = res.OppUserInfo;
-            info.State = MatchingState.FoundOppAck;
-            NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
+            if(mIsSearching)
+            {
+                SearchOpponentInfo info = new SearchOpponentInfo();
+                info.MyUserInfo = UserSetting.UserInfo;
+                info.OppUserInfo = res.OppUserInfo;
+                info.State = MatchingState.FoundOppAck;
+                NetClientApp.GetInstance().Request(NetCMD.SearchOpponent, info, null);
+            }
         }
     }
     private void RequestMatch()

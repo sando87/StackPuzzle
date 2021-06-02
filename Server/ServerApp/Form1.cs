@@ -316,11 +316,12 @@ namespace ServerApp
             }
             else
             {
-                if (MySession.MatchState == MatchingState.FoundOpp && requestBody.State == MatchingState.FoundOppAck)
+                if (requestBody.State == MatchingState.FoundOppAck)
                 {
-                    MySession.MatchState = MatchingState.FoundOppAck;
+                    if(MySession.MatchState == MatchingState.FoundOpp)
+                        MySession.MatchState = MatchingState.FoundOppAck;
                 }
-                else
+                else if(requestBody.State == MatchingState.TryMatching)
                 {
                     MySession.StartSearchOpp();
                     MySession.MatchLevel = requestBody.Level;
@@ -332,7 +333,8 @@ namespace ServerApp
         }
         private SearchOpponentInfo ProcStopMatching(SearchOpponentInfo requestBody)
         {
-            mCurrentSession.ReleaseOpp();
+            if(mCurrentSession.MatchState != MatchingState.Matched)
+                mCurrentSession.ReleaseOpp();
             return requestBody;
         }
         private PVPInfo ProcPVPCommand(PVPInfo requestBody)
@@ -447,7 +449,7 @@ namespace ServerApp
             SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, userB.MatchLevel, MatchingState.FoundOpp);
             SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, userA.MatchLevel, MatchingState.FoundOpp);
 
-            await Task.Delay(NetProtocol.ServerMatchingInterval * 1000);
+            await Task.Delay(NetProtocol.ServerMatchingInterval * 2000);
 
             if (userA.MatchState == MatchingState.FoundOppAck && userB.MatchState == MatchingState.FoundOppAck)
             {
@@ -461,8 +463,10 @@ namespace ServerApp
             }
             else
             {
-                userA.MatchState = MatchingState.TryMatching;
-                userB.MatchState = MatchingState.TryMatching;
+                if(userA.MatchState == MatchingState.FoundOpp)
+                    userA.MatchState = MatchingState.TryMatching;
+                if (userB.MatchState == MatchingState.FoundOpp)
+                    userB.MatchState = MatchingState.TryMatching;
             }
         }
         private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingLevel oppLevel, MatchingState state)
