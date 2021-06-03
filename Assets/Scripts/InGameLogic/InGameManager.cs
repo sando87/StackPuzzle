@@ -62,6 +62,7 @@ public class InGameManager : MonoBehaviour
     private bool mUseCombo = false;
     private float mStartTime = 0;
     private int mProductCount = 0;
+    private float mSFXVolume = 1;
     private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
@@ -125,12 +126,12 @@ public class InGameManager : MonoBehaviour
 
         if (IsIdle && !mPrevIdleState && IsAllProductIdle())
         {
+            EventEnterIdle?.Invoke();
             if (mUseCombo && !mIsFinished)
             {
                 mUseCombo = false;
                 ComboReset();
             }
-            EventEnterIdle?.Invoke();
         }
 
         mPrevIdleState = IsIdle;
@@ -141,7 +142,7 @@ public class InGameManager : MonoBehaviour
         MenuInformBox.PopUp("START!!");
         StartGame(info, userInfo);
         if (info.TimeLimit > 0)
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime, mSFXVolume);
 
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
@@ -149,7 +150,9 @@ public class InGameManager : MonoBehaviour
             mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            StartCoroutine(CheckFinishStageMode());
+            EventEnterIdle = CheckIsFinishedInStageMode;
+            StartCoroutine(RefreshTimer());
+
             mIsUserEventLock = false;
             Animator anim = GetComponent<Animator>();
             if (anim != null)
@@ -179,6 +182,7 @@ public class InGameManager : MonoBehaviour
     {
         StartGame(info, userInfo);
 
+        mSFXVolume = 0.5f;
         transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
         StartCoroutine(ProcessNetMessages());
     }
@@ -367,7 +371,7 @@ public class InGameManager : MonoBehaviour
             });
         }
 
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Swipe);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Swipe, mSFXVolume);
         RemoveLimit();
     }
 
@@ -406,7 +410,7 @@ public class InGameManager : MonoBehaviour
             ComboUp();
             Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
             Billboard.ComboCounter[Billboard.CurrentCombo]++;
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched, mSFXVolume);
 
             nextScanFrames.Clear();
             foreach (Product[] matches in nextMatches)
@@ -429,8 +433,8 @@ public class InGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
-        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
+        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit, mSFXVolume);
         List<ProductInfo> nextProducts = new List<ProductInfo>();
         foreach (Product pro in destroyedProducts)
         {
@@ -506,11 +510,11 @@ public class InGameManager : MonoBehaviour
         Network_Destroy(nextProducts.ToArray(), skill, false);
 
         if (skill == ProductSkill.SameColor)
-            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3);
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, mSFXVolume);
         else if (skill == ProductSkill.Bomb)
-            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2);
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2, mSFXVolume);
         else
-            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1);
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1, mSFXVolume);
 
         mProductCount += mergeProducts.Length;
     }
@@ -546,7 +550,7 @@ public class InGameManager : MonoBehaviour
         Billboard.DestroyCount += validProducts.Length;
         EventBreakTarget?.Invoke(mainFrame.transform.position, StageGoalType.Score);
 
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
         return validProducts;
     }
 
@@ -678,17 +682,17 @@ public class InGameManager : MonoBehaviour
 
         if (main.Skill == ProductSkill.Bomb && sub.Skill == ProductSkill.Bomb)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb2);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb2, mSFXVolume);
             DestroySkillBomb_Bomb(main, sub);
         }
         else if (main.Skill != ProductSkill.Bomb && sub.Skill != ProductSkill.Bomb)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2, mSFXVolume);
             DestroySkillStripe_Stripe(main, sub);
         }
         else
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2, mSFXVolume);
             if (main.Skill == ProductSkill.Bomb)
                 DestroySkillBomb_Stripe(main, sub);
             else
@@ -846,7 +850,7 @@ public class InGameManager : MonoBehaviour
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill, mSFXVolume);
             ShakeField(0.1f);
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
@@ -858,7 +862,7 @@ public class InGameManager : MonoBehaviour
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
-                    //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2);
+                    //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2, mSFXVolume);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySameProductLoop());
                 }));
@@ -872,7 +876,7 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in destPros)
         {
             startPro.Animation.Play("flinch");
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward, mSFXVolume);
             GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
             effect.transform.localScale = new Vector3(0.75f, 0.75f, 1);
 
@@ -1178,9 +1182,6 @@ public class InGameManager : MonoBehaviour
         if (count <= 0)
             return;
 
-        if (mStageInfo.Difficulty == MatchingLevel.Bronze)
-            count *= 3;
-
         if (FieldType == GameFieldType.Stage)
             return;
         else if (FieldType == GameFieldType.pvpPlayer)
@@ -1350,7 +1351,7 @@ public class InGameManager : MonoBehaviour
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
                     destProduct.SetChocoBlock(1);
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce);
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
                     Destroy(obstacle);
                 }
                 else
@@ -1444,28 +1445,33 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    IEnumerator CheckFinishStageMode()
+    IEnumerator RefreshTimer()
     {
-        while (true)
+        while (mStageInfo.TimeLimit > 0)
         {
-            if (mStageInfo.TimeLimit > 0)
-            {
-                float remainTime = mStageInfo.TimeLimit - PlayTime;
-                EventRemainTime?.Invoke((int)remainTime);
-                if (remainTime < 0)
-                {
-                    StartFinish(false);
-                    break;
-                }
-            }
+            float remainTime = mStageInfo.TimeLimit - PlayTime;
+            EventRemainTime?.Invoke((int)remainTime);
+            yield return new WaitForSeconds(1);
+        }
+    }
+    private void CheckIsFinishedInStageMode()
+    {
+        if (IsAchieveGoals())
+        {
+            StartFinish(true);
+            return;
+        }
 
-            if (IsAchieveGoals())
-            {
-                StartFinish(true);
-                break;
-            }
-
-            yield return null;
+        if (mStageInfo.TimeLimit > 0)
+        {
+            float remainTime = mStageInfo.TimeLimit - PlayTime;
+            if (remainTime <= 0)
+                StartFinish(false);
+        }
+        else if (mStageInfo.MoveLimit > 0)
+        {
+            if (Billboard.MoveCount >= mStageInfo.MoveLimit)
+                StartFinish(false);
         }
     }
     private bool IsAchieveGoals()
@@ -1545,7 +1551,7 @@ public class InGameManager : MonoBehaviour
         Vector3 startWorldPos = MenuInGame.Inst().Limit.transform.position;
         for(int i = 0; i < remains; ++i)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward, mSFXVolume);
             GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
             effect.transform.localScale = new Vector3(0.5f, 0.5f, 1);
             StartCoroutine(RewardEach(effect, () => { rewardedCount++; }));
@@ -1663,7 +1669,7 @@ public class InGameManager : MonoBehaviour
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
                     destProduct.SetChocoBlock(99);
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce);
+                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
                     Destroy(obstacle);
                 }
                 else
@@ -2116,6 +2122,7 @@ public class InGameManager : MonoBehaviour
         mRandomSeed = null;
         mStartTime = 0;
         mProductCount = 0;
+        mSFXVolume = 1;
         mUseCombo = false;
 
         ProductIDs.Clear();
@@ -2143,8 +2150,6 @@ public class InGameManager : MonoBehaviour
         {
             Billboard.MoveCount++;
             EventReduceLimit?.Invoke();
-            if (Billboard.MoveCount >= mStageInfo.MoveLimit)
-                StartFinish(false);
         }
     }
     private bool IsNoMoreMatchableProducts()
@@ -2322,7 +2327,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator StartElectronicEffect(Vector3 _startPos, Product[] pros, Action<Product> eventTurn, Action eventEnd)
     {
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2, mSFXVolume);
         mIsLightningSkill = true;
         Vector3 startPos = _startPos;
         while (true)
@@ -2402,7 +2407,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateLaserEffect(Vector2 startPos, Vector2 destPos)
     {
-        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill3);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill3, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
         GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
@@ -2410,21 +2415,21 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateStripeEffect(Vector2 startPos, bool isVertical)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe1, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(StripeParticle, start, isVertical ? Quaternion.Euler(0, 0, 90) : Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
     private void CreateExplosionEffect(Vector2 startPos)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb1);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb1, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
     private void CreateSmokeEffect(Vector2 startPos)
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSmoke);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSmoke, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
@@ -2448,7 +2453,7 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Frame frame in frames)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam, mSFXVolume);
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
             StartCoroutine(UnityUtils.MoveDecelerate(projectail, frame.transform.position, 1.0f, () =>
             {
@@ -2472,14 +2477,14 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach(Product obj in objs)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam, mSFXVolume);
             float rad = UnityEngine.Random.Range(-10, 45) * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             dir *= left;
             GameObject projectail = Instantiate(prefab, startWorldPos, Quaternion.identity, transform);
             StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
             {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam, mSFXVolume);
                 Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(obj);
@@ -2500,7 +2505,7 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Product obj in objs)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectStartBeam, mSFXVolume);
             float rad = UnityEngine.Random.Range(0, 360) * Mathf.Deg2Rad;
             Vector3 dir = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0);
             Vector3 startPos = dir * UnityEngine.Random.Range(1.3f, 1.8f) + transform.position;
@@ -2508,7 +2513,7 @@ public class InGameManager : MonoBehaviour
             //projectail.transform.GetChild(1).gameObject.SetActive(false);
             StartCoroutine(AnimateMagnet(projectail, dir, obj.transform.position, 30, () =>
             {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndBeam, mSFXVolume);
                 Destroy(projectail, 1.0f);
                 endCount++;
                 eventEachEnd?.Invoke(obj);
@@ -2529,7 +2534,7 @@ public class InGameManager : MonoBehaviour
         int endCount = 0;
         foreach (Product obj in objs)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLaunchMissile);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLaunchMissile, mSFXVolume);
             float rad = UnityEngine.Random.Range(-10, 45) * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             dir *= left;
@@ -2563,7 +2568,7 @@ public class InGameManager : MonoBehaviour
             GameObject meteor = Instantiate(MeteorPrefab, startPos, Quaternion.identity, transform);
             StartCoroutine(UnityUtils.MoveAccelerate(meteor, destPos, 0.5f, () =>
             {
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLightBomb);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLightBomb, mSFXVolume);
                 meteor.transform.GetChild(1).gameObject.SetActive(true);
                 meteor.transform.GetChild(2).gameObject.SetActive(true);
                 //meteor.GetComponentInChildren<Animator>().StartPlayback();

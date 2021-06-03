@@ -1,7 +1,7 @@
 #Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
-GoalType,Cover
+GoalType,Choco
 #GoalValue,9
-MoveLimit,20
+MoveLimit,25
 ColorCount,5
 #Reward,gold/100
 #Reward,dia/5
@@ -12,8 +12,8 @@ ColorCount,5
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/1 0/1 0/1 0/0
-Rows,0/0 0/1 0/1 0/1 0/0
-Rows,0/0 0/1 0/1 0/1 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
+Rows,0/0 1/0 1/0 1/0 0/0
+Rows,0/0 1/0 1/0 1/0 0/0
+Rows,0/0 1/0 1/0 1/0 0/0

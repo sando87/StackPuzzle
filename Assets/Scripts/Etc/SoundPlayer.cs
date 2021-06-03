@@ -68,7 +68,7 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip[] StarClip;
     public AudioClip[] CoinClip;
 
-    private Dictionary<AudioClip, int> mRequestedClips = new Dictionary<AudioClip, int>();
+    private Dictionary<AudioClip, float> mRequestedClips = new Dictionary<AudioClip, float>();
 
     private void Awake()
     {
@@ -83,6 +83,8 @@ public class SoundPlayer : MonoBehaviour
             foreach(var item in mRequestedClips)
             {
                 AudioClip clip = item.Key;
+                float volume = item.Value;
+                Player.volume = volume;
                 Player.PlayOneShot(clip);
             }
             mRequestedClips.Clear();
@@ -112,13 +114,22 @@ public class SoundPlayer : MonoBehaviour
     }
 
 
-    public void PlaySoundEffect(AudioClip sound)
+    public void PlaySoundEffect(AudioClip sound, float volume = 1)
     {
-        mRequestedClips[sound] = 1;
+        float vol = volume;
+        if (mRequestedClips.ContainsKey(sound))
+            vol = Mathf.Max(vol, mRequestedClips[sound]);
+
+        mRequestedClips[sound] = vol;
     }
-    public void PlaySoundEffect(ClipSound sound)
+    public void PlaySoundEffect(ClipSound sound, float volume = 1)
     {
-        mRequestedClips[GetAudioClip(sound)] = 1;
+        float vol = volume;
+        AudioClip clip = GetAudioClip(sound);
+        if (mRequestedClips.ContainsKey(clip))
+            vol = Mathf.Max(vol, mRequestedClips[clip]);
+
+        mRequestedClips[clip] = vol;
     }
 
     public AudioClip GetAudioClip(ClipSound sound)

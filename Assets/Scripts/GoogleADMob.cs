@@ -50,14 +50,23 @@ public class GoogleADMob : MonoBehaviour
 
     public int RemainSec(AdsType type)
     {
+        if (!AdsUnits.ContainsKey(type))
+            return int.MaxValue;
+
         return (int)AdsUnits[type].RemainSec;
     }
     public bool IsLoaded(AdsType type)
     {
+        if (!AdsUnits.ContainsKey(type))
+            return false;
+
         return AdsUnits[type].IsLoaded;
     }
     public void Show(AdsType type, Action<bool> eventReward)
     {
+        if (!AdsUnits.ContainsKey(type))
+            return;
+
         if (!AdsUnits[type].IsLoaded)
             return;
 

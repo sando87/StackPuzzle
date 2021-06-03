@@ -1,13 +1,13 @@
-GoalType,Choco
-GoalValue,6
+GoalType,Score
+GoalValue,250
 MoveLimit,30
-ColorCount,5
+ColorCount,4
 #RandomSeed,4
-#Reward,4/1 dia/4
-Rows,0/x 0/x 0/0 0/0 0/x 0/x
-Rows,0/x 0/0 0/0 0/0 0/0 0/x
+#Reward,1/2
+#Reward,1/1 2/1 3/1
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0 0/0
-Rows,0/0 0/0 0/0 1/0 1/0 1/0
-Rows,0/0 0/0 0/0 1/0 1/0 1/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
+Rows,0/0 0/0 0/0 0/0 0/0 0/0
