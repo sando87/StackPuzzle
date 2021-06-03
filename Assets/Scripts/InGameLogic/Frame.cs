@@ -160,12 +160,12 @@ public class Frame : MonoBehaviour
         Color textColor = Color.white;
         switch(color)
         {
-            case ProductColor.Blue: textColor = Color.blue; break;
-            case ProductColor.Green: textColor = Color.green; break;
-            case ProductColor.Orange: textColor = new Color(1, 0.5f, 0, 1); break;
-            case ProductColor.Purple: textColor = Color.magenta; break;
-            case ProductColor.Red: textColor = Color.red; break;
-            case ProductColor.Yellow: textColor = Color.yellow; break;
+            case ProductColor.Blue: textColor = new Color(0, 0.4f, 1, 1); break;
+            case ProductColor.Green: textColor = new Color(0.17f, 0.7f, 0, 1); break;
+            case ProductColor.Orange: textColor = new Color(1, 0.41f, 0, 1); break;
+            case ProductColor.Purple: textColor = new Color(0.61f, 0, 0.84f, 1); break;
+            case ProductColor.Red: textColor = new Color(0.98f, 0.1f, 0, 1); break;
+            case ProductColor.Yellow: textColor = new Color(1, 0.82f, 0, 1); break;
         }
         StartCoroutine(_CreateComboTextEffect(combo, textColor));
     }
