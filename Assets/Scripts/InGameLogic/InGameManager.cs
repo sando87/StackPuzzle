@@ -667,10 +667,15 @@ public class InGameManager : MonoBehaviour
         else if (target.Skill == ProductSkill.SameColor)
         {
             ShakeField(0.05f);
-            Product[] pros = FindSameColor(target);
+            Product[] pros = FindSameColor(target, false);
             StartCoroutine(StartElectronicEffect(target.transform.position, pros,
                 (pro) => {
-                    DestroyProducts(new Product[1] { pro });
+
+                    if (pro.Skill == ProductSkill.Vertical || pro.Skill == ProductSkill.Horizontal || pro.Skill == ProductSkill.Bomb)
+                        DestroySkillNoChain(pro);
+                    else
+                        DestroyProducts(new Product[1] { pro });
+
                 }, null));
         }
     }
@@ -802,7 +807,10 @@ public class InGameManager : MonoBehaviour
         StartCoroutine(StartElectronicEffect(productbombB.transform.position, targetsB.ToArray(),
             (pro) => {
                 DestroyProducts(new Product[1] { pro });
-            }, null));
+            }, 
+            () => {
+                StartCoroutine(DestroySkillSimpleLoop());
+            }));
     }
 
     private void DestroySkillWithSamecolor(Product productA, Product productB)
@@ -934,7 +942,7 @@ public class InGameManager : MonoBehaviour
                 }
             }
 
-            if (IsAllProductIdle())
+            if (!mIsAutoMatching && IsAllProductIdle())
                 break;
 
             KeepLoop:
@@ -992,7 +1000,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator DestroySameProductLoop()
     {
-        mIsAutoMatching = true;
+        mItemLooping = true;
         List<Product> sameSkills = new List<Product>();
         foreach (Frame frame in mFrames)
             if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor && !frame.ChildProduct.IsChocoBlock)
@@ -1017,7 +1025,8 @@ public class InGameManager : MonoBehaviour
             DestroyProducts(pros);
             yield return new WaitForSeconds(UserSetting.SameSkillInterval);
         }
-        mIsAutoMatching = false;
+        mItemLooping = false;
+        StartCoroutine(DestroySkillSimpleLoop());
     }
 
     public void UseItemExtendsLimits(Vector3 startWorldPos, Vector3 destWorldPos)
@@ -2200,14 +2209,17 @@ public class InGameManager : MonoBehaviour
 
         return new List<Frame>(rets.Values).ToArray();
     }
-    private Product[] FindSameColor(Product target)
+    private Product[] FindSameColor(Product target, bool skipSkill = true)
     {
         List<Product> pros = new List<Product>();
         pros.Add(target);
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill != ProductSkill.Nothing)
+            if (pro == null || pro.IsLocked || pro.IsChocoBlock)
+                continue;
+
+            if (skipSkill && pro.Skill != ProductSkill.Nothing)
                 continue;
 
             if(pro.Color == target.Color)
