@@ -47,6 +47,7 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectEndGameReward;
     public AudioClip EffectStartBeam;
     public AudioClip EffectEndBeam;
+    public AudioClip EffectAttackPVP;
     public AudioClip EffectLightBomb;
     public AudioClip EffectTouchBush;
     public AudioClip EffectBreakBush;

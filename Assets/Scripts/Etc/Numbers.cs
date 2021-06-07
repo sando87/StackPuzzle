@@ -17,6 +17,7 @@ public class Numbers : MonoBehaviour
     public int Number = 321;
     public bool Outline = true;
     public float gap = 0.3f;
+    public string layerName = "Default";
 
     private void Start()
     {
@@ -30,7 +31,9 @@ public class Numbers : MonoBehaviour
         {
             First.sprite = NumberImages[Number];
             First.color = NumberColor;
+            First.sortingLayerName = layerName;
             FirstOutline.sprite = NumberOutlineImages[Number];
+            FirstOutline.sortingLayerName = layerName;
             First.transform.position = transform.position;
 
             First.gameObject.SetActive(true);
@@ -44,11 +47,15 @@ public class Numbers : MonoBehaviour
         {
             First.sprite = NumberImages[Number % 10];
             First.color = NumberColor;
+            First.sortingLayerName = layerName;
             Second.sprite = NumberImages[Number / 10];
             Second.color = NumberColor;
+            Second.sortingLayerName = layerName;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
+            FirstOutline.sortingLayerName = layerName;
             SecondOutline.sprite = NumberOutlineImages[Number / 10];
+            SecondOutline.sortingLayerName = layerName;
 
             Vector3 center = transform.position;
             center.x += (imgWorldWidth * 0.5f);
@@ -67,14 +74,20 @@ public class Numbers : MonoBehaviour
         {
             First.sprite = NumberImages[Number % 10];
             First.color = NumberColor;
+            First.sortingLayerName = layerName;
             Second.sprite = NumberImages[(Number / 10) % 10];
             Second.color = NumberColor;
+            Second.sortingLayerName = layerName;
             Third.sprite = NumberImages[Number / 100];
             Third.color = NumberColor;
+            Third.sortingLayerName = layerName;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
+            FirstOutline.sortingLayerName = layerName;
             SecondOutline.sprite = NumberOutlineImages[(Number / 10) % 10];
+            SecondOutline.sortingLayerName = layerName;
             ThirdOutline.sprite = NumberOutlineImages[Number / 100];
+            ThirdOutline.sortingLayerName = layerName;
 
             Vector3 center = transform.position;
             center.x += imgWorldWidth;

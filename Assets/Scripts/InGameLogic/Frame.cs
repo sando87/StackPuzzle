@@ -177,6 +177,7 @@ public class Frame : MonoBehaviour
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;
         numComp.NumberColor = textColor;
+        numComp.layerName = "UI";
 
         float time = 0;
         float duration = 0.3f;
@@ -192,17 +193,10 @@ public class Frame : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        if (GameManager.FieldType == GameFieldType.Stage)
-        {
-            StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
-                EventScoreText?.Invoke(combo);
-                Destroy(obj);
-            }));
-        }
-        else
-        {
-            StartCoroutine(DisappearGoingUP(obj, 0.5f));
-        }
+        StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
+            EventScoreText?.Invoke(combo);
+            Destroy(obj);
+        }));
     }
     IEnumerator DisappearGoingUP(GameObject obj, float duration)
     {

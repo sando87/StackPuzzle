@@ -12,10 +12,12 @@ public class ScoreBar : MonoBehaviour
     [SerializeField] private Slider EffectBar = null;
     [SerializeField] private GameObject GroupLine = null;
     [SerializeField] private GameObject SplitBarPrefab = null;
+    [SerializeField] private GameObject ValueEndPos = null;
 
     //private int ScorePerBar = UserSetting.ScorePerBar;
     public int ScorePerBar { get; set; } = UserSetting.ScorePerBar;
     public int CurrentScore { get; private set; } = 0;
+    public Vector3 EndPosition { get { return ValueEndPos.transform.position; } }
 
     public void Clear()
     {

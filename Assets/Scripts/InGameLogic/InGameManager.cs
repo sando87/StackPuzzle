@@ -182,7 +182,7 @@ public class InGameManager : MonoBehaviour
     {
         StartGame(info, userInfo);
 
-        mSFXVolume = 0.5f;
+        mSFXVolume = 0.1f;
         transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
         StartCoroutine(ProcessNetMessages());
     }
@@ -1214,6 +1214,7 @@ public class InGameManager : MonoBehaviour
                 objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             }
 
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
@@ -1230,6 +1231,7 @@ public class InGameManager : MonoBehaviour
                 objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             }
 
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
             StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
             {
                 Destroy(destObj);
@@ -1264,16 +1266,17 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator AnimateAttack(GameObject[] objs, Vector3 dest, Action<GameObject> EventEndEach)
     {
-        float dragFactor = 0.02f;
+        yield return null;
+        float dragFactor = 0.015f;
         float destFactor = 0;
         Tuple<Vector2, float>[] startSpeed = new Tuple<Vector2, float>[objs.Length];
         for (int i = 0; i < objs.Length; ++i)
         {
-            float rad = UnityEngine.Random.Range(225, 315) * Mathf.Deg2Rad;
+            float rad = UnityEngine.Random.Range(195, 345) * Mathf.Deg2Rad;
             if (objs[i].transform.position.y > dest.y)
                 rad += Mathf.PI;
             Vector2 force = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            startSpeed[i] = new Tuple<Vector2, float>(force, UnityEngine.Random.Range(30, 35));
+            startSpeed[i] = new Tuple<Vector2, float>(force, UnityEngine.Random.Range(35, 45));
         }
 
         while (true)

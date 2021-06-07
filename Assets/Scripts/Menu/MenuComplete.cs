@@ -142,7 +142,7 @@ public class MenuComplete : MonoBehaviour
             if(prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;
-                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.transform.position, Quaternion.identity, RewardCoin.transform);
+                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.EndPosition, Quaternion.identity, RewardCoin.transform);
                 Effects.Add(coinObj);
                 StartCoroutine(UnityUtils.AnimateThrow(coinObj));
                 SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin1);
