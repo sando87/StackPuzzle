@@ -1626,7 +1626,7 @@ public class InGameManager : MonoBehaviour
         int addedSec = mStageInfo.TimeLimit;
         int timelimit = addedSec;
         float remainTime = timelimit - PlayTime;
-        Network_CloseProducts(new List<ProductInfo>().ToArray(), (int)remainTime);
+        Network_FlushAttacks(new List<ProductInfo>().ToArray(), (int)remainTime);
 
         while (timelimit > 0)
         {
@@ -1640,13 +1640,13 @@ public class InGameManager : MonoBehaviour
                 addedSec = (int)(addedSec * 0.7f);
                 timelimit += Mathf.Max(addedSec, 10);
 
-
-                int point = AttackPointFrame.Flush(CountX);
-                List<Product> products = GetNextFlushTargets(point);
+                List<Product> products = GetNextFlushTargets(CountX);
                 Product[] rets = products.ToArray();
-                Network_FlushAttacks(Serialize(rets));
+                int curRemainSec = (int)(timelimit - PlayTime);
+                curRemainSec = Mathf.Max(curRemainSec, 0);
+                Network_FlushAttacks(Serialize(rets), curRemainSec);
                 StartCoroutine(FlushObstacles(rets));
-                if (products.Count < point)
+                if (products.Count < CountX)
                 {
                     StartFinish(false);
                 }
@@ -2123,7 +2123,7 @@ public class InGameManager : MonoBehaviour
         if (FieldType == GameFieldType.pvpPlayer)
         {
             //pvp 에서 역전을 위한 장치 (방해블럭이 많을수록 colorCount값이 낮아진다)
-            float rate = GetChocoCount() / (mFrames.Length * 0.7f);
+            float rate = GetChocoCount() / (mFrames.Length * 0.5f);
             rate = Mathf.Min(rate, 1.0f);
             colorCount = colorCount - rate;
         }
@@ -2720,6 +2720,9 @@ public class InGameManager : MonoBehaviour
             if (mNetMessages.Count == 0)
                 continue;
 
+            if (mIsFlushing)
+                continue;
+
             PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.EndGame)
             {
@@ -2771,7 +2774,7 @@ public class InGameManager : MonoBehaviour
                     if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
                         products.Add(pro);
                 }
-                
+
                 if (products.Count == body.ArrayCount)
                 {
                     Billboard.CurrentCombo = body.combo;
@@ -2794,7 +2797,7 @@ public class InGameManager : MonoBehaviour
                         {
                             if (body.withLaserEffect)
                             {
-                                if(idx == 0)
+                                if (idx == 0)
                                     CreateLaserEffect(transform.position, products[idx].transform.position);
                             }
                             else
@@ -2845,7 +2848,7 @@ public class InGameManager : MonoBehaviour
                 {
                     ProductInfo info = body.products[i];
                     Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
+                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor && pro.IsChocoBlock)
                         products.Add(pro);
                 }
 
@@ -2921,7 +2924,11 @@ public class InGameManager : MonoBehaviour
             {
                 if(IsAllProductIdle())
                 {
-                    AttackPointFrame.Flush(body.ArrayCount);
+                    if(body.remainTime > 0)
+                        EventRemainTime?.Invoke(body.remainTime);
+                    else
+                        AttackPointFrame.Flush(body.ArrayCount);
+
                     List<Product> rets = new List<Product>();
                     for (int i = 0; i < body.ArrayCount; ++i)
                     {
@@ -2929,7 +2936,9 @@ public class InGameManager : MonoBehaviour
                         Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
                         rets.Add(pro);
                     }
-                    StartCoroutine(FlushObstacles(rets.ToArray()));
+
+                    if(rets.Count > 0)
+                        StartCoroutine(FlushObstacles(rets.ToArray()));
 
                     mNetMessages.RemoveFirst();
                 }
@@ -3172,7 +3181,7 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_FlushAttacks(ProductInfo[] pros)
+    private void Network_FlushAttacks(ProductInfo[] pros, int remainTime = -1)
     {
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
@@ -3181,6 +3190,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
+        req.remainTime = remainTime;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))

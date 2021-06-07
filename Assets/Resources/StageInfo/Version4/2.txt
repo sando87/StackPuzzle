@@ -1,5 +1,5 @@
 GoalType,Score
-GoalValue,80
+GoalValue,100
 MoveLimit,25
 ColorCount,6
 RandomSeed,1184634566
