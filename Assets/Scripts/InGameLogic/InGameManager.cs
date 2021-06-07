@@ -1343,6 +1343,9 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator FlushObstacles(Product[] targets)
     {
+        while (!IsIdle)
+            yield return null;
+
         mIsFlushing = true;
         List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
         foreach (Product target in targets)
@@ -1620,7 +1623,6 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckFinishPvpTimer()
     {
-        int stoneYIdx = 0;
         int addedSec = mStageInfo.TimeLimit;
         int timelimit = addedSec;
         float remainTime = timelimit - PlayTime;
@@ -1638,14 +1640,15 @@ public class InGameManager : MonoBehaviour
                 addedSec = (int)(addedSec * 0.7f);
                 timelimit += Mathf.Max(addedSec, 10);
 
-                if (stoneYIdx >= CountY)
+
+                int point = AttackPointFrame.Flush(CountX);
+                List<Product> products = GetNextFlushTargets(point);
+                Product[] rets = products.ToArray();
+                Network_FlushAttacks(Serialize(rets));
+                StartCoroutine(FlushObstacles(rets));
+                if (products.Count < point)
                 {
                     StartFinish(false);
-                }
-                else
-                {
-                    StartCoroutine(StartToPushStone(stoneYIdx, (int)(timelimit - PlayTime)));
-                    stoneYIdx++;
                 }
             }
             else
@@ -2103,9 +2106,29 @@ public class InGameManager : MonoBehaviour
 
         return skill;
     }
+    private int GetChocoCount()
+    {
+        int count = 0;
+        foreach(Frame frame in mFrames)
+        {
+            Product pro = frame.ChildProduct;
+            if (pro != null && pro.IsChocoBlock)
+                count++;
+        }
+        return count;
+    }
     private int RandomNextColor()
     {
-        int range = (int)(mStageInfo.ColorCount * 10.0f);
+        float colorCount = mStageInfo.ColorCount;
+        if (FieldType == GameFieldType.pvpPlayer)
+        {
+            //pvp 에서 역전을 위한 장치 (방해블럭이 많을수록 colorCount값이 낮아진다)
+            float rate = GetChocoCount() / (mFrames.Length * 0.7f);
+            rate = Mathf.Min(rate, 1.0f);
+            colorCount = colorCount - rate;
+        }
+
+        int range = (int)(colorCount * 10.0f);
         int ran = mRandomSeed.Next(range);
         return ran / 10;
     }
