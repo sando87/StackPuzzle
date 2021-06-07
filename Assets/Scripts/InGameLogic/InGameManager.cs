@@ -572,6 +572,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator DestroyProductsDropping()
     {
+        int continuousMatchedCount = 0;
         mIsAutoMatching = true;
         while (true)
         {
@@ -604,11 +605,21 @@ public class InGameManager : MonoBehaviour
             }
             else if (matchableProducts != null)
             {
+                continuousMatchedCount++;
                 ProductSkill nextSkill = CheckSkillable(matchableProducts);
                 if (nextSkill == ProductSkill.Nothing)
                     DestroyProducts(matchableProducts);
                 else
-                    MergeProducts(matchableProducts, nextSkill);
+                {
+                    //밸런스 조정을 위한 장치
+                    if(continuousMatchedCount > 40)
+                        DestroyProducts(matchableProducts);
+                    else if (continuousMatchedCount > 25 && nextSkill == ProductSkill.SameColor)
+                        DestroyProducts(matchableProducts);
+                    else
+                        MergeProducts(matchableProducts, nextSkill);
+                }
+                    
             }
 
             yield return new WaitForSeconds(UserSetting.AutoMatchInterval);
@@ -2094,16 +2105,9 @@ public class InGameManager : MonoBehaviour
     }
     private int RandomNextColor()
     {
-        return mRandomSeed.Next((int)mStageInfo.ColorCount);
-        //int count = (int)(mStageInfo.ColorCount + 0.99f);
-        //float remain = mStageInfo.ColorCount - (int)mStageInfo.ColorCount;
-        //int idx = UnityEngine.Random.Range(0, count);
-        //if (remain > 0 && idx == count - 1)
-        //{
-        //    if (remain <= UnityEngine.Random.Range(0, 10) * 0.1f)
-        //        idx = UnityEngine.Random.Range(0, count - 1);
-        //}
-        //return idx;
+        int range = (int)(mStageInfo.ColorCount * 10.0f);
+        int ran = mRandomSeed.Next(range);
+        return ran / 10;
     }
     private void ResetGame()
     {

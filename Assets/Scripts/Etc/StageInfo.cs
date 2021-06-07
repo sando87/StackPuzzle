@@ -42,6 +42,21 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
+#if UNITY_STANDALONE_WIN
+        string path = "./" + stageNum + ".txt";
+        if(File.Exists(path))
+        {
+            string[] tmpLines = File.ReadAllLines(path);
+            if(tmpLines != null && tmpLines.Length > 0)
+            {
+                StageInfo tmpInfo = Load(tmpLines);
+                tmpInfo.Num = stageNum;
+                tmpInfo.Difficulty = MatchingLevel.None;
+                return tmpInfo;
+            }
+        }
+#endif
+
         TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + stageNum);
         if (ta == null || ta.text.Length == 0)
             return null;
