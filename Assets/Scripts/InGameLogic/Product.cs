@@ -420,19 +420,7 @@ public class Product : MonoBehaviour
         }
         Renderer.material.color = new Color(0, 0, 0, 0);
     }
-    IEnumerator AnimateTwinkle(GameObject obj)
-    {
-        float t = 0;
-        SpriteRenderer ren = obj.GetComponent<SpriteRenderer>();
-        while (t < 0.4f)
-        {
-            int light = (int)(t * 10) % 2;
-            ren.material.SetColor("_Color", new Color(1 - light, 1 - light, 1 - light, 0));
-            t += Time.deltaTime;
-            yield return null;
-        }
-        ren.material.color = new Color(0, 0, 0, 0);
-    }
+    
 
     #region Support Functions
 
@@ -538,7 +526,38 @@ public class Product : MonoBehaviour
             default: break;
         }
     }
+    public void EnableMasking(int order)
+    {
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer render in renders)
+        {
+            render.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+            render.sortingOrder = order;
+        }
+    }
+    public void DisableMasking()
+    {
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer render in renders)
+        {
+            render.maskInteraction = SpriteMaskInteraction.None;
+        }
+    }
+    public Sprite ToSkillImage(ProductSkill skill)
+    {
+        switch (skill)
+        {
+            case ProductSkill.Horizontal: return ImgHorizontal;
+            case ProductSkill.Vertical: return ImgVertical;
+            case ProductSkill.Bomb: return ImgBomb;
+            case ProductSkill.SameColor: return ImgSameColor;
+            default: break;
+        }
+        return null;
+    }
 
+
+    IceBlock IcedBlock;
     public bool BreakChocoBlock(int combo)
     {
         if(IsCapped)
@@ -550,24 +569,12 @@ public class Product : MonoBehaviour
         if (ChocoBlock.tag == "off")
             return false;
 
-        int chocoLevel = int.Parse(ChocoBlock.name);
-        if (combo < (chocoLevel - 1) * 3)
+        if(IcedBlock.BreakChocoBlock(Combo))
         {
-            StartCoroutine(AnimateTwinkle(ChocoBlock));
-            return false;
+            EventUnWrapChoco?.Invoke();
+            return true;
         }
-            
-
-        ChocoBlock.tag = "off";
-        ChocoBlock.name = "0";
-        StartCoroutine(AnimShake());
-        EventUnWrapChoco?.Invoke();
-        StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
-        {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
-            ParentFrame.StartCoroutine(AnimatePickedUp());
-        }));
-        return true;
+        return false;
     }
     IEnumerator AnimBreakChoco()
     {
@@ -595,23 +602,6 @@ public class Product : MonoBehaviour
         ChocoBlock.GetComponent<SpriteRenderer>().sprite = level <= Chocos.Length ? Chocos[level - 1] : ImgClosed;
         ChocoBlock.transform.localScale = Vector3.one;
     }
-    public void EnableMasking(int order)
-    {
-        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
-        foreach(SpriteRenderer render in renders)
-        {
-            render.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-            render.sortingOrder = order;
-        }
-    }
-    public void DisableMasking()
-    {
-        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
-        foreach (SpriteRenderer render in renders)
-        {
-            render.maskInteraction = SpriteMaskInteraction.None;
-        }
-    }
     private IEnumerator AnimatePickedUp()
     {
         float time = 0;
@@ -633,18 +623,6 @@ public class Product : MonoBehaviour
             yield return null;
         }
         Destroy(obj);
-    }
-    public Sprite ToSkillImage(ProductSkill skill)
-    {
-        switch (skill)
-        {
-            case ProductSkill.Horizontal: return ImgHorizontal;
-            case ProductSkill.Vertical: return ImgVertical;
-            case ProductSkill.Bomb: return ImgBomb;
-            case ProductSkill.SameColor: return ImgSameColor;
-            default: break;
-        }
-        return null;
     }
     IEnumerator AnimShake()
     {
