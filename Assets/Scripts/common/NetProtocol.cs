@@ -9,7 +9,7 @@ public enum NetCMD
 }
 public enum PVPCommand
 {
-    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, DropPause, DropResume, ChangeSkill, BreakIce, CloseProducts, UseItem,
+    Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, DropPause, DropResume, ChangeSkill, BreakIce, CloseProducts, UseItem, SyncTimer,
     SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
 }
 public enum ProductColor

@@ -25,6 +25,7 @@ public class InGameManager : MonoBehaviour
     public const string vgGround = "ground";
 
     public Sprite[] BackgroundImages;
+    public Sprite[] PvpIceBlocks;
     public SpriteRenderer BackgroundSprite;
     public GameObject[] ProductPrefabs;
     public GameObject FramePrefab1;
@@ -63,6 +64,7 @@ public class InGameManager : MonoBehaviour
     private float mStartTime = 0;
     private int mProductCount = 0;
     private float mSFXVolume = 1;
+    private int mPVPFlushBlockLevel = 0;
     private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
@@ -1331,8 +1333,8 @@ public class InGameManager : MonoBehaviour
 
                 List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
-                Network_FlushAttacks(Serialize(rets));
-                StartCoroutine(FlushObstacles(rets));
+                Network_FlushAttacks(Serialize(rets), mPVPFlushBlockLevel);
+                StartCoroutine(FlushObstacles(rets, mPVPFlushBlockLevel));
                 if (products.Count < point)
                 {
                     StartFinish(false);
@@ -1344,7 +1346,7 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    IEnumerator FlushObstacles(Product[] targets)
+    IEnumerator FlushObstacles(Product[] targets, int blockLevel)
     {
         while (!IsIdle)
             yield return null;
@@ -1376,7 +1378,7 @@ public class InGameManager : MonoBehaviour
                 float deltaY = vel * Time.deltaTime;
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
-                    destProduct.SetChocoBlock(1);
+                    destProduct.SetChocoBlock(blockLevel);
                     SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
                     Destroy(obstacle);
                 }
@@ -1626,41 +1628,27 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckFinishPvpTimer()
     {
-        int addedSec = mStageInfo.TimeLimit;
-        int timelimit = addedSec;
-        float remainTime = timelimit - PlayTime;
-        Network_FlushAttacks(new List<ProductInfo>().ToArray(), (int)remainTime);
-
-        while (timelimit > 0)
+        mPVPFlushBlockLevel = 0;
+        float currentTimelimit = 0;
+        while (true)
         {
-            remainTime = timelimit - PlayTime;
-            EventRemainTime?.Invoke((int)remainTime);
-            if (remainTime < 0)
+            float remain = currentTimelimit - PlayTime;
+            if (remain <= 0)
             {
-                while (!IsIdle)
-                    yield return null;
+                mPVPFlushBlockLevel++;
+                currentTimelimit += mStageInfo.TimeLimit;
+                remain = currentTimelimit - PlayTime;
 
-                addedSec = (int)(addedSec * 0.7f);
-                timelimit += Mathf.Max(addedSec, 10);
-
-                List<Product> products = GetNextFlushTargets(CountX);
-                Product[] rets = products.ToArray();
-                int curRemainSec = (int)(timelimit - PlayTime);
-                curRemainSec = Mathf.Max(curRemainSec, 0);
-                Network_FlushAttacks(Serialize(rets), curRemainSec);
-                StartCoroutine(FlushObstacles(rets));
-                if (products.Count < CountX)
-                {
-                    StartFinish(false);
-                }
+                //play anim timeout
+                Network_SyncTimer((int)remain);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
             }
-            else
+
+            EventRemainTime?.Invoke((int)remain);
+            if (IsNoMoreMatchableProducts())
             {
-                if(IsNoMoreMatchableProducts())
-                {
-                    yield return new WaitForSeconds(1);
-                    StartFinish(false);
-                }
+                yield return new WaitForSeconds(1);
+                StartFinish(false);
             }
             yield return new WaitForSeconds(1);
         }
@@ -2162,6 +2150,7 @@ public class InGameManager : MonoBehaviour
         mStartTime = 0;
         mProductCount = 0;
         mSFXVolume = 1;
+        mPVPFlushBlockLevel = 0;
         mUseCombo = false;
 
         ProductIDs.Clear();
@@ -2876,6 +2865,14 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.SyncTimer)
+            {
+                //play anim timeout
+                EventRemainTime?.Invoke(body.remainTime);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+
+                mNetMessages.RemoveFirst();
+            }
             else if (body.cmd == PVPCommand.UseItem)
             {
                 List<Product> products = new List<Product>();
@@ -2927,11 +2924,7 @@ public class InGameManager : MonoBehaviour
             {
                 if(IsAllProductIdle())
                 {
-                    if(body.remainTime > 0)
-                        EventRemainTime?.Invoke(body.remainTime);
-                    else
-                        AttackPointFrame.Flush(body.ArrayCount);
-
+                    AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> rets = new List<Product>();
                     for (int i = 0; i < body.ArrayCount; ++i)
                     {
@@ -2941,7 +2934,10 @@ public class InGameManager : MonoBehaviour
                     }
 
                     if(rets.Count > 0)
-                        StartCoroutine(FlushObstacles(rets.ToArray()));
+                    {
+                        int blockLevel = body.combo;
+                        StartCoroutine(FlushObstacles(rets.ToArray(), blockLevel));
+                    }
 
                     mNetMessages.RemoveFirst();
                 }
@@ -3184,7 +3180,7 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_FlushAttacks(ProductInfo[] pros, int remainTime = -1)
+    private void Network_FlushAttacks(ProductInfo[] pros, int level)
     {
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
@@ -3192,10 +3188,21 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = Billboard.CurrentCombo;
-        req.remainTime = remainTime;
+        req.combo = level;
         req.ArrayCount = pros.Length;
         Array.Copy(pros, req.products, pros.Length);
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
+            StartFinish(false);
+    }
+    private void Network_SyncTimer(int remainSec)
+    {
+        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.SyncTimer;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.remainTime = remainSec;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3219,3 +3226,4 @@ public class InGameManager : MonoBehaviour
     }
     #endregion
 }
+
