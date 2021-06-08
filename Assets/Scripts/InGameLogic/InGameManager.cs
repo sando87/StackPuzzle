@@ -262,7 +262,7 @@ public class InGameManager : MonoBehaviour
                 if (chocoCount == -1)
                     pro.ChangeProductImage(ProductSkill.SameColor);
                 else if(chocoCount > 0)
-                    pro.SetChocoBlock(chocoCount);
+                    pro.IcedBlock.SetBlockCombo(chocoCount);
 
                 pro.InitCap(cellInfo.ProductCapCount);
                 pro.EventUnWrapChoco = () => {
@@ -867,7 +867,7 @@ public class InGameManager : MonoBehaviour
         }
         else if (another.Skill == ProductSkill.SameColor)
         {
-            List<Product> randomProducts = ScanRandomProducts(5);
+            List<Product> randomProducts = ScanRandomProducts(9);
             Product[] pros = randomProducts.ToArray();
             Frame[] frames = ToFrames(pros);
 
@@ -1378,7 +1378,7 @@ public class InGameManager : MonoBehaviour
                 float deltaY = vel * Time.deltaTime;
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
-                    destProduct.SetChocoBlock(blockLevel);
+                    destProduct.IcedBlock.SetBlockCombo(blockLevel);
                     SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
                     Destroy(obstacle);
                 }
@@ -1682,7 +1682,7 @@ public class InGameManager : MonoBehaviour
                 float deltaY = vel * Time.deltaTime;
                 if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
                 {
-                    destProduct.SetChocoBlock(99);
+                    destProduct.IcedBlock.SetBlockCombo(99);
                     SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
                     Destroy(obstacle);
                 }
@@ -1742,7 +1742,7 @@ public class InGameManager : MonoBehaviour
             {
                 count++;
                 Product stonePro = CreateNewProduct();
-                stonePro.SetChocoBlock(99);
+                stonePro.IcedBlock.SetBlockCombo(99);
 
                 nextClosePros.Add(new ProductInfo(stonePro.Color, stonePro.Color, ProductSkill.Nothing, vf.BottomFrame.IndexX, vf.BottomFrame.IndexY, stonePro.InstanceID, stonePro.InstanceID));
 
@@ -1770,7 +1770,7 @@ public class InGameManager : MonoBehaviour
             ProductInfo info = pros[i];
             VerticalFrames vf = mFrames[info.idxX, info.idxY].VertFrames;
             Product stonePro = CreateNewProduct();
-            stonePro.SetChocoBlock(99);
+            stonePro.IcedBlock.SetBlockCombo(99);
             stonePro.InstanceID = info.nextInstID;
 
             StartCoroutine(vf.PushUpStone(stonePro, () =>
@@ -2731,7 +2731,7 @@ public class InGameManager : MonoBehaviour
                     Product pro = CreateNewProduct(frame, info.nextColor);
                     pro.InstanceID = info.nextInstID;
                     ProductIDs[pro.InstanceID] = pro;
-                    pro.SetChocoBlock(0);
+                    pro.IcedBlock.SetBlockCombo(0);
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                 }
 

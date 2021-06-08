@@ -169,8 +169,8 @@ public class MenuBattle : MonoBehaviour
             UserSetting.UpdateUserInfoToLocal(resBody.userInfo);
 
             MatchingLevel currentLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
-            if (UserSetting.MaxLeagueLevel < currentLeague)
-                UserSetting.MaxLeagueLevel = currentLeague;
+            if (UserSetting.UserInfo.maxLeague < currentLeague)
+                UserSetting.SetMaxLeague(currentLeague);
         });
 
         if(!ret)

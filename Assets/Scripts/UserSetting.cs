@@ -25,11 +25,6 @@ public class UserSetting
             return new DateTime(long.Parse(ticks));
         }
     }
-    public static MatchingLevel MaxLeagueLevel
-    {
-        get { return (MatchingLevel)PlayerPrefs.GetInt("MaxLeagueLevel", 1); }
-        set { PlayerPrefs.SetInt("MaxLeagueLevel", (int)value); }
-    }
     public static MatchingLevel MatchLevel
     {
         get { return (MatchingLevel)PlayerPrefs.GetInt("matchLevel", 1); }
@@ -98,7 +93,7 @@ public class UserSetting
     public const float SkillDestroyInterval = 0.2f; //1단계 스킬블럭들 터지는 시간
     public const float ChocoFlushInterval = 1.5f;
     public const int MatchCount = 3;
-    public const int ScorePerAttack = 20;
+    public const int ScorePerAttack = 50;
     public const int FlushCount = 20;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
@@ -175,6 +170,11 @@ public class UserSetting
         mUserInfo = info;
         SaveUserInfo(info);
     }
+    public static void SetMaxLeague(MatchingLevel level)
+    {
+        mUserInfo.maxLeague = level;
+        SaveUserInfo(mUserInfo);
+    }
 
     public static UserInfo LoadUserInfo()
     {
@@ -189,6 +189,7 @@ public class UserSetting
             info.total = PlayerPrefs.GetInt("total");
             info.rankingRate = PlayerPrefs.GetFloat("rankingRate");
             info.deviceName = PlayerPrefs.GetString("deviceName");
+            info.maxLeague = (MatchingLevel)PlayerPrefs.GetInt("maxLeague");
             return info;
         }
         else
@@ -216,6 +217,7 @@ public class UserSetting
             PlayerPrefs.SetInt("total", info.total);
             PlayerPrefs.SetFloat("rankingRate", info.rankingRate);
             PlayerPrefs.SetString("deviceName", info.deviceName);
+            PlayerPrefs.SetInt("maxLeague", (int)info.maxLeague);
         }
         return info;
     }

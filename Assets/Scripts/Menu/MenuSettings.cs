@@ -16,6 +16,8 @@ public class MenuSettings : MonoBehaviour
     public TextMeshProUGUI ExpLevel;
     public TextMeshProUGUI Exp;
     public Slider ExpBar;
+    public Image LeagueLevel;
+    public TextMeshProUGUI LeagueText;
 
     public static void PopUp()
     {
@@ -111,6 +113,8 @@ public class MenuSettings : MonoBehaviour
         SoundSFX.value = UserSetting.VolumeSFX;
         SoundBack.value = UserSetting.VolumeBackground;
         UserName.text = UserSetting.UserName;
+        LeagueLevel.sprite = UserSetting.UserInfo.maxLeague.GetSprite();
+        LeagueText.text = UserSetting.UserInfo.maxLeague.GetText();
 
         int score = UserSetting.UserScore;
         int level = Utils.ToLevel(score);

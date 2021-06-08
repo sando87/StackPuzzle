@@ -6,7 +6,6 @@ using UnityEngine;
 public class Product : MonoBehaviour
 {
     public ProductColor Color;
-    public GameObject ChocoBlock;
     public Animation Animation;
     public SpriteRenderer Renderer;
     public Sprite[] Images;
@@ -22,6 +21,7 @@ public class Product : MonoBehaviour
     public GameObject ComboNumPrefab;
     public GameObject CapObject;
     public GameObject WaterDropParticle;
+    public IceBlock IcedBlock;
 
     public Action EventUnWrapChoco;
     public Action EventUnWrapCap;
@@ -41,8 +41,8 @@ public class Product : MonoBehaviour
     public bool IsDropping { get; private set; }
     public bool SkillCasted { get; set; } = false;
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
-    public bool IsChocoBlock { get { return ChocoBlock.tag == "on"; } }
-    public bool IsClosed { get { return int.Parse(ChocoBlock.name) > Chocos.Length; } }
+    public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
+    public bool IsClosed { get { return IcedBlock.ThresholdCombo == 99; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
     public void AttachTo(Frame parentFrame)
@@ -557,7 +557,6 @@ public class Product : MonoBehaviour
     }
 
 
-    IceBlock IcedBlock;
     public bool BreakChocoBlock(int combo)
     {
         if(IsCapped)
@@ -566,78 +565,15 @@ public class Product : MonoBehaviour
             return false;
         }
 
-        if (ChocoBlock.tag == "off")
+        if (!IcedBlock.IsIced)
             return false;
 
-        if(IcedBlock.BreakChocoBlock(Combo))
+        if(IcedBlock.BreakBlock(combo))
         {
             EventUnWrapChoco?.Invoke();
             return true;
         }
         return false;
-    }
-    IEnumerator AnimBreakChoco()
-    {
-        //IsBreakingChoco = true;
-        SpriteRenderer ren = ChocoBlock.GetComponent<SpriteRenderer>();
-        ChocoBlock.transform.localScale = new Vector3(1.2f, 1.2f, 1.0f);
-        int idx = 0;
-        while(idx < IceBreakSprites.Length)
-        {
-            ren.sprite = IceBreakSprites[idx];
-            idx++;
-            yield return new WaitForSeconds(0.1f);
-        }
-        Animation.Play("swap");
-        ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
-    }
-    public void SetChocoBlock(int level, bool anim = false)
-    {
-        if (level <= 0)
-            return;
-
-        ChocoBlock.tag = "on";
-        ChocoBlock.name = level.ToString();
-        ChocoBlock.GetComponent<SpriteRenderer>().enabled = true;
-        ChocoBlock.GetComponent<SpriteRenderer>().sprite = level <= Chocos.Length ? Chocos[level - 1] : ImgClosed;
-        ChocoBlock.transform.localScale = Vector3.one;
-    }
-    private IEnumerator AnimatePickedUp()
-    {
-        float time = 0;
-        float duration = 3.0f;
-        Vector3 acc = new Vector3(0, -60.0f, 0);
-        float x = UnityEngine.Random.Range(-3f, 3f);
-        float y = UnityEngine.Random.Range(20.0f, 25.0f);
-        float rot = y * 0.5f;
-        Vector3 startVel = new Vector3(x, y, 0);
-        GameObject obj = Instantiate(ChocoBlock, ChocoBlock.transform.position, Quaternion.identity, ParentFrame.transform);
-        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        ChocoBlock.GetComponent<SpriteRenderer>().enabled = false;
-        while (time < duration)
-        {
-            obj.transform.position += (startVel * Time.deltaTime);
-            obj.transform.Rotate(x < 0 ? Vector3.forward : Vector3.back, rot);
-            startVel += (acc * Time.deltaTime);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        Destroy(obj);
-    }
-    IEnumerator AnimShake()
-    {
-        float dist = 0.05f;
-        Vector3 startPos = transform.position;
-        Vector3 dir = new Vector3(0, -1, 0);
-        dir.Normalize();
-        while (dist > 0.01f)
-        {
-            transform.position = startPos + (dist * dir);
-            dist *= 0.7f;
-            dir *= -1;
-            yield return new WaitForSeconds(0.1f);
-        }
-        transform.position = startPos;
     }
 
     public void InitCap(int capIndex)

@@ -151,6 +151,7 @@ public class UserInfo
     public int NetworkLatency { get; set; } = -1;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public PurchaseItemType[] PvpItems = new PurchaseItemType[3];
+    public MatchingLevel maxLeague = MatchingLevel.Bronze;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

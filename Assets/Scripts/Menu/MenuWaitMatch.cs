@@ -383,7 +383,7 @@ public class MenuWaitMatch : MonoBehaviour
                 btn.transform.GetChild(0).gameObject.SetActive(false);
             }
 
-            if (level <= UserSetting.MaxLeagueLevel)
+            if (level <= UserSetting.UserInfo.maxLeague)
             {
                 btn.GetComponent<Image>().color = Color.white;
                 btn.transform.GetChild(1).GetComponent<Image>().color = Color.white;

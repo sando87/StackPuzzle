@@ -1,13 +1,17 @@
 ﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class IceBlock : MonoBehaviour
 {
+    [SerializeField]
+    private TextMeshPro ComboText = null;
+
     public bool IsIced { get { return ThresholdCombo > 0; } }
     public int ThresholdCombo { get; set; } = 0;
     public Frame ParentFrame { get { return transform.GetComponentInParent<Frame>(); } }
 
-    public bool BreakChocoBlock(int combo)
+    public bool BreakBlock(int combo)
     {
         if (combo < ThresholdCombo)
         {
@@ -20,23 +24,30 @@ public class IceBlock : MonoBehaviour
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
-            GetComponent<SpriteRenderer>().enabled = false;
+            gameObject.SetActive(false);
             IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
+            obj.SetBlockCombo(combo);
             obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
             ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
         }));
         return true;
     }
-    public void SetChocoBlock(int thresholdCombo)
+    public void SetBlockCombo(int thresholdCombo)
     {
         if (thresholdCombo <= 0)
+        {
+            ThresholdCombo = 0;
+            ComboText.text = "";
+            gameObject.SetActive(false);
             return;
+        }
 
         ThresholdCombo = thresholdCombo;
-        GetComponent<SpriteRenderer>().enabled = true;
-        //GetComponent<SpriteRenderer>().sprite = level <= Chocos.Length ? Chocos[level - 1] : ImgClosed;
+        gameObject.SetActive(true);
+        ComboText.text = thresholdCombo == 1 ? "" : thresholdCombo.ToString();
         transform.localScale = Vector3.one;
     }
+
     private IEnumerator AnimatePickedUp(GameObject obj)
     {
         float time = 0;

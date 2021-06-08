@@ -309,12 +309,22 @@ public static class MyExtensions
     private static Sprite SkillImageBomb = null;
     private static Sprite SkillImageSame = null;
 
+    private static Sprite LeagueImageBronze = null;
+    private static Sprite LeagueImageSilver = null;
+    private static Sprite LeagueImageGold = null;
+    private static Sprite LeagueImageMaster = null;
+
     static MyExtensions()
     {
         SkillImageVert = Resources.Load<Sprite>("Images/skillHori");
         SkillImageHori = Resources.Load<Sprite>("Images/skillVert");
         SkillImageBomb = Resources.Load<Sprite>("Images/skillBomb");
         SkillImageSame = Resources.Load<Sprite>("Images/skillSame");
+
+        LeagueImageBronze = Resources.Load<Sprite>("Images/rune_bronze");
+        LeagueImageSilver = Resources.Load<Sprite>("Images/rune_silver");
+        LeagueImageGold = Resources.Load<Sprite>("Images/rune_gold");
+        LeagueImageMaster = Resources.Load<Sprite>("Images/rune_master");
     }
 
     //transform.position = Vector2()를 하면 z값이 0으로 소실된다.
@@ -336,6 +346,28 @@ public static class MyExtensions
             case ProductSkill.Bomb: return SkillImageBomb;
             case ProductSkill.SameColor: return SkillImageSame;
             default: return null;
+        }
+    }
+    public static Sprite GetSprite(this MatchingLevel level)
+    {
+        switch (level)
+        {
+            case MatchingLevel.Bronze: return LeagueImageBronze;
+            case MatchingLevel.Silver: return LeagueImageSilver;
+            case MatchingLevel.Gold: return LeagueImageGold;
+            case MatchingLevel.Master: return LeagueImageMaster;
+            default: return null;
+        }
+    }
+    public static string GetText(this MatchingLevel level)
+    {
+        switch (level)
+        {
+            case MatchingLevel.Bronze: return "Bronze";
+            case MatchingLevel.Silver: return "Silver";
+            case MatchingLevel.Gold: return "Gold";
+            case MatchingLevel.Master: return "Master";
+            default: return "";
         }
     }
 }
