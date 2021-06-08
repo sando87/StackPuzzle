@@ -2,8 +2,8 @@
 GoalType,Score
 GoalValue,750
 TimeLimit,75
-ColorCount,4
-Rows,0/0 0/0 0/0 0/0 0/0
+ColorCount,4.5
+Rows,0/x 0/0 0/0 0/0 0/x
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0

@@ -1,10 +1,10 @@
 #Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
 GoalType,Score
-GoalValue,250
+GoalValue,750
 MoveLimit,20
 #ExtendLimit(0), RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, PowerUp
 Reward,2/1
-ColorCount,4
+ColorCount,4.5
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/x 0/0 0/0 0/0
