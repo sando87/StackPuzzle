@@ -26,7 +26,8 @@ public class MenuTitle : MonoBehaviour
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         LOG.echo("Start App");
 
-        Application.targetFrameRate = 30;
+        Application.targetFrameRate = 30; //FPS 30프레임 고정
+        Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
 
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         NetClientApp.GetInstance().EventConnection = OnNetConnected;
