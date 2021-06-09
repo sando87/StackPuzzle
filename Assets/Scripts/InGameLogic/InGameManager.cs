@@ -1156,7 +1156,7 @@ public class InGameManager : MonoBehaviour
         List<ProductInfo> netPros = new List<ProductInfo>();
         foreach (Frame target in frames)
             netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeMatch);
+        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeCombo);
 
         mIsItemEffect = true;
         mStopDropping = true;
@@ -2987,7 +2987,7 @@ public class InGameManager : MonoBehaviour
         {
             StartCoroutine(CreateMagnetTrails(TrailingPrefab, pros, null, null));
         }
-        else if (item == PurchaseItemType.MakeMatch)
+        else if (item == PurchaseItemType.MakeCombo)
         {
             List<Frame> frames = new List<Frame>();
             foreach (Product pro in pros)

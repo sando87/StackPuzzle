@@ -95,14 +95,14 @@ public class MenuInGame : MonoBehaviour
                 ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
                 ItemSlots[i].GetComponentInChildren<Image>().sprite = items[i].GetSprite();
                 ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
-                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
+                //ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
             }
             else
             {
                 ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
                 ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
                 ItemSlots[i].GetComponentInChildren<Image>().sprite = ItemEmptyImage;
-                ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
+                //ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
             }
         }
 
@@ -181,7 +181,7 @@ public class MenuInGame : MonoBehaviour
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.PowerUp:
+            case PurchaseItemType.Meteor:
                 InGameManager.InstStage.UseItemMeteor(5);
                 break;
             default: break;

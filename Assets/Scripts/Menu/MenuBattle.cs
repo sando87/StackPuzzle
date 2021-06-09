@@ -242,7 +242,7 @@ public class MenuBattle : MonoBehaviour
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.PowerUp:
+            case PurchaseItemType.Meteor:
                 InGameManager.InstPVP_Player.UseItemMeteor(5);
                 break;
             default: break;

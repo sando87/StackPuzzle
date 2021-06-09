@@ -37,6 +37,7 @@ public class MenuItemShop : MonoBehaviour
                 obj.transform.GetChild(0).GetComponent<Image>().sprite = type.GetSprite();
                 ItemCounts.Add(obj.GetComponentInChildren<TextMeshProUGUI>());
             }
+            ItemCounts[0].transform.parent.gameObject.SetActive(false);
         }
         UpdateState();
     }
