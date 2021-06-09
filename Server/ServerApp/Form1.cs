@@ -463,9 +463,9 @@ namespace ServerApp
             }
             else
             {
-                if(userA.MatchState == MatchingState.FoundOpp)
+                if(userA.MatchState == MatchingState.FoundOpp || userA.MatchState == MatchingState.FoundOppAck)
                     userA.MatchState = MatchingState.TryMatching;
-                if (userB.MatchState == MatchingState.FoundOpp)
+                if (userB.MatchState == MatchingState.FoundOpp || userB.MatchState == MatchingState.FoundOppAck)
                     userB.MatchState = MatchingState.TryMatching;
             }
         }
