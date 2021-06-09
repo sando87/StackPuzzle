@@ -19,6 +19,7 @@ public class IceBlock : MonoBehaviour
             return false;
         }
 
+        int oriCombo = ThresholdCombo;
         ThresholdCombo = 0;
         StartCoroutine(AnimShake());
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
@@ -26,7 +27,7 @@ public class IceBlock : MonoBehaviour
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
             gameObject.SetActive(false);
             IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
-            obj.SetBlockCombo(combo);
+            obj.SetBlockCombo(oriCombo);
             obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
             ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
         }));

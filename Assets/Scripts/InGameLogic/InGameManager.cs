@@ -64,7 +64,7 @@ public class InGameManager : MonoBehaviour
     private float mStartTime = 0;
     private int mProductCount = 0;
     private float mSFXVolume = 1;
-    private int mPVPFlushBlockLevel = 0;
+    private int mPVPTimerCounter = 0;
     private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
@@ -475,8 +475,9 @@ public class InGameManager : MonoBehaviour
         mProductCount -= validProducts.Length;
         StartCoroutine(DestroyProductDelay(validProducts, UserSetting.MatchReadyInterval, withLaserEffect));
 
-        int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
-        int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
+        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
+        int preAttackCount = Billboard.CurrentScore / spa;
+        int curAttackCount = (Billboard.CurrentScore + addedScore) / spa;
         Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
 
         Billboard.CurrentScore += addedScore;
@@ -544,8 +545,9 @@ public class InGameManager : MonoBehaviour
         mProductCount -= validProducts.Length;
         StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill));
 
-        int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
-        int curAttackCount = (Billboard.CurrentScore + addedScore) / UserSetting.ScorePerAttack;
+        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
+        int preAttackCount = Billboard.CurrentScore / spa;
+        int curAttackCount = (Billboard.CurrentScore + addedScore) / spa;
         Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
 
         Billboard.CurrentScore += addedScore;
@@ -1333,8 +1335,8 @@ public class InGameManager : MonoBehaviour
 
                 List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
-                Network_FlushAttacks(Serialize(rets), mPVPFlushBlockLevel);
-                StartCoroutine(FlushObstacles(rets, mPVPFlushBlockLevel));
+                Network_FlushAttacks(Serialize(rets), 1);
+                StartCoroutine(FlushObstacles(rets, 1));
                 if (products.Count < point)
                 {
                     StartFinish(false);
@@ -1628,14 +1630,14 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckFinishPvpTimer()
     {
-        mPVPFlushBlockLevel = 0;
+        mPVPTimerCounter = 0;
         float currentTimelimit = 0;
         while (true)
         {
             float remain = currentTimelimit - PlayTime;
             if (remain <= 0)
             {
-                mPVPFlushBlockLevel++;
+                mPVPTimerCounter++;
                 currentTimelimit += mStageInfo.TimeLimit;
                 remain = currentTimelimit - PlayTime;
 
@@ -2150,7 +2152,7 @@ public class InGameManager : MonoBehaviour
         mStartTime = 0;
         mProductCount = 0;
         mSFXVolume = 1;
-        mPVPFlushBlockLevel = 0;
+        mPVPTimerCounter = 0;
         mUseCombo = false;
 
         ProductIDs.Clear();
@@ -2774,8 +2776,9 @@ public class InGameManager : MonoBehaviour
 
                     int score = body.combo * body.ArrayCount;
 
-                    int preAttackCount = Billboard.CurrentScore / UserSetting.ScorePerAttack;
-                    int curAttackCount = (Billboard.CurrentScore + score) / UserSetting.ScorePerAttack;
+                    int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * InGameManager.InstPVP_Player.mPVPTimerCounter));
+                    int preAttackCount = Billboard.CurrentScore / spa;
+                    int curAttackCount = (Billboard.CurrentScore + score) / spa;
 
                     Billboard.CurrentScore += score;
                     Billboard.DestroyCount += body.ArrayCount;
