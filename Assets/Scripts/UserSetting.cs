@@ -59,6 +59,7 @@ public class UserSetting
     public static void StageUnLock(int stageNum) { UserSettingInfo.StageUnLock(stageNum); }
     public static byte GetStageStarCount(int stageNum) { return UserSettingInfo.GetStageStarCount(stageNum); }
     public static void SetStageStarCount(int stageNum, byte starCount) { UserSettingInfo.SetStageStarCount(stageNum, starCount); }
+    public static int GetHighestStageNumber() { return UserSettingInfo.GetHighestStageNumber(); }
     #endregion
 
 
@@ -280,6 +281,13 @@ class UserSettingInfo
     {
         byte cnt = mStageStarCount[stageNum - 1];
         return cnt == 0xff ? (byte)0 : cnt;
+    }
+    public int GetHighestStageNumber()
+    {
+        for (int i = 0; i < mStageStarCount.Length; ++i)
+            if (mStageStarCount[i] == 0xff)
+                return i;
+        return mStageStarCount.Length;
     }
     public void SetStageStarCount(int stageNum, byte starCount)
     {

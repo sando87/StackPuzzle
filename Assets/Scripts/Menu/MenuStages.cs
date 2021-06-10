@@ -18,11 +18,18 @@ public class MenuStages : MonoBehaviour
     public GameObject BackButton;
     public GameObject BottomGroup;
 
+    public GameObject BackgroundStageField;
+
     private int mAutoNextStageNum = 1;
 
 
     private MenuMessageBox mMenu = null;
 
+    private void Start()
+    {
+        int highestStageNum = UserSetting.GetHighestStageNumber();
+        SetViewToStage(highestStageNum);
+    }
     private void Update()
     {
         QuitProgram();
@@ -38,26 +45,24 @@ public class MenuStages : MonoBehaviour
     }
     public static void PopUp()
     {
-        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(true);
-
         Inst.gameObject.SetActive(true);
         Inst.StopCoroutine("UpdateHeartTimer");
         Inst.StartCoroutine("UpdateHeartTimer");
         Inst.StatusGroup.SetActive(true);
         Inst.BackButton.SetActive(true);
         Inst.BottomGroup.SetActive(true);
+        Inst.BackgroundStageField.SetActive(true);
     }
     public static void Hide()
     {
         Inst.gameObject.SetActive(false);
-        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
     }
     public static void HideHalf()
     {
         Inst.StatusGroup.SetActive(true);
         Inst.BackButton.SetActive(false);
         Inst.BottomGroup.SetActive(false);
-        GameObject.Find("WorldSpace").transform.Find("StageScreen").gameObject.SetActive(false);
+        Inst.BackgroundStageField.SetActive(false);
     }
 
 
@@ -197,5 +202,18 @@ public class MenuStages : MonoBehaviour
             }
         }
 #endif
+    }
+
+    private MapStage FindStage(int number)
+    {
+        ScrollRect sr = BackgroundStageField.GetComponentInChildren<ScrollRect>();
+        return sr.content.Find(number.ToString()).GetComponent<MapStage>();
+    }
+    private void SetViewToStage(int number)
+    {
+        MapStage stage = FindStage(number);
+        ScrollRect sr = BackgroundStageField.GetComponentInChildren<ScrollRect>();
+        float value = stage.transform.position.y / (sr.content.rect.height - sr.GetComponent<RectTransform>().rect.height);
+        sr.verticalNormalizedPosition = value;
     }
 }
