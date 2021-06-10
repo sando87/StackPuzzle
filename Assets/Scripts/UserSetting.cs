@@ -2,87 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.UI;
 
 public class UserSetting
 {
-    public static bool IsBotPlayer { get { return mIsBotPlayer; } }
-    public static UserInfo UserInfo { get { return mUserInfo; } }
-    public static int Latency { set { mUserInfo.NetworkLatency = value; } }
-    public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
-    public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
-    public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }
-    public static string UserName { get { return mUserInfo == null ? "" : mUserInfo.userName; } }
-    
 
-    public static DateTime FirstLaunchDate
-    {
-        get
-        {
-            string ticks = PlayerPrefs.GetString("FirstLaunchDate", DateTime.Now.Ticks.ToString());
-            return new DateTime(long.Parse(ticks));
-        }
-    }
-    public static MatchingLevel MatchLevel
-    {
-        get { return (MatchingLevel)PlayerPrefs.GetInt("matchLevel", 1); }
-        set { PlayerPrefs.SetInt("matchLevel", (int)value); }
-    }
-    public static bool Mute
-    {
-        get { return PlayerPrefs.GetInt("userMute", 0) == 1; }
-        set { PlayerPrefs.SetInt("userMute", value ? 1 : 0); }
-    }
-    public static float VolumeSFX
-    {
-        get { return PlayerPrefs.GetFloat("VolumeSFX", 1); }
-        set { PlayerPrefs.SetFloat("VolumeSFX", value); }
-    }
-    public static float VolumeBackground
-    {
-        get { return PlayerPrefs.GetFloat("VolumeBackground", 1); }
-        set { PlayerPrefs.SetFloat("VolumeBackground", value); }
-    }
-    public static int TutorialNumber
-    {
-        get { return PlayerPrefs.GetInt("TutorialNumber", 1); }
-        set { PlayerPrefs.SetInt("TutorialNumber", value); }
-    }
-    public static DateTime GetLastExcuteTime(AdsType type)
-    {
-        return new DateTime(long.Parse(PlayerPrefs.GetString(type.ToString(), "0")));
-    }
-    public static void SetLastExcuteTime(AdsType type, DateTime time)
-    {
-        PlayerPrefs.SetString(type.ToString(), time.Ticks.ToString());
-    }
-
-    public static bool StageIsLocked(int stageNum)
-    {
-        byte cnt = StageStarCount[stageNum - 1];
-        return cnt == 0xff;
-    }
-    public static void StageUnLock(int stageNum)
-    {
-        byte cnt = StageStarCount[stageNum - 1];
-        if (cnt == 0xff)
-            SetStageStarCount(stageNum, 0);
-    }
-    public static byte GetStageStarCount(int stageNum)
-    {
-        byte cnt = StageStarCount[stageNum - 1];
-        return cnt == 0xff ? (byte)0 : cnt;
-    }
-    public static void SetStageStarCount(int stageNum, byte starCount)
-    {
-        StageStarCount[stageNum - 1] = starCount;
-        byte[] encryptInfo = Utils.Encrypt(StageStarCount);
-        string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
-        PlayerPrefs.SetString("StageStarCount", hexStr);
-    }
-
+    #region Game System Config Values
     public const int NameLengthMin = 3;
     public const int StageTotalCount = 100;
     public const float SameSkillInterval = 0.3f; //SameSkill2 매칭 간격
@@ -104,34 +32,47 @@ public class UserSetting
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
+    private const string UserInfoVersion = "ui1";
+    #endregion
 
-    private static bool mIsBotPlayer = false;
-    private static UserInfo mUserInfo = null;
-    private static byte[] mStageStarCount = null;
-    private static byte[] StageStarCount
+
+    #region UserSetting Information in Local
+    private static UserSettingInfo mUserSettingInfo = null;
+    private static UserSettingInfo UserSettingInfo
     {
         get
         {
-            if (mStageStarCount == null)
-            {
-                if (PlayerPrefs.HasKey("StageStarCount"))
-                {
-                    string hexStr = PlayerPrefs.GetString("StageStarCount");
-                    byte[] bytes = Utils.HexStringToByteArray(hexStr);
-                    byte[] originData = Utils.Decrypt(bytes);
-                    mStageStarCount = originData;
-                }
-                else
-                {
-                    mStageStarCount = new byte[StageTotalCount];
-                    for (int i = 0; i < StageTotalCount; ++i)
-                        mStageStarCount[i] = 0xff; //lock
-                    SetStageStarCount(1, 0);
-                }
-            }
-            return mStageStarCount;
+            if (mUserSettingInfo == null)
+                mUserSettingInfo = UserSettingInfo.Load();
+            return mUserSettingInfo;
         }
     }
+    public static DateTime FirstLaunchDate { get { return UserSettingInfo.FirstLaunchDate; } }
+    public static MatchingLevel MatchLevel { get { return UserSettingInfo.MatchLevel; } set { UserSettingInfo.MatchLevel = value; } }
+    public static bool Mute { get { return UserSettingInfo.Mute; } set { UserSettingInfo.Mute = value; } }
+    public static float VolumeSFX { get { return UserSettingInfo.VolumeSFX; } set { UserSettingInfo.VolumeSFX = value; } }
+    public static float VolumeBackground { get { return UserSettingInfo.VolumeBackground; } set { UserSettingInfo.VolumeBackground = value; } }
+    public static int TutorialNumber { get { return UserSettingInfo.TutorialNumber; } set { UserSettingInfo.TutorialNumber = value; } }
+    public static DateTime GetLastExcuteTime(AdsType type) { return UserSettingInfo.GetLastExcuteTime(type); }
+    public static void SetLastExcuteTime(AdsType type, DateTime time) { UserSettingInfo.SetLastExcuteTime(type, time); }
+    public static bool StageIsLocked(int stageNum) { return UserSettingInfo.StageIsLocked(stageNum); }
+    public static void StageUnLock(int stageNum) { UserSettingInfo.StageUnLock(stageNum); }
+    public static byte GetStageStarCount(int stageNum) { return UserSettingInfo.GetStageStarCount(stageNum); }
+    public static void SetStageStarCount(int stageNum, byte starCount) { UserSettingInfo.SetStageStarCount(stageNum, starCount); }
+    #endregion
+
+
+    #region UserInfo Network
+    private static bool mIsBotPlayer = false;
+    private static UserInfo mUserInfo = null;
+
+    public static bool IsBotPlayer { get { return mIsBotPlayer; } }
+    public static UserInfo UserInfo { get { return mUserInfo; } }
+    public static int Latency { set { mUserInfo.NetworkLatency = value; } }
+    public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
+    public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
+    public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }
+    public static string UserName { get { return mUserInfo == null ? "" : mUserInfo.userName; } }
 
     public static void Initialize()
     {
@@ -178,18 +119,9 @@ public class UserSetting
 
     public static UserInfo LoadUserInfo()
     {
-        if(PlayerPrefs.HasKey("userPk"))
+        if(PlayerPrefs.HasKey(UserInfoVersion))
         {
-            UserInfo info = new UserInfo();
-            info.userPk = PlayerPrefs.GetInt("userPk");
-            info.userName = PlayerPrefs.GetString("userName");
-            info.score = PlayerPrefs.GetInt("score");
-            info.win = PlayerPrefs.GetInt("win");
-            info.lose = PlayerPrefs.GetInt("lose");
-            info.total = PlayerPrefs.GetInt("total");
-            info.rankingRate = PlayerPrefs.GetFloat("rankingRate");
-            info.deviceName = PlayerPrefs.GetString("deviceName");
-            info.maxLeague = (MatchingLevel)PlayerPrefs.GetInt("maxLeague");
+            UserInfo info = UnityUtils.LoadFromRegedit<UserInfo>(UserInfoVersion);
             return info;
         }
         else
@@ -209,15 +141,7 @@ public class UserSetting
         }
         else
         {
-            PlayerPrefs.SetInt("userPk", info.userPk);
-            PlayerPrefs.SetString("userName", info.userName);
-            PlayerPrefs.SetInt("score", info.score);
-            PlayerPrefs.SetInt("win", info.win);
-            PlayerPrefs.SetInt("lose", info.lose);
-            PlayerPrefs.SetInt("total", info.total);
-            PlayerPrefs.SetFloat("rankingRate", info.rankingRate);
-            PlayerPrefs.SetString("deviceName", info.deviceName);
-            PlayerPrefs.SetInt("maxLeague", (int)info.maxLeague);
+            UnityUtils.SaveToRegedit(UserInfoVersion, info);
         }
         return info;
     }
@@ -276,5 +200,99 @@ public class UserSetting
 
         }
     }
+    #endregion
 
+}
+
+class UserSettingInfo
+{
+    private const string KeyVersion = "usi1";
+
+    [SerializeField] private Int64 mFirstLaunchDate = 0;
+    [SerializeField] private MatchingLevel mMatchLevel = MatchingLevel.Bronze;
+    [SerializeField] private bool mMute = false;
+    [SerializeField] private float mVolumeSFX = 1;
+    [SerializeField] private float mVolumeBackground = 1;
+    [SerializeField] private int mTutorialNumber = 1;
+    [SerializeField] private Int64[] mAdsLastShowTime = null;
+    [SerializeField] private byte[] mStageStarCount = null;
+
+    public UserSettingInfo()
+    {
+        mFirstLaunchDate = DateTime.Now.Ticks;
+        mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
+        mStageStarCount = new byte[UserSetting.StageTotalCount];
+
+        for (int i = 0; i < mStageStarCount.Length; ++i)
+            mStageStarCount[i] = 0xff;
+        mStageStarCount[0] = 0;
+    }
+
+    public DateTime FirstLaunchDate
+    {
+        get { return new DateTime(mFirstLaunchDate); }
+    }
+    public MatchingLevel MatchLevel
+    {
+        get { return mMatchLevel; }
+        set { mMatchLevel = value; Save(); }
+    }
+    public bool Mute
+    {
+        get { return mMute; }
+        set { mMute = value; Save(); }
+    }
+    public float VolumeSFX
+    {
+        get { return mVolumeSFX; }
+        set { mVolumeSFX = value; Save(); }
+    }
+    public float VolumeBackground
+    {
+        get { return mVolumeBackground; }
+        set { mVolumeBackground = value; Save(); }
+    }
+    public int TutorialNumber
+    {
+        get { return mTutorialNumber; }
+        set { mTutorialNumber = value; Save(); }
+    }
+    public DateTime GetLastExcuteTime(AdsType type)
+    {
+        return new DateTime(mAdsLastShowTime[(int)type]);
+    }
+    public void SetLastExcuteTime(AdsType type, DateTime time)
+    {
+        mAdsLastShowTime[(int)type] = time.Ticks;
+        Save();
+    }
+    public bool StageIsLocked(int stageNum)
+    {
+        return mStageStarCount[stageNum - 1] == 0xff;
+    }
+    public void StageUnLock(int stageNum)
+    {
+        byte cnt = mStageStarCount[stageNum - 1];
+        if (cnt == 0xff)
+            SetStageStarCount(stageNum, 0);
+    }
+    public byte GetStageStarCount(int stageNum)
+    {
+        byte cnt = mStageStarCount[stageNum - 1];
+        return cnt == 0xff ? (byte)0 : cnt;
+    }
+    public void SetStageStarCount(int stageNum, byte starCount)
+    {
+        mStageStarCount[stageNum - 1] = starCount;
+        Save();
+    }
+
+    public static UserSettingInfo Load()
+    {
+        return UnityUtils.LoadFromRegedit<UserSettingInfo>(KeyVersion);
+    }
+    private void Save()
+    {
+        UnityUtils.SaveToRegedit(KeyVersion, this);
+    }
 }

@@ -299,6 +299,42 @@ public class UnityUtils
         EventEnd?.Invoke();
     }
 
+
+    public static T LoadFromRegedit<T>(string key) where T : new()
+    {
+        try
+        {
+            if (PlayerPrefs.HasKey(key))
+            {
+                string hexStr = PlayerPrefs.GetString(key);
+                byte[] bytes = Utils.HexStringToByteArray(hexStr);
+                byte[] originData = Utils.Decrypt(bytes);
+                string jsonStr = System.Text.Encoding.Default.GetString(originData);
+                T ret = JsonUtility.FromJson<T>(jsonStr);
+                return ret;
+            }
+            else
+            {
+                T ret = new T();
+                return ret;
+            }
+        }
+        catch (Exception ex) { LOG.warn(ex.Message); }
+        return default;
+    }
+    public static void SaveToRegedit(string key, object obj)
+    {
+        try
+        {
+            string jsonStr = JsonUtility.ToJson(obj, true);
+            byte[] oriData = System.Text.Encoding.Default.GetBytes(jsonStr);
+            byte[] encryptData = Utils.Encrypt(oriData);
+            string hexStr = Utils.ByteArrayToHexString(encryptData);
+            PlayerPrefs.SetString(key, hexStr);
+        }
+        catch (Exception ex) { LOG.warn(ex.Message); }
+    }
+
 }
 
 //c# 확장 메서드 방식

@@ -162,6 +162,10 @@ public class Utils
                          .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                          .ToArray();
     }
+    public static string ByteArrayToHexString(byte[] data)
+    {
+        return BitConverter.ToString(data).Replace("-", string.Empty);
+    }
     public static byte[] Encrypt(byte[] input)
     {
         byte[] output = new byte[input.Length];
