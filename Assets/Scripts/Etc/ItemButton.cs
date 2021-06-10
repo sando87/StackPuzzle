@@ -6,15 +6,20 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ItemButton : Button
+public class ItemButton : MonoBehaviour
 {
+    [SerializeField] private Sprite BtnBgImgA = null;
+    [SerializeField] private Sprite BtnBgImgB = null;
+    [SerializeField] private Image ItemImg = null;
+    [SerializeField] private Image ItemEmptyImg = null;
+    [SerializeField] private TextMeshProUGUI ItemCount = null;
+
     private PurchaseItemType ItemType = PurchaseItemType.None;
 
     public void SetItem(PurchaseItemType item)
     {
         ItemType = item;
-        transform.GetChild(0).GetComponent<Image>().sprite = ItemType.GetSprite();
-        transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = ItemType.GetCount().ToString();
+        UpdateItem();
     }
 
     public PurchaseItemType GetItem()
@@ -24,15 +29,33 @@ public class ItemButton : Button
 
     public void UpdateItem()
     {
-        transform.GetChild(0).GetComponent<Image>().sprite = ItemType.GetSprite();
-        transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = ItemType.GetCount().ToString();
+        if (ItemType == PurchaseItemType.None)
+        {
+            GetComponent<Image>().sprite = BtnBgImgB;
+            ItemImg.gameObject.SetActive(false);
+            ItemEmptyImg.gameObject.SetActive(true);
+            ItemCount.gameObject.SetActive(false);
+        }
+        else
+        {
+            GetComponent<Image>().sprite = BtnBgImgA;
+            ItemImg.gameObject.SetActive(true);
+            ItemEmptyImg.gameObject.SetActive(false);
+            ItemCount.gameObject.SetActive(true);
+
+            ItemImg.sprite = ItemType.GetSprite();
+            ItemCount.text = ItemType.GetCount().ToString();
+        }
     }
 
     public void SetEnable(bool enable)
     {
-        transform.GetChild(0).GetComponent<Image>().color = enable ? Color.white : Color.gray;
-        transform.GetChild(0).GetComponent<Image>().sprite = ItemType.GetSprite();
-        transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = ItemType.GetCount().ToString();
-        enabled = enable;
+        ItemImg.color = enable ? Color.white : Color.gray;
+        GetComponent<Button>().enabled = enable;
+    }
+
+    public void AddEvent(Action<PurchaseItemType> eventClick)
+    {
+        GetComponent<Button>().onClick.AddListener(() => eventClick(ItemType));
     }
 }

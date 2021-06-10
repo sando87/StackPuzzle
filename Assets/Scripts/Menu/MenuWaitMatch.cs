@@ -139,18 +139,9 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         MenuItemSelector.PopUp((item) =>
         {
-            if(item.GetCount() > 0)
-            {
-                curBtn.SetItem(item);
-                int idx = curBtn.transform.GetSiblingIndex();
-                UserSetting.UserInfo.PvpItems[idx] = item;
-            }
-            else
-            {
-                curBtn.SetItem(PurchaseItemType.None);
-                int idx = curBtn.transform.GetSiblingIndex();
-                UserSetting.UserInfo.PvpItems[idx] = PurchaseItemType.None;
-            }
+            curBtn.SetItem(item);
+            int idx = curBtn.transform.GetSiblingIndex();
+            UserSetting.UserInfo.PvpItems[idx] = item;
         });
     }
 
@@ -328,17 +319,9 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
         {
+            btn.UpdateItem();
             int idx = btn.transform.GetSiblingIndex();
-            if (btn.GetItem().GetCount() > 0)
-            {
-                btn.UpdateItem();
-                UserSetting.UserInfo.PvpItems[idx] = btn.GetItem();
-            }
-            else
-            {
-                btn.SetItem(PurchaseItemType.None);
-                UserSetting.UserInfo.PvpItems[idx] = PurchaseItemType.None;
-            }
+            UserSetting.UserInfo.PvpItems[idx] = btn.GetItem();
         }
         UpdateLeagueLevelButtons();
     }

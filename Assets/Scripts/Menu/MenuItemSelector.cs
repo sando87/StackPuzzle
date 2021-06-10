@@ -29,16 +29,14 @@ public class MenuItemSelector : MonoBehaviour
         {
             PurchaseItemType type = (PurchaseItemType)i;
             slots[i].SetItem(type);
-            slots[i].onClick.AddListener(OnSelectItem);
+            slots[i].AddEvent(OnSelectItem);
         }
     }
 
-    public void OnSelectItem()
+    public void OnSelectItem(PurchaseItemType item)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
-        PurchaseItemType type = curBtn.GetItem();
-        EventSelectItem?.Invoke(type);
+        EventSelectItem?.Invoke(item);
         Destroy(gameObject);
     }
     public void OnCancle()

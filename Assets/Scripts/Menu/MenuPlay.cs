@@ -58,10 +58,7 @@ public class MenuPlay : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
         {
-            if (btn.GetItem().GetCount() > 0)
-                btn.UpdateItem();
-            else
-                btn.SetItem(PurchaseItemType.None);
+            btn.UpdateItem();
         }
     }
 
@@ -138,10 +135,7 @@ public class MenuPlay : MonoBehaviour
         ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         MenuItemSelector.PopUp((item) =>
         {
-            if (item.GetCount() > 0)
-                curBtn.SetItem(item);
-            else
-                curBtn.SetItem(PurchaseItemType.None);
+            curBtn.SetItem(item);
         });
     }
 

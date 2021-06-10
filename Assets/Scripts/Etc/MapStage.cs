@@ -12,7 +12,7 @@ public class MapStage : MonoBehaviour
     [SerializeField] private Image Star1 = null;
     [SerializeField] private Image Star2 = null;
     [SerializeField] private Image Star3 = null;
-    [SerializeField] private TextMeshPro NumberText = null;
+    [SerializeField] private Text NumberText = null;
 
     public int Number { get { return int.Parse(name); } }
     public bool Locked { get { return Lock.gameObject.activeSelf; } }
@@ -54,6 +54,7 @@ public class MapStage : MonoBehaviour
         byte starCount = UserSetting.GetStageStarCount(Number);
 
         NumberText.text = Number.ToString();
+        NumberText.gameObject.SetActive(!isLocked);
         Star1.gameObject.SetActive(starCount >= 1 ? true : false);
         Star2.gameObject.SetActive(starCount >= 2 ? true : false);
         Star3.gameObject.SetActive(starCount >= 3 ? true : false);
