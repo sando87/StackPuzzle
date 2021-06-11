@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 
@@ -10,7 +11,6 @@ public class Frame : MonoBehaviour
     private int mBushIndex;
 
     public Sprite[] Covers;
-    public Sprite[] BushImages;
     public SpriteRenderer[] Borders;
     public SpriteRenderer CoverRenderer;
     public GameObject BreakStonesParticle;
@@ -126,16 +126,16 @@ public class Frame : MonoBehaviour
         if (!IsBushed)
             return;
 
-        int limitCombo = (mBushIndex - 1) * 3;
-        if (combo < limitCombo)
+        if (combo < mBushIndex)
             return;
 
         mBushIndex = 0;
-        BushObject.GetComponent<Animator>().enabled = false;
-        BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
+        BushObject.GetComponentInChildren<Animator>().enabled = false;
+        BushObject.GetComponent<SpriteRenderer>().enabled = false;
+        BushObject.transform.GetChild(1).gameObject.SetActive(false);
         BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBush);
-        Invoke("InitBush", 2.0f);
+        Destroy(BushObject, 3.0f);
         EventBreakBush?.Invoke(this);
     }
     public void TouchBush()
@@ -143,16 +143,15 @@ public class Frame : MonoBehaviour
         if (IsBushed)
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectTouchBush);
-            BushObject.GetComponent<Animator>().enabled = true;
-            BushObject.GetComponent<Animator>().Play("bush", -1, 0);
+            BushObject.GetComponentInChildren<Animator>().enabled = true;
+            BushObject.GetComponentInChildren<Animator>().Play("bush", -1, 0);
         }
     }
     private void InitBush()
     {
-        BushObject.GetComponent<Animator>().enabled = false;
-        BushObject.GetComponent<SpriteRenderer>().sprite = BushImages[mBushIndex];
-        BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(false);
         BushObject.SetActive(IsBushed);
+        if (IsBushed)
+            BushObject.GetComponentInChildren<TextMeshPro>().text = mBushIndex == 1 ? "" : mBushIndex.ToString();
     }
 
     public void CreateComboTextEffect(int combo, ProductColor color)
