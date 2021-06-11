@@ -25,7 +25,6 @@ public class MenuPlay : MonoBehaviour
         menuPlay.SetActive(true);
         MenuPlay menu = menuPlay.GetComponent<MenuPlay>();
         menu.UpdateUIState(info);
-        StageManager.Inst.gameObject.SetActive(false);
 
         if (UserSetting.IsBotPlayer)
             menu.StartCoroutine(menu.AutoStart());
@@ -65,7 +64,6 @@ public class MenuPlay : MonoBehaviour
     public void OnClose()
     {
         gameObject.SetActive(false);
-        StageManager.Inst.gameObject.SetActive(true);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
@@ -84,7 +82,6 @@ public class MenuPlay : MonoBehaviour
         InGameManager.InstStage.InitProducts();
         MenuInGame.PopUp(mStageInfo);
         MenuStages.Hide();
-        StageManager.Inst.Activate(false);
         gameObject.SetActive(false);
 
         if (!UserSetting.IsBotPlayer)

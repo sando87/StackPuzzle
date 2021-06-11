@@ -204,16 +204,22 @@ public class MenuStages : MonoBehaviour
 #endif
     }
 
-    private MapStage FindStage(int number)
+    public MapStage FindStage(int number)
     {
         ScrollRect sr = BackgroundStageField.GetComponentInChildren<ScrollRect>();
-        return sr.content.Find(number.ToString()).GetComponent<MapStage>();
+        MapStage[] stages = sr.content.GetComponentsInChildren<MapStage>();
+        foreach (MapStage stage in stages)
+            if (stage.Number == number)
+                return stage;
+        return null;
     }
-    private void SetViewToStage(int number)
+    public void SetViewToStage(int number)
     {
         MapStage stage = FindStage(number);
         ScrollRect sr = BackgroundStageField.GetComponentInChildren<ScrollRect>();
-        float value = stage.transform.position.y / (sr.content.rect.height - sr.GetComponent<RectTransform>().rect.height);
+        float lowY = sr.content.GetChild(0).transform.position.y;
+        float highY = sr.content.GetChild(sr.content.transform.childCount - 1).transform.position.y;
+        float value = (stage.transform.position.y - lowY) / (highY - lowY);
         sr.verticalNormalizedPosition = value;
     }
 }

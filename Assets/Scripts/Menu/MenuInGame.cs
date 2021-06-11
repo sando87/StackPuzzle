@@ -220,11 +220,11 @@ public class MenuInGame : MonoBehaviour
             float limitRate = InGameManager.InstStage.LimitRate;
             int starCount = limitRate < 0.6f ? 3 : (limitRate < 0.8f ? 2 : 1);
             bool isFirstThreeStar = starCount == 3 && UserSetting.GetStageStarCount(mStageInfo.Num) < 3;
-            Stage currentStage = StageManager.Inst.GetStage(mStageInfo.Num);
+            MapStage currentStage = MenuStages.Inst.FindStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
 
             bool isFirstClear = false;
-            Stage nextStage = StageManager.Inst.GetStage(mStageInfo.Num + 1);
+            MapStage nextStage = MenuStages.Inst.FindStage(mStageInfo.Num + 1);
             if (nextStage != null)
             {
                 isFirstClear = nextStage.Locked;

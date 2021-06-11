@@ -30,7 +30,6 @@ public class MenuFailed : MonoBehaviour
         gameObject.SetActive(false);
         MenuInGame.Hide();
         MenuStages.PopUp();
-        StageManager.Inst.Activate(true);
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
