@@ -69,7 +69,6 @@ public class MenuInGame : MonoBehaviour
         LevelCompleted.gameObject.SetActive(false);
         LevelFailed.gameObject.SetActive(false);
         Limit.text = info.MoveLimit.ToString();
-        ScoreBarObj.ScorePerBar = UserSetting.ScorePerBar;
         if (info.GoalTypeEnum == StageGoalType.Score)
         {
             TargetType.gameObject.SetActive(false);
@@ -84,7 +83,8 @@ public class MenuInGame : MonoBehaviour
             TargetValue.text = info.GoalValue.ToString();
         }
         ComboNumber.Clear();
-        ScoreBarObj.Clear();
+
+        ScoreBarObj.Init(info.StarPoint);
 
         PurchaseItemType[] items = MenuPlay.Inst().GetSelectedItems();
         for(int i = 0; i < ItemSlots.Length; ++i)
@@ -218,7 +218,7 @@ public class MenuInGame : MonoBehaviour
         {
             //int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
             float limitRate = InGameManager.InstStage.LimitRate;
-            int starCount = limitRate < 0.6f ? 3 : (limitRate < 0.8f ? 2 : 1);
+            int starCount = ScoreBarObj.CurrentStarCount;
             bool isFirstThreeStar = starCount == 3 && UserSetting.GetStageStarCount(mStageInfo.Num) < 3;
             MapStage currentStage = MenuStages.Inst.FindStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);

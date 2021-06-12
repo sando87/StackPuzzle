@@ -7,28 +7,31 @@ using UnityEngine.UI;
 public class ScoreBar : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI TotalScore = null;
-    [SerializeField] private TextMeshProUGUI StarCount = null;
+    [SerializeField] private GameObject StarA = null;
+    [SerializeField] private GameObject StarB = null;
+    [SerializeField] private GameObject StarC = null;
     [SerializeField] private Slider MainBar = null;
-    [SerializeField] private Slider EffectBar = null;
     [SerializeField] private GameObject GroupLine = null;
     [SerializeField] private GameObject SplitBarPrefab = null;
     [SerializeField] private GameObject ValueEndPos = null;
 
     //private int ScorePerBar = UserSetting.ScorePerBar;
-    public int ScorePerBar { get; set; } = UserSetting.ScorePerBar;
+    public int ScorePerBar { get; private set; } = UserSetting.ScorePerBar;
     public int CurrentScore { get; private set; } = 0;
     public Vector3 EndPosition { get { return ValueEndPos.transform.position; } }
+    public int CurrentStarCount { get { return StarC.activeSelf ? 3 : (StarB.activeSelf ? 2 : (StarA.activeSelf ? 1 : 0)); } }
 
-    public void Clear()
+    public void Init(int scorePerBar)
     {
+        ScorePerBar = scorePerBar;
         CurrentScore = 0;
         MainBar.normalizedValue = 0;
+        StarA.SetActive(false);
+        StarB.SetActive(false);
+        StarC.SetActive(false);
 
         if (TotalScore != null)
             TotalScore.text = CurrentScore.ToString();
-
-        if (StarCount != null)
-            StarCount.text = "0";
 
         InitSplitBar();
     }
@@ -37,14 +40,6 @@ public class ScoreBar : MonoBehaviour
     public void SetScore(int score)
     {
         score = Mathf.Max(0, score);
-        if (CurrentScore / ScorePerBar != score / ScorePerBar)
-        {
-            Animation anim = GetComponentInChildren<Animation>();
-            if (anim != null)
-                anim.Play();
-        }
-            
-
         CurrentScore = score;
         UpdateScoreDisplay();
     }
@@ -54,33 +49,12 @@ public class ScoreBar : MonoBehaviour
         if(TotalScore != null)
             TotalScore.text = CurrentScore.ToString();
 
-        float rate = GetRate(CurrentScore);
-        MainBar.normalizedValue = rate;
+        float rate = CurrentScore / (float)ScorePerBar;;
+        MainBar.normalizedValue = Mathf.Min(1.0f, rate);
 
-        UpdateStarCount();
-    }
-
-    private float GetRate(int score)
-    {
-        return (score % ScorePerBar) / (float)ScorePerBar;
-    }
-    private IEnumerator AnimateRate(float fromRate)
-    {
-        float targetRate = GetRate(CurrentScore);
-        EffectBar.gameObject.SetActive(true);
-        EffectBar.normalizedValue = targetRate;
-        float time = 0;
-        float duration = 0.2f;
-        float term = targetRate - fromRate;
-        while (time < duration)
-        {
-            float rate = UnityUtils.AccelPlus(time, duration);
-            float curRate = fromRate + term * rate;
-            MainBar.normalizedValue = curRate;
-            time += Time.deltaTime;
-            yield return null;
-        }
-        EffectBar.gameObject.SetActive(false);
+        StarA.SetActive(rate >= 0.5f);
+        StarB.SetActive(rate >= 0.75f);
+        StarC.SetActive(rate >= 1);
     }
 
     private void InitSplitBar()
@@ -96,15 +70,6 @@ public class ScoreBar : MonoBehaviour
             RectTransform tr = subBar.GetComponent<RectTransform>();
             tr.anchoredPosition = new Vector2(gap * (i + 1), 0);
         }
-    }
-
-    private void UpdateStarCount()
-    {
-        if (StarCount == null)
-            return;
-
-        int starCount = CurrentScore / ScorePerBar;
-        StarCount.text = starCount.ToString();
     }
 
 }

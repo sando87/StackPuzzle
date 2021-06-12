@@ -2,6 +2,7 @@ GoalType,Score
 GoalValue,18
 MoveLimit,15
 ColorCount,6
+StarPoint,30
 RandomSeed,1155532165
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0

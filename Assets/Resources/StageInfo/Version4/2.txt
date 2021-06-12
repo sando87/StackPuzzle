@@ -2,6 +2,7 @@ GoalType,Score
 GoalValue,100
 MoveLimit,25
 ColorCount,6
+StarPoint,300
 RandomSeed,1184634566
 #Reward,gold/100
 #Reward,dia/5

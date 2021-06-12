@@ -31,6 +31,7 @@ public class StageInfo
     public int MoveLimit = 0;
     public int TimeLimit = 0;
     public float ColorCount = 0;
+    public int StarPoint = 50;
     public int XCount { get { return BoardInfo[0].Length; } }
     public int YCount { get { return BoardInfo.Count; } }
     public MatchingLevel Difficulty { get; private set; }
@@ -99,8 +100,7 @@ public class StageInfo
                 case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
                 case "RandomSeed": info.RandomSeed = int.Parse(tokens[1]); break;
-                //case "XCount": info.XCount = int.Parse(tokens[1]); break;
-                //case "YCount": info.YCount = int.Parse(tokens[1]); RowIndex = info.YCount; break;
+                case "StarPoint": info.StarPoint = int.Parse(tokens[1]); break;
                 case "Items": info.Items = Parse(tokens[1]); break;
                 case "Reward": info.Rewards.Add(tokens[1]); break;
                 case "Rows": info.ParseRow(tokens[1]); break;
@@ -277,6 +277,7 @@ public class StageInfo
             + TimeLimit + ","
             + ColorCount + ","
             + RandomSeed + ","
+            + StarPoint + ","
             + XCount + ","
             + YCount + ","
             + StageInfo.ItemToString(Items);
@@ -382,13 +383,10 @@ public class StageInfo
         string fullname = GetPath() + stageNum + ".txt";
         string defaultData = 
         "GoalType,Score\r\n" +
-        "GoalValue,3\r\n" +
+        "GoalValue,300\r\n" +
         "MoveLimit,25\r\n" +
         "ColorCount,5.0\r\n" +
-        "RandomSeed,-1\r\n" +
-        "Items,4:OneMore/5:KeepCombo/6:SameColor/-1:SameColor\r\n" +
-        "XCount,7\r\n" +
-        "YCount,7\r\n" +
+        "StarPoint,50\r\n" +
         "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
         "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
         "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
