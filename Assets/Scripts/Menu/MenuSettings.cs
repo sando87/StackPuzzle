@@ -124,4 +124,9 @@ public class MenuSettings : MonoBehaviour
         float rate = (float)dd / Utils.ScorePerLevel;
         ExpBar.normalizedValue = rate;
     }
+
+    public void OnBtnTerms()
+    {
+        MenuTermsAndConditions.PopUp();
+    }
 }

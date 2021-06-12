@@ -47,6 +47,7 @@ public class UserSetting
             return mUserSettingInfo;
         }
     }
+    public static bool IsTermsAgreement { get { return UserSettingInfo.IsTermsAgreement; } set { UserSettingInfo.IsTermsAgreement = value; } }
     public static DateTime FirstLaunchDate { get { return UserSettingInfo.FirstLaunchDate; } }
     public static MatchingLevel MatchLevel { get { return UserSettingInfo.MatchLevel; } set { UserSettingInfo.MatchLevel = value; } }
     public static bool Mute { get { return UserSettingInfo.Mute; } set { UserSettingInfo.Mute = value; } }
@@ -207,8 +208,9 @@ public class UserSetting
 
 class UserSettingInfo
 {
-    private const string KeyVersion = "usi1";
+    private const string KeyVersion = "usi2";
 
+    [SerializeField] private bool mIsTermsAgreement = false;
     [SerializeField] private Int64 mFirstLaunchDate = 0;
     [SerializeField] private MatchingLevel mMatchLevel = MatchingLevel.Bronze;
     [SerializeField] private bool mMute = false;
@@ -220,6 +222,7 @@ class UserSettingInfo
 
     public UserSettingInfo()
     {
+        mIsTermsAgreement = false;
         mFirstLaunchDate = DateTime.Now.Ticks;
         mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
         mStageStarCount = new byte[UserSetting.StageTotalCount];
@@ -229,6 +232,11 @@ class UserSettingInfo
         mStageStarCount[0] = 0;
     }
 
+    public bool IsTermsAgreement
+    {
+        get { return mIsTermsAgreement; }
+        set { mIsTermsAgreement = value; Save(); }
+    }
     public DateTime FirstLaunchDate
     {
         get { return new DateTime(mFirstLaunchDate); }

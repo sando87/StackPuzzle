@@ -23,6 +23,21 @@ public class MenuTitle : MonoBehaviour
         if (cig != null)
             cig.Init();
 
+        if (UserSetting.IsTermsAgreement)
+        {
+            InitOnAwake();
+        }
+        else
+        {
+            MenuTermsAndConditions.PopUp(() =>
+            {
+                InitOnAwake();
+            });
+        }
+    }
+
+    private void InitOnAwake()
+    {
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         LOG.echo("Start App");
 
