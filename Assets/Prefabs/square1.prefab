@@ -264,10 +264,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Covers:
   - {fileID: 0}
-  - {fileID: 21300000, guid: 9cb8e8fa3192a174995966b79664d8f6, type: 3}
-  - {fileID: 21300000, guid: b26dfd500366ebb449adb5b4b2d39544, type: 3}
-  - {fileID: 21300000, guid: acb503f9f2289d949ba8b58e23101cb6, type: 3}
-  - {fileID: 21300000, guid: af05f1ac1e09c3544843dbde6ef997e5, type: 3}
+  - {fileID: 21300000, guid: c5efb1e9342418d4ebb8a18ab4a13b43, type: 3}
+  - {fileID: 21300000, guid: 0c491ff67f8330145ac880697c19afb8, type: 3}
+  - {fileID: 21300000, guid: a3c345b0270feae42a7988ec0bdc8bcf, type: 3}
+  - {fileID: 21300000, guid: b236e7ad9903593459cb9bfdd08198be, type: 3}
   Borders:
   - {fileID: 2802684306425416562}
   - {fileID: 1724095900784286155}
@@ -467,7 +467,7 @@ Transform:
   m_GameObject: {fileID: 7022187097946315502}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -1.2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_Children: []
   m_Father: {fileID: 7467327917572669046}
   m_RootOrder: 0
