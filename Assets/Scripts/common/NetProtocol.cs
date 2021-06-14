@@ -214,17 +214,13 @@ public class SearchOpponentInfo
     public int RoomNumber = -1;
 }
 
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
-public class PVPInfo
+public class PVPInfo : ByteSerializer
 {
     public PVPCommand cmd;
     public int oppUserPk;
     public int XCount;
     public int YCount;
     public int combo;
-    public int idxX;
-    public int idxY;
-    public int newDropCount;
     public int remainTime;
     public float colorCount;
     public bool withLaserEffect;
@@ -233,8 +229,68 @@ public class PVPInfo
     public ProductSkill skill;
     public SwipeDirection dir;
     public PurchaseItemType item;
-    public UserInfo userInfo;
-    public int ArrayCount;
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
-    public ProductInfo[] products = new ProductInfo[100];
+    public UserInfo userInfo = new UserInfo();
+
+    public ProductInfo[] pros { get; set; }
+    public int ArrayCount { get { return pros == null ? 0 : pros.Length; } }
+
+    public byte[] Serialize()
+    {
+        List<byte> rets = new List<byte>();
+        rets.AddRange(BitConverter.GetBytes((int)cmd));
+        rets.AddRange(BitConverter.GetBytes(oppUserPk));
+        rets.AddRange(BitConverter.GetBytes(XCount));
+        rets.AddRange(BitConverter.GetBytes(YCount));
+        rets.AddRange(BitConverter.GetBytes(combo));
+        rets.AddRange(BitConverter.GetBytes(remainTime));
+        rets.AddRange(BitConverter.GetBytes(colorCount));
+        rets.AddRange(BitConverter.GetBytes(withLaserEffect));
+        rets.AddRange(BitConverter.GetBytes(success));
+        rets.AddRange(BitConverter.GetBytes(oppDisconnected));
+        rets.AddRange(BitConverter.GetBytes((int)skill));
+        rets.AddRange(BitConverter.GetBytes((int)dir));
+        rets.AddRange(BitConverter.GetBytes((int)item));
+        rets.AddRange(Utils.Serialize(userInfo));
+
+        if (pros != null)
+        {
+            foreach (ProductInfo info in pros)
+                rets.AddRange(Utils.Serialize(info));
+        }
+        return rets.ToArray();
+    }
+
+    public void Deserialize(byte[] bytes)
+    {
+        try
+        {
+            int off = 0;
+            cmd = (PVPCommand)BitConverter.ToInt32(bytes, off); off += 4;
+            oppUserPk = BitConverter.ToInt32(bytes, off); off += 4;
+            XCount = BitConverter.ToInt32(bytes, off); off += 4;
+            YCount = BitConverter.ToInt32(bytes, off); off += 4;
+            combo = BitConverter.ToInt32(bytes, off); off += 4;
+            remainTime = BitConverter.ToInt32(bytes, off); off += 4;
+            colorCount = BitConverter.ToSingle(bytes, off); off += 4;
+            withLaserEffect = BitConverter.ToBoolean(bytes, off); off += 1;
+            success = BitConverter.ToBoolean(bytes, off); off += 1;
+            oppDisconnected = BitConverter.ToBoolean(bytes, off); off += 1;
+            skill = (ProductSkill)BitConverter.ToInt32(bytes, off); off += 4;
+            dir = (SwipeDirection)BitConverter.ToInt32(bytes, off); off += 4;
+            item = (PurchaseItemType)BitConverter.ToInt32(bytes, off); off += 4;
+
+            userInfo = Utils.Deserialize<UserInfo>(ref bytes, off); off += Utils.Sizeof<UserInfo>();
+
+            List<ProductInfo> infos = new List<ProductInfo>();
+            int proSize = Utils.Sizeof<ProductInfo>();
+            for (; off < bytes.Length; off += proSize)
+                infos.Add(Utils.Deserialize<ProductInfo>(ref bytes, off));
+
+            pros = infos.ToArray();
+        }
+        catch(Exception ex)
+        {
+            LOG.warn(ex.Message);
+        }
+    }
 }

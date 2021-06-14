@@ -189,7 +189,7 @@ namespace ServerApp
                     case NetCMD.AddLogFile: resBody = ProcAddLogFile(body); break;
                     case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                    case NetCMD.PVP: resBody = ProcPVPCommand(Utils.Deserialize<PVPInfo>(ref body)); break;
+                    case NetCMD.PVP: resBody = ProcPVPCommand(body); break;
 
                     default: resBody = new LogInfo("Undefied Command"); break;
                 }
@@ -337,8 +337,11 @@ namespace ServerApp
                 mCurrentSession.ReleaseOpp();
             return requestBody;
         }
-        private PVPInfo ProcPVPCommand(PVPInfo requestBody)
+        private PVPInfo ProcPVPCommand(byte[] body)
         {
+            PVPInfo requestBody = new PVPInfo();
+            requestBody.Deserialize(body);
+
             bool isOK = false;
             switch (requestBody.cmd)
             {

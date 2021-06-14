@@ -1755,7 +1755,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Network_CloseProducts(nextClosePros.ToArray(), remainTime);
+        //Network_CloseProducts(nextClosePros.ToArray(), remainTime);
 
         while (count > 0)
             yield return null;
@@ -2695,7 +2695,8 @@ public class InGameManager : MonoBehaviour
         if (head.Cmd != NetCMD.PVP)
             return;
 
-        PVPInfo resMsg = Utils.Deserialize<PVPInfo>(ref body);
+        PVPInfo resMsg = new PVPInfo();
+        resMsg.Deserialize(body);
         if (resMsg.cmd == PVPCommand.EndGame)
         {
             mNetMessages.AddFirst(resMsg);
@@ -2728,7 +2729,7 @@ public class InGameManager : MonoBehaviour
             {
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
-                    ProductInfo info = body.products[i];
+                    ProductInfo info = body.pros[i];
                     Frame frame = mFrames[info.idxX, info.idxY];
                     Product pro = CreateNewProduct(frame, info.nextColor);
                     pro.InstanceID = info.nextInstID;
@@ -2747,7 +2748,7 @@ public class InGameManager : MonoBehaviour
             {
                 if(IsAllProductIdle())
                 {
-                    Product pro = mFrames[body.products[0].idxX, body.products[0].idxY].ChildProduct;
+                    Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     Product target = pro.Dir(body.dir);
 
                     mIsUserEventLock = true;
@@ -2763,7 +2764,7 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
-                    ProductInfo info = body.products[i];
+                    ProductInfo info = body.pros[i];
                     Product pro = ProductIDs[info.prvInstID];
                     if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
                         products.Add(pro);
@@ -2802,9 +2803,9 @@ public class InGameManager : MonoBehaviour
                             Frame parentFrame = products[idx].ParentFrame;
                             products[idx].Combo = body.combo;
                             products[idx].DestroyImmediately();
-                            Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                            Product newPro = CreateNewProduct(body.pros[idx].nextColor);
                             newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                            newPro.InstanceID = body.products[idx].nextInstID;
+                            newPro.InstanceID = body.pros[idx].nextInstID;
                             ProductIDs[newPro.InstanceID] = newPro;
                             //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                             parentFrame.VertFrames.AddNewProduct(newPro);
@@ -2821,9 +2822,9 @@ public class InGameManager : MonoBehaviour
                             products[idx].MergeImImmediately(products[0], body.skill);
                             if (idx != 0)
                             {
-                                Product newPro = CreateNewProduct(body.products[idx].nextColor);
+                                Product newPro = CreateNewProduct(body.pros[idx].nextColor);
                                 newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                                newPro.InstanceID = body.products[idx].nextInstID;
+                                newPro.InstanceID = body.pros[idx].nextInstID;
                                 ProductIDs[newPro.InstanceID] = newPro;
                                 //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                                 parentFrame.VertFrames.AddNewProduct(newPro);
@@ -2841,7 +2842,7 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
-                    ProductInfo info = body.products[i];
+                    ProductInfo info = body.pros[i];
                     Product pro = ProductIDs[info.prvInstID];
                     if (pro != null && !pro.IsLocked && pro.Color == info.prvColor && pro.IsChocoBlock)
                         products.Add(pro);
@@ -2862,7 +2863,7 @@ public class InGameManager : MonoBehaviour
                     EventRemainTime?.Invoke(body.remainTime);
                     if(body.ArrayCount > 0)
                     {
-                        StartCoroutine(StartToPushStoneOpp(body.products, body.ArrayCount));
+                        StartCoroutine(StartToPushStoneOpp(body.pros, body.ArrayCount));
                     }
 
                     mNetMessages.RemoveFirst();
@@ -2881,7 +2882,7 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
-                    ProductInfo info = body.products[i];
+                    ProductInfo info = body.pros[i];
                     Product pro = ProductIDs[info.prvInstID];
                     if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
                         products.Add(pro);
@@ -2908,7 +2909,7 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = new List<Product>();
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
-                    ProductInfo info = body.products[i];
+                    ProductInfo info = body.pros[i];
                     Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
                     if (pro != null && !pro.IsLocked)
                         products.Add(pro);
@@ -2917,7 +2918,7 @@ public class InGameManager : MonoBehaviour
                 if (products.Count == body.ArrayCount)
                 {
                     for (int i = 0; i < body.ArrayCount; ++i)
-                        products[i].ChangeProductImage(body.products[i].skill);
+                        products[i].ChangeProductImage(body.pros[i].skill);
 
                     mNetMessages.RemoveFirst();
                 }
@@ -2931,7 +2932,7 @@ public class InGameManager : MonoBehaviour
                     List<Product> rets = new List<Product>();
                     for (int i = 0; i < body.ArrayCount; ++i)
                     {
-                        ProductInfo info = body.products[i];
+                        ProductInfo info = body.pros[i];
                         Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
                         rets.Add(pro);
                     }
@@ -3046,8 +3047,7 @@ public class InGameManager : MonoBehaviour
         req.YCount = CountY;
         req.colorCount = mStageInfo.ColorCount;
         req.combo = 0;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
+        req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
@@ -3061,10 +3061,10 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.Click;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = pro.Combo;
-        req.ArrayCount = 1;
-        req.products[0].idxX = pro.ParentFrame.IndexX;
-        req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].prvColor = pro.Color;
+        req.pros = new ProductInfo[1];
+        req.pros[0].idxX = pro.ParentFrame.IndexX;
+        req.pros[0].idxY = pro.ParentFrame.IndexY;
+        req.pros[0].prvColor = pro.Color;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3077,11 +3077,11 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.Swipe;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = pro.Combo;
-        req.ArrayCount = 1;
         req.dir = dir;
-        req.products[0].idxX = pro.ParentFrame.IndexX;
-        req.products[0].idxY = pro.ParentFrame.IndexY;
-        req.products[0].prvColor = pro.Color;
+        req.pros = new ProductInfo[1];
+        req.pros[0].idxX = pro.ParentFrame.IndexX;
+        req.pros[0].idxY = pro.ParentFrame.IndexY;
+        req.pros[0].prvColor = pro.Color;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3096,19 +3096,8 @@ public class InGameManager : MonoBehaviour
         req.combo = Billboard.CurrentCombo;
         req.skill = skill;
         req.withLaserEffect = withLaserEffect;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            StartFinish(false);
-    }
-    private void Network_Drop(bool dropPause)
-    {
-        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
-            return;
+        req.pros = pros;
 
-        PVPInfo req = new PVPInfo();
-        req.cmd = dropPause ? PVPCommand.DropPause : PVPCommand.DropResume;
-        req.oppUserPk = InstPVP_Opponent.UserPk;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3121,23 +3110,8 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.BreakIce;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            StartFinish(false);
-    }
-    private void Network_CloseProducts(ProductInfo[] pros, int remainTime)
-    {
-        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
-            return;
+        req.pros = pros;
 
-        PVPInfo req = new PVPInfo();
-        req.cmd = PVPCommand.CloseProducts;
-        req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = Billboard.CurrentCombo;
-        req.remainTime = remainTime;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3151,8 +3125,8 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.item = item;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
+        req.pros = pros;
+
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3164,22 +3138,8 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.ChangeSkill;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
-        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
-            StartFinish(false);
-    }
-    private void Network_Create(ProductInfo[] pros)
-    {
-        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
-            return;
+        req.pros = pros;
 
-        PVPInfo req = new PVPInfo();
-        req.cmd = PVPCommand.Create;
-        req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = 0;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3192,8 +3152,8 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = level;
-        req.ArrayCount = pros.Length;
-        Array.Copy(pros, req.products, pros.Length);
+        req.pros = pros;
+
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
@@ -3209,21 +3169,10 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_Skill(PVPCommand skill, ProductInfo[] infos, Frame startFrame = null)
-    {
-        PVPInfo req = new PVPInfo();
-        req.cmd = skill;
-        req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.ArrayCount = infos.Length;
-        req.combo = Billboard.CurrentCombo;
-        Array.Copy(infos, req.products, infos.Length);
-        req.idxX = startFrame == null ? 0 : startFrame.IndexX;
-        req.idxY = startFrame == null ? 0 : startFrame.IndexY;
-        NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck);
-    }
     private void Network_PVPAck(byte[] _resBody)
     {
-        PVPInfo res = Utils.Deserialize<PVPInfo>(ref _resBody);
+        PVPInfo res = new PVPInfo();
+        res.Deserialize(_resBody);
         if (res.oppDisconnected)
             StartFinish(true);
     }

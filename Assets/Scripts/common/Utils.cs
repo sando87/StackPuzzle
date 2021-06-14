@@ -83,6 +83,10 @@ public class Utils
         }
     }
 
+    static public int Sizeof<T>()
+    {
+        return Marshal.SizeOf(typeof(T));
+    }
     static public byte[] Serialize(object obj)
     {
         try
@@ -101,14 +105,14 @@ public class Utils
         }
         return null;
     }
-    static public T Deserialize<T>(ref byte[] data) where T : new()
+    static public T Deserialize<T>(ref byte[] data, int off = 0) where T : new()
     {
         try
         {
             T str = new T();
             int size = Marshal.SizeOf(str);
             IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.Copy(data, 0, ptr, size);
+            Marshal.Copy(data, off, ptr, size);
             str = (T)Marshal.PtrToStructure(ptr, str.GetType());
             Marshal.FreeHGlobal(ptr);
             return str;

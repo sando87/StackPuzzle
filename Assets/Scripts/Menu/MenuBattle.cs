@@ -165,7 +165,8 @@ public class MenuBattle : MonoBehaviour
         req.userInfo = UserSetting.UserInfo;
         bool ret = NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
         {
-            PVPInfo resBody = Utils.Deserialize<PVPInfo>(ref _body);
+            PVPInfo resBody = new PVPInfo();
+            resBody.Deserialize(_body);
             UserSetting.UpdateUserInfoToLocal(resBody.userInfo);
 
             MatchingLevel currentLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
