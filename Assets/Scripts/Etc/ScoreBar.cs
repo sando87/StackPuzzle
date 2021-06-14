@@ -33,7 +33,7 @@ public class ScoreBar : MonoBehaviour
         if (TotalScore != null)
             TotalScore.text = CurrentScore.ToString();
 
-        InitSplitBar();
+        UpdateSplitBar();
     }
 
 
@@ -42,6 +42,7 @@ public class ScoreBar : MonoBehaviour
         score = Mathf.Max(0, score);
         CurrentScore = score;
         UpdateScoreDisplay();
+        UpdateSplitBar();
     }
 
     private void UpdateScoreDisplay()
@@ -57,18 +58,23 @@ public class ScoreBar : MonoBehaviour
         StarC.SetActive(rate >= 1);
     }
 
-    private void InitSplitBar()
+    private void UpdateSplitBar()
     {
-        foreach (Transform chid in GroupLine.transform)
-            Destroy(chid.gameObject);
-
-        int count = ScorePerBar / UserSetting.ScorePerSplitBar;
-        float gap = (1.0f / count) * GroupLine.GetComponent<RectTransform>().rect.width;
-        for (int i = 0; i < count; ++i)
+        int targetScore = Mathf.Max(CurrentScore, ScorePerBar);
+        int preLineCount = GroupLine.transform.childCount - 1;
+        int curLineCount = (targetScore / 100);
+        if (preLineCount < curLineCount)
         {
-            GameObject subBar = Instantiate(SplitBarPrefab, GroupLine.transform);
-            RectTransform tr = subBar.GetComponent<RectTransform>();
-            tr.anchoredPosition = new Vector2(gap * (i + 1), 0);
+            for (int i = preLineCount; i < curLineCount; ++i)
+                Instantiate(SplitBarPrefab, GroupLine.transform);
+        }
+        else if (preLineCount > curLineCount)
+        {
+            for (int i = 1; i < GroupLine.transform.childCount; ++i)
+                Destroy(GroupLine.transform.GetChild(i).gameObject);
+
+            for (int i = 0; i < curLineCount; ++i)
+                Instantiate(SplitBarPrefab, GroupLine.transform);
         }
     }
 
