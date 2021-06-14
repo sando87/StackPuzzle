@@ -390,7 +390,7 @@ namespace ServerApp
             responseMsg.Cmd = NetCMD.PVP;
             responseMsg.UserPk = mCurrentSession.UserInfo.userPk;
 
-            byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(requestBody));
+            byte[] response = NetProtocol.ToArray(responseMsg, requestBody.Serialize());
             if (mServer.SendData(oppSessoion.Endpoint, response) <= 0)
                 return false;
 
