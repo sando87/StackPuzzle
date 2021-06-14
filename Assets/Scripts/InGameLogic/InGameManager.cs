@@ -292,6 +292,9 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
+        if (pro.ParentFrame.IsCovered)
+            return;
+
         if(pro.Skill != ProductSkill.Nothing)
         {
             mUseCombo = true;
@@ -324,7 +327,7 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product product = swipeObj.GetComponent<Product>();
-        if (product.IsLocked || product.IsChocoBlock)
+        if (product.IsLocked || product.IsChocoBlock || product.ParentFrame.IsCovered)
             return;
 
         Product targetProduct = null;
@@ -336,7 +339,7 @@ public class InGameManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock)
+        if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock || targetProduct.ParentFrame.IsCovered)
             return;
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)

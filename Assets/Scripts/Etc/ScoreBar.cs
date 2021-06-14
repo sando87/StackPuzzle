@@ -48,7 +48,12 @@ public class ScoreBar : MonoBehaviour
     private void UpdateScoreDisplay()
     {
         if(TotalScore != null)
+        {
             TotalScore.text = CurrentScore.ToString();
+            Animation anim = TotalScore.GetComponent<Animation>();
+            if (anim != null)
+                anim.Play();
+        }
 
         float rate = CurrentScore / (float)ScorePerBar;;
         MainBar.normalizedValue = Mathf.Min(1.0f, rate);
