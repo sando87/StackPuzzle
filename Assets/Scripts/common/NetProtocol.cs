@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 public enum NetCMD
 {
     Undef, AddUser, UpdateUser, EditName, DelUser, AddLog, AddLogFile, GetScores, 
-    SearchOpponent, StopMatching, PVP, HeartCheck
+    SearchOpponent, StopMatching, PVP, EndPVP, HeartCheck
 }
 public enum PVPCommand
 {
@@ -214,6 +214,15 @@ public class SearchOpponentInfo
     public int RoomNumber = -1;
 }
 
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+public class EndPVP
+{
+    public PVPCommand cmd;
+    public int oppUserPk;
+    public bool success;
+    public UserInfo userInfo;
+}
+
 public class PVPInfo : ByteSerializer
 {
     public PVPCommand cmd;
@@ -229,7 +238,6 @@ public class PVPInfo : ByteSerializer
     public ProductSkill skill;
     public SwipeDirection dir;
     public PurchaseItemType item;
-    public UserInfo userInfo = new UserInfo();
 
     public ProductInfo[] pros { get; set; }
     public int ArrayCount { get { return pros == null ? 0 : pros.Length; } }
@@ -250,7 +258,7 @@ public class PVPInfo : ByteSerializer
         rets.AddRange(BitConverter.GetBytes((int)skill));
         rets.AddRange(BitConverter.GetBytes((int)dir));
         rets.AddRange(BitConverter.GetBytes((int)item));
-        rets.AddRange(Utils.Serialize(userInfo));
+        //rets.AddRange(Utils.Serialize(userInfo));
 
         if (pros != null)
         {
@@ -279,7 +287,7 @@ public class PVPInfo : ByteSerializer
             dir = (SwipeDirection)BitConverter.ToInt32(bytes, off); off += 4;
             item = (PurchaseItemType)BitConverter.ToInt32(bytes, off); off += 4;
 
-            userInfo = Utils.Deserialize<UserInfo>(ref bytes, off); off += Utils.Sizeof<UserInfo>();
+            //userInfo = Utils.Deserialize<UserInfo>(ref bytes, off); off += Utils.Sizeof<UserInfo>();
 
             List<ProductInfo> infos = new List<ProductInfo>();
             int proSize = Utils.Sizeof<ProductInfo>();

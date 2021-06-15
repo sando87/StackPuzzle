@@ -1650,10 +1650,15 @@ public class InGameManager : MonoBehaviour
             }
 
             EventRemainTime?.Invoke((int)remain);
-            if (IsNoMoreMatchableProducts())
+            if (IsNoMoreMatchableProducts()) //더이상 움직일 수 있는 블럭이 없을 경우 실패
             {
                 yield return new WaitForSeconds(1);
                 StartFinish(false);
+            }
+            if(Opponent.mIsFinished) //상대방이 죽거나 종료된 상태이면 승리
+            {
+                yield return new WaitForSeconds(1);
+                StartFinish(true);
             }
             yield return new WaitForSeconds(1);
         }
@@ -2695,17 +2700,17 @@ public class InGameManager : MonoBehaviour
             return;
         if (head.Ack == 1)
             return;
-        if (head.Cmd != NetCMD.PVP)
-            return;
 
-        PVPInfo resMsg = new PVPInfo();
-        resMsg.Deserialize(body);
-        if (resMsg.cmd == PVPCommand.EndGame)
+        if(head.Cmd == NetCMD.EndPVP)
         {
-            mNetMessages.AddFirst(resMsg);
+            mIsFinished = true;
+            return;
         }
-        else
+
+        if (head.Cmd == NetCMD.PVP)
         {
+            PVPInfo resMsg = new PVPInfo();
+            resMsg.Deserialize(body);
             mNetMessages.AddLast(resMsg);
         }
     }
@@ -2722,13 +2727,7 @@ public class InGameManager : MonoBehaviour
                 continue;
 
             PVPInfo body = mNetMessages.First.Value;
-            if (body.cmd == PVPCommand.EndGame)
-            {
-                mIsFinished = true;
-                Opponent.StartFinish(true);
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.StartGame)
+            if (body.cmd == PVPCommand.StartGame)
             {
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
@@ -3174,9 +3173,8 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_PVPAck(byte[] _resBody)
     {
-        PVPInfo res = new PVPInfo();
-        res.Deserialize(_resBody);
-        if (res.oppDisconnected)
+        UserInfo oppUser = Utils.Deserialize<UserInfo>(ref _resBody);
+        if (oppUser.userPk < 0)
             StartFinish(true);
     }
     #endregion

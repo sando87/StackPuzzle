@@ -158,15 +158,14 @@ public class MenuBattle : MonoBehaviour
     {
         int prevScore = UserSetting.UserScore;
 
-        PVPInfo req = new PVPInfo();
+        EndPVP req = new EndPVP();
         req.cmd = PVPCommand.EndGame;
         req.oppUserPk = InGameManager.InstPVP_Opponent.UserPk;
         req.success = success;
         req.userInfo = UserSetting.UserInfo;
-        bool ret = NetClientApp.GetInstance().Request(NetCMD.PVP, req, (_body) =>
+        bool ret = NetClientApp.GetInstance().Request(NetCMD.EndPVP, req, (_body) =>
         {
-            PVPInfo resBody = new PVPInfo();
-            resBody.Deserialize(_body);
+            EndPVP resBody = Utils.Deserialize<EndPVP>(ref _body);
             UserSetting.UpdateUserInfoToLocal(resBody.userInfo);
 
             MatchingLevel currentLeague = Utils.ToLeagueLevel(UserSetting.UserScore);

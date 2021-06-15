@@ -190,6 +190,7 @@ namespace ServerApp
                     case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.PVP: resBody = ProcPVPCommand(body); break;
+                    case NetCMD.EndPVP: resBody = ProcEndPVPGame(Utils.Deserialize<EndPVP>(ref body)); break;
 
                     default: resBody = new LogInfo("Undefied Command"); break;
                 }
@@ -337,7 +338,7 @@ namespace ServerApp
                 mCurrentSession.ReleaseOpp();
             return requestBody;
         }
-        private PVPInfo ProcPVPCommand(byte[] body)
+        private UserInfo ProcPVPCommand(byte[] body)
         {
             PVPInfo requestBody = new PVPInfo();
             requestBody.Deserialize(body);
@@ -356,29 +357,39 @@ namespace ServerApp
                 case PVPCommand.SkillIceRes:
                     isOK = BypassToOppPlayer(requestBody);
                     break;
-                case PVPCommand.EndGame:
-                    isOK = BypassToOppPlayer(requestBody);
-                    requestBody.userInfo = EndPVPGame(requestBody);
-                    break;
                 default:
                     isOK = BypassToOppPlayer(requestBody);
                     break;
             }
-            requestBody.oppDisconnected = !isOK;
-            return requestBody;
+
+            UserInfo oppUserInfo = new UserInfo();
+            SessionUser oppSessoion = GetUser(mCurrentSession.OppEndpoint);
+            if (oppSessoion != null && isOK)
+                oppUserInfo = oppSessoion.UserInfo;
+            return oppUserInfo;
         }
-        private UserInfo EndPVPGame(PVPInfo requestBody)
+        private EndPVP ProcEndPVPGame(EndPVP requestBody)
         {
-            UserInfo renewUserInfo = null;
+            SessionUser oppSessoion = GetUser(mCurrentSession.OppEndpoint);
+            if (oppSessoion != null)
+            {
+                Header finishMsg = new Header();
+                finishMsg.Cmd = NetCMD.EndPVP;
+                finishMsg.UserPk = mCurrentSession.UserInfo.userPk;
+
+                byte[] response = NetProtocol.ToArray(finishMsg, Utils.Serialize(requestBody));
+                mServer.SendData(oppSessoion.Endpoint, response);
+            }
+
             if (mCurrentSession.MatchState == MatchingState.Matched)
             {
-                renewUserInfo = UpdateUserPVPRecord(mCurrentSession, requestBody.success);
+                requestBody.userInfo = UpdateUserPVPRecord(mCurrentSession, requestBody.success);
                 mCurrentSession.ReleaseOpp();
             }
             else
-                renewUserInfo = DBManager.Inst().GetUser(requestBody.userInfo.userPk);
+                requestBody.userInfo = DBManager.Inst().GetUser(requestBody.userInfo.userPk);
 
-            return renewUserInfo;
+            return requestBody;
         }
         private bool BypassToOppPlayer(PVPInfo requestBody)
         {
