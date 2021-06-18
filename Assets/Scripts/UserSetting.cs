@@ -78,6 +78,20 @@ public class UserSetting
 
     public static void Initialize()
     {
+#if UNITY_STANDALONE_WIN
+        string path = "./autobot.txt";
+        if(File.Exists(path))
+        {
+            string[] tmpLines = File.ReadAllLines(path);
+            if(tmpLines != null && tmpLines.Length > 0)
+            {
+                string devicename = tmpLines[0];
+                UserSetting.SwitchBotPlayer(true, devicename);
+                return;
+            }
+        }
+#endif
+
         mUserInfo = LoadUserInfo();
     }
     public static void AddNewUserInfoToServer()

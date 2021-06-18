@@ -1351,7 +1351,7 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    IEnumerator FlushObstacles(Product[] targets, int blockLevel)
+    IEnumerator FlushObstacles(Product[] targets, int blockLevel, Action eventEnd = null)
     {
         while (!IsIdle)
             yield return null;
@@ -1399,6 +1399,7 @@ public class InGameManager : MonoBehaviour
                 yield return null;
         }
         ShakeField(0.05f);
+        eventEnd?.Invoke();
         mIsFlushing = false;
     }
     private List<Product> GetNextFlushTargets(int cnt)
@@ -2723,9 +2724,6 @@ public class InGameManager : MonoBehaviour
             if (mNetMessages.Count == 0)
                 continue;
 
-            if (mIsFlushing)
-                continue;
-
             PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.StartGame)
             {
@@ -2748,7 +2746,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Swipe)
             {
-                if(IsAllProductIdle())
+                if(IsIdle && IsAllProductIdle())
                 {
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     Product target = pro.Dir(body.dir);
@@ -2839,6 +2837,30 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.FlushAttacks)
+            {
+                if (IsIdle && IsAllProductIdle())
+                {
+                    List<Product> rets = new List<Product>();
+                    for (int i = 0; i < body.ArrayCount; ++i)
+                    {
+                        ProductInfo info = body.pros[i];
+                        Product pro = ProductIDs[info.prvInstID];
+                        if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                            rets.Add(pro);
+                    }
+
+                    if (rets.Count == body.ArrayCount)
+                    {
+                        AttackPointFrame.Flush(body.ArrayCount);
+                        int blockLevel = body.combo;
+                        StartCoroutine(FlushObstacles(rets.ToArray(), blockLevel, () =>
+                        {
+                            mNetMessages.RemoveFirst();
+                        }));
+                    }
+                }
+            }
             else if (body.cmd == PVPCommand.BreakIce)
             {
                 List<Product> products = new List<Product>();
@@ -2858,9 +2880,17 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.SyncTimer)
+            {
+                //play anim timeout
+                EventRemainTime?.Invoke(body.remainTime);
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+
+                mNetMessages.RemoveFirst();
+            }
             else if (body.cmd == PVPCommand.CloseProducts)
             {
-                if (IsAllProductIdle())
+                if (IsIdle && IsAllProductIdle())
                 {
                     EventRemainTime?.Invoke(body.remainTime);
                     if(body.ArrayCount > 0)
@@ -2870,14 +2900,6 @@ public class InGameManager : MonoBehaviour
 
                     mNetMessages.RemoveFirst();
                 }
-            }
-            else if (body.cmd == PVPCommand.SyncTimer)
-            {
-                //play anim timeout
-                EventRemainTime?.Invoke(body.remainTime);
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
-
-                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.UseItem)
             {
@@ -2925,28 +2947,6 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
 
-            }
-            else if (body.cmd == PVPCommand.FlushAttacks)
-            {
-                if(IsAllProductIdle())
-                {
-                    AttackPointFrame.Flush(body.ArrayCount);
-                    List<Product> rets = new List<Product>();
-                    for (int i = 0; i < body.ArrayCount; ++i)
-                    {
-                        ProductInfo info = body.pros[i];
-                        Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
-                        rets.Add(pro);
-                    }
-
-                    if(rets.Count > 0)
-                    {
-                        int blockLevel = body.combo;
-                        StartCoroutine(FlushObstacles(rets.ToArray(), blockLevel));
-                    }
-
-                    mNetMessages.RemoveFirst();
-                }
             }
         }
     }

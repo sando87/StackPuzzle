@@ -161,12 +161,11 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-//#if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-        if (UserSetting.StageIsLocked(7))
-        {
-            MenuMessageBox.PopUp("Required\n7 Stages", false, null);
-            return;
-        }
+        //if (UserSetting.StageIsLocked(7))
+        //{
+        //    MenuMessageBox.PopUp("Required\n7 Stages", false, null);
+        //    return;
+        //}
 
         MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
         if (currentPossibleLeague < UserSetting.MatchLevel && UserSetting.MatchLevel != MatchingLevel.All)
@@ -181,7 +180,6 @@ public class MenuWaitMatch : MonoBehaviour
             MenuMessageBox.PopUp("No Life", false, null);
             return;
         }
-//#endif
 
         RequestMatch();
 

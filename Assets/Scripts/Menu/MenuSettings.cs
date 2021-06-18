@@ -66,7 +66,7 @@ public class MenuSettings : MonoBehaviour
             {
                 if(isOK)
                 {
-                    if (inputText == "off")
+                    if (inputText.Length <= 0 || inputText == "off")
                         UserSetting.SwitchBotPlayer(false, "");
                     else
                         UserSetting.SwitchBotPlayer(true, inputText);
