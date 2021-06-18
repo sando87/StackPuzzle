@@ -162,8 +162,8 @@ public class Product : MonoBehaviour
             Frame parent = Detach(Manager.transform);
             parent.BreakCover();
             parent.BreakBush(Combo);
+            Manager.ProductIDs.Remove(InstanceID);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
-                Manager.ProductIDs.Remove(InstanceID);
                 Destroy(gameObject);
             }));
         }
@@ -200,6 +200,7 @@ public class Product : MonoBehaviour
         parent.BreakCover();
         parent.BreakBush(Combo);
         WaterDropParticle.SetActive(true);
+        Manager.ProductIDs.Remove(InstanceID);
         StartCoroutine(AnimateDestroy());
 
         return parent;
@@ -401,7 +402,6 @@ public class Product : MonoBehaviour
             idx++;
             yield return null;
         }
-        Manager.ProductIDs.Remove(InstanceID);
         Destroy(gameObject);
     }
     IEnumerator AnimateFlash(float intensity)

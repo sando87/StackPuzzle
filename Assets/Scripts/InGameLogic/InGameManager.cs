@@ -1862,7 +1862,7 @@ public class InGameManager : MonoBehaviour
         mVerticalFrames = vf.ToArray();
     }
 
-    private Product CreateNewProduct(Frame parent, ProductColor color = ProductColor.None)
+    private Product CreateNewProduct(Frame parent, ProductColor color = ProductColor.None, int instanceID = 0)
     {
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
@@ -1870,17 +1870,17 @@ public class InGameManager : MonoBehaviour
         product.Manager = this;
         product.transform.localPosition = new Vector3(0, 0, -1);
         product.AttachTo(parent);
-        product.InstanceID = product.GetInstanceID();
+        product.InstanceID = instanceID == 0 ? product.GetInstanceID() : instanceID;
         ProductIDs[product.InstanceID] = product;
         return product;
     }
-    private Product CreateNewProduct(ProductColor color = ProductColor.None)
+    private Product CreateNewProduct(ProductColor color = ProductColor.None, int instanceID = 0)
     {
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
         Product product = obj.GetComponent<Product>();
         product.Manager = this;
-        product.InstanceID = product.GetInstanceID();
+        product.InstanceID = instanceID == 0 ? product.GetInstanceID() : instanceID;
         ProductIDs[product.InstanceID] = product;
         return product;
     }
@@ -2731,9 +2731,7 @@ public class InGameManager : MonoBehaviour
                 {
                     ProductInfo info = body.pros[i];
                     Frame frame = mFrames[info.idxX, info.idxY];
-                    Product pro = CreateNewProduct(frame, info.nextColor);
-                    pro.InstanceID = info.nextInstID;
-                    ProductIDs[pro.InstanceID] = pro;
+                    Product pro = CreateNewProduct(frame, info.nextColor, info.nextInstID);
                     pro.IcedBlock.SetBlockCombo(0);
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                 }
@@ -2803,10 +2801,8 @@ public class InGameManager : MonoBehaviour
                             Frame parentFrame = products[idx].ParentFrame;
                             products[idx].Combo = body.combo;
                             products[idx].DestroyImmediately();
-                            Product newPro = CreateNewProduct(body.pros[idx].nextColor);
+                            Product newPro = CreateNewProduct(body.pros[idx].nextColor, body.pros[idx].nextInstID);
                             newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                            newPro.InstanceID = body.pros[idx].nextInstID;
-                            ProductIDs[newPro.InstanceID] = newPro;
                             //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                             parentFrame.VertFrames.AddNewProduct(newPro);
                             newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
@@ -2822,10 +2818,8 @@ public class InGameManager : MonoBehaviour
                             products[idx].MergeImImmediately(products[0], body.skill);
                             if (idx != 0)
                             {
-                                Product newPro = CreateNewProduct(body.pros[idx].nextColor);
+                                Product newPro = CreateNewProduct(body.pros[idx].nextColor, body.pros[idx].nextInstID);
                                 newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                                newPro.InstanceID = body.pros[idx].nextInstID;
-                                ProductIDs[newPro.InstanceID] = newPro;
                                 //newPro.transform.SetParent(parentFrame.VertFrames.transform);
                                 parentFrame.VertFrames.AddNewProduct(newPro);
                                 newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
