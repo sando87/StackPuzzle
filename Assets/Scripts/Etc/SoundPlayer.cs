@@ -23,7 +23,8 @@ public class SoundPlayer : MonoBehaviour
     public AudioSource PlayerBack;
 
     public AudioClip BackMusicMap;
-    public AudioClip BackMusicInGame;
+    public AudioClip BackMusicInGameStage;
+    public AudioClip BackMusicInGamePVP;
 
     public AudioClip EffectButton1;
     public AudioClip EffectButton2;
@@ -81,14 +82,16 @@ public class SoundPlayer : MonoBehaviour
     {
         if(mRequestedClips.Count > 0)
         {
-            foreach(var item in mRequestedClips)
+            float refvolume = Player.volume;
+            foreach (var item in mRequestedClips)
             {
                 AudioClip clip = item.Key;
                 float volume = item.Value;
-                Player.volume = volume;
+                Player.volume = refvolume * volume;
                 Player.PlayOneShot(clip);
             }
             mRequestedClips.Clear();
+            Player.volume = refvolume;
         }
     }
 
@@ -112,6 +115,10 @@ public class SoundPlayer : MonoBehaviour
         PlayerBack.clip = bkMusic;
         PlayerBack.loop = true;
         PlayerBack.Play();
+    }
+    public void StopBackMusic()
+    {
+        PlayerBack.Stop();
     }
 
 

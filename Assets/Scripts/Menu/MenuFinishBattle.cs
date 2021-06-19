@@ -111,7 +111,6 @@ public class MenuFinishBattle : MonoBehaviour
         StopCoroutine("AutoNext");
         gameObject.SetActive(false);
         MenuWaitMatch.PopUp();
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
     }
 
     private IEnumerator AutoNext()

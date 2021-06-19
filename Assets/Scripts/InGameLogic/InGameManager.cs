@@ -184,7 +184,7 @@ public class InGameManager : MonoBehaviour
     {
         StartGame(info, userInfo);
 
-        mSFXVolume = 0.1f;
+        mSFXVolume = 0.2f;
         transform.localScale = new Vector3(UserSetting.BattleOppResize, UserSetting.BattleOppResize, 1);
         StartCoroutine(ProcessNetMessages());
     }
@@ -2878,7 +2878,7 @@ public class InGameManager : MonoBehaviour
             {
                 //play anim timeout
                 EventRemainTime?.Invoke(body.remainTime);
-                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+                //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
 
                 mNetMessages.RemoveFirst();
             }

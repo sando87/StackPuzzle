@@ -234,7 +234,7 @@ public class MenuInGame : MonoBehaviour
             string log = "[STAGE] " + "success," + mStageInfo.Num + "," + starCount + "," + ScoreBarObj.CurrentScore;
             LOG.echo(log);
 
-            SoundPlayer.Inst.PlayerBack.Stop();
+            SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear, isFirstThreeStar);
             InGameManager.InstStage.CleanUpGame();
@@ -245,7 +245,7 @@ public class MenuInGame : MonoBehaviour
             string log = "[STAGE] " + "failed," + mStageInfo.Num;
             LOG.echo(log);
 
-            SoundPlayer.Inst.PlayerBack.Stop();
+            SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
             if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0

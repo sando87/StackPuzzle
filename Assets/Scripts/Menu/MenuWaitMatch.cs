@@ -57,6 +57,8 @@ public class MenuWaitMatch : MonoBehaviour
         mIsSearching = false;
         gameObject.SetActive(false);
         MenuStages.PopUp();
+        if(!SoundPlayer.Inst.PlayerBack.isPlaying)
+            SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
@@ -289,7 +291,7 @@ public class MenuWaitMatch : MonoBehaviour
         ResetMatchUI();
 
         gameObject.SetActive(false);
-        SoundPlayer.Inst.PlayerBack.Stop();
+        SoundPlayer.Inst.StopBackMusic();
         MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo, pvpInfo.Level);
     }
     private void FailMatch()

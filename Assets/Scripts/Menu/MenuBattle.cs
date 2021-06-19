@@ -181,7 +181,7 @@ public class MenuBattle : MonoBehaviour
 
         if (success)
         {
-            SoundPlayer.Inst.PlayerBack.Stop();
+            SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
             MenuFinishBattle.PopUp(success, prevScore);
 
@@ -191,7 +191,7 @@ public class MenuBattle : MonoBehaviour
         }
         else
         {
-            SoundPlayer.Inst.PlayerBack.Stop();
+            SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
             MenuFinishBattle.PopUp(success, prevScore);

@@ -11,6 +11,7 @@ public class MenuTitle : MonoBehaviour
     public Slider LoadingBar;
     public TextMeshProUGUI StartText;
     public GameObject StartButton;
+    public GameObject NetworkObject;
 
     private void Awake()
     {
@@ -23,6 +24,13 @@ public class MenuTitle : MonoBehaviour
         if (cig != null)
             cig.Init();
 
+        LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
+
+        Application.targetFrameRate = 30; //FPS 30프레임 고정
+        Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
+
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
+
         if (UserSetting.IsTermsAgreement)
         {
             InitOnAwake();
@@ -31,6 +39,7 @@ public class MenuTitle : MonoBehaviour
         {
             MenuTermsAndConditions.PopUp(() =>
             {
+                LOG.echo("TermsAgreed");
                 InitOnAwake();
             });
         }
@@ -38,13 +47,8 @@ public class MenuTitle : MonoBehaviour
 
     private void InitOnAwake()
     {
-        LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         LOG.echo("Start App");
-
-        Application.targetFrameRate = 30; //FPS 30프레임 고정
-        Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
-
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
+        NetworkObject.SetActive(true);
         NetClientApp.GetInstance().EventConnection = OnNetConnected;
         InitLogSystem();
         UserSetting.Initialize();

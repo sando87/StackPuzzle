@@ -35,7 +35,7 @@ public class MenuTermsAndConditions : MonoBehaviour
         if (UserSetting.IsTermsAgreement)
         {
             BtnAgree.gameObject.SetActive(false);
-            BtnDeveloper.gameObject.SetActive(true);
+            BtnDeveloper.gameObject.SetActive(false);
             BtnClose.gameObject.SetActive(true);
             DeveloperView.SetActive(false);
         }

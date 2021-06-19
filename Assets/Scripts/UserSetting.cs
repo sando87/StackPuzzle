@@ -229,7 +229,7 @@ class UserSettingInfo
     [SerializeField] private MatchingLevel mMatchLevel = MatchingLevel.Bronze;
     [SerializeField] private bool mMute = false;
     [SerializeField] private float mVolumeSFX = 1;
-    [SerializeField] private float mVolumeBackground = 1;
+    [SerializeField] private float mVolumeBackground = 0.3f;
     [SerializeField] private int mTutorialNumber = 1;
     [SerializeField] private Int64[] mAdsLastShowTime = null;
     [SerializeField] private byte[] mStageStarCount = null;
