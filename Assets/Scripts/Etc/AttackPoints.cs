@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class AttackPoints : MonoBehaviour
 {
-    [SerializeField] private Sprite[] Images = new Sprite[4];
+    [SerializeField] private Sprite[] Images = null;
     [SerializeField] private GameObject BaseSprite = null;
 
     private const float mAnimateSpeed = 0.6f;
@@ -64,11 +64,19 @@ public class AttackPoints : MonoBehaviour
     private void CreateNewChild(int points)
     {
         int count = Math.Abs(points);
-        int cntA = count / 27;
-        int cntB = (count % 27) / 9;
-        int cntC = (count % 9) / 3;
-        int cntD = count % 3;
+        int cntTop = count / 256;
+        int cntA = (count % 256) / 64;
+        int cntB = (count % 64) / 16;
+        int cntC = (count % 16) / 4;
+        int cntD = count % 4;
 
+        for (int i = 0; i < cntTop; ++i)
+        {
+            GameObject obj = Instantiate(BaseSprite, transform);
+            obj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            obj.GetComponent<SpriteRenderer>().sprite = Images[4];
+            mChilds.Add(obj);
+        }
         for (int i = 0; i < cntA; ++i)
         {
             GameObject obj = Instantiate(BaseSprite, transform);

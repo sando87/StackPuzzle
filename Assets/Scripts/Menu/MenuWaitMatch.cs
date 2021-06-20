@@ -163,12 +163,6 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        //if (UserSetting.StageIsLocked(7))
-        //{
-        //    MenuMessageBox.PopUp("Required\n7 Stages", false, null);
-        //    return;
-        //}
-
         MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
         if (currentPossibleLeague < UserSetting.MatchLevel && UserSetting.MatchLevel != MatchingLevel.All)
         {
@@ -359,23 +353,23 @@ public class MenuWaitMatch : MonoBehaviour
             MatchingLevel level = (MatchingLevel)(idx + 1);
             if(level == UserSetting.MatchLevel)
             {
-                btn.transform.GetChild(0).gameObject.SetActive(true);
+                btn.transform.GetChild(0).GetChild(0).gameObject.SetActive(true);
             }
             else
             {
-                btn.transform.GetChild(0).gameObject.SetActive(false);
+                btn.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
             }
 
             if (level <= UserSetting.UserInfo.maxLeague)
             {
-                btn.GetComponent<Image>().color = Color.white;
-                btn.transform.GetChild(1).GetComponent<Image>().color = Color.white;
+                btn.transform.GetChild(0).gameObject.SetActive(true);
+                btn.transform.GetChild(1).gameObject.SetActive(false);
                 btn.enabled = true;
             }
             else
             {
-                btn.GetComponent<Image>().color = Color.gray;
-                btn.transform.GetChild(1).GetComponent<Image>().color = Color.gray;
+                btn.transform.GetChild(0).gameObject.SetActive(false);
+                btn.transform.GetChild(1).gameObject.SetActive(true);
                 btn.enabled = false;
             }
         }

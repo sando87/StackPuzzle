@@ -50,6 +50,14 @@ public class Tutorials : MonoBehaviour
                     break;
                 }
             }
+            else if (curNum == 5) //Battle(PVP)모드 개방
+            {
+                if (MenuStages.Inst.gameObject.activeInHierarchy && UserSetting.GetHighestStageNumber() >= UserSetting.BattleModeUnlockStage)
+                {
+                    TutorialEvent.Start(curNum, TutorialEventType.Click, MenuStages.Inst.BattleButton.transform.position, OnEvnetHandler);
+                    break;
+                }
+            }
             else
                 break;
             yield return null;
@@ -96,8 +104,13 @@ public class Tutorials : MonoBehaviour
             else if (type == TutorialEventType.Click2)
             {
                 UserSetting.TutorialNumber = curNum + 1;
-                //StartCoroutine(TutorialStarter());
+                StartCoroutine(TutorialStarter());
             }
+        }
+        else if(curNum == 5)
+        {
+            UserSetting.TutorialNumber = curNum + 1;
+            StartCoroutine(TutorialStarter());
         }
     }
 }

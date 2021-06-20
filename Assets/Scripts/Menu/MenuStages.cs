@@ -17,6 +17,7 @@ public class MenuStages : MonoBehaviour
     public GameObject StatusGroup;
     public GameObject BackButton;
     public GameObject BottomGroup;
+    public Button BattleButton;
 
     public GameObject BackgroundStageField;
 
@@ -144,6 +145,13 @@ public class MenuStages : MonoBehaviour
     public void OnBattle()
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        if (UserSetting.GetHighestStageNumber() < UserSetting.BattleModeUnlockStage)
+        {
+            MenuMessageBox.PopUp("You need to clear " + UserSetting.BattleModeUnlockStage + " Stages.", false, null);
+            return;
+        }
+
         MenuWaitMatch.PopUp();
         Hide();
     }
