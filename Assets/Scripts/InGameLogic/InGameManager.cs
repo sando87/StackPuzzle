@@ -434,7 +434,7 @@ public class InGameManager : MonoBehaviour
         mStopDropping = false;
     }
     
-    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect)
+    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect, int timerCounter)
     {
         yield return new WaitForSeconds(delay);
 
@@ -451,7 +451,7 @@ public class InGameManager : MonoBehaviour
             nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
         }
         mRequestDrop = true;
-        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect);
+        Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect, timerCounter);
         mProductCount += destroyedProducts.Length;
     }
     private Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
@@ -476,7 +476,7 @@ public class InGameManager : MonoBehaviour
             return validProducts;
 
         mProductCount -= validProducts.Length;
-        StartCoroutine(DestroyProductDelay(validProducts, UserSetting.MatchReadyInterval, withLaserEffect));
+        StartCoroutine(DestroyProductDelay(validProducts, UserSetting.MatchReadyInterval, withLaserEffect, mPVPTimerCounter));
 
         int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
         int preAttackCount = Billboard.CurrentScore / spa;
@@ -489,7 +489,7 @@ public class InGameManager : MonoBehaviour
 
         return validProducts;
     }
-    IEnumerator MergeProductDelay(Product[] mergeProducts, float delay, ProductSkill skill)
+    IEnumerator MergeProductDelay(Product[] mergeProducts, float delay, ProductSkill skill, int timerCounter)
     {
         yield return new WaitForSeconds(delay);
 
@@ -513,7 +513,7 @@ public class InGameManager : MonoBehaviour
         }
 
         mRequestDrop = true;
-        Network_Destroy(nextProducts.ToArray(), skill, false);
+        Network_Destroy(nextProducts.ToArray(), skill, false, timerCounter);
 
         if (skill == ProductSkill.SameColor)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, mSFXVolume);
@@ -546,7 +546,7 @@ public class InGameManager : MonoBehaviour
             return validProducts;
 
         mProductCount -= validProducts.Length;
-        StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill));
+        StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill, mPVPTimerCounter));
 
         int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
         int preAttackCount = Billboard.CurrentScore / spa;
@@ -1645,9 +1645,9 @@ public class InGameManager : MonoBehaviour
                 currentTimelimit += mStageInfo.TimeLimit;
                 remain = currentTimelimit - PlayTime;
 
-                //play anim timeout
                 Network_SyncTimer((int)remain);
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
+                MenuBattle.Inst().AnimTimeoutEffect(mPVPTimerCounter);
             }
 
             EventRemainTime?.Invoke((int)remain);
@@ -2775,7 +2775,8 @@ public class InGameManager : MonoBehaviour
 
                     int score = body.combo * body.ArrayCount;
 
-                    int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * InGameManager.InstPVP_Player.mPVPTimerCounter));
+                    int pvpTimerCounter = body.remainTime;
+                    int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * pvpTimerCounter));
                     int preAttackCount = Billboard.CurrentScore / spa;
                     int curAttackCount = (Billboard.CurrentScore + score) / spa;
 
@@ -3081,7 +3082,7 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect)
+    private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect, int timerCounter)
     {
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
@@ -3091,6 +3092,7 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.skill = skill;
+        req.remainTime = timerCounter;
         req.withLaserEffect = withLaserEffect;
         req.pros = pros;
 

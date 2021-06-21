@@ -26,6 +26,9 @@ public class MenuBattle : MonoBehaviour
     public Sprite ItemEmptyImage;
     public ItemButton[] PlayerItemSlots;
     public ItemButton[] OpponentItemSlots;
+    public GameObject TimeoutEffectAnim;
+    public TextMeshProUGUI FromMulti;
+    public TextMeshProUGUI ToMulti;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;
@@ -264,6 +267,32 @@ public class MenuBattle : MonoBehaviour
             remain--;
             yield return new WaitForSeconds(1);
         }
+    }
+    public void AnimTimeoutEffect(int timerCounter)
+    {
+        if (timerCounter <= 1)
+            return;
+
+        string from = "";
+        string to = "";
+        switch (timerCounter)
+        {
+            case 2: from = "x1.0"; to = "x1.2"; break;
+            case 3: from = "x1.2"; to = "x1.4"; break;
+            case 4: from = "x1.4"; to = "x1.6"; break;
+            case 5: from = "x1.6"; to = "x1.8"; break;
+            default: from = "x1.8"; to = "x2.0"; break;
+        }
+
+        FromMulti.text = from;
+        ToMulti.text = to;
+        StartCoroutine(AnimTimeout());
+    }
+    IEnumerator AnimTimeout()
+    {
+        TimeoutEffectAnim.SetActive(true);
+        yield return new WaitForSeconds(3);
+        TimeoutEffectAnim.SetActive(false);
     }
 
 }

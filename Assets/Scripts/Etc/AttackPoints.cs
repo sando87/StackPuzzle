@@ -7,6 +7,7 @@ public class AttackPoints : MonoBehaviour
 {
     [SerializeField] private Sprite[] Images = null;
     [SerializeField] private GameObject BaseSprite = null;
+    [SerializeField] private Animation EffectAnim = null;
 
     private const float mAnimateSpeed = 0.6f;
     private List<GameObject> mChilds = new List<GameObject>();
@@ -138,6 +139,7 @@ public class AttackPoints : MonoBehaviour
         TouchedTime = Time.realtimeSinceStartup;
         Points += point;
         StartAnimate();
+        EffectAnim.Play();
     }
     public int Flush(int reqPoint)
     {
