@@ -1481,7 +1481,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator RefreshTimer()
     {
-        while (mStageInfo.TimeLimit > 0)
+        while (mStageInfo.TimeLimit > 0 && !mIsFinished)
         {
             float remainTime = mStageInfo.TimeLimit - PlayTime;
             EventRemainTime?.Invoke((int)remainTime);

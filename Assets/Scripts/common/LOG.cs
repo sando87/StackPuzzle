@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 class LOG
 {
-    static public Func<bool> IsNetworkAlive;
     static public Action<string> LogWriterConsole;
-    static public Func<string, bool> LogStringWriterDB;
-    static public Func<byte[], bool> LogBytesWriterDB;
+    static public Func<bool> IsNetworkAlive = () => { return false; } ;
+    static public Func<string, bool> LogStringWriterDB = (data) => { return false; };
+    static public Func<byte[], bool> LogBytesWriterDB = (data) => { return false; } ;
 
     static private Thread mThread = null;
     static private bool mRunFlag = false;
@@ -25,15 +25,6 @@ class LOG
     {
         if (mThread != null)
             return;
-
-        if (IsNetworkAlive == null)
-            IsNetworkAlive = () => { return false; };
-
-        if (LogStringWriterDB == null)
-            LogStringWriterDB = (data) => { return false; };
-
-        if (LogBytesWriterDB == null)
-            LogBytesWriterDB = (data) => { return false; };
 
         mFileLogPath = logPath + "/Log/";
         DirectoryInfo di = new DirectoryInfo(mFileLogPath);
