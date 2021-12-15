@@ -22,6 +22,8 @@ public class StageInfoCell
 }
 public class StageInfo
 {
+    static public readonly string NewLine = Environment.NewLine;
+
     public const int Version = 4;
     public int Num = 0;
     public string GoalType = "";
@@ -62,7 +64,7 @@ public class StageInfo
         if (ta == null || ta.text.Length == 0)
             return null;
 
-        string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        string[] lines = ta.text.Split(new string[] { NewLine }, StringSplitOptions.RemoveEmptyEntries);
         StageInfo info = Load(lines);
         info.Num = stageNum;
         info.Difficulty = MatchingLevel.None;
@@ -76,7 +78,7 @@ public class StageInfo
         if (ta == null || ta.text.Length == 0)
             return null;
 
-        string[] lines = ta.text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        string[] lines = ta.text.Split(new string[] { NewLine }, StringSplitOptions.RemoveEmptyEntries);
         StageInfo info = Load(lines);
         info.Num = 0;
         info.Difficulty = level;
@@ -318,7 +320,7 @@ public class StageInfo
             string frameCover = cell.FrameCoverCount < 0 ? "x" : cell.FrameCoverCount.ToString();
             rowString += cell.ProductCapCount + "/" + productChoco + "/" + cell.FrameBushCount + "/" + frameCover + " ";
         }
-        return rowString + "\r\n";
+        return rowString + NewLine;
     }
     public StageInfoCell GetCell(int idxX, int idxY)
     {
@@ -382,18 +384,18 @@ public class StageInfo
         CreateStageInfoFolder();
         string fullname = GetPath() + stageNum + ".txt";
         string defaultData = 
-        "GoalType,Score\r\n" +
-        "GoalValue,300\r\n" +
-        "MoveLimit,25\r\n" +
-        "ColorCount,5.0\r\n" +
-        "StarPoint,50\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n" +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0\r\n";
+        "GoalType,Score" + NewLine +
+        "GoalValue,300" + NewLine +
+        "MoveLimit,25" + NewLine +
+        "ColorCount,5.0" + NewLine +
+        "StarPoint,50" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
+        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0";
 
         File.WriteAllText(fullname, defaultData);
     }
