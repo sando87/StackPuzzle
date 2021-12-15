@@ -34,6 +34,7 @@ public class Product : MonoBehaviour
     public float DropSpeed { get; set; } = 0;
     public float Weight { get; set; }
     public int Combo { get; set; }
+    public bool IsSwapable { get; set; } = true;
     public int InstanceID { get; set; }
     public bool IsMerging { get; private set; }
     public bool IsDestroying { get; private set; }
@@ -125,6 +126,8 @@ public class Product : MonoBehaviour
     }
     public void Swipe(Product targetProduct, Action EventSwipeEnd)
     {
+        IsSwapable = false;
+        targetProduct.IsSwapable = false;
         Frame myFrame = Detach(Manager.transform);
         Frame targetFrame = targetProduct.Detach(Manager.transform);
         myFrame.TouchBush();

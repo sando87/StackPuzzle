@@ -342,6 +342,9 @@ public class InGameManager : MonoBehaviour
         if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock || targetProduct.ParentFrame.IsCovered)
             return;
 
+        if (!product.IsSwapable || !targetProduct.IsSwapable)
+            return;
+
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
             mUseCombo = true;
