@@ -1,8 +1,14 @@
+#0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)
+#Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
 GoalType,Score
 GoalValue,18
 MoveLimit,15
 ColorCount,6
 StarPoint,30
+#Reward,gold/100
+#Reward,dia/5
+#Reward,1/1 2/1 3/1
+#RandomSeed,4
 RandomSeed,1155532165
 Rows,0/0 0/0 0/0 0/0 0/0
 Rows,0/0 0/0 0/0 0/0 0/0
