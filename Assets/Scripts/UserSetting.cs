@@ -134,6 +134,10 @@ public class UserSetting
         SaveUserInfo(mUserInfo);
     }
 
+    public static void DeleteUserInfo()
+    {
+        PlayerPrefs.DeleteKey(UserInfoVersion);
+    }
     public static UserInfo LoadUserInfo()
     {
         if(PlayerPrefs.HasKey(UserInfoVersion))
@@ -325,5 +329,10 @@ class UserSettingInfo
     private void Save()
     {
         UnityUtils.SaveToRegedit(KeyVersion, this);
+    }
+
+    public static void Delete()
+    {
+        PlayerPrefs.DeleteKey(KeyVersion);
     }
 }

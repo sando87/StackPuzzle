@@ -58,6 +58,7 @@ public class LevelEditor : EditorWindow
                 GUILayout.Label("========================================", EditorStyles.boldLabel);
                 GUILevelController();
                 GUILayout.Label("========================================", EditorStyles.boldLabel);
+                GUICustomFunctions();
             }
             GUILayout.EndVertical();
             GUILayout.Space(5);
@@ -130,7 +131,25 @@ public class LevelEditor : EditorWindow
         GUILayout.EndHorizontal();
         GUILayout.EndVertical();
     }
+    void GUICustomFunctions()
+    {
+        GUILayout.BeginVertical();
 
+        if (GUILayout.Button("Delete UserSettingInfo", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+            UserSettingInfo.Delete();
+        }
+        if (GUILayout.Button("Delete UserInfo", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+            UserSetting.DeleteUserInfo();
+        }
+        if (GUILayout.Button("Reserve1", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+        }
+
+        GUILayout.EndVertical();
+
+    }
 
     void GUIBlockSelector()
     {
