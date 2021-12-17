@@ -43,13 +43,13 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(InGameManager mgr, int idxX, int idxY, int coverCount, int bushIndex = 0)
+    public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int coverCount, int bushIndex = 0)
     {
         GameManager = mgr;
         IndexX = idxX;
         IndexY = idxY;
 
-        if (coverCount < 0)
+        if (isDisabled)
         {
             Empty = true;
             mCoverCount = 0;

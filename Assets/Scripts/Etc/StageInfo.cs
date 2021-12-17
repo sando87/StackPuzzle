@@ -8,16 +8,27 @@ public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, Item
 
 public class StageInfoCell
 {
-    public int ProductChocoCount;
-    public int ProductCapCount;
-    public int FrameCoverCount;
-    public int FrameBushCount;
-    public StageInfoCell(int chocoCount, int CoverCount, int capCount, int bushCount)
+    public int ChocoCount;
+    public int CapCount;
+    public int CoverCount;
+    public int BushCount;
+    public bool IsDisabled;
+
+    public StageInfoCell(bool isDisabled, int chocoCount, int coverCount, int capCount, int bushCount)
     {
-        ProductChocoCount = chocoCount;
-        FrameCoverCount = CoverCount;
-        ProductCapCount = capCount;
-        FrameBushCount = bushCount;
+        ChocoCount = chocoCount;
+        CoverCount = coverCount;
+        CapCount = capCount;
+        BushCount = bushCount;
+        IsDisabled = isDisabled;
+    }
+    public StageInfoCell()
+    {
+        ChocoCount = 0;
+        CoverCount = 0;
+        CapCount = 0;
+        BushCount = 0;
+        IsDisabled = false;
     }
 }
 public class StageInfo
@@ -69,6 +80,22 @@ public class StageInfo
         info.Num = stageNum;
         info.Difficulty = MatchingLevel.None;
         return info;
+    }
+
+    public static int GetStageCount()
+    {
+        string path = "./Assets/Resources/StageInfo/Version" + Version + "/";
+        DirectoryInfo info = new DirectoryInfo(path);
+        int cnt = 0;
+        foreach (System.IO.FileInfo file in info.GetFiles()) 
+        {
+            string name = file.Name.Split('.')[0];
+            if(int.TryParse(name, out int num))
+            {
+                cnt++;
+            }
+        }
+        return cnt;
     }
 
     public static StageInfo Load(MatchingLevel level)
@@ -159,21 +186,9 @@ public class StageInfo
         {
             ret += item.Key.ToString() + ":" + item.Value.ToString() + "/";
         }
-        return ret;
+        return ret.Length > 0 ? "Items," + ret + NewLine : "";
     }
 
-    public static void CreateStageInfoFolder()
-    {
-        string sDirPath = GetPath();
-        DirectoryInfo di = new DirectoryInfo(sDirPath);
-        if (di.Exists == false)
-            di.Create();
-    }
-
-    public static string GetPath()
-    {
-        return Application.persistentDataPath + "/StageInfo/Version" + Version + "/";
-    }
 
     public static Sprite TypeToImage(string goalType)
     {
@@ -293,19 +308,14 @@ public class StageInfo
         for (int xIdx = 0; xIdx < columns.Length; ++xIdx)
         {
             string[] keyValue = columns[xIdx].Split('/');
-            if(keyValue.Length == 2)
+            if(keyValue.Length == 5)
             {
-                int productChocoCount = keyValue[0] == "*" ? -1 : int.Parse(keyValue[0]);
-                int frameCoverCount = keyValue[1] == "x" ? -1 : int.Parse(keyValue[1]);
-                cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount, 0, 0);
-            }
-            else if(keyValue.Length == 4)
-            {
-                int productCapCount = int.Parse(keyValue[0]);
-                int productChocoCount = keyValue[1] == "*" ? -1 : int.Parse(keyValue[1]);
-                int frameBushCount = int.Parse(keyValue[2]);
-                int frameCoverCount = keyValue[3] == "x" ? -1 : int.Parse(keyValue[3]);
-                cells[xIdx] = new StageInfoCell(productChocoCount, frameCoverCount, productCapCount, frameBushCount);
+                bool isDisabled = keyValue[0] == "x" ? true : false;
+                int productCapCount = int.Parse(keyValue[1]);
+                int productChocoCount = int.Parse(keyValue[2]);
+                int frameBushCount = int.Parse(keyValue[3]);
+                int frameCoverCount = int.Parse(keyValue[4]);
+                cells[xIdx] = new StageInfoCell(isDisabled, productChocoCount, frameCoverCount, productCapCount, frameBushCount);
             }
         }
         BoardInfo.Add(cells);
@@ -316,11 +326,10 @@ public class StageInfo
         for (int xIdx = 0; xIdx < XCount; ++xIdx)
         {
             StageInfoCell cell = GetCell(xIdx, rowIndex);
-            string productChoco = cell.FrameCoverCount < 0 ? "*" : cell.FrameCoverCount.ToString();
-            string frameCover = cell.FrameCoverCount < 0 ? "x" : cell.FrameCoverCount.ToString();
-            rowString += cell.ProductCapCount + "/" + productChoco + "/" + cell.FrameBushCount + "/" + frameCover + " ";
+            string isDis = cell.IsDisabled ? "x" : "o";
+            rowString += isDis + "/" + cell.CapCount + "/" + cell.ChocoCount + "/" + cell.BushCount + "/" + cell.CoverCount + " ";
         }
-        return rowString + NewLine;
+        return "Rows," + rowString + NewLine;
     }
     public StageInfoCell GetCell(int idxX, int idxY)
     {
@@ -333,7 +342,7 @@ public class StageInfo
         {
             foreach(StageInfoCell cell in row)
             {
-                if (cell.ProductChocoCount > 0)
+                if (cell.ChocoCount > 0)
                     count++;
             }
         }
@@ -346,7 +355,7 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.FrameCoverCount > 0)
+                if (cell.CoverCount > 0)
                     count++;
             }
         }
@@ -359,7 +368,7 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.ProductCapCount > 0)
+                if (cell.CapCount > 0)
                     count++;
             }
         }
@@ -372,32 +381,59 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.FrameBushCount > 0)
+                if (cell.BushCount > 0)
                     count++;
             }
         }
         return count;
     }
 
-    public static void SaveDeefault(int stageNum)
+    private string RewardsToString()
     {
-        CreateStageInfoFolder();
-        string fullname = GetPath() + stageNum + ".txt";
-        string defaultData = 
-        "GoalType,Score" + NewLine +
-        "GoalValue,300" + NewLine +
-        "MoveLimit,25" + NewLine +
-        "ColorCount,5.0" + NewLine +
-        "StarPoint,50" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0" + NewLine +
-        "Rows,0/0 0/0 0/0 0/0 0/0 0/0 0/0";
+        string ret = "";
+        foreach(string reward in Rewards)
+        {
+            ret += "Reward," + reward + NewLine;
+        }
+        return ret;
 
-        File.WriteAllText(fullname, defaultData);
+    }
+    private string RowsToString()
+    {
+        string ret = "";
+        int cnt = BoardInfo.Count;
+        for (int i = 0; i < cnt; ++i)
+        {
+            ret += RowToString(i);
+        }
+        return ret;
     }
 
+#if UNITY_EDITOR
+    public void SaveToFile()
+    {
+        string fullname = "Assets/Resources/StageInfo/Version" + Version + "/" + Num + ".txt";
+        string data =
+        // comments
+        "# 0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)" + NewLine +
+        "# Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco" + NewLine +
+        "# Reward,gold/100" + NewLine +
+        "# Reward,dia/5" + NewLine +
+        "# Reward,1/1 2/1 3/1" + NewLine +
+
+        // data
+        "GoalType," + GoalType + NewLine +
+        "GoalValue," + GoalValue + NewLine +
+        "MoveLimit," + MoveLimit + NewLine +
+        "TimeLimit," + TimeLimit + NewLine +
+        "ColorCount," + ColorCount + NewLine +
+        "StarPoint," + StarPoint + NewLine +
+        "RandomSeed," + RandomSeed + NewLine +
+        ItemToString(Items) +
+        RewardsToString() +
+        RowsToString();
+
+        File.WriteAllText(fullname, data);
+    }
+#endif
 }

@@ -8,20 +8,23 @@ using System;
 
 public class LevelEditor : EditorWindow
 {
-    public Sprite NoBlockImage = null;
+    enum SelectType { NoBlock, CapProduct, IceProduct, BushFrame, RopeFrame }
+
+    public Sprite[] IceImages = null;
+    public Sprite[] CapImages = null;
+    public Sprite[] BushImages = null;
+    public Sprite[] RopeImages = null;
 
     //블럭 사이즈 정의
     private GUILayoutOption[] GridButtonSize = new GUILayoutOption[2] { GUILayout.Width(50), GUILayout.Height(50) };
     private GUILayoutOption[] GridButtonSizeHalf = new GUILayoutOption[2] { GUILayout.Width(25), GUILayout.Height(25) };
-    private int mCountX = 5;
-    private int mCountY = 5;
 
     private Vector2 ScrollPosition = Vector2.zero;
-    private int SelectorIndex = 0;
+    private SelectType CurrentSelection = SelectType.NoBlock;
     private string TextFieldLevel = "";
-    private string TextFieldTurn = "";
-    private string TextFieldBomb = "";
     GUIStyle BombCountTextStyle = null; //주변 폭탄 개수를 표시하는 Text 스타일
+
+    private StageInfo mStageInfo = null;
 
     [MenuItem("/Users/LevelEditor")]
     private static void ShowWind기ow()
@@ -35,10 +38,10 @@ public class LevelEditor : EditorWindow
     private void Initialze()
     {
         LoadResources();
-        //LoadLevel(1);
+        LoadLevel(1);
 
         //최초 실행시 비활성화 블럭이 선택된 상태로 시작
-        SelectorIndex = 0;
+        CurrentSelection = SelectType.NoBlock;
 
         BombCountTextStyle = new GUIStyle(); //GUI.skin.GetStyle("Label");
         BombCountTextStyle.alignment = TextAnchor.MiddleCenter;
@@ -58,7 +61,11 @@ public class LevelEditor : EditorWindow
                 GUILayout.Label("========================================", EditorStyles.boldLabel);
                 GUILevelController();
                 GUILayout.Label("========================================", EditorStyles.boldLabel);
-                GUICustomFunctions();
+                
+                if(mStageInfo != null)
+                {
+                    GUILevelStageMeta();
+                }
             }
             GUILayout.EndVertical();
             GUILayout.Space(5);
@@ -66,7 +73,11 @@ public class LevelEditor : EditorWindow
             {
                 GUIBlockSelector();
                 GUILayout.Label("=============================================================================================", EditorStyles.boldLabel);
-                GUIGameGrid();
+
+                if(mStageInfo != null)
+                {
+                    GUIGameGrid();
+                }
             }
             GUILayout.EndVertical();
         }
@@ -76,6 +87,66 @@ public class LevelEditor : EditorWindow
     }
 
     void GUILevelLoader()
+    {
+        GUILayout.BeginVertical();
+        GUILayout.BeginHorizontal();
+
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("New", new GUILayoutOption[] { GUILayout.Width(90) }))
+        {
+            CreateNewStage();
+        }
+        if (GUILayout.Button("Save", new GUILayoutOption[] { GUILayout.Width(90) }))
+        {
+            SaveToFile();
+        }
+        if (GUILayout.Button("Refresh", new GUILayoutOption[] { GUILayout.Width(90) }))
+        {
+            RefreshStage();
+        }
+
+        GUILayout.EndHorizontal();
+        GUILayout.EndVertical();
+    }
+    void GUILevelController()
+    {
+        GUILayout.BeginVertical();
+        GUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("<< 이전레벨", new GUILayoutOption[] { GUILayout.Width(90) }))
+        {
+            if(mStageInfo != null && mStageInfo.Num > 1)
+            {
+                LoadLevel(mStageInfo.Num - 1);
+            }
+        }
+
+        GUILayout.FlexibleSpace();
+
+        TextFieldLevel = GUILayout.TextField(TextFieldLevel, new GUILayoutOption[] { GUILayout.Width(60) });
+        if (int.TryParse(TextFieldLevel, out int userInputNumber))// && 0 < userInputNumber && userInputNumber <= LevelSpecs.Count)
+        {
+            LoadLevel(userInputNumber);
+        }
+        else
+        {
+            mStageInfo = null;
+        }
+
+        GUILayout.FlexibleSpace();
+
+        if (GUILayout.Button("다음레벨 >>", new GUILayoutOption[] { GUILayout.Width(90) }))
+        {
+            if (mStageInfo != null)
+            {
+                LoadLevel(mStageInfo.Num + 1);
+            }
+        }
+
+        GUILayout.EndHorizontal();
+        GUILayout.EndVertical();
+    }
+    void GUILevelStageMeta()
     {
         GUILayout.BeginVertical();
         GUILayout.BeginHorizontal();
@@ -94,62 +165,6 @@ public class LevelEditor : EditorWindow
         GUILayout.EndHorizontal();
         GUILayout.EndVertical();
     }
-    void GUILevelController()
-    {
-        GUILayout.BeginVertical();
-        GUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("<< 이전레벨", new GUILayoutOption[] { GUILayout.Width(90) }))
-        {
-            // LoadLevel(prevNumber);
-        }
-
-        GUILayout.FlexibleSpace();
-
-        TextFieldLevel = GUILayout.TextField(TextFieldLevel, new GUILayoutOption[] { GUILayout.Width(60) });
-        if (int.TryParse(TextFieldLevel, out int userInputNumber))// && 0 < userInputNumber && userInputNumber <= LevelSpecs.Count)
-        {
-            // if (userInputNumber != DisplayInfo.LevelNumber)
-            // {
-            //     LoadLevel(userInputNumber);
-            // }
-        }
-        else
-        {
-            // MapBlocks.Clear();
-            // DisplayInfo = new LevelEditorBoard();
-        }
-
-        GUILayout.FlexibleSpace();
-
-        if (GUILayout.Button("다음레벨 >>", new GUILayoutOption[] { GUILayout.Width(90) }))
-        {
-            // int nextNumber = Mathf.Min(DisplayInfo.LevelNumber + 1, LevelSpecs.Count);
-            // LoadLevel(nextNumber);
-        }
-
-        GUILayout.EndHorizontal();
-        GUILayout.EndVertical();
-    }
-    void GUICustomFunctions()
-    {
-        GUILayout.BeginVertical();
-
-        if (GUILayout.Button("Delete UserSettingInfo", new GUILayoutOption[] { GUILayout.Width(150) }))
-        {
-            UserSettingInfo.Delete();
-        }
-        if (GUILayout.Button("Delete UserInfo", new GUILayoutOption[] { GUILayout.Width(150) }))
-        {
-            UserSetting.DeleteUserInfo();
-        }
-        if (GUILayout.Button("Reserve1", new GUILayoutOption[] { GUILayout.Width(150) }))
-        {
-        }
-
-        GUILayout.EndVertical();
-
-    }
 
     void GUIBlockSelector()
     {
@@ -160,35 +175,30 @@ public class LevelEditor : EditorWindow
 
         GUILayout.BeginHorizontal();
         {
-            GUI.color = SelectorIndex == 0 ? enabledColor : disabledColor;
+            GUI.color = CurrentSelection == SelectType.NoBlock ? enabledColor : disabledColor;
             if (GUILayout.Button("X", GridButtonSize))
             {
-                SelectorIndex = 0;
+                CurrentSelection = SelectType.NoBlock;
             }
-            GUI.color = SelectorIndex == 1 ? enabledColor : disabledColor;
-            if (GUILayout.Button(NoBlockImage.texture, GridButtonSize))
+            GUI.color = CurrentSelection == SelectType.CapProduct ? enabledColor : disabledColor;
+            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
             {
-                SelectorIndex = 1;
+                CurrentSelection = SelectType.CapProduct;
             }
-            GUI.color = SelectorIndex == 2 ? enabledColor : disabledColor;
-            if (GUILayout.Button(NoBlockImage.texture, GridButtonSize))
+            GUI.color = CurrentSelection == SelectType.IceProduct ? enabledColor : disabledColor;
+            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
             {
-                SelectorIndex = 2;
+                CurrentSelection = SelectType.IceProduct;
             }
-            GUI.color = SelectorIndex == 3 ? enabledColor : disabledColor;
-            if (GUILayout.Button(NoBlockImage.texture, GridButtonSize))
+            GUI.color = CurrentSelection == SelectType.BushFrame ? enabledColor : disabledColor;
+            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
             {
-                SelectorIndex = 3;
+                CurrentSelection = SelectType.BushFrame;
             }
-            GUI.color = SelectorIndex == 4 ? enabledColor : disabledColor;
-            if (GUILayout.Button(NoBlockImage.texture, GridButtonSize))
+            GUI.color = CurrentSelection == SelectType.RopeFrame ? enabledColor : disabledColor;
+            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
             {
-                SelectorIndex = 4;
-            }
-            GUI.color = SelectorIndex == 5 ? enabledColor : disabledColor;
-            if (GUILayout.Button(NoBlockImage.texture, GridButtonSize))
-            {
-                SelectorIndex = 5;
+                CurrentSelection = SelectType.RopeFrame;
             }
         }
         GUILayout.EndHorizontal();
@@ -200,8 +210,8 @@ public class LevelEditor : EditorWindow
     void GUIGameGrid()
     {
         GUI.color = Color.white;
-        int countX = mCountX;
-        int countY = mCountY;
+        int countX = mStageInfo.XCount;
+        int countY = mStageInfo.YCount;
 
         GUILayout.BeginVertical();
 
@@ -250,8 +260,8 @@ public class LevelEditor : EditorWindow
     }
     void GUIGameBlockField()
     {
-        int countX = mCountX;
-        int countY = mCountY;
+        int countX = mStageInfo.XCount;
+        int countY = mStageInfo.YCount;
 
         GUILayout.BeginVertical();
         for (int row = 0; row < countY; row++)
@@ -319,37 +329,33 @@ public class LevelEditor : EditorWindow
     {
         string imagePath = "Assets/Images/";
 
-        NoBlockImage = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
+        IceImages = new Sprite[4];
+        IceImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
+        IceImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
+        IceImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
+        IceImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
     }
     private void LoadLevel(int levelNumber)
     {
-        // if(!LoadFromFile(levelNumber)) return;
-
-        // InitDisplayInfo(levelNumber);
-        // UpdateLevelSpecData();
+        LoadFromFile(levelNumber);
     }
+    
     private void DrawBlock(int idxX, int idxY)
     {
-        GUILayout.Button("X", GridButtonSize);
+        StageInfoCell block = ToCell(idxX, idxY);
+        if(block.IsDisabled)
+        {
+            if (GUILayout.Button("x", GridButtonSize)) {
+                OnClickBlock(idxX, idxY);
+            }
+            return;
+        }
 
-        // BlockRawData block = MapBlocks[ToIndex(idxX, idxY)];
-        // UpdateAroundBombCount(idxX, idxY);
+        // 블럭의 기본 베이스가 되는 이미지 먼저 그린다.
+        if (GUILayout.Button("o", GridButtonSize)) {
+            OnClickBlock(idxX, idxY);
+        }
 
-        // if(block.IsDisabled)
-        // {
-        //     if (GUILayout.Button("X", GridButtonSize)) {
-        //         OnClickBlock(idxX, idxY);
-        //     }
-        //     return;
-        // }
-
-        // // 블럭의 기본 베이스가 되는 이미지 먼저 그린다.
-        // if (block.IsBroken) //깨진 블럭이 우선순위가 가장 높고
-        // {
-        //     if (GUILayout.Button(BrokenBlockImage.texture, GridButtonSize)) {
-        //         OnClickBlock(idxX, idxY);
-        //     }
-        // }
         // else if(block.Gimmick == FileBlcokType.UnBreakable) //다음으로 깨질수없는 기믹 블럭
         // {
         //     if (GUILayout.Button(UnBreakableImage.texture, GridButtonSize)) {
@@ -411,7 +417,39 @@ public class LevelEditor : EditorWindow
     }
     private void OnClickBlock(int idxX, int idxY)
     {
-        LOG.trace();
+        StageInfoCell block = ToCell(idxX, idxY);
+        switch(CurrentSelection)
+        {
+            case SelectType.NoBlock:
+                {
+                    block.IsDisabled = !block.IsDisabled;
+                    break;
+                }
+            case SelectType.CapProduct:
+                {
+                    block.CapCount++;
+                    block.CapCount %= 4;
+                    break;
+                }
+            case SelectType.IceProduct:
+                {
+                    block.ChocoCount++;
+                    block.ChocoCount %= 4;
+                    break;
+                }
+            case SelectType.BushFrame:
+                {
+                    block.BushCount++;
+                    block.BushCount %= 4;
+                    break;
+                }
+            case SelectType.RopeFrame:
+                {
+                    block.CoverCount++;
+                    block.CoverCount %= 4;
+                    break;
+                }
+        }
     }
     // private int AddNewLevel()
     // {
@@ -429,7 +467,11 @@ public class LevelEditor : EditorWindow
 
     //     return newData.Number;
     // }
-    private int ToIndex(int idxX, int idxY) { return idxY * mCountX + idxX; }
+    
+    private StageInfoCell ToCell(int idxX, int idxY) 
+    { 
+        return mStageInfo.BoardInfo[idxY][idxX];
+    }
 
 
     public static void ReArrangeLevels()
@@ -450,83 +492,65 @@ public class LevelEditor : EditorWindow
 
     private bool LoadFromFile(int levelNum)
     {
-        // string stagePath = "Assets/GoldMineSweeper/Resources/" + CDefine.LEVEL_SPEC_TABLE + ".asset";
-        // LevelSpecTable levelTable = AssetDatabase.LoadAssetAtPath<LevelSpecTable>(stagePath);
-        // if(levelTable == null) return false;
-
-        // LevelSpecs.Clear();
-        // foreach(LevelSpec lv in levelTable.EnumLevels())
-        // {
-        //     LevelSpecs.Add(lv);
-        // }
-
-        // if(levelNum <= 0 || LevelSpecs.Count < levelNum) return false;
-
-        // string mapPath = "Assets/GoldMineSweeper/Resources/" + CDefine.LEVEL_TARGET_PATH + "/" + LevelSpecs[levelNum - 1].MapFilename + ".asset";
-        // LevelMapTable mapTable = AssetDatabase.LoadAssetAtPath<LevelMapTable>(mapPath);
-        // if(mapTable == null)
-        // {
-        //     return false;
-        // }
-
-        // MapBlocks.Clear();
-        // foreach (BlockRawData block in mapTable.EnumBlocks())
-        // {
-        //     MapBlocks.Add(block);
-        // }
-        // mCountX = mapTable.CountX;
-        // mCountY = mapTable.CountY;
+        mStageInfo = StageInfo.Load(levelNum);
+        if(mStageInfo == null)
+        {
+            return false;
+        }
+        TextFieldLevel = levelNum.ToString();
         return true;
     }
     private void SaveToFile()
     {
-        // if (MapBlocks.Count <= 0 || LevelSpecs.Count <= 0) return;
+        if(mStageInfo == null) return;
 
-        // string stagePath = "Assets/GoldMineSweeper/Resources/" + CDefine.LEVEL_SPEC_TABLE + ".asset";
-        // LevelSpecTable levelTable = AssetDatabase.LoadAssetAtPath<LevelSpecTable>(stagePath);
-        // levelTable.InvokePrivateMethod("UpdateSpecTable", new object[] { LevelSpecs.ToArray() });
-
-        // int levelNum = DisplayInfo.LevelNumber;
-        // string mapPath = "Assets/GoldMineSweeper/Resources/" + CDefine.LEVEL_TARGET_PATH + "/" + LevelSpecs[levelNum - 1].MapFilename + ".asset";
-        // LevelMapTable mapTable = AssetDatabase.LoadAssetAtPath<LevelMapTable>(mapPath);
-        // if(mapTable == null)
-        // {
-        //     mapTable = ScriptableObject.CreateInstance<LevelMapTable>();
-        //     UnityEditor.AssetDatabase.CreateAsset(mapTable, mapPath);
-        //     UnityEditor.AssetDatabase.Refresh();
-        // }
-        // mapTable.InvokePrivateMethod("UpdateMapTable", new object[] { MapBlocks.ToArray(), mCountX, mCountY });
+        mStageInfo.SaveToFile();
     }
+    
     private void AddRow()
     {
-        // MapBlocks.AddRange(new BlockRawData[mCountX]);
-        // mCountY++;
+        mStageInfo.BoardInfo.Add(new StageInfoCell[mStageInfo.XCount]);
     }
     private void SubRow()
     {
-        // MapBlocks.RemoveRange(MapBlocks.Count - mCountX, mCountX);
-        // mCountY--;
+        mStageInfo.BoardInfo.RemoveAt(mStageInfo.YCount - 1);
     }
     private void AddColumn()
     {
-        // List<BlockRawData> newBlocks = new List<BlockRawData>();
-        // for (int y = 0; y < mCountY; ++y)
-        // {
-        //     newBlocks.AddRange(MapBlocks.GetRange(y * mCountX, mCountX));
-        //     newBlocks.Add(new BlockRawData());
-        // }
-        // MapBlocks = newBlocks;
-        // mCountX++;
+        int rowCount = mStageInfo.YCount;
+        for (int y = 0; y < rowCount; ++y)
+        {
+            List<StageInfoCell> cells = new List<StageInfoCell>();
+            cells.AddRange(mStageInfo.BoardInfo[y]);
+            cells.Add(new StageInfoCell());
+            mStageInfo.BoardInfo[y] = cells.ToArray();
+        }
     }
     private void SubColumn()
     {
-        // List<BlockRawData> newBlocks = new List<BlockRawData>();
-        // for (int y = 0; y < mCountY; ++y)
-        // {
-        //     newBlocks.AddRange(MapBlocks.GetRange(y * mCountX, mCountX - 1));
-        // }
-        // MapBlocks = newBlocks;
-        // mCountX--;
+        int rowCount = mStageInfo.YCount;
+        int columCount = mStageInfo.XCount;
+        for (int y = 0; y < rowCount; ++y)
+        {
+            List<StageInfoCell> cells = new List<StageInfoCell>();
+            cells.AddRange(mStageInfo.BoardInfo[y]);
+            cells.RemoveAt(columCount - 1);
+            mStageInfo.BoardInfo[y] = cells.ToArray();
+        }
+    }
+    private void CreateNewStage()
+    {
+        int stageCount = StageInfo.GetStageCount();
+        int newStageNum = stageCount + 1;
+        mStageInfo = StageInfo.Load(1);
+        mStageInfo.Num = newStageNum;
+        TextFieldLevel = newStageNum.ToString();
+    }
+    private void RefreshStage()
+    {
+        if(mStageInfo == null) return;
+
+        mStageInfo = StageInfo.Load(mStageInfo.Num);
     }
 }
 #endif

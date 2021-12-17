@@ -225,7 +225,7 @@ public class InGameManager : MonoBehaviour
                 //frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).FrameCoverCount, info.GetCell(x, y).FrameBushCount);
+                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).IsDisabled, info.GetCell(x, y).CoverCount, info.GetCell(x, y).BushCount);
                 mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
@@ -258,13 +258,11 @@ public class InGameManager : MonoBehaviour
                 Product pro = CreateNewProduct(mFrames[x, y]);
 
                 StageInfoCell cellInfo = mStageInfo.GetCell(x, y);
-                int chocoCount = cellInfo.ProductChocoCount;
-                if (chocoCount == -1)
-                    pro.ChangeProductImage(ProductSkill.SameColor);
-                else if(chocoCount > 0)
+                int chocoCount = cellInfo.ChocoCount;
+                if(chocoCount > 0)
                     pro.IcedBlock.SetBlockCombo(chocoCount);
 
-                pro.InitCap(cellInfo.ProductCapCount);
+                pro.InitCap(cellInfo.CapCount);
                 pro.EventUnWrapChoco = () => {
                     Billboard.ChocoCount++;
                     EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
