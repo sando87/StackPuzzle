@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco, Cap, Bush }
@@ -82,20 +83,20 @@ public class StageInfo
         return info;
     }
 
-    public static int GetStageCount()
+    public static int GetMaxStageNum()
     {
         string path = "./Assets/Resources/StageInfo/Version" + Version + "/";
         DirectoryInfo info = new DirectoryInfo(path);
-        int cnt = 0;
+        int maxNum = 0;
         foreach (System.IO.FileInfo file in info.GetFiles()) 
         {
-            string name = file.Name.Split('.')[0];
-            if(int.TryParse(name, out int num))
+            string[] pieces = file.Name.Split('.');
+            if(pieces.Length == 2 && int.TryParse(pieces[0], out int num))
             {
-                cnt++;
+                maxNum = Math.Max(maxNum, num);
             }
         }
-        return cnt;
+        return maxNum;
     }
 
     public static StageInfo Load(MatchingLevel level)
@@ -136,7 +137,6 @@ public class StageInfo
             }
         }
 
-        info.BoardInfo.Reverse();
         info.GoalTypeImage = TypeToImage(info.GoalType);
         info.GoalTypeEnum = StringToType(info.GoalType);
         if(info.GoalValue <= 0)
@@ -434,6 +434,7 @@ public class StageInfo
         RowsToString();
 
         File.WriteAllText(fullname, data);
+        AssetDatabase.Refresh();
     }
 #endif
 }

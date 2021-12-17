@@ -225,7 +225,7 @@ public class InGameManager : MonoBehaviour
                 //frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(this, x, y, info.GetCell(x, y).IsDisabled, info.GetCell(x, y).CoverCount, info.GetCell(x, y).BushCount);
+                mFrames[x, y].Initialize(this, x, y, GetCellInversed(x, y).IsDisabled, GetCellInversed(x, y).CoverCount, GetCellInversed(x, y).BushCount);
                 mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
@@ -257,7 +257,7 @@ public class InGameManager : MonoBehaviour
 
                 Product pro = CreateNewProduct(mFrames[x, y]);
 
-                StageInfoCell cellInfo = mStageInfo.GetCell(x, y);
+                StageInfoCell cellInfo = GetCellInversed(x, y);
                 int chocoCount = cellInfo.ChocoCount;
                 if(chocoCount > 0)
                     pro.IcedBlock.SetBlockCombo(chocoCount);
@@ -276,6 +276,10 @@ public class InGameManager : MonoBehaviour
         }
 
         Network_StartGame(Serialize(initProducts.ToArray()));
+    }
+    private StageInfoCell GetCellInversed(int xIdx, int yIdx)
+    {
+        return mStageInfo.GetCell(xIdx, mStageInfo.YCount - 1 - yIdx);
     }
     public void CleanUpGame()
     {

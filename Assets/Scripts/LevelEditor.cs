@@ -126,7 +126,10 @@ public class LevelEditor : EditorWindow
         TextFieldLevel = GUILayout.TextField(TextFieldLevel, new GUILayoutOption[] { GUILayout.Width(60) });
         if (int.TryParse(TextFieldLevel, out int userInputNumber))// && 0 < userInputNumber && userInputNumber <= LevelSpecs.Count)
         {
-            LoadLevel(userInputNumber);
+            if(mStageInfo == null || userInputNumber != mStageInfo.Num)
+            {
+                LoadLevel(userInputNumber);
+            }
         }
         else
         {
@@ -540,7 +543,7 @@ public class LevelEditor : EditorWindow
     }
     private void CreateNewStage()
     {
-        int stageCount = StageInfo.GetStageCount();
+        int stageCount = StageInfo.GetMaxStageNum();
         int newStageNum = stageCount + 1;
         mStageInfo = StageInfo.Load(1);
         mStageInfo.Num = newStageNum;
