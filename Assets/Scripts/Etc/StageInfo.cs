@@ -137,21 +137,26 @@ public class StageInfo
             }
         }
 
-        info.GoalTypeImage = TypeToImage(info.GoalType);
-        info.GoalTypeEnum = StringToType(info.GoalType);
-        if(info.GoalValue <= 0)
-        {
-            if (info.GoalTypeEnum == StageGoalType.Choco)
-                info.GoalValue = info.GetChocoCount();
-            else if(info.GoalTypeEnum == StageGoalType.Cover)
-                info.GoalValue = info.GetCoverCount();
-            else if (info.GoalTypeEnum == StageGoalType.Cap)
-                info.GoalValue = info.GetCapCount();
-            else if (info.GoalTypeEnum == StageGoalType.Bush)
-                info.GoalValue = info.GetBushCount();
-        }
+        info.UpdateGoalInfo();
 
         return info;
+    }
+
+    public void UpdateGoalInfo()
+    {
+        GoalTypeImage = TypeToImage(GoalType);
+        GoalTypeEnum = StringToType(GoalType);
+        if (GoalValue <= 0)
+        {
+            if (GoalTypeEnum == StageGoalType.Choco)
+                GoalValue = GetChocoCount();
+            else if (GoalTypeEnum == StageGoalType.Cover)
+                GoalValue = GetCoverCount();
+            else if (GoalTypeEnum == StageGoalType.Cap)
+                GoalValue = GetCapCount();
+            else if (GoalTypeEnum == StageGoalType.Bush)
+                GoalValue = GetBushCount();
+        }
     }
 
     public int ComboTypeCount()

@@ -22,7 +22,8 @@ public class LevelEditor : EditorWindow
     private Vector2 ScrollPosition = Vector2.zero;
     private SelectType CurrentSelection = SelectType.NoBlock;
     private string TextFieldLevel = "";
-    GUIStyle BombCountTextStyle = null; //주변 폭탄 개수를 표시하는 Text 스타일
+    private int GoalTypeIndex = 0;
+    string[] GoalTypeList = new string[] { "Score", "Cap", "Ice", "Bush", "Rope" };
 
     private StageInfo mStageInfo = null;
 
@@ -38,15 +39,10 @@ public class LevelEditor : EditorWindow
     private void Initialze()
     {
         LoadResources();
-        LoadLevel(1);
+        LoadFromFile(1);
 
         //최초 실행시 비활성화 블럭이 선택된 상태로 시작
         CurrentSelection = SelectType.NoBlock;
-
-        BombCountTextStyle = new GUIStyle(); //GUI.skin.GetStyle("Label");
-        BombCountTextStyle.alignment = TextAnchor.MiddleCenter;
-        BombCountTextStyle.fontSize = 16;
-        BombCountTextStyle.fontStyle = FontStyle.Bold;
     }
 
     private void OnGUI()
@@ -117,7 +113,7 @@ public class LevelEditor : EditorWindow
         {
             if(mStageInfo != null && mStageInfo.Num > 1)
             {
-                LoadLevel(mStageInfo.Num - 1);
+                LoadFromFile(mStageInfo.Num - 1);
             }
         }
 
@@ -128,7 +124,7 @@ public class LevelEditor : EditorWindow
         {
             if(mStageInfo == null || userInputNumber != mStageInfo.Num)
             {
-                LoadLevel(userInputNumber);
+                LoadFromFile(userInputNumber);
             }
         }
         else
@@ -142,7 +138,7 @@ public class LevelEditor : EditorWindow
         {
             if (mStageInfo != null)
             {
-                LoadLevel(mStageInfo.Num + 1);
+                LoadFromFile(mStageInfo.Num + 1);
             }
         }
 
@@ -152,20 +148,82 @@ public class LevelEditor : EditorWindow
     void GUILevelStageMeta()
     {
         GUILayout.BeginVertical();
+
         GUILayout.BeginHorizontal();
-
+        GUILayout.Label("Version", EditorStyles.boldLabel);
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("New", new GUILayoutOption[] { GUILayout.Width(90) }))
+        GUILayout.Label(StageInfo.Version.ToString(), EditorStyles.boldLabel);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("LevelNumber", EditorStyles.boldLabel);
+        GUILayout.FlexibleSpace();
+        GUILayout.Label(mStageInfo.Num.ToString(), EditorStyles.boldLabel);
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+
+        GUILayout.BeginHorizontal();
+        int preIndex = GoalTypeIndex;
+        GoalTypeIndex = EditorGUILayout.Popup("GoalType", GoalTypeIndex, GoalTypeList);
+        if(preIndex != GoalTypeIndex)
         {
+            ChangeGoalTypeTo(GoalTypeIndex);
         }
-        if (GUILayout.Button("Save", new GUILayoutOption[] { GUILayout.Width(90) }))
+        GUILayout.EndHorizontal();
+
+        if(mStageInfo.GoalTypeEnum == StageGoalType.Score)
         {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("GoalValue", EditorStyles.label);
+            GUILayout.FlexibleSpace();
+            mStageInfo.GoalValue = EditorGUILayout.IntField(mStageInfo.GoalValue, new GUILayoutOption[1] { GUILayout.Width(100) });
+            GUILayout.EndHorizontal();
         }
-        if (GUILayout.Button("Refresh", new GUILayoutOption[] { GUILayout.Width(90) }))
+        else
         {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("GoalValue", EditorStyles.label);
+            GUILayout.FlexibleSpace();
+            int goalCount = GetGoalCount();
+            GUILayout.Label(goalCount.ToString(), EditorStyles.label);
+            GUILayout.EndHorizontal();
         }
 
+        GUILayout.Space(10);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("MoveLimit", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.MoveLimit = EditorGUILayout.IntField(mStageInfo.MoveLimit, new GUILayoutOption[1] { GUILayout.Width(100) });
         GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("TimeLimit", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.TimeLimit = EditorGUILayout.IntField(mStageInfo.TimeLimit, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("ColorCount", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.ColorCount = EditorGUILayout.FloatField(mStageInfo.ColorCount, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("StarPoint", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.StarPoint = EditorGUILayout.IntField(mStageInfo.StarPoint, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("RandomSeed", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.RandomSeed = EditorGUILayout.IntField(mStageInfo.RandomSeed, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
         GUILayout.EndVertical();
     }
 
@@ -184,7 +242,7 @@ public class LevelEditor : EditorWindow
                 CurrentSelection = SelectType.NoBlock;
             }
             GUI.color = CurrentSelection == SelectType.CapProduct ? enabledColor : disabledColor;
-            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
+            if (GUILayout.Button(CapImages[0].texture, GridButtonSize))
             {
                 CurrentSelection = SelectType.CapProduct;
             }
@@ -194,12 +252,12 @@ public class LevelEditor : EditorWindow
                 CurrentSelection = SelectType.IceProduct;
             }
             GUI.color = CurrentSelection == SelectType.BushFrame ? enabledColor : disabledColor;
-            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
+            if (GUILayout.Button(BushImages[0].texture, GridButtonSize))
             {
                 CurrentSelection = SelectType.BushFrame;
             }
             GUI.color = CurrentSelection == SelectType.RopeFrame ? enabledColor : disabledColor;
-            if (GUILayout.Button(IceImages[0].texture, GridButtonSize))
+            if (GUILayout.Button(RopeImages[0].texture, GridButtonSize))
             {
                 CurrentSelection = SelectType.RopeFrame;
             }
@@ -285,9 +343,10 @@ public class LevelEditor : EditorWindow
                     }
                     continue;
                 }
-
-                DrawBlock(col - 1, row);
-
+                else
+                {
+                    DrawBlock(col - 1, row);
+                }
             }
             GUILayout.EndHorizontal();
         }
@@ -297,60 +356,46 @@ public class LevelEditor : EditorWindow
     }
     void CheckFieldDownSizing()
     {
-        // int countX = mCountX;
-        // int countY = mCountY;
+        int countX = mStageInfo.XCount;
+        int countY = mStageInfo.YCount;
 
-        // bool isLastRowAllDisbled = true;
-        // for (int x = 0; x < countX; ++x)
-        // {
-        //     if(!MapBlocks[ToIndex(x, countY - 1)].IsDisabled)
-        //     {
-        //         isLastRowAllDisbled = false;
-        //         break;
-        //     }
-        // }
+        bool isLastRowAllDisbled = true;
+        for (int x = 0; x < countX; ++x)
+        {
+            if(!ToCell(x, countY - 1).IsDisabled)
+            {
+                isLastRowAllDisbled = false;
+                break;
+            }
+        }
 
-        // bool isLastColumnAllDisbled = true;
-        // for (int y = 0; y < countY; ++y)
-        // {
-        //     if (!MapBlocks[ToIndex(countX - 1, y)].IsDisabled)
-        //     {
-        //         isLastColumnAllDisbled = false;
-        //         break;
-        //     }
-        // }
+        bool isLastColumnAllDisbled = true;
+        for (int y = 0; y < countY; ++y)
+        {
+            if (!ToCell(countX - 1, y).IsDisabled)
+            {
+                isLastColumnAllDisbled = false;
+                break;
+            }
+        }
 
-        // if(isLastRowAllDisbled)
-        //     SubRow();
+        if(isLastRowAllDisbled)
+            SubRow();
 
-        // if (isLastColumnAllDisbled)
-        //     SubColumn();
+        if (isLastColumnAllDisbled)
+            SubColumn();
     }
-
-
-    private void LoadResources()
-    {
-        string imagePath = "Assets/Images/";
-
-        IceImages = new Sprite[4];
-        IceImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
-        IceImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
-        IceImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
-        IceImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockStone_big.png", typeof(Sprite));
-    }
-    private void LoadLevel(int levelNumber)
-    {
-        LoadFromFile(levelNumber);
-    }
-    
     private void DrawBlock(int idxX, int idxY)
     {
         StageInfoCell block = ToCell(idxX, idxY);
         if(block.IsDisabled)
         {
+            Color oriColor = GUI.color;
+            GUI.color = Color.gray;
             if (GUILayout.Button("x", GridButtonSize)) {
                 OnClickBlock(idxX, idxY);
             }
+            GUI.color = oriColor;
             return;
         }
 
@@ -359,64 +404,22 @@ public class LevelEditor : EditorWindow
             OnClickBlock(idxX, idxY);
         }
 
-        // else if(block.Gimmick == FileBlcokType.UnBreakable) //다음으로 깨질수없는 기믹 블럭
-        // {
-        //     if (GUILayout.Button(UnBreakableImage.texture, GridButtonSize)) {
-        //         OnClickBlock(idxX, idxY);
-        //     }
-        // }
-        // else //다음으로 기본 색상이 반영된다.
-        // {
-        //     Texture colorBlockTex = BlockImgaes[(int)block.BlockColor].texture;
-        //     if (GUILayout.Button(colorBlockTex, GridButtonSize)) {
-        //         OnClickBlock(idxX, idxY);
-        //     }
-        // }
-
-        // // Overlap되어 겹쳐 그려져야 하는 폭탄이나 이동 기믹 블럭들을 그려준다
-        // if (block.IsJelly)
-        // {
-        //     GUI.Box(GUILayoutUtility.GetLastRect(), JellyImage.texture);
-        // }
-        // if (block.Gimmick == FileBlcokType.Returnable)
-        // {
-        //     GUI.Box(GUILayoutUtility.GetLastRect(), ReturnableImage.texture);
-        // }
-        // if (block.Gimmick == FileBlcokType.Movable)
-        // {
-        //     Texture arrowTexture = null;
-        //     switch (block.MoveDirection)
-        //     {
-        //         case OutlinePosition.Right: arrowTexture = ArrowImages[0].texture; break;
-        //         case OutlinePosition.Left: arrowTexture = ArrowImages[1].texture; break;
-        //         case OutlinePosition.Top: arrowTexture = ArrowImages[2].texture; break;
-        //         default: arrowTexture = ArrowImages[3].texture; break;
-        //     }
-        //     GUI.Box(GUILayoutUtility.GetLastRect(), arrowTexture);
-        // }
-        // if (block.IsBomb)
-        // {
-        //     Rect bombRect = GUILayoutUtility.GetLastRect();
-        //     bombRect.center += new Vector2(12.5f, 12.5f);
-        //     GUIStyle bombSize = new GUIStyle();
-        //     bombSize.fixedWidth = 25;
-        //     bombSize.fixedHeight = 25;
-        //     GUI.Box(bombRect, BombImage.texture, bombSize);
-        // }
-        // if (block.PreventBomb)
-        // {
-        //     Rect noBombRect = GUILayoutUtility.GetLastRect();
-        //     noBombRect.center += new Vector2(12.5f, 12.5f);
-        //     GUIStyle noBombSize = new GUIStyle();
-        //     noBombSize.fixedWidth = 25;
-        //     noBombSize.fixedHeight = 25;
-        //     GUI.Box(noBombRect, NoBombImage.texture, noBombSize);
-        // }
-        // if (block.Number > 0 && block.IsBroken)
-        // {
-        //     BombCountTextStyle.normal.textColor = BlockUnit.TextCountToColor(block.Number);
-        //     GUI.Label(GUILayoutUtility.GetLastRect(), block.Number.ToString(), BombCountTextStyle);
-        // }
+        if (block.CapCount > 0)
+        {
+            GUI.Box(GUILayoutUtility.GetLastRect(), CapImages[block.CapCount - 1].texture);
+        }
+        if (block.ChocoCount > 0)
+        {
+            GUI.Box(GUILayoutUtility.GetLastRect(), IceImages[block.ChocoCount - 1].texture);
+        }
+        if (block.BushCount > 0)
+        {
+            GUI.Box(GUILayoutUtility.GetLastRect(), BushImages[block.BushCount - 1].texture);
+        }
+        if (block.CoverCount > 0)
+        {
+            GUI.Box(GUILayoutUtility.GetLastRect(), RopeImages[block.CoverCount - 1].texture);
+        }
     }
     private void OnClickBlock(int idxX, int idxY)
     {
@@ -431,68 +434,53 @@ public class LevelEditor : EditorWindow
             case SelectType.CapProduct:
                 {
                     block.CapCount++;
-                    block.CapCount %= 4;
+                    block.CapCount %= CapImages.Length + 1;
                     break;
                 }
             case SelectType.IceProduct:
                 {
                     block.ChocoCount++;
-                    block.ChocoCount %= 4;
+                    block.ChocoCount %= IceImages.Length + 1;
                     break;
                 }
             case SelectType.BushFrame:
                 {
                     block.BushCount++;
-                    block.BushCount %= 4;
+                    block.BushCount %= BushImages.Length + 1;
                     break;
                 }
             case SelectType.RopeFrame:
                 {
                     block.CoverCount++;
-                    block.CoverCount %= 4;
+                    block.CoverCount %= RopeImages.Length + 1;
                     break;
                 }
         }
     }
-    // private int AddNewLevel()
-    // {
-    //     LevelSpec newData = new LevelSpec();
-    //     newData.Number = LevelSpecs.Count + 1;
-    //     newData.MaxMoves = 8;
-    //     newData.GoldTargetCount = 0;
-    //     newData.MapFilename = CDefine.LEVEL_MAP_SUFFIX + DateTime.Now.ToString("MMdd_hhmmss");
-    //     LevelSpecs.Add(newData);
 
-    //     MapBlocks.Clear();
-    //     MapBlocks.AddRange(new BlockRawData[25]);
-    //     mCountX = 5;
-    //     mCountY = 5;
-
-    //     return newData.Number;
-    // }
-    
-    private StageInfoCell ToCell(int idxX, int idxY) 
-    { 
-        return mStageInfo.BoardInfo[idxY][idxX];
-    }
-
-
-    public static void ReArrangeLevels()
+    private void LoadResources()
     {
-        // string stagePath = "Assets/GoldMineSweeper/Resources/" + CDefine.LEVEL_SPEC_TABLE + ".asset";
-        // LevelSpecTable levelTable = AssetDatabase.LoadAssetAtPath<LevelSpecTable>(stagePath);
+        string imagePath = "Assets/Images/";
 
-        // List<LevelSpec> tmpLevels = new List<LevelSpec>();
-        // foreach (LevelSpec lv in levelTable.EnumLevels())
-        // {
-        //     LevelSpec spec = lv;
-        //     spec.Number = tmpLevels.Count + 1;
-        //     tmpLevels.Add(spec);
-        // }
+        CapImages = new Sprite[5];
+        CapImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block.png", typeof(Sprite));
+        CapImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block2.png", typeof(Sprite));
+        CapImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block3.png", typeof(Sprite));
+        CapImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block4.png", typeof(Sprite));
+        CapImages[4] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block5.png", typeof(Sprite));
 
-        // levelTable.InvokePrivateMethod("UpdateSpecTable", new object[] { tmpLevels.ToArray() });
+        IceImages = new Sprite[1];
+        IceImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockIce_big.png", typeof(Sprite));
+
+        BushImages = new Sprite[1];
+        BushImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront.png", typeof(Sprite));
+
+        RopeImages = new Sprite[4];
+        RopeImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross1.png", typeof(Sprite));
+        RopeImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross2.png", typeof(Sprite));
+        RopeImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross3.png", typeof(Sprite));
+        RopeImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross4.png", typeof(Sprite));
     }
-
     private bool LoadFromFile(int levelNum)
     {
         mStageInfo = StageInfo.Load(levelNum);
@@ -501,6 +489,7 @@ public class LevelEditor : EditorWindow
             return false;
         }
         TextFieldLevel = levelNum.ToString();
+        UpdateGoalTypeIndex();
         return true;
     }
     private void SaveToFile()
@@ -509,10 +498,56 @@ public class LevelEditor : EditorWindow
 
         mStageInfo.SaveToFile();
     }
+
+    private void UpdateGoalTypeIndex()
+    {
+        switch (mStageInfo.GoalTypeEnum)
+        {
+            case StageGoalType.Score: GoalTypeIndex = 0; return;
+            case StageGoalType.Cap: GoalTypeIndex = 1; return;
+            case StageGoalType.Choco: GoalTypeIndex = 2; return;
+            case StageGoalType.Bush: GoalTypeIndex = 3; return;
+            case StageGoalType.Cover: GoalTypeIndex = 4; return;
+        }
+    }
+    private void ChangeGoalTypeTo(int index)
+    {
+        string goalTypeString = "Score";
+        switch(index)
+        {
+            case 0: goalTypeString = "Score"; break;
+            case 1: goalTypeString = "Cap"; break;
+            case 2: goalTypeString = "Choco"; break;
+            case 3: goalTypeString = "Bush"; break;
+            case 4: goalTypeString = "Cover"; break;
+        }
+
+        mStageInfo.GoalType = goalTypeString;
+        mStageInfo.UpdateGoalInfo();
+    }
+    private int GetGoalCount()
+    {
+        switch (mStageInfo.GoalTypeEnum)
+        {
+            case StageGoalType.Cap: return mStageInfo.GetCapCount();
+            case StageGoalType.Choco: return mStageInfo.GetChocoCount();
+            case StageGoalType.Bush: return mStageInfo.GetBushCount();
+            case StageGoalType.Cover: return mStageInfo.GetCoverCount();
+        }
+        return 0;
+    }
+    private StageInfoCell ToCell(int idxX, int idxY)
+    {
+        return mStageInfo.BoardInfo[idxY][idxX];
+    }
     
     private void AddRow()
     {
-        mStageInfo.BoardInfo.Add(new StageInfoCell[mStageInfo.XCount]);
+        List<StageInfoCell> row = new List<StageInfoCell>();
+        for (int i = 0; i < mStageInfo.XCount; ++i)
+            row.Add(new StageInfoCell());
+
+        mStageInfo.BoardInfo.Add(row.ToArray());
     }
     private void SubRow()
     {
