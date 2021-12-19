@@ -22,7 +22,7 @@ public enum SwipeDirection
 };
 public enum ProductSkill
 {
-    Nothing, Horizontal, Vertical, Bomb, SameColor
+    Nothing, Horizontal, Vertical, Bomb, SameColor, Hammer
 };
 public enum PurchaseItemType
 {

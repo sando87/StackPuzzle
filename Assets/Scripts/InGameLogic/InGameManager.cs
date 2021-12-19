@@ -2100,13 +2100,15 @@ public class InGameManager : MonoBehaviour
             return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
-        int ran = UnityEngine.Random.Range(0, 3);
+        int ran = UnityEngine.Random.Range(0, 4);
         if (ran == 0)
             skill = ProductSkill.Horizontal;
         else if (ran == 1)
             skill = ProductSkill.Vertical;
-        else
+        else if (ran == 2)
             skill = ProductSkill.Bomb;
+        else
+            skill = ProductSkill.Hammer;
 
         return skill;
     }

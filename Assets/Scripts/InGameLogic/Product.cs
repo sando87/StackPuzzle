@@ -16,6 +16,7 @@ public class Product : MonoBehaviour
     public Sprite ImgVertical;
     public Sprite ImgBomb;
     public Sprite ImgSameColor;
+    public Sprite ImgHammer;
     public Sprite ImgCombo;
     public Sprite ImgClosed;
     public GameObject ComboNumPrefab;
@@ -523,6 +524,7 @@ public class Product : MonoBehaviour
             case ProductSkill.Vertical:     Renderer.sprite = ImgVertical; break;
             case ProductSkill.Bomb:         Renderer.sprite = ImgBomb; break;
             case ProductSkill.SameColor:    Renderer.sprite = ImgSameColor; break;
+            case ProductSkill.Hammer:       Renderer.sprite = ImgHammer; break;
             default: break;
         }
     }
