@@ -457,7 +457,7 @@ public class InGameManager : MonoBehaviour
         Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect, timerCounter);
         mProductCount += destroyedProducts.Length;
     }
-    private Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
+    public Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
     {
         if (matches == null || matches.Length <= 0)
             return matches;
