@@ -38,6 +38,7 @@ public class InGameManager : MonoBehaviour
     public GameObject TrailingPrefab;
     public GameObject MissilePrefab;
     public GameObject MeteorPrefab;
+    public GameObject LineRocketPrefab;
 
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
@@ -660,12 +661,18 @@ public class InGameManager : MonoBehaviour
         target.SkillCasted = true;
         if (target.Skill == ProductSkill.Horizontal)
         {
-            CreateStripeEffect(target.transform.position, false);
-            Product[] pros = ScanHorizenProducts(target);
-            DestroyProducts(pros);
-            foreach (Product pro in pros)
-                if (pro != target && pro.Skill != ProductSkill.Nothing)
-                    DestroySkillChain(pro);
+            GameObject rocket = Instantiate(LineRocketPrefab, transform);
+            rocket.transform.position = target.transform.position;
+            rocket.transform.DOMoveX(rocket.transform.position.x + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+            {
+                Destroy(rocket);
+            });
+            // CreateStripeEffect(target.transform.position, false);
+            // Product[] pros = ScanHorizenProducts(target);
+            // DestroyProducts(pros);
+            // foreach (Product pro in pros)
+            //     if (pro != target && pro.Skill != ProductSkill.Nothing)
+            //         DestroySkillChain(pro);
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
