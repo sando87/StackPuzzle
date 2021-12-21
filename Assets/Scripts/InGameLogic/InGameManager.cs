@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
@@ -698,6 +699,27 @@ public class InGameManager : MonoBehaviour
 
                 }, null));
         }
+        else if (target.Skill == ProductSkill.Hammer)
+        {
+            StartCoroutine(DestroyHammerEffect(target));
+        }
+    }
+    private IEnumerator DestroyHammerEffect(Product target)
+    {
+        target.Animation.Play("idle");
+        yield return null;
+        target.Animation.Stop();
+        float duration = 0.8f;
+        Product nextTarget = FindHammerTarget();
+        float topPosY = target.transform.position.y + 4;
+        target.transform.DOMoveX(nextTarget.transform.position.x, duration);
+        target.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+
+        target.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+        yield return new WaitForSeconds(duration * 0.5f);
+        target.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad);
+        yield return new WaitForSeconds(duration * 0.5f);
+        DestroyProducts(new Product[2] {target, nextTarget});
     }
 
     private void DestroySkillNormal_Normal(Product main, Product sub)
@@ -2694,6 +2716,10 @@ public class InGameManager : MonoBehaviour
         }
 
         eventEnd?.Invoke();
+    }
+    private Product FindHammerTarget()
+    {
+        return mFrames[0, 0].ChildProduct;
     }
 
     #endregion
