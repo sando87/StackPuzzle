@@ -206,6 +206,16 @@ public class Product : MonoBehaviour
 
         return parent;
     }
+    public void DetachFromField()
+    {
+        IsDestroying = true;
+        Animation.Stop();
+        transform.localPosition = new Vector3(0, 0, -1);
+        transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        Detach(Manager.transform);
+        Manager.ProductIDs.Remove(InstanceID);
+        Destroy(gameObject);
+    }
     public Product Dir(SwipeDirection dir)
     {
         switch (dir)

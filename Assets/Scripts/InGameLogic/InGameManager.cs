@@ -565,6 +565,23 @@ public class InGameManager : MonoBehaviour
         return validProducts;
     }
 
+
+    IEnumerator DetachProduct(Product product)
+    {
+
+        //SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
+        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit, mSFXVolume);
+        Frame parentFrame = product.ParentFrame;
+        product.DetachFromField();
+        Product newPro = CreateNewProduct();
+        parentFrame.VertFrames.AddNewProduct(newPro);
+        newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
+        mRequestDrop = true;
+        mProductCount++;
+
+        yield return new WaitForSeconds(0);
+    }
+
     private void DropNextProducts()
     {
         if (mStopDropping)
@@ -663,6 +680,9 @@ public class InGameManager : MonoBehaviour
         {
             GameObject rocket = Instantiate(LineRocketPrefab, transform);
             rocket.transform.position = target.transform.position;
+
+            DetachProduct(target);
+            
             rocket.transform.DOMoveX(rocket.transform.position.x + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
             {
                 Destroy(rocket);
