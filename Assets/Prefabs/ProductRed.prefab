@@ -128,8 +128,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 0e3771d780f52da469b76acdfd05d149, type: 3}
   - {fileID: 21300000, guid: fe14384f03543094da4a01bef9d5c660, type: 3}
   - {fileID: 21300000, guid: c47fbddfe10081b47bb951ee69020d01, type: 3}
-  ImgHorizontal: {fileID: 21300000, guid: 7811148399876d441afe9179f58e19f2, type: 3}
-  ImgVertical: {fileID: 21300000, guid: b3de6e9327925ab478fd41039bd839e7, type: 3}
+  ImgHorizontal: {fileID: 21300000, guid: a6bd615bc3ec64ad9b9fac7f4eaa7654, type: 3}
+  ImgVertical: {fileID: 21300000, guid: 376f927787651434d829f459c9aade4d, type: 3}
   ImgBomb: {fileID: 21300000, guid: e5e05a422b9f82f469905445f179f73c, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 1ef8c6073aa03dc4eb73f3faf2de4798, type: 3}
   ImgHammer: {fileID: 21300000, guid: f155c897078834e6abd1d72767f75704, type: 3}

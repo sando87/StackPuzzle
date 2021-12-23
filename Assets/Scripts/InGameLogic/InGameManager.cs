@@ -678,30 +678,44 @@ public class InGameManager : MonoBehaviour
         target.SkillCasted = true;
         if (target.Skill == ProductSkill.Horizontal)
         {
-            GameObject rocket = Instantiate(LineRocketPrefab, transform);
-            rocket.transform.position = target.transform.position;
-
+            Vector3 startPosition = target.transform.position;
             DetachProduct(target);
             
-            rocket.transform.DOMoveX(rocket.transform.position.x + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+            GameObject rocketL = Instantiate(LineRocketPrefab, transform);
+            rocketL.transform.position = startPosition;
+            rocketL.transform.DOMoveX(rocketL.transform.position.x + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
             {
-                Destroy(rocket);
+                Destroy(rocketL);
             });
-            // CreateStripeEffect(target.transform.position, false);
-            // Product[] pros = ScanHorizenProducts(target);
-            // DestroyProducts(pros);
-            // foreach (Product pro in pros)
-            //     if (pro != target && pro.Skill != ProductSkill.Nothing)
-            //         DestroySkillChain(pro);
+            
+            GameObject rocketR = Instantiate(LineRocketPrefab, transform);
+            rocketR.transform.position = startPosition;
+            rocketR.transform.rotation = Quaternion.Euler(0, 0, 180);
+            rocketR.transform.DOMoveX(rocketR.transform.position.x - 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+            {
+                Destroy(rocketR);
+            });
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
-            CreateStripeEffect(target.transform.position, true);
-            Product[] pros = ScanVerticalProducts(target);
-            DestroyProducts(pros);
-            foreach (Product pro in pros)
-                if (pro != target && pro.Skill != ProductSkill.Nothing)
-                    DestroySkillChain(pro);
+            Vector3 startPosition = target.transform.position;
+            DetachProduct(target);
+
+            GameObject rocketT = Instantiate(LineRocketPrefab, transform);
+            rocketT.transform.position = startPosition;
+            rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
+            rocketT.transform.DOMoveY(rocketT.transform.position.y + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+            {
+                Destroy(rocketT);
+            });
+
+            GameObject rocketB = Instantiate(LineRocketPrefab, transform);
+            rocketB.transform.position = startPosition;
+            rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
+            rocketB.transform.DOMoveY(rocketB.transform.position.y - 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+            {
+                Destroy(rocketB);
+            });
         }
         else if (target.Skill == ProductSkill.Bomb)
         {
