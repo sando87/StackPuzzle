@@ -169,16 +169,44 @@ public class Product : MonoBehaviour
             }));
         }
     }
-    public bool ReadyForDestroy(int combo)
+    public bool IsObstacled()
     {
-        if(IsCapped)
+        if(ParentFrame != null)
+        {
+            if(ParentFrame.IsBushed || ParentFrame.IsCovered)
+                return true;
+        }
+        
+        if (IsCapped || IsChocoBlock)
+            return true;
+
+        return false;
+    }
+    public void BreakObstacle()
+    {
+        if(ParentFrame.IsBushed)
+        {
+            ParentFrame.BreakBush(Combo);
+        }
+        else if(ParentFrame.IsCovered)
+        {
+            ParentFrame.BreakCover();
+        }
+        else if (IsCapped)
         {
             BreakCap();
+        }
+        else if(IsChocoBlock)
+        {
+            BreakChocoBlock(Combo);
+        }
+    }
+    public bool ReadyForDestroy(int combo)
+    {
+        if(IsObstacled() || IsLocked)
+        {
             return false;
         }
-
-        if (IsDestroying)
-            return false;
 
         IsDestroying = true;
         Combo = combo;
