@@ -440,7 +440,10 @@ public class InGameManager : MonoBehaviour
     
     IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect, int timerCounter)
     {
-        yield return new WaitForSeconds(delay);
+        if(delay > 0)
+        {
+            yield return new WaitForSeconds(delay);
+        }
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
         //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit, mSFXVolume);
@@ -458,7 +461,7 @@ public class InGameManager : MonoBehaviour
         Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect, timerCounter);
         mProductCount += destroyedProducts.Length;
     }
-    public Product[] DestroyProducts(Product[] matches, bool withLaserEffect = false)
+    public Product[] DestroyProducts(Product[] matches, float delay = UserSetting.MatchReadyInterval)
     {
         if (matches == null || matches.Length <= 0)
             return matches;
@@ -468,6 +471,18 @@ public class InGameManager : MonoBehaviour
         int addedScore = 0;
         foreach (Product pro in matches)
         {
+            if(pro.IsObstacled())
+            {
+                pro.BreakObstacle();
+                continue;
+            }
+
+            if(pro.Skill != ProductSkill.Nothing)
+            {
+                DestroySkillChain(pro);
+                continue;
+            }
+
             if (pro.ReadyForDestroy(Billboard.CurrentCombo))
             {
                 addedScore += Billboard.CurrentCombo;
@@ -480,7 +495,7 @@ public class InGameManager : MonoBehaviour
             return validProducts;
 
         mProductCount -= validProducts.Length;
-        StartCoroutine(DestroyProductDelay(validProducts, UserSetting.MatchReadyInterval, withLaserEffect, mPVPTimerCounter));
+        StartCoroutine(DestroyProductDelay(validProducts, delay, false, mPVPTimerCounter));
 
         int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
         int preAttackCount = Billboard.CurrentScore / spa;
