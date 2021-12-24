@@ -10,6 +10,8 @@ public class Rocket : MonoBehaviour
     private Frame mCurrentFrame = null;
     private InGameManager mIngameMgr = null;
 
+    public Action<Frame> EventExplosion { get; set; } = null;
+
     void Start() 
     {
         mIngameMgr = InGameManager.InstCurrent;
@@ -22,17 +24,9 @@ public class Rocket : MonoBehaviour
 
         if(mCurrentFrame != nowFrame)
         {
-            DoSomtiong(nowFrame);
+            EventExplosion?.Invoke(nowFrame);
             mCurrentFrame = nowFrame;
         }
-    }
-
-    private void DoSomtiong(Frame frame)
-    {
-        Product pro = frame.ChildProduct;
-        if(pro == null || pro.IsLocked) return;
-
-        mIngameMgr.DestroyProducts(new Product[] { pro });
     }
 
     private Frame FindOnFrame()
