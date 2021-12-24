@@ -670,6 +670,77 @@ public class InGameManager : MonoBehaviour
         return count;
     }
 
+    private IEnumerator BreakHorizontalProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    {
+        if(delay > 0)
+        {
+            mIsUserEventLock = true;
+            pro.transform.DOShakePosition(delay);
+            yield return new WaitForSeconds(delay);
+            mIsUserEventLock = false;
+        }
+
+        Vector3 startPosition = pro.transform.position;
+        DetachProduct(pro);
+
+        GameObject rocketL = Instantiate(LineRocketPrefab, transform);
+        rocketL.transform.position = startPosition;
+        rocketL.transform.DOMoveX(rocketL.transform.position.x + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+        {
+            Destroy(rocketL);
+        });
+
+        GameObject rocketR = Instantiate(LineRocketPrefab, transform);
+        rocketR.transform.position = startPosition;
+        rocketR.transform.rotation = Quaternion.Euler(0, 0, 180);
+        rocketR.transform.DOMoveX(rocketR.transform.position.x - 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+        {
+            Destroy(rocketR);
+        });
+    }
+    private IEnumerator BreakVerticalProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    {
+        if (delay > 0)
+        {
+            mIsUserEventLock = true;
+            pro.transform.DOShakePosition(delay);
+            yield return new WaitForSeconds(delay);
+            mIsUserEventLock = false;
+        }
+
+        Vector3 startPosition = pro.transform.position;
+        DetachProduct(pro);
+
+        GameObject rocketT = Instantiate(LineRocketPrefab, transform);
+        rocketT.transform.position = startPosition;
+        rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
+        rocketT.transform.DOMoveY(rocketT.transform.position.y + 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+        {
+            Destroy(rocketT);
+        });
+
+        GameObject rocketB = Instantiate(LineRocketPrefab, transform);
+        rocketB.transform.position = startPosition;
+        rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
+        rocketB.transform.DOMoveY(rocketB.transform.position.y - 5, 1).SetEase(Ease.InCubic).OnComplete(() =>
+        {
+            Destroy(rocketB);
+        });
+    }
+    private IEnumerator BreakBombProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    {
+        if (delay > 0)
+        {
+            mIsUserEventLock = true;
+            pro.Animation.Play("destroy");
+            yield return new WaitForSeconds(delay);
+            mIsUserEventLock = false;
+        }
+
+        CreateExplosionEffect(pro.transform.position);
+        Product[] pros = ScanAroundProducts(pro, 1);
+        DestroyProducts(pros);
+    }
     private void DestroySkillChain(Product target)
     {
         if (target.SkillCasted)
