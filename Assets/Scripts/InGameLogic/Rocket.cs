@@ -7,9 +7,10 @@ using DG.Tweening;
 
 public class Rocket : MonoBehaviour
 {
-    private Frame mCurrentFrame = null;
+    private Dictionary<Frame, int> mFrames = new Dictionary<Frame, int>();
     private InGameManager mIngameMgr = null;
 
+    public bool IsBig { get; set; } = false;
     public Action<Frame> EventExplosion { get; set; } = null;
 
     void Start() 
@@ -19,19 +20,47 @@ public class Rocket : MonoBehaviour
 
     void Update()
     {
-        Frame nowFrame = FindOnFrame();
-        if(nowFrame == null) return;
+        Frame[] nowFrames = FindOnFrames();
+        if(nowFrames.Length == 0) return;
 
-        if(mCurrentFrame != nowFrame)
+        foreach(Frame nextFrame in nowFrames)
         {
-            EventExplosion?.Invoke(nowFrame);
-            mCurrentFrame = nowFrame;
+            if (!mFrames.ContainsKey(nextFrame))
+            {
+                EventExplosion?.Invoke(nextFrame);
+                mFrames[nextFrame] = 1;
+            }
         }
+
     }
 
-    private Frame FindOnFrame()
+    private Frame[] FindOnFrames()
     {
-        return mIngameMgr.FrameOfWorldPos(transform.position.x, transform.position.y);
+        List<Frame> frames = new List<Frame>();
+        Frame frame = mIngameMgr.FrameOfWorldPos(transform.position.x, transform.position.y);
+        if(frame != null)
+        {
+            frames.Add(frame);
+        }
+
+        if(IsBig)
+        {
+            Vector3 upPosition = transform.position + transform.up * mIngameMgr.GridSize;
+            Frame upframe = mIngameMgr.FrameOfWorldPos(upPosition.x, upPosition.y);
+            if (upframe != null)
+            {
+                frames.Add(upframe);
+            }
+
+            Vector3 downPosition = transform.position - transform.up * mIngameMgr.GridSize;
+            Frame downframe = mIngameMgr.FrameOfWorldPos(downPosition.x, downPosition.y);
+            if (downframe != null)
+            {
+                frames.Add(downframe);
+            }
+        }
+
+        return frames.ToArray();
     }
 }
 

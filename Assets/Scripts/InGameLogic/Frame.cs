@@ -90,17 +90,33 @@ public class Frame : MonoBehaviour
     {
         return IndexX > 0 ? GameManager.Frame(IndexX - 1, IndexY) : null;
     }
+    public Frame MostLeft()
+    {
+        return GameManager.Frame(0, IndexY);
+    }
     public Frame Right()
     {
         return IndexX < GameManager.CountX - 1 ? GameManager.Frame(IndexX + 1, IndexY) : null;
+    }
+    public Frame MostRight()
+    {
+        return GameManager.Frame(GameManager.CountX - 1, IndexY);
     }
     public Frame Down()
     {
         return IndexY > 0 ? GameManager.Frame(IndexX, IndexY - 1) : null;
     }
+    public Frame MostDown()
+    {
+        return GameManager.Frame(IndexX, 0);
+    }
     public Frame Up()
     {
         return IndexY < GameManager.CountY - 1 ? GameManager.Frame(IndexX, IndexY + 1) : null;
+    }
+    public Frame MostUp()
+    {
+        return GameManager.Frame(IndexX, GameManager.CountY - 1);
     }
     public Frame[] GetAroundFrames()
     {

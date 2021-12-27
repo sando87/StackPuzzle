@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class Product : MonoBehaviour
 {
@@ -304,33 +305,18 @@ public class Product : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
     }
-    public void StartToDrop(Frame frame)
+    public void StartToDrop(Frame frame, float duration)
     {
         if (ParentFrame != null)
             Detach(ParentFrame.VertFrames.transform);
 
-        StopCoroutine("DropToFrame");
-        StartCoroutine("DropToFrame", frame);
-    }
-    private IEnumerator DropToFrame(Frame destFrame)
-    {
         IsDropping = true;
-        float acc = 40;
-        Vector3 destPos = destFrame.transform.position;
-        while (true)
+        transform.DOKill();
+        transform.DOMoveY(frame.transform.position.y, duration).SetEase(Ease.InQuad).OnComplete(() =>
         {
-            DropSpeed += acc * Time.deltaTime;
-            float dy = DropSpeed * Time.deltaTime;
-            transform.position -= new Vector3(0, dy, 0);
-            if (transform.position.y <= destPos.y)
-                break;
-
-            yield return null;
-        }
-        transform.SetPosition2D(destPos);
-
-        IsDropping = false;
-        DropEndToFrame(destFrame);
+            IsDropping = false;
+            DropEndToFrame(frame);
+        });
     }
     private void OnTriggerStay2D(Collider2D collision)
     {

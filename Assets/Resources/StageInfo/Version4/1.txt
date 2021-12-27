@@ -7,7 +7,7 @@ GoalType,Score
 GoalValue,200
 MoveLimit,20
 TimeLimit,0
-ColorCount,5
+ColorCount,4
 StarPoint,30
 RandomSeed,-1
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 

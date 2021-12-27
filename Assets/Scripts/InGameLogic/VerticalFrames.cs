@@ -8,6 +8,8 @@ public class VerticalFrames : MonoBehaviour
     private List<Product> NewProducts = new List<Product>();
     private Frame[] Frames = null;
     public int MaskOrder { get; private set; } = 0;
+    public int HoldCount { get; set; } = 0;
+    public bool IsHolded { get { return HoldCount > 0; } }
 
     public void init(int maskOrder, float scale)
     {
@@ -154,18 +156,18 @@ public class VerticalFrames : MonoBehaviour
         eventEnd?.Invoke();
     }
 
-    public void StartToDrop()
+    public Product[] StartToDrop()
     {
-        if (NewProducts.Count <= 0)
-            return;
+        if (NewProducts.Count <= 0 || IsHolded)
+            return null;
 
         Frame firstFrame = FindFirstEmptyFrame();
         if (firstFrame == null)
-            return;
+            return null;
 
         bool isLocked = IsLockedProduct(firstFrame);
         if (isLocked)
-            return;
+            return null;
 
         List<Product> targets = new List<Product>();
         Product[] pros = GetComponentsInChildren<Product>();
@@ -182,11 +184,12 @@ public class VerticalFrames : MonoBehaviour
         Frame curFrame = firstFrame;
         foreach(Product target in targets)
         {
-            target.StartToDrop(curFrame);
+            target.StartToDrop(curFrame, 0.3f);
             curFrame = curFrame.Up();
         }
 
         NewProducts.Clear();
+        return targets.ToArray();
     }
     private Frame FindFirstEmptyFrame()
     {
