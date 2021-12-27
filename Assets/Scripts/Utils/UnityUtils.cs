@@ -344,6 +344,7 @@ public static class MyExtensions
     private static Sprite SkillImageHori = null;
     private static Sprite SkillImageBomb = null;
     private static Sprite SkillImageSame = null;
+    private static Sprite SkillImageHammer = null;
 
     private static Sprite LeagueImageBronze = null;
     private static Sprite LeagueImageSilver = null;
@@ -356,6 +357,7 @@ public static class MyExtensions
         SkillImageHori = Resources.Load<Sprite>("Images/skillVert");
         SkillImageBomb = Resources.Load<Sprite>("Images/skillBomb");
         SkillImageSame = Resources.Load<Sprite>("Images/skillSame");
+        SkillImageHammer = Resources.Load<Sprite>("Images/skillHammer");
 
         LeagueImageBronze = Resources.Load<Sprite>("Images/rune_bronze");
         LeagueImageSilver = Resources.Load<Sprite>("Images/rune_silver");
@@ -381,6 +383,7 @@ public static class MyExtensions
             case ProductSkill.Vertical: return SkillImageVert;
             case ProductSkill.Bomb: return SkillImageBomb;
             case ProductSkill.SameColor: return SkillImageSame;
+            case ProductSkill.Hammer: return SkillImageHammer;
             default: return null;
         }
     }

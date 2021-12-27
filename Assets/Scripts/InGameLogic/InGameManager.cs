@@ -455,7 +455,7 @@ public class InGameManager : MonoBehaviour
         //Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect, timerCounter);
         mProductCount += destroyedProducts.Length;
     }
-    public Product[] DestroyProducts(Product[] matches, float delay = UserSetting.MatchReadyInterval)
+    public Product[] DestroyProducts(Product[] matches, float delay = UserSetting.MatchReadyInterval, bool ignoreSkill = false)
     {
         if (matches == null || matches.Length <= 0)
             return matches;
@@ -476,7 +476,7 @@ public class InGameManager : MonoBehaviour
                 continue;
             }
 
-            if(pro.Skill != ProductSkill.Nothing)
+            if(pro.Skill != ProductSkill.Nothing && !ignoreSkill)
             {
                 BreakSkillProduct(pro);
             }
@@ -716,19 +716,23 @@ public class InGameManager : MonoBehaviour
         return count;
     }
 
-    private IEnumerator BreakHorizontalProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    private IEnumerator BreakHorizontalProduct(Frame frame, float delay = UserSetting.MatchReadyInterval)
     {
-        Vector3 startPosition = pro.transform.position;
-        Vector3 rightEndPosition = pro.ParentFrame.MostRight().transform.position;
-        Vector3 leftEndPosition = pro.ParentFrame.MostLeft().transform.position;
+        Vector3 startPosition = frame.transform.position;
+        Vector3 rightEndPosition = frame.MostRight().transform.position;
+        Vector3 leftEndPosition = frame.MostLeft().transform.position;
         float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
         maxDistance += GridSize;
 
-        mDropLockCount++;
+        //mDropLockCount++;
         if(delay > 0)
         {
             mIsUserEventLock = true;
-            pro.transform.DOShakePosition(delay, 0.1f);
+            if(frame.ChildProduct != null)
+            {
+                frame.ChildProduct.transform.DOShakePosition(delay, 0.1f);
+            }
+
             yield return new WaitForSeconds(delay);
             mIsUserEventLock = false;
         }
@@ -765,24 +769,26 @@ public class InGameManager : MonoBehaviour
             Destroy(rocketL.gameObject);
         });
 
-        yield return new WaitUntil(() => rocketL == null && rocketR == null);
-        mDropLockCount--;
+        //yield return new WaitUntil(() => rocketL == null && rocketR == null);
+        //mDropLockCount--;
     }
-    private IEnumerator BreakVerticalProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    private IEnumerator BreakVerticalProduct(Frame frame, float delay = UserSetting.MatchReadyInterval)
     {
-        Vector3 startPosition = pro.transform.position;
-        Vector3 topEndPosition = pro.ParentFrame.MostUp().transform.position;
-        Vector3 bottomEndPosition = pro.ParentFrame.MostDown().transform.position;
+        Vector3 startPosition = frame.transform.position;
+        Vector3 topEndPosition = frame.MostUp().transform.position;
+        Vector3 bottomEndPosition = frame.MostDown().transform.position;
         float maxDistance = Mathf.Max(startPosition.y - bottomEndPosition.y, topEndPosition.y - startPosition.y);
         maxDistance += GridSize;
 
-        Frame parentFrame = pro.ParentFrame;
-        parentFrame.VertFrames.HoldCount++;
+        frame.VertFrames.HoldCount++;
 
         if (delay > 0)
         {
             mIsUserEventLock = true;
-            pro.transform.DOShakePosition(delay, 0.1f);
+            if(frame.ChildProduct != null)
+            {
+                frame.ChildProduct.transform.DOShakePosition(delay, 0.1f);
+            }
             yield return new WaitForSeconds(delay);
             mIsUserEventLock = false;
         }
@@ -820,20 +826,23 @@ public class InGameManager : MonoBehaviour
         });
 
         yield return new WaitUntil(() => rocketT == null && rocketB == null);
-        parentFrame.VertFrames.HoldCount--;
+        frame.VertFrames.HoldCount--;
     }
-    private IEnumerator BreakBombProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
+    private IEnumerator BreakBombProduct(Frame frame, float delay = UserSetting.MatchReadyInterval)
     {
         if (delay > 0)
         {
             mIsUserEventLock = true;
-            pro.Animation.Play("destroy");
+            if(frame.ChildProduct != null)
+            {
+                frame.ChildProduct.Animation.Play("destroy");
+            }
             yield return new WaitForSeconds(delay);
             mIsUserEventLock = false;
         }
 
-        CreateExplosionEffect(pro.transform.position);
-        Product[] pros = ScanAroundProducts(pro, 1);
+        CreateExplosionEffect(frame.transform.position);
+        Product[] pros = ScanAroundProducts(frame.ChildProduct, 1);
         DestroyProducts(pros);
     }
     private IEnumerator BreakHammerProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
@@ -852,7 +861,7 @@ public class InGameManager : MonoBehaviour
         float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
         float topPosY = hammerObj.transform.position.y + 3;
-        hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration);
+        hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
         hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
 
         hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
@@ -864,7 +873,6 @@ public class InGameManager : MonoBehaviour
         {
             DestroyProducts(new Product[1] { nextTarget.ChildProduct });
         }
-        
     }
     private IEnumerator BreakRainbowProduct(Product pro, float delay = UserSetting.MatchReadyInterval)
     {
@@ -892,15 +900,15 @@ public class InGameManager : MonoBehaviour
         target.SkillCasted = true;
         if (target.Skill == ProductSkill.Horizontal)
         {
-            StartCoroutine(BreakHorizontalProduct(target, delay));
+            StartCoroutine(BreakHorizontalProduct(target.ParentFrame, delay));
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
-            StartCoroutine(BreakVerticalProduct(target, delay));
+            StartCoroutine(BreakVerticalProduct(target.ParentFrame, delay));
         }
         else if (target.Skill == ProductSkill.Bomb)
         {
-            StartCoroutine(BreakBombProduct(target, delay));
+            StartCoroutine(BreakBombProduct(target.ParentFrame, delay));
         }
         else if (target.Skill == ProductSkill.SameColor)
         {
@@ -1118,6 +1126,68 @@ public class InGameManager : MonoBehaviour
         mDropLockCount--;
         mIsUserEventLock = false;
     }
+    private IEnumerator DestroySkillHammer_Bomb(Product productHammer, Product productBomb)
+    {
+        //mIsUserEventLock = true;
+        GameObject bombObj = Instantiate(SimpleSpritePrefab, transform);
+        bombObj.transform.position = productBomb.transform.position;
+        bombObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        bombObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Bomb.GetSprite();
+        //yield return new WaitForSeconds(UserSetting.MatchReadyInterval);
+        //mIsUserEventLock = false;
+
+        float duration = 0.8f;
+        Frame nextTarget = FindHammerTarget();
+        yield return StartCoroutine(ThrowOver(bombObj, nextTarget.transform.position, duration));
+        Destroy(bombObj);
+
+        StartCoroutine(BreakBombProduct(nextTarget, 0));
+    }
+    private IEnumerator DestroySkillHammer_Hori(Product productHammer, Product productHori)
+    {
+        //mIsUserEventLock = true;
+        GameObject horiObj = Instantiate(SimpleSpritePrefab, transform);
+        horiObj.transform.position = productHori.transform.position;
+        horiObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        horiObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Horizontal.GetSprite();
+        //yield return new WaitForSeconds(UserSetting.MatchReadyInterval);
+        //mIsUserEventLock = false;
+
+        float duration = 0.8f;
+        Frame nextTarget = FindHammerTarget();
+        yield return StartCoroutine(ThrowOver(horiObj, nextTarget.transform.position, duration));
+        Destroy(horiObj);
+
+        StartCoroutine(BreakHorizontalProduct(nextTarget, 0));
+    }
+    private IEnumerator DestroySkillHammer_Vert(Product productHammer, Product productVert)
+    {
+        //mIsUserEventLock = true;
+        GameObject horiObj = Instantiate(SimpleSpritePrefab, transform);
+        horiObj.transform.position = productVert.transform.position;
+        horiObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        horiObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Horizontal.GetSprite();
+        //yield return new WaitForSeconds(UserSetting.MatchReadyInterval);
+        //mIsUserEventLock = false;
+
+        float duration = 0.8f;
+        Frame nextTarget = FindHammerTarget();
+        yield return StartCoroutine(ThrowOver(horiObj, nextTarget.transform.position, duration));
+        Destroy(horiObj);
+
+        StartCoroutine(BreakVerticalProduct(nextTarget, 0));
+    }
+    private IEnumerator ThrowOver(GameObject target, Vector3 dest, float duration)
+    {
+        float topPosY = target.transform.position.y + 3;
+        target.transform.DOMoveX(dest.x, duration).SetEase(Ease.Linear);
+        target.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+
+        target.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+        yield return new WaitForSeconds(duration * 0.5f);
+        target.transform.DOMoveY(dest.y, duration * 0.5f).SetEase(Ease.InQuad);
+        yield return new WaitForSeconds(duration * 0.5f);
+    }
 
     private void DestroySkillWithSamecolor(Product productA, Product productB)
     {
@@ -1154,6 +1224,24 @@ public class InGameManager : MonoBehaviour
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
                 () => {
+                    Network_ChangeSkill(netInfo.ToArray());
+                    StartCoroutine(DestroySkillSimpleLoop());
+                }));
+        }
+        else if (another.Skill == ProductSkill.Ham)
+        {
+            List<Product> randomProducts = ScanRandomProducts(7);
+            randomProducts.Add(sameColor);
+            Product[] pros = randomProducts.ToArray();
+
+            List<ProductInfo> netInfo = new List<ProductInfo>();
+            StartCoroutine(CreateProductBullets(sameColor, 0.2f, true, pros,
+                (pro) =>
+                {
+                    netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
+                },
+                () =>
+                {
                     Network_ChangeSkill(netInfo.ToArray());
                     StartCoroutine(DestroySkillSimpleLoop());
                 }));
@@ -1294,7 +1382,7 @@ public class InGameManager : MonoBehaviour
         mItemLooping = true;
         List<Product> sameSkills = new List<Product>();
         foreach (Frame frame in mFrames)
-            if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor && !frame.ChildProduct.IsChocoBlock)
+            if (frame.ChildProduct != null && frame.ChildProduct.Skill == ProductSkill.SameColor)
                 sameSkills.Add(frame.ChildProduct);
 
         while(true)
@@ -1313,7 +1401,7 @@ public class InGameManager : MonoBehaviour
                 break;
 
             Product[] pros = FindSameColor(target);
-            DestroyProducts(pros);
+            DestroyProducts(pros, UserSetting.MatchReadyInterval, true);
             yield return new WaitForSeconds(UserSetting.SameSkillInterval);
         }
         mItemLooping = false;
@@ -2519,8 +2607,14 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked || pro == target)
+            if (pro == null || pro.IsLocked)
                 continue;
+
+            if (pro == target)
+            {
+                pros.Add(pro);
+                continue;
+            }
 
             if (skipSkill && pro.Skill != ProductSkill.Nothing)
                 continue;
@@ -2966,7 +3060,29 @@ public class InGameManager : MonoBehaviour
     }
     private Frame FindHammerTarget()
     {
-        return mFrames[0, 0];
+        Frame scenaryFrame = null;
+        int randomStartIndex = UnityEngine.Random.Range(0, mFrames.Length);
+        for (int i = 0; i < mFrames.Length; ++i)
+        {
+            int ranIdx = (i + randomStartIndex) % mFrames.Length;
+            int idxX = ranIdx % CountX;
+            int idxY = ranIdx / CountX;
+            Frame frame = Frame(idxX, idxY);
+            if(frame.ChildProduct != null && frame.ChildProduct.IsObstacled())
+            {
+                return frame;
+            }
+
+            if(scenaryFrame == null)
+            {
+                if(frame.ChildProduct != null)
+                {
+                    scenaryFrame = frame;
+                }
+            }
+        }
+
+        return scenaryFrame;
     }
 
     #endregion

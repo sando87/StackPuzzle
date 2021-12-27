@@ -13,7 +13,7 @@ public class UserSetting
     #region Game System Config Values
     public const int NameLengthMin = 3;
     public const int StageTotalCount = 100;
-    public const float SameSkillInterval = 0.3f; //SameSkill2 매칭 간격
+    public const float SameSkillInterval = 1.3f; //SameSkill2 매칭 간격
     public const float ComboMatchInterval = 0.3f; //콤보 매칭간 시간
     public const float MatchReadyInterval = 0.3f; //매칭되고 실제 터지기까지 시간
     public const float ProductDropGravity = -50.0f; //떨어지는 속도
