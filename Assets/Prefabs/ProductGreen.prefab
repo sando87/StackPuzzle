@@ -4969,6 +4969,8 @@ MonoBehaviour:
     type: 3}
   CapObject: {fileID: 9106356467153095585}
   WaterDropParticle: {fileID: 2368693174287922659}
+  CapBreakingEffectPrefab: {fileID: 2181236465794078134, guid: dbdd235c27fa9274c884cc57aa37a885,
+    type: 3}
   IcedBlock: {fileID: 3739135166766130237}
 --- !u!61 &914925551782911538
 BoxCollider2D:

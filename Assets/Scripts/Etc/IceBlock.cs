@@ -7,45 +7,47 @@ public class IceBlock : MonoBehaviour
     [SerializeField]
     private TextMeshPro ComboText = null;
 
-    public bool IsIced { get { return ThresholdCombo > 0; } }
-    public int ThresholdCombo { get; set; } = 0;
+    public bool IsIced { get { return BreakDepth > 0; } }
+    public int BreakDepth { get; set; } = 0;
     public Frame ParentFrame { get { return transform.GetComponentInParent<Frame>(); } }
 
-    public bool BreakBlock(int combo)
+    public bool BreakBlock(float delay = UserSetting.MatchReadyInterval)
     {
-        if (combo < ThresholdCombo)
+        if (!IsIced)
         {
-            StartCoroutine(AnimateTwinkle());
             return false;
         }
 
-        int oriCombo = ThresholdCombo;
-        ThresholdCombo = 0;
-        StartCoroutine(AnimShake());
-        StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.MatchReadyInterval, () =>
+        if(delay > 0)
         {
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
-            gameObject.SetActive(false);
-            IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
-            obj.SetBlockCombo(oriCombo);
-            obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-            ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
-        }));
-        return true;
-    }
-    public void SetBlockCombo(int thresholdCombo)
-    {
-        if (thresholdCombo <= 0)
+            StartCoroutine(AnimShake());
+            CancelInvoke("BreakAction");
+            Invoke("BreakAction", delay);
+        }
+        else
         {
-            ThresholdCombo = 0;
-            ComboText.text = "";
-            gameObject.SetActive(false);
-            return;
+            BreakAction();
         }
 
-        ThresholdCombo = thresholdCombo;
-        gameObject.SetActive(true);
-        ComboText.text = thresholdCombo == 1 ? "" : thresholdCombo.ToString();
+        return true;
+    }
+    private void BreakAction()
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
+
+        IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
+        obj.SetDepth(BreakDepth);
+        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
+
+        SetDepth(BreakDepth - 1);
+    }
+    public void SetDepth(int depth)
+    {
+        CancelInvoke("BreakAction");
+        BreakDepth = depth;
+        gameObject.SetActive(IsIced);
+        ComboText.text = BreakDepth.ToString();
         transform.localScale = Vector3.one;
     }
 

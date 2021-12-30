@@ -15,6 +15,7 @@ public class Frame : MonoBehaviour
     public SpriteRenderer CoverRenderer;
     public GameObject BreakStonesParticle;
     public GameObject BushObject;
+    public GameObject BushEffectPrefab;
     public GameObject ComboNumPrefab;
 
     public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
@@ -64,7 +65,7 @@ public class Frame : MonoBehaviour
         }
 
         mBushIndex = bushIndex;
-        InitBush();
+        UpdateBush();
     }
 
     public void ShowBorder(int pos)
@@ -137,22 +138,19 @@ public class Frame : MonoBehaviour
         Destroy(obj, 1.0f);
     }
 
-    public void BreakBush(int combo)
+    public void BreakBush()
     {
         if (!IsBushed)
             return;
 
-        if (combo < mBushIndex)
-            return;
-
-        mBushIndex = 0;
-        BushObject.GetComponentInChildren<Animator>().enabled = false;
-        BushObject.GetComponent<SpriteRenderer>().enabled = false;
-        BushObject.transform.GetChild(1).gameObject.SetActive(false);
-        BushObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
+        mBushIndex--;
+        Instantiate(BushEffectPrefab, transform.position, Quaternion.identity, transform);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBush);
-        Destroy(BushObject, 3.0f);
-        EventBreakBush?.Invoke(this);
+        TouchBush();
+        UpdateBush();
+
+        if(mBushIndex <= 0)
+            EventBreakBush?.Invoke(this);
     }
     public void TouchBush()
     {
@@ -163,11 +161,11 @@ public class Frame : MonoBehaviour
             BushObject.GetComponentInChildren<Animator>().Play("bush", -1, 0);
         }
     }
-    private void InitBush()
+    private void UpdateBush()
     {
         BushObject.SetActive(IsBushed);
         if (IsBushed)
-            BushObject.GetComponentInChildren<TextMeshPro>().text = mBushIndex == 1 ? "" : mBushIndex.ToString();
+            BushObject.GetComponentInChildren<TextMeshPro>().text = mBushIndex.ToString();
     }
 
     public void CreateComboTextEffect(int combo, ProductColor color)
@@ -231,6 +229,33 @@ public class Frame : MonoBehaviour
             yield return null;
         }
         Destroy(obj);
+    }
+    public bool IsObstacled()
+    {
+        if (IsBushed || IsCovered)
+            return true;
+
+        return false;
+    }
+    public void BreakObstacle(float delay)
+    {
+        StartCoroutine(CoBreakObstacle(delay));
+    }
+    private IEnumerator CoBreakObstacle(float delay)
+    {
+        if(delay > 0)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        if (IsBushed)
+        {
+            BreakBush();
+        }
+        else if (IsCovered)
+        {
+            BreakCover();
+        }
     }
 
 }

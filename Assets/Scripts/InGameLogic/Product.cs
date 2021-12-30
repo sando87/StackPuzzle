@@ -23,6 +23,7 @@ public class Product : MonoBehaviour
     public GameObject ComboNumPrefab;
     public GameObject CapObject;
     public GameObject WaterDropParticle;
+    public GameObject CapBreakingEffectPrefab;
     public IceBlock IcedBlock;
 
     public Action EventUnWrapChoco;
@@ -44,7 +45,7 @@ public class Product : MonoBehaviour
     public bool SkillCasted { get; set; } = false;
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
     public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
-    public bool IsClosed { get { return IcedBlock.ThresholdCombo == 99; } }
+    public bool IsClosed { get { return false; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
 
     public void AttachTo(Frame parentFrame)
@@ -162,8 +163,6 @@ public class Product : MonoBehaviour
         else
         {
             Frame parent = Detach(Manager.transform);
-            parent.BreakCover();
-            parent.BreakBush(Combo);
             Manager.ProductIDs.Remove(InstanceID);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Destroy(gameObject);
@@ -172,34 +171,20 @@ public class Product : MonoBehaviour
     }
     public bool IsObstacled()
     {
-        if(ParentFrame != null)
-        {
-            if(ParentFrame.IsBushed || ParentFrame.IsCovered)
-                return true;
-        }
-        
         if (IsCapped || IsChocoBlock)
             return true;
 
         return false;
     }
-    public void BreakObstacle()
+    public void BreakObstacle(float delay)
     {
-        if(ParentFrame.IsBushed)
+        if (IsCapped)
         {
-            ParentFrame.BreakBush(Combo);
-        }
-        else if(ParentFrame.IsCovered)
-        {
-            ParentFrame.BreakCover();
-        }
-        else if (IsCapped)
-        {
-            BreakCap();
+            BreakCap(delay);
         }
         else if(IsChocoBlock)
         {
-            BreakChocoBlock(Combo);
+            BreakChocoBlock(delay);
         }
     }
     public bool ReadyForDestroy(int combo)
@@ -227,8 +212,6 @@ public class Product : MonoBehaviour
         transform.localScale = new Vector3(0.6f, 0.6f, 1);
         ParentFrame.CreateComboTextEffect(Combo, Color);
         Frame parent = Detach(Manager.transform);
-        parent.BreakCover();
-        parent.BreakBush(Combo);
         WaterDropParticle.SetActive(true);
         Manager.ProductIDs.Remove(InstanceID);
         StartCoroutine(AnimateDestroy());
@@ -465,7 +448,10 @@ public class Product : MonoBehaviour
     }
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
-        if (Color != color || IsChocoBlock || IsCapped || Skill != ProductSkill.Nothing || IsLocked)
+        if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
+            return;
+
+        if(ParentFrame != null && ParentFrame.IsObstacled())
             return;
 
         if (products.Contains(this))
@@ -583,18 +569,12 @@ public class Product : MonoBehaviour
     }
 
 
-    public bool BreakChocoBlock(int combo)
+    private bool BreakChocoBlock(float delay)
     {
-        if(IsCapped)
-        {
-            BreakCap();
-            return false;
-        }
-
         if (!IcedBlock.IsIced)
             return false;
 
-        if(IcedBlock.BreakBlock(combo))
+        if(IcedBlock.BreakBlock(delay))
         {
             EventUnWrapChoco?.Invoke();
             return true;
@@ -604,30 +584,39 @@ public class Product : MonoBehaviour
 
     public void InitCap(int capIndex)
     {
+        CancelInvoke("ChangeCapImage");
         CapIndex = capIndex;
         CapObject.GetComponent<Animator>().enabled = false;
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
-        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(false);
         CapObject.SetActive(IsCapped);
     }
-    private void BreakCap()
+    private void BreakCap(float delay = UserSetting.MatchReadyInterval)
     {
         if (CapIndex <= 0)
             return;
 
         CapIndex--;
-        CapObject.GetComponent<Animator>().enabled = true;
-        CapObject.GetComponent<Animator>().Play("CapAnim", -1, 0);
-        CancelInvoke("ChangeCapImage");
-        Invoke("ChangeCapImage", UserSetting.MatchReadyInterval);
+        // CapObject.GetComponent<Animator>().enabled = true;
+        // CapObject.GetComponent<Animator>().Play("CapAnim", -1, 0);
+        if(delay > 0)
+        {
+            CancelInvoke("ChangeCapImage");
+            Invoke("ChangeCapImage", delay);
+        }
+        else
+        {
+            ChangeCapImage();
+        }
+        
         if (CapIndex <= 0)
             EventUnWrapCap?.Invoke();
     }
     private void ChangeCapImage()
     {
+        Instantiate(CapBreakingEffectPrefab, CapObject.transform.position, Quaternion.identity, transform);
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
-        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().gameObject.SetActive(true);
-        CapObject.transform.GetChild(0).GetComponent<ParticleSystem>().Play();
+        CapObject.transform.DOKill();
+        CapObject.transform.DOScale(new Vector3(2.5f, 2.5f, 1), 0.2f).From(new Vector3(1.6f, 1.6f, 1)).SetLoops(2, LoopType.Yoyo);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
     }
 
