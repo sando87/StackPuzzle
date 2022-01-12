@@ -268,6 +268,13 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 0c491ff67f8330145ac880697c19afb8, type: 3}
   - {fileID: 21300000, guid: a3c345b0270feae42a7988ec0bdc8bcf, type: 3}
   - {fileID: 21300000, guid: b236e7ad9903593459cb9bfdd08198be, type: 3}
+  Bushes:
+  - {fileID: 0}
+  - {fileID: 21300000, guid: 9f1e67938dffde7479e5d3a2f6392d5e, type: 3}
+  - {fileID: 21300000, guid: 59b3f8617c5845b42a0d08c004dda10b, type: 3}
+  - {fileID: 21300000, guid: 45e9f4667c5b7374884d4e387ed6b0cf, type: 3}
+  - {fileID: 21300000, guid: e4c9db7c2076ec948a804f5443f817c2, type: 3}
+  - {fileID: 21300000, guid: 7c692f25c7ca6dd499ad676db2c72bc3, type: 3}
   Borders:
   - {fileID: 2802684306425416562}
   - {fileID: 1724095900784286155}
@@ -605,6 +612,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3421174372852266275, guid: 91dd18287174ee74c88bec5257d7f11e,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 91dd18287174ee74c88bec5257d7f11e, type: 3}

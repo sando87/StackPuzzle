@@ -19,7 +19,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1316826976247658042
 RectTransform:
   m_ObjectHideFlags: 0
@@ -301,4 +301,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0abd8a368f47b9a45b4519f89ea4e1de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ComboText: {fileID: 2580623837353917952}
+  IceBlockImages:
+  - {fileID: 0}
+  - {fileID: 21300000, guid: ade07bf068eabfd41bacdf2a76ab4473, type: 3}
+  - {fileID: 21300000, guid: f863a726097a437498f9679377cb2a87, type: 3}
+  - {fileID: 21300000, guid: ecc23cef2234279449a7c4d8a8d2c0d7, type: 3}
+  - {fileID: 21300000, guid: 247f975a3fb81614389322c6bf0c9367, type: 3}

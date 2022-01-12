@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class IceBlock : MonoBehaviour
 {
+    // [SerializeField]
+    // private TextMeshPro ComboText = null;
     [SerializeField]
-    private TextMeshPro ComboText = null;
+    private Sprite[] IceBlockImages = null;
 
     public bool IsIced { get { return BreakDepth > 0; } }
     public int BreakDepth { get; set; } = 0;
@@ -26,6 +28,7 @@ public class IceBlock : MonoBehaviour
         }
         else
         {
+            StartCoroutine(AnimShake());
             BreakAction();
         }
 
@@ -47,7 +50,8 @@ public class IceBlock : MonoBehaviour
         CancelInvoke("BreakAction");
         BreakDepth = depth;
         gameObject.SetActive(IsIced);
-        ComboText.text = BreakDepth.ToString();
+        GetComponent<SpriteRenderer>().sprite = IceBlockImages[BreakDepth];
+        //ComboText.text = BreakDepth.ToString();
         transform.localScale = Vector3.one;
     }
 
@@ -72,18 +76,18 @@ public class IceBlock : MonoBehaviour
     }
     IEnumerator AnimShake()
     {
-        float dist = 0.05f;
-        Vector3 startPos = transform.position;
+        float dist = 0.1f;
+        Vector3 startPos = transform.localPosition;
         Vector3 dir = new Vector3(0, -1, 0);
         dir.Normalize();
         while (dist > 0.01f)
         {
-            transform.position = startPos + (dist * dir);
+            transform.localPosition = startPos + (dist * dir);
             dist *= 0.7f;
             dir *= -1;
             yield return new WaitForSeconds(0.1f);
         }
-        transform.position = startPos;
+        transform.localPosition = startPos;
     }
     IEnumerator AnimateTwinkle()
     {

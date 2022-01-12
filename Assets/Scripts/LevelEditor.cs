@@ -469,11 +469,18 @@ public class LevelEditor : EditorWindow
         CapImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block4.png", typeof(Sprite));
         CapImages[4] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "block5.png", typeof(Sprite));
 
-        IceImages = new Sprite[1];
+        IceImages = new Sprite[4];
         IceImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockIce_big.png", typeof(Sprite));
+        IceImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockIce_big2.png", typeof(Sprite));
+        IceImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockIce_big3.png", typeof(Sprite));
+        IceImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "blockIce_big4.png", typeof(Sprite));
 
-        BushImages = new Sprite[1];
+        BushImages = new Sprite[5];
         BushImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront.png", typeof(Sprite));
+        BushImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront2.png", typeof(Sprite));
+        BushImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront3.png", typeof(Sprite));
+        BushImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront4.png", typeof(Sprite));
+        BushImages[4] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "bushFront5.png", typeof(Sprite));
 
         RopeImages = new Sprite[4];
         RopeImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross1.png", typeof(Sprite));

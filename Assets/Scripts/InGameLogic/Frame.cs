@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ public class Frame : MonoBehaviour
     private int mBushIndex;
 
     public Sprite[] Covers;
+    public Sprite[] Bushes;
     public SpriteRenderer[] Borders;
     public SpriteRenderer CoverRenderer;
     public GameObject BreakStonesParticle;
@@ -62,6 +64,8 @@ public class Frame : MonoBehaviour
             Empty = false;
             mCoverCount = coverCount;
             CoverRenderer.sprite = Covers[mCoverCount];
+            float deg = 90 * (mCoverCount - 1);
+            CoverRenderer.transform.rotation = Quaternion.Euler(0, 0, deg);
         }
 
         mBushIndex = bushIndex;
@@ -82,6 +86,7 @@ public class Frame : MonoBehaviour
 
         mCoverCount--;
         CoverRenderer.sprite = Covers[mCoverCount];
+        CoverRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mCoverCount - 1)), 0.5f, RotateMode.FastBeyond360);
         CreateBreakStoneEffect();
         if(mCoverCount <= 0)
             EventBreakCover?.Invoke(this);
@@ -164,8 +169,7 @@ public class Frame : MonoBehaviour
     private void UpdateBush()
     {
         BushObject.SetActive(IsBushed);
-        if (IsBushed)
-            BushObject.GetComponentInChildren<TextMeshPro>().text = mBushIndex.ToString();
+        BushObject.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Bushes[mBushIndex];
     }
 
     public void CreateComboTextEffect(int combo, ProductColor color)
