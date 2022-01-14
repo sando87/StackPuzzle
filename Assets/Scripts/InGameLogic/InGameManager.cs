@@ -873,7 +873,7 @@ public class InGameManager : MonoBehaviour
         GameObject hammerObj = Instantiate(HammerPrefab, transform);
         hammerObj.transform.position = pro.transform.position;
 
-        float duration = 0.9f;
+        float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
         float topPosY = hammerObj.transform.position.y + 3;
         hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
@@ -1222,7 +1222,7 @@ public class InGameManager : MonoBehaviour
 
         DestroyProducts(new Product[] { productHammerA, productHammerB }, 0, true);
 
-        float duration = 0.9f;
+        float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
 
         StartCoroutine(ThrowOver(horiObjA, nextTarget.transform.position, duration));
@@ -1231,7 +1231,7 @@ public class InGameManager : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         StartCoroutine(ThrowOver(horiObjC, nextTarget.transform.position, duration));
         
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.2f);
         Destroy(horiObjA);
         if (nextTarget.ChildProduct != null)
         {
