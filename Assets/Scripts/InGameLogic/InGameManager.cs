@@ -3225,23 +3225,26 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.Click)
             {
-                mNetMessages.RemoveFirst();
+                if (IsIdle && IsAllProductIdle())
+                {
+                    Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
+                    OnClick(pro.gameObject);
+
+                    mNetMessages.RemoveFirst();
+                }
             }
             else if (body.cmd == PVPCommand.Swipe)
             {
                 if(IsIdle && IsAllProductIdle())
                 {
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
-                    Product target = pro.Dir(body.dir);
-
-                    mIsUserEventLock = true;
-                    pro.Swipe(target, () => {
-                        mIsUserEventLock = false;
-                    });
+                    OnSwipe(pro.gameObject, body.dir);
 
                     mNetMessages.RemoveFirst();
                 }
             }
+            
+            /*
             else if (body.cmd == PVPCommand.Destroy)
             {
                 List<Product> products = new List<Product>();
@@ -3426,6 +3429,7 @@ public class InGameManager : MonoBehaviour
                 }
 
             }
+            */
         }
     }
     private void CastItemEffectOnOpponent(Product[] pros, PurchaseItemType item)
@@ -3567,6 +3571,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect, int timerCounter)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -3584,6 +3589,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_BreakIce(ProductInfo[] pros)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -3598,6 +3604,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_UseItem(ProductInfo[] pros, PurchaseItemType item)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -3613,6 +3620,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -3626,6 +3634,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_FlushAttacks(ProductInfo[] pros, int level)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -3640,6 +3649,7 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_SyncTimer(int remainSec)
     {
+        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
