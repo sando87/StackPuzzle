@@ -8,15 +8,10 @@ using DG.Tweening;
 public class Rocket : MonoBehaviour
 {
     private Dictionary<Frame, int> mFrames = new Dictionary<Frame, int>();
-    private InGameManager mIngameMgr = null;
-
+    
+    public InGameManager IngameMgr { get; set; }
     public bool IsBig { get; set; } = false;
     public Action<Frame> EventExplosion { get; set; } = null;
-
-    void Start() 
-    {
-        mIngameMgr = InGameManager.InstCurrent;
-    }
 
     void Update()
     {
@@ -37,7 +32,7 @@ public class Rocket : MonoBehaviour
     private Frame[] FindOnFrames()
     {
         List<Frame> frames = new List<Frame>();
-        Frame frame = mIngameMgr.FrameOfWorldPos(transform.position.x, transform.position.y);
+        Frame frame = IngameMgr.FrameOfWorldPos(transform.position.x, transform.position.y);
         if(frame != null)
         {
             frames.Add(frame);
@@ -45,15 +40,15 @@ public class Rocket : MonoBehaviour
 
         if(IsBig)
         {
-            Vector3 upPosition = transform.position + transform.up * mIngameMgr.GridSize;
-            Frame upframe = mIngameMgr.FrameOfWorldPos(upPosition.x, upPosition.y);
+            Vector3 upPosition = transform.position + transform.up * IngameMgr.GridSize;
+            Frame upframe = IngameMgr.FrameOfWorldPos(upPosition.x, upPosition.y);
             if (upframe != null)
             {
                 frames.Add(upframe);
             }
 
-            Vector3 downPosition = transform.position - transform.up * mIngameMgr.GridSize;
-            Frame downframe = mIngameMgr.FrameOfWorldPos(downPosition.x, downPosition.y);
+            Vector3 downPosition = transform.position - transform.up * IngameMgr.GridSize;
+            Frame downframe = IngameMgr.FrameOfWorldPos(downPosition.x, downPosition.y);
             if (downframe != null)
             {
                 frames.Add(downframe);

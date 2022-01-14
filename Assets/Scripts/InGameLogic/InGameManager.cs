@@ -750,6 +750,7 @@ public class InGameManager : MonoBehaviour
 
 
         Rocket rocketR = Instantiate(LineRocketPrefab, transform);
+        rocketR.IngameMgr = this;
         rocketR.transform.position = startPosition;
         rocketR.EventExplosion = (onFrame) =>
         {
@@ -765,6 +766,7 @@ public class InGameManager : MonoBehaviour
         });
 
         Rocket rocketL = Instantiate(LineRocketPrefab, transform);
+        rocketL.IngameMgr = this;
         rocketL.transform.position = startPosition;
         rocketL.transform.rotation = Quaternion.Euler(0, 0, 180);
         rocketL.EventExplosion = (onFrame) =>
@@ -805,6 +807,7 @@ public class InGameManager : MonoBehaviour
         }
 
         Rocket rocketT = Instantiate(LineRocketPrefab, transform);
+        rocketT.IngameMgr = this;
         rocketT.transform.position = startPosition;
         rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
         rocketT.EventExplosion = (onFrame) =>
@@ -821,6 +824,7 @@ public class InGameManager : MonoBehaviour
         });
 
         Rocket rocketB = Instantiate(LineRocketPrefab, transform);
+        rocketB.IngameMgr = this;
         rocketB.transform.position = startPosition;
         rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
         rocketB.EventExplosion = (onFrame) =>
@@ -986,6 +990,7 @@ public class InGameManager : MonoBehaviour
             maxDistance += GridSize;
 
             Rocket rocketR = Instantiate(LineRocketPrefab, transform);
+            rocketR.IngameMgr = this;
             rocketR.transform.position = startPosition;
             rocketR.transform.DOScale(2, UserSetting.AutoMatchInterval);
             rocketR.IsBig = true;
@@ -999,6 +1004,7 @@ public class InGameManager : MonoBehaviour
             };
 
             Rocket rocketL = Instantiate(LineRocketPrefab, transform);
+            rocketL.IngameMgr = this;
             rocketL.transform.position = startPosition;
             rocketL.transform.rotation = Quaternion.Euler(0, 0, 180);
             rocketL.transform.DOScale(2, UserSetting.AutoMatchInterval);
@@ -1039,6 +1045,7 @@ public class InGameManager : MonoBehaviour
             maxDistance += GridSize;
             
             Rocket rocketT = Instantiate(LineRocketPrefab, transform);
+            rocketT.IngameMgr = this;
             rocketT.transform.position = startPosition;
             rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
             rocketT.transform.DOScale(2, UserSetting.AutoMatchInterval);
@@ -1053,6 +1060,7 @@ public class InGameManager : MonoBehaviour
             };
 
             Rocket rocketB = Instantiate(LineRocketPrefab, transform);
+            rocketB.IngameMgr = this;
             rocketB.transform.position = startPosition;
             rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
             rocketB.transform.DOScale(2, UserSetting.AutoMatchInterval);
