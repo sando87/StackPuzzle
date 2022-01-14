@@ -228,7 +228,8 @@ public class InGameManager : MonoBehaviour
                 //frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
-                mFrames[x, y].Initialize(this, x, y, GetCellInversed(x, y).IsDisabled, GetCellInversed(x, y).CoverCount, GetCellInversed(x, y).BushCount);
+                StageInfoCell cellInfo = GetCellInversed(x, y);
+                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.CoverCount, cellInfo.BushCount);
                 mFrames[x, y].EventBreakCover = (frame) => {
                     Billboard.CoverCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
