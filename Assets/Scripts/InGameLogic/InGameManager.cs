@@ -303,6 +303,7 @@ public class InGameManager : MonoBehaviour
 
         if(pro.Skill != ProductSkill.Nothing)
         {
+            Network_Click(pro);
             mUseCombo = true;
             RemoveLimit();
             DestroyProducts(new Product[] { pro });
@@ -316,6 +317,7 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
+                Network_Click(pro);
                 StartCoroutine(DoMatchingCycle(matches[0]));
                 RemoveLimit();
             }
@@ -1345,9 +1347,11 @@ public class InGameManager : MonoBehaviour
             GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
             effect.transform.localScale = new Vector3(0.75f, 0.75f, 1);
 
-            ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 3);
+            ProductSkill skillIndex = ProductSkill.Nothing;
             if(skillType == ProductSkill.Bomb || skillType == ProductSkill.Hammer)
                 skillIndex = skillType;
+            else
+                skillIndex = mRandomSeed.Next() % 2 == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical;
             effect.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
 
             StartCoroutine(UnityUtils.MoveLinear(effect, pro.transform.position, 0.3f, 50.0f, () =>
@@ -1532,7 +1536,7 @@ public class InGameManager : MonoBehaviour
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
             (pro) =>
             {
-                int ran = UnityEngine.Random.Range(0, 3);
+                int ran = mRandomSeed.Next() % 3;
                 if (ran == 0)
                     pro.ChangeProductImage(ProductSkill.Horizontal);
                 else if (ran == 1)
@@ -2022,7 +2026,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator RewardEach(GameObject obj, Action eventEnd)
     {
-        ProductSkill skillIndex = (ProductSkill)UnityEngine.Random.Range(1, 4);
+        ProductSkill skillIndex = (ProductSkill)((mRandomSeed.Next() % 3) + 1);
         obj.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
 
         while (true)
@@ -2523,7 +2527,7 @@ public class InGameManager : MonoBehaviour
             return ProductSkill.SameColor;
 
         ProductSkill skill = ProductSkill.Nothing;
-        int ran = UnityEngine.Random.Range(0, 4);
+        int ran = mRandomSeed.Next() % 4;
         if (ran == 0)
             skill = ProductSkill.Horizontal;
         else if (ran == 1)
@@ -2548,6 +2552,8 @@ public class InGameManager : MonoBehaviour
     }
     private int RandomNextColor()
     {
+        return mRandomSeed.Next() % (int)mStageInfo.ColorCount;
+
         float colorCount = mStageInfo.ColorCount;
         if (FieldType == GameFieldType.pvpPlayer)
         {
@@ -2650,7 +2656,7 @@ public class InGameManager : MonoBehaviour
         while (rets.Count < count && loopCount < totalCount)
         {
             loopCount++;
-            int ranIdx = UnityEngine.Random.Range(0, totalCount);
+            int ranIdx = mRandomSeed.Next() % totalCount;
             if (rets.ContainsKey(ranIdx))
                 continue;
 
@@ -2765,7 +2771,7 @@ public class InGameManager : MonoBehaviour
         while (true)
         {
             curIdx++;
-            curIdx = UnityEngine.Random.Range(curIdx, curIdx + step);
+            curIdx = (mRandomSeed.Next() % step) + curIdx;
             if (curIdx >= totalCount)
                 break;
 
@@ -3125,7 +3131,7 @@ public class InGameManager : MonoBehaviour
     private Frame FindHammerTarget()
     {
         Frame scenaryFrame = null;
-        int randomStartIndex = UnityEngine.Random.Range(0, mFrames.Length);
+        int randomStartIndex = mRandomSeed.Next() % mFrames.Length;
         for (int i = 0; i < mFrames.Length; ++i)
         {
             int ranIdx = (i + randomStartIndex) % mFrames.Length;
@@ -3217,7 +3223,7 @@ public class InGameManager : MonoBehaviour
                 {
                     ProductInfo info = body.pros[i];
                     Frame frame = mFrames[info.idxX, info.idxY];
-                    Product pro = CreateNewProduct(frame, info.nextColor, info.nextInstID);
+                    Product pro = CreateNewProduct(frame);
                     pro.IcedBlock.SetDepth(0);
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                 }
