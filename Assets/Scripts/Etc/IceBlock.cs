@@ -13,24 +13,15 @@ public class IceBlock : MonoBehaviour
     public int BreakDepth { get; set; } = 0;
     public Frame ParentFrame { get { return transform.GetComponentInParent<Frame>(); } }
 
-    public bool BreakBlock(float delay = UserSetting.MatchReadyInterval)
+    public bool BreakBlock()
     {
         if (!IsIced)
         {
             return false;
         }
 
-        if(delay > 0)
-        {
-            StartCoroutine(AnimShake());
-            CancelInvoke("BreakAction");
-            Invoke("BreakAction", delay);
-        }
-        else
-        {
-            StartCoroutine(AnimShake());
-            BreakAction();
-        }
+        StartCoroutine(AnimShake());
+        BreakAction();
 
         return true;
     }

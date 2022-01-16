@@ -140,7 +140,7 @@ public class InGameManager : MonoBehaviour
         }
 
         mPrevIdleState = IsIdle;
-        DropNextProducts();
+        //DropNextProducts();
     }
     public void StartGameInStageMode(StageInfo info, UserInfo userInfo)
     {
@@ -306,7 +306,8 @@ public class InGameManager : MonoBehaviour
             Network_Click(pro);
             mUseCombo = true;
             RemoveLimit();
-            DestroyProducts(new Product[] { pro });
+            TryDestroy(pro);
+            //DestroyProducts(new Product[] { pro });
         }
         else
         {
@@ -385,56 +386,567 @@ public class InGameManager : MonoBehaviour
     #region MatchingLogic
     IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
-        mDropLockCount++;
         ComboReset();
 
-        List<Frame> nextScanFrames = new List<Frame>();
-        nextScanFrames.AddRange(ToFrames(firstMatches));
-        ProductSkill nextSkill = CheckSkillable(firstMatches);
-        if (nextSkill == ProductSkill.Nothing)
-            DestroyProducts(firstMatches);
-        else
-            MergeProducts(firstMatches, nextSkill);
+        List<Product[]> matchableGroups = new List<Product[]>();
+        matchableGroups.Add(firstMatches);
 
-        while (true)
+        while(true)
         {
-            List<Product> aroundProducts = FindAroundProducts(nextScanFrames.ToArray());
-            foreach (Product aroundPro in aroundProducts)
+            foreach(Product[] pros in matchableGroups)
             {
-                if(IsObstacled(aroundPro.ParentFrame))
-                {
-                    BreakObstacle(aroundPro.ParentFrame, UserSetting.MatchReadyInterval);
-                }
+                LockToMatch(pros);
             }
 
-            List<Product[]> nextMatches = FindMatchedProducts(aroundProducts.ToArray());
-            if (nextMatches.Count <= 0)
-                break;
+            yield return new WaitForSeconds(0.3f);
 
-            yield return new WaitForSeconds(UserSetting.ComboMatchInterval);
-
-            ComboUp();
-            Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
-            Billboard.ComboCounter[Billboard.CurrentCombo]++;
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched, mSFXVolume);
-
-            nextScanFrames.Clear();
-            foreach (Product[] matches in nextMatches)
+            // 주변 블럭 리스트 얻어옴
+            List<Product> aroundPros = new List<Product>();
+            foreach (Product[] pros in matchableGroups)
             {
-                nextScanFrames.AddRange(ToFrames(matches));
-                nextSkill = CheckSkillable(matches);
-                if (nextSkill == ProductSkill.Nothing)
-                    DestroyProducts(matches);
-                else
-                    MergeProducts(matches, nextSkill);
+                FindAroundProducts(pros, aroundPros);
+            }
+            Product[] aroundProducts = aroundPros.ToArray();
+
+            //주변 블럭 정보 가져왔으면 실제로 터트리는 기능 수행
+            foreach (Product[] pros in matchableGroups)
+            {
+                DoMatchProducts(pros);
+            }
+            matchableGroups.Clear();
+
+            //터질때 주변 장해물 파괴
+            BreakObstacles(aroundProducts);
+
+            //터질때 주변에 매칭가능하면 연쇄하여 파괴하며 콤보 올라감
+            matchableGroups = FindMatchedProducts(aroundProducts);
+            if (matchableGroups.Count > 0)
+            {
+                // 콤보 올리고 기타 정보도 수정
+                ComboUp();
+                Billboard.MaxCombo = Math.Max(Billboard.CurrentCombo, Billboard.MaxCombo);
+                Billboard.ComboCounter[Billboard.CurrentCombo]++;
+
+                SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched, mSFXVolume);
+            }
+            else
+            {
+                //주변 매칭가능한 블럭들이 없으면 종료
+                break;
             }
         }
 
-        yield return new WaitForSeconds(UserSetting.ComboMatchInterval);
-
-        mDropLockCount--;
+        StartToDrop();
     }
-    
+
+    private void DoMatchProducts(Product[] pros)
+    {
+        ProductSkill nextSkill = CheckSkillable(pros);
+        if (nextSkill == ProductSkill.Nothing)
+        {
+            foreach (Product destPro in pros)
+            {
+                destPro.DestroyImmediately();
+            }
+        }
+        else
+        {
+            foreach (Product destPro in pros)
+            {
+                destPro.MergeImImmediately(pros[0], nextSkill);
+            }
+        }
+    }
+    private void LockToMatch(Product[] pros)
+    {
+        ProductSkill nextSkill = CheckSkillable(pros);
+        if (nextSkill == ProductSkill.Nothing)
+        {
+            foreach (Product destPro in pros)
+            {
+                destPro.ReadyForDestroy(Billboard.CurrentCombo);
+            }
+        }
+        else
+        {
+            foreach (Product destPro in pros)
+            {
+                destPro.ReadyForMerge(Billboard.CurrentCombo);
+            }
+        }
+    }
+    private void BreakObstacles(Product[] pros)
+    {
+        foreach (Product pro in pros)
+        {
+            if (IsObstacled(pro.ParentFrame))
+            {
+                BreakObstacle(pro.ParentFrame);
+            }
+        }
+
+    }
+
+    public enum DelayedCallRet { Keep, Done }
+    public class DelayedCall
+    {
+        // 콜백함수가 호출된 횟수
+        public int callCount = 0;
+        // 콜백함수가 빠르게 호출되는 함수
+        public bool fastMode = false;
+
+        // bool Function(int param); 형태
+        // 반환값이 true이면 worker중지, 입력 int값은 callcount를 인자로 넣어줌
+        public System.Func<int, DelayedCallRet> callback = null;
+
+        public DelayedCall(int callCount, bool _fastMode, System.Func<int, DelayedCallRet> _callback)
+        {
+            this.callCount = callCount;
+            this.fastMode = _fastMode;
+            this.callback = _callback;
+        }
+    }
+
+    private bool mIsDroppingCycle = false;
+    private List<DelayedCall> mWorkerList = new List<DelayedCall>();
+
+    private void AddWorker(System.Func<int, DelayedCallRet> callback, bool isFastMode = false)
+    {
+        mWorkerList.Add(new DelayedCall(0, isFastMode, callback));
+        if(!mIsDroppingCycle)
+        {
+            StartCoroutine(DoDroppingCycle());
+        }
+    }
+
+    private void StartToDrop()
+    {
+        AddWorker((nn) => { return DelayedCallRet.Done; });
+    }
+
+    IEnumerator DoDroppingCycle()
+    {
+        mIsUserEventLock = true;
+        mIsDroppingCycle = true;
+
+        yield return new WaitForSeconds(0.35f);
+
+        int counter = 0;
+        while(mWorkerList.Count > 0)
+        {
+            DelayedCall[] workers = mWorkerList.ToArray();
+            foreach (DelayedCall worker in workers)
+            {
+                if(worker.fastMode)
+                {
+                    DelayedCallRet ret = worker.callback(worker.callCount);
+                    if (ret == DelayedCallRet.Done)
+                    {
+                        mWorkerList.Remove(worker);
+                    }
+                    else
+                    {
+                        worker.callCount++;
+                    }
+                }
+                else
+                {
+                    if(counter == 0)
+                    {
+                        DelayedCallRet ret = worker.callback(worker.callCount);
+                        if (ret == DelayedCallRet.Done)
+                        {
+                            mWorkerList.Remove(worker);
+                        }
+                        else
+                        {
+                            worker.callCount++;
+                        }
+                    }
+                }
+            }
+
+            // 드랍 프로세스 시작
+            if(counter == 0)
+            {
+                foreach (VerticalFrames vf in mVerticalFrames)
+                {
+                    if (vf.IsDroppable())
+                    {
+                        // 비어있는 프레임에 새로운 블럭 생성
+                        CreateNewProducts(vf);
+
+                        // 떨어지기 시작
+                        Product[] droppingPros = vf.StartToDrop();
+
+                        if (droppingPros != null && droppingPros.Length > 0)
+                        {
+                            // 0.3초뒤 드롭된 블록들에 대해 매칭 시도하는 콜백 등록
+                            AddWorker((int callcount) =>
+                            {
+                            //매칭 가능한 블록들이 있는지 찾는 기능 수행
+                            List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
+                                if (matches.Count > 0)
+                                {
+                                // 깜빡이는 연출 효과
+                                foreach (Product[] pros in matches)
+                                    {
+                                        LockToMatch(pros);
+                                    }
+
+                                //재매칭될것 있으면 다음 0.3초뒤에 실제 파괴되는 콜백 등록
+                                AddWorker((int cnt) =>
+                                    {
+                                    // 실제 블럭이 파괴되는 로직 수행
+                                    foreach (Product[] pros in matches)
+                                        {
+                                            DoMatchProducts(pros);
+                                        }
+                                        return DelayedCallRet.Done;
+                                    });
+                                }
+                                return DelayedCallRet.Done;
+                            });
+                        }
+                    }
+                }
+
+            }
+
+            yield return new WaitForSeconds(0.11f);
+            counter = (counter + 1) % 3;
+        }
+
+        mIsDroppingCycle = false;
+        mIsUserEventLock = false;
+    }
+
+    private Product[] CreateNewProducts(VerticalFrames vf)
+    {
+        List<Product> newPros = new List<Product>();
+        foreach(Frame frame in vf.Frames)
+        {
+            if(frame.ChildProduct == null)
+            {
+                Product newPro = CreateNewProduct();
+                vf.AddNewProduct(newPro);
+                newPro.EnableMasking(vf.MaskOrder);
+            }
+        }
+        return newPros.ToArray();
+    }
+
+    private void TryDestroy(Product pro)
+    {
+        if(IsObstacled(pro.ParentFrame))
+        {
+            BreakObstacle(pro.ParentFrame);
+        }
+        else if(pro.IsSkillable)
+        {
+            CastSkillProduct(pro);
+        }
+        else
+        {
+            pro.DestroyImmediately();
+        }
+    }
+    private void CastSkillProduct(Product target)
+    {
+        if (target.SkillCasted)
+            return;
+
+        if (target.Skill == ProductSkill.Horizontal)
+        {
+            CastHorizontalProduct(target);
+        }
+        else if (target.Skill == ProductSkill.Vertical)
+        {
+            CastVerticalProduct(target);
+        }
+        else if (target.Skill == ProductSkill.Bomb)
+        {
+            CastBombProduct(target);
+        }
+        else if (target.Skill == ProductSkill.SameColor)
+        {
+            CastRainbowProduct(target);
+        }
+        else if (target.Skill == ProductSkill.Hammer)
+        {
+            CastHammerProduct(target);
+        }
+    }
+
+    private void CastHorizontalProduct(Product pro)
+    {
+        Frame startFrame = pro.ParentFrame;
+        Vector3 startPosition = startFrame.transform.position;
+        Vector3 rightEndPosition = startFrame.MostRight().transform.position;
+        Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
+        float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
+        maxDistance += GridSize;
+
+        Rocket rocketR = Instantiate(LineRocketPrefab, transform);
+        rocketR.IngameMgr = this;
+        rocketR.transform.position = startPosition;
+        rocketR.transform.DOMoveX(startPosition.x + maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
+        {
+            Destroy(rocketR.gameObject);
+        });
+
+        Rocket rocketL = Instantiate(LineRocketPrefab, transform);
+        rocketL.IngameMgr = this;
+        rocketL.transform.position = startPosition;
+        rocketL.transform.rotation = Quaternion.Euler(0, 0, 180);
+        rocketL.transform.DOMoveX(startPosition.x - maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
+        {
+            Destroy(rocketL.gameObject);
+        });
+
+        pro.SkillCasted = true;
+        pro.transform.DOShakePosition(0.3f, 0.1f);
+        AddWorker((cnt) =>
+        {
+            if(cnt == 0)
+            {
+                TryDestroy(pro);
+                return DelayedCallRet.Keep;
+            }
+            
+            Frame leftFrame = startFrame.Left(cnt);
+            if (leftFrame != null)
+            {
+                Product leftPro = leftFrame.ChildProduct;
+                if (leftPro != null && !leftPro.IsLocked)
+                {
+                    TryDestroy(leftPro);
+                }
+            }
+
+            Frame rightFrame = startFrame.Right(cnt);
+            if (rightFrame != null)
+            {
+                Product rightPro = rightFrame.ChildProduct;
+                if (rightPro != null && !rightPro.IsLocked)
+                {
+                    TryDestroy(rightPro);
+                }
+            }
+
+            if (startFrame.IndexX - cnt < 0 && startFrame.IndexX + cnt >= CountX)
+            {
+                return DelayedCallRet.Done;
+            }
+
+            return DelayedCallRet.Keep;
+        }, true);
+    }
+    private void CastVerticalProduct(Product pro)
+    {
+        Frame startFrame = pro.ParentFrame;
+        startFrame.VertFrames.HoldCount++;
+
+        Vector3 startPosition = startFrame.transform.position;
+        Vector3 topEndPosition = startFrame.MostUp().transform.position;
+        Vector3 bottomEndPosition = startFrame.MostDown().transform.position;
+        float maxDistance = Mathf.Max(startPosition.y - bottomEndPosition.y, topEndPosition.y - startPosition.y);
+        maxDistance += GridSize;
+
+        Rocket rocketT = Instantiate(LineRocketPrefab, transform);
+        rocketT.IngameMgr = this;
+        rocketT.transform.position = startPosition;
+        rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
+        rocketT.transform.DOMoveY(startPosition.y + maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
+        {
+            Destroy(rocketT.gameObject);
+        });
+
+        Rocket rocketB = Instantiate(LineRocketPrefab, transform);
+        rocketB.IngameMgr = this;
+        rocketB.transform.position = startPosition;
+        rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
+        rocketB.EventExplosion = (onFrame) =>
+        rocketB.transform.DOMoveY(startPosition.y - maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
+        {
+            Destroy(rocketB.gameObject);
+        });
+
+        pro.SkillCasted = true;
+        pro.transform.DOShakePosition(0.3f, 0.1f);
+        AddWorker((cnt) =>
+        {
+            if(cnt == 0)
+            {
+                TryDestroy(pro);
+                return DelayedCallRet.Keep;
+            }
+
+            Frame upFrame = startFrame.Up(cnt);
+            if (upFrame != null)
+            {
+                Product upPro = upFrame.ChildProduct;
+                if (upPro != null && !upPro.IsLocked)
+                {
+                    TryDestroy(upPro);
+                }
+            }
+
+            Frame downFrame = startFrame.Down(cnt);
+            if (downFrame != null)
+            {
+                Product downPro = downFrame.ChildProduct;
+                if (downPro != null && !downPro.IsLocked)
+                {
+                    TryDestroy(downPro);
+                }
+            }
+
+            if (startFrame.IndexY - cnt < 0 && startFrame.IndexY + cnt >= CountY)
+            {
+                startFrame.VertFrames.HoldCount--;
+                return DelayedCallRet.Done;
+            }
+
+            return DelayedCallRet.Keep;
+        }, true);
+    }
+    private void CastBombProduct(Product pro)
+    {
+        pro.SkillCasted = true;
+        pro.Animation.Play("destroy");
+        AddWorker((cnt) =>
+        {
+            CreateExplosionEffect(pro.transform.position);
+            Product[] arPros = ScanAroundProducts(pro, 1);
+            TryDestroy(pro);
+            foreach(Product arPro in arPros)
+            {
+                TryDestroy(arPro);
+            }
+            return DelayedCallRet.Done;
+        });
+    }
+    private void CastRainbowProduct(Product pro)
+    {
+        pro.Animation.Play("destroy");
+        pro.SkillCasted = true;
+        Vector3 startPos = pro.transform.position;
+        Product[] samePros = null;
+        AddWorker((idx) =>
+        {
+            if(samePros == null)
+            {
+                ShakeField(0.05f);
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2, mSFXVolume);
+                samePros = FindSameColor(pro, false);
+                TryDestroy(pro);
+                if(samePros == null)
+                {
+                    return DelayedCallRet.Done;
+                }
+            }
+
+            if(idx < samePros.Length)
+            {
+                Product curPro = samePros[idx];
+                if(curPro != null && !curPro.IsLocked)
+                {
+                    CreateLaserEffect(startPos, curPro.transform.position);
+                    TryDestroy(curPro);
+                }
+                
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                return DelayedCallRet.Done;
+            }
+        }, true);
+    }
+    private void CastHammerProduct(Product pro)
+    {
+        pro.Animation.Play("destroy");
+        pro.SkillCasted = true;
+
+        Frame nextTarget = null;
+        AddWorker((cnt) =>
+        {
+            if(cnt == 0)
+            {
+                // 망치가 날아갈 목적지 찾고
+                nextTarget = FindHammerTarget();
+
+                // 날아가는 연출 시작
+                float duration = 0.9f;
+                GameObject hammerObj = Instantiate(HammerPrefab, transform);
+                hammerObj.transform.position = pro.transform.position;
+                float topPosY = hammerObj.transform.position.y + 3;
+                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
+                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f);
+                Destroy(hammerObj, duration);
+
+                TryDestroy(pro);
+            }
+            else if(cnt >= 3)
+            {
+                Product destPro = nextTarget.ChildProduct;
+                if(destPro != null && !destPro.IsLocked)
+                {
+                    TryDestroy(destPro);
+                }
+                return DelayedCallRet.Done;
+            }
+            return DelayedCallRet.Keep;
+        });
+    }
+
+    private void StartSingleSkillLoop()
+    {
+        int nn = 0;
+        AddWorker((cnt) =>
+        {
+            Product targetSkill = FindNextSingleSkill();
+            if(targetSkill != null)
+            {
+                nn = 0;
+                CastSkillProduct(targetSkill);
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                if (IsAllProductIdle())
+                {
+                    nn++;
+                    if(nn >= 3)
+                        return DelayedCallRet.Done;
+                }
+                    
+            }
+            
+            return DelayedCallRet.Keep;
+        });
+    }
+
+    private Product FindNextSingleSkill()
+    {
+        for (int y = CountY - 1; y >= 0; --y)
+        {
+            for (int x = 0; x < CountX; ++x)
+            {
+                Frame frame = mFrames[x, y];
+                Product pro = frame.ChildProduct;
+                if (pro != null && pro.IsSkillable && !pro.IsLocked && !pro.IsObstacled())
+                {
+                    return pro;
+                }
+            }
+        }
+        return null;
+    }
+
     IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect, int timerCounter)
     {
         if(delay > 0)
@@ -469,7 +981,7 @@ public class InGameManager : MonoBehaviour
         {
             if(IsObstacled(pro.ParentFrame))
             {
-                BreakObstacle(pro.ParentFrame, 0);
+                BreakObstacle(pro.ParentFrame);
                 continue;
             }
 
@@ -707,12 +1219,13 @@ public class InGameManager : MonoBehaviour
                     MergeProducts(group, nextSkill);
                 }
 
-                List<Product> aroundProducts = FindAroundProducts(ToFrames(group));
+                List<Product> aroundProducts = new List<Product>();
+                FindAroundProducts(group, aroundProducts);
                 foreach (Product aroundPro in aroundProducts)
                 {
                     if (IsObstacled(aroundPro.ParentFrame))
                     {
-                        BreakObstacle(aroundPro.ParentFrame, UserSetting.MatchReadyInterval);
+                        BreakObstacle(aroundPro.ParentFrame);
                     }
                 }
             }
@@ -1282,7 +1795,7 @@ public class InGameManager : MonoBehaviour
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
-                    StartCoroutine(DestroySkillSimpleLoop());
+                    StartSingleSkillLoop();
                 }));
         }
         else if (another.Skill == ProductSkill.Bomb)
@@ -1298,7 +1811,7 @@ public class InGameManager : MonoBehaviour
                 },
                 () => {
                     Network_ChangeSkill(netInfo.ToArray());
-                    StartCoroutine(DestroySkillSimpleLoop());
+                    StartSingleSkillLoop();
                 }));
         }
         else if (another.Skill == ProductSkill.Hammer)
@@ -1316,7 +1829,7 @@ public class InGameManager : MonoBehaviour
                 () =>
                 {
                     Network_ChangeSkill(netInfo.ToArray());
-                    StartCoroutine(DestroySkillSimpleLoop());
+                    StartSingleSkillLoop();
                 }));
         }
         else if (another.Skill == ProductSkill.SameColor)
@@ -1520,9 +2033,9 @@ public class InGameManager : MonoBehaviour
             (pro) =>
             {
                 if(pro.ParentFrame.IsObstacled())
-                    pro.ParentFrame.BreakObstacle(0);
+                    pro.ParentFrame.BreakObstacle();
                 else if(pro.IsObstacled())
-                    pro.BreakObstacle(UserSetting.MatchReadyInterval);
+                    pro.BreakObstacle();
             },
             () =>
             {
@@ -2746,20 +3259,23 @@ public class InGameManager : MonoBehaviour
         }
         return list;
     }
-    private List<Product> FindAroundProducts(Frame[] emptyFrames)
+    private void FindAroundProducts(Product[] targets, List<Product> rets)
     {
-        Dictionary<Product, int> aroundProducts = new Dictionary<Product, int>();
-        foreach (Frame frame in emptyFrames)
+        foreach (Product target in targets)
         {
-            Frame[] aroundFrames = frame.GetAroundFrames();
+            Frame[] aroundFrames = target.ParentFrame.GetAroundFrames();
             foreach (Frame sub in aroundFrames)
             {
-                Product pro = sub.ChildProduct;
-                if (pro != null && !pro.IsLocked)
-                    aroundProducts[pro] = 1;
+                Product arPro = sub.ChildProduct;
+                if (arPro != null && !arPro.IsLocked)
+                {
+                    if(!rets.Contains(arPro))
+                    {
+                        rets.Add(arPro);
+                    }
+                }
             }
         }
-        return new List<Product>(aroundProducts.Keys);
     }
     public Frame FrameOfWorldPos(float worldPosX, float worldPosY)
     {
@@ -3175,11 +3691,11 @@ public class InGameManager : MonoBehaviour
 
         return false;
     }
-    private void BreakObstacle(Frame frame, float delay)
+    private void BreakObstacle(Frame frame)
     {
         if (frame.IsObstacled())
         {
-            frame.BreakObstacle(delay);
+            frame.BreakObstacle();
             return;
         }
 
@@ -3187,7 +3703,7 @@ public class InGameManager : MonoBehaviour
         {
             if (frame.ChildProduct.IsObstacled())
             {
-                frame.ChildProduct.BreakObstacle(delay);
+                frame.ChildProduct.BreakObstacle();
             }
         }
     }

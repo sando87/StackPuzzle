@@ -6,7 +6,7 @@ using UnityEngine;
 public class VerticalFrames : MonoBehaviour
 {
     private List<Product> NewProducts = new List<Product>();
-    private Frame[] Frames = null;
+    public Frame[] Frames = null;
     public int MaskOrder { get; private set; } = 0;
     public int HoldCount { get; set; } = 0;
     public bool IsHolded { get { return HoldCount > 0; } }
@@ -181,6 +181,7 @@ public class VerticalFrames : MonoBehaviour
         Product[] newPros = RepositionNewProducts(topPosition);
         targets.AddRange(newPros);
 
+
         Frame curFrame = firstFrame;
         foreach(Product target in targets)
         {
@@ -244,5 +245,20 @@ public class VerticalFrames : MonoBehaviour
         list.AddRange(pros);
         list.Sort((lsh, rsh) => { return lsh.transform.position.y > rsh.transform.position.y ? -1 : 1; });
         return list[0].transform.position;
+    }
+    public bool IsDroppable()
+    {
+        if (IsHolded)
+            return false;
+
+        Frame firstFrame = FindFirstEmptyFrame();
+        if (firstFrame == null)
+            return false;
+
+        bool isLocked = IsLockedProduct(firstFrame);
+        if (isLocked)
+            return false;
+
+        return true;
     }
 }

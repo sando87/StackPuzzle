@@ -92,33 +92,37 @@ public class Frame : MonoBehaviour
             EventBreakCover?.Invoke(this);
     }
 
-    public Frame Left()
+    public Frame Left(int offX = 1)
     {
-        return IndexX > 0 ? GameManager.Frame(IndexX - 1, IndexY) : null;
+        int nextIdxX = IndexX - offX;
+        return nextIdxX >= 0 ? GameManager.Frame(nextIdxX, IndexY) : null;
     }
     public Frame MostLeft()
     {
         return GameManager.Frame(0, IndexY);
     }
-    public Frame Right()
+    public Frame Right(int offX = 1)
     {
-        return IndexX < GameManager.CountX - 1 ? GameManager.Frame(IndexX + 1, IndexY) : null;
+        int nextIdxX = IndexX + offX;
+        return nextIdxX < GameManager.CountX ? GameManager.Frame(nextIdxX, IndexY) : null;
     }
     public Frame MostRight()
     {
         return GameManager.Frame(GameManager.CountX - 1, IndexY);
     }
-    public Frame Down()
+    public Frame Down(int offY = 1)
     {
-        return IndexY > 0 ? GameManager.Frame(IndexX, IndexY - 1) : null;
+        int nextIdxY = IndexY - offY;
+        return nextIdxY >= 0 ? GameManager.Frame(IndexX, nextIdxY) : null;
     }
     public Frame MostDown()
     {
         return GameManager.Frame(IndexX, 0);
     }
-    public Frame Up()
+    public Frame Up(int offY = 1)
     {
-        return IndexY < GameManager.CountY - 1 ? GameManager.Frame(IndexX, IndexY + 1) : null;
+        int nextIdxY = IndexY + offY;
+        return nextIdxY < GameManager.CountY ? GameManager.Frame(IndexX, nextIdxY) : null;
     }
     public Frame MostUp()
     {
@@ -241,17 +245,8 @@ public class Frame : MonoBehaviour
 
         return false;
     }
-    public void BreakObstacle(float delay)
+    public void BreakObstacle()
     {
-        StartCoroutine(CoBreakObstacle(delay));
-    }
-    private IEnumerator CoBreakObstacle(float delay)
-    {
-        if(delay > 0)
-        {
-            yield return new WaitForSeconds(delay);
-        }
-
         if (IsBushed)
         {
             BreakBush();

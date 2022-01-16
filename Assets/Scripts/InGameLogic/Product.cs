@@ -29,6 +29,7 @@ public class Product : MonoBehaviour
     public Action EventUnWrapChoco;
     public Action EventUnWrapCap;
 
+    public bool IsSkillable { get { return Skill != ProductSkill.Nothing && !SkillCasted; } }
     public int CapIndex { get; private set; }
     public bool IsCapped { get { return CapIndex > 0; } }
     public InGameManager Manager { get; set; }
@@ -43,7 +44,7 @@ public class Product : MonoBehaviour
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; private set; }
     public bool SkillCasted { get; set; } = false;
-    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping; } }
+    public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || SkillCasted; } }
     public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
     public bool IsClosed { get { return false; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
@@ -176,15 +177,15 @@ public class Product : MonoBehaviour
 
         return false;
     }
-    public void BreakObstacle(float delay)
+    public void BreakObstacle()
     {
         if (IsCapped)
         {
-            BreakCap(delay);
+            BreakCap();
         }
         else if(IsChocoBlock)
         {
-            BreakChocoBlock(delay);
+            BreakChocoBlock();
         }
     }
     public bool ReadyForDestroy(int combo)
@@ -569,12 +570,12 @@ public class Product : MonoBehaviour
     }
 
 
-    private bool BreakChocoBlock(float delay)
+    private bool BreakChocoBlock()
     {
         if (!IcedBlock.IsIced)
             return false;
 
-        if(IcedBlock.BreakBlock(delay))
+        if(IcedBlock.BreakBlock())
         {
             EventUnWrapChoco?.Invoke();
             return true;
@@ -590,23 +591,13 @@ public class Product : MonoBehaviour
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
         CapObject.SetActive(IsCapped);
     }
-    private void BreakCap(float delay = UserSetting.MatchReadyInterval)
+    private void BreakCap()
     {
         if (CapIndex <= 0)
             return;
 
         CapIndex--;
-        // CapObject.GetComponent<Animator>().enabled = true;
-        // CapObject.GetComponent<Animator>().Play("CapAnim", -1, 0);
-        if(delay > 0)
-        {
-            CancelInvoke("ChangeCapImage");
-            Invoke("ChangeCapImage", delay);
-        }
-        else
-        {
-            ChangeCapImage();
-        }
+        ChangeCapImage();
         
         if (CapIndex <= 0)
             EventUnWrapCap?.Invoke();
