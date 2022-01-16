@@ -295,11 +295,11 @@ public class Product : MonoBehaviour
             Detach(ParentFrame.VertFrames.transform);
 
         IsDropping = true;
+        AttachTo(frame);
         transform.DOKill();
-        transform.DOMoveY(frame.transform.position.y, duration).SetEase(Ease.InQuad).OnComplete(() =>
+        transform.DOLocalMoveY(0, duration).SetEase(Ease.InQuad).OnComplete(() =>
         {
-            IsDropping = false;
-            DropEndToFrame(frame);
+            Animation.Play("drop");
         });
     }
     private void OnTriggerStay2D(Collider2D collision)
@@ -352,11 +352,10 @@ public class Product : MonoBehaviour
         transform.localPosition = new Vector3(0, 0, -1);
         DisableMasking();
     }
-    private void DropEndToFrame(Frame frame)
+    public void DropEnd()
     {
+        IsDropping = false;
         DropSpeed = 0;
-        AttachTo(frame);
-        Animation.Play("drop");
         transform.localPosition = new Vector3(0, 0, -1);
         DisableMasking();
     }

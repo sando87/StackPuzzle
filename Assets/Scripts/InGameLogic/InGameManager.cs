@@ -490,19 +490,24 @@ public class InGameManager : MonoBehaviour
     public enum DelayedCallRet { Keep, Done }
     public class DelayedCall
     {
-        // 콜백함수가 호출된 횟수
+        // tick 은 모두 0.1f 초마다 1씩 증가
+        public int tickTotalCount = 0;
+        public int tickCurrentCount = 0;
+        public int tickDelayRef = 0;
+        public int tickStepRef = 0;
         public int callCount = 0;
-        // 콜백함수가 빠르게 호출되는 함수
-        public bool fastMode = false;
 
         // bool Function(int param); 형태
         // 반환값이 true이면 worker중지, 입력 int값은 callcount를 인자로 넣어줌
         public System.Func<int, DelayedCallRet> callback = null;
 
-        public DelayedCall(int callCount, bool _fastMode, System.Func<int, DelayedCallRet> _callback)
+        public DelayedCall(int delayTick, int stepTick, System.Func<int, DelayedCallRet> _callback)
         {
-            this.callCount = callCount;
-            this.fastMode = _fastMode;
+            this.tickTotalCount = 0;
+            this.tickCurrentCount = 0;
+            this.tickDelayRef = delayTick;
+            this.tickStepRef = stepTick;
+            this.callCount = 0;
             this.callback = _callback;
         }
     }
@@ -510,9 +515,11 @@ public class InGameManager : MonoBehaviour
     private bool mIsDroppingCycle = false;
     private List<DelayedCall> mWorkerList = new List<DelayedCall>();
 
-    private void AddWorker(System.Func<int, DelayedCallRet> callback, bool isFastMode = false)
+    // delayTick은 처음 callback함수가 실행되기까지 지연시간(tick당 0.1초)
+    // stepTick은 callback함수가 실행되는 간격(tick당 0.1초)
+    private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
-        mWorkerList.Add(new DelayedCall(0, isFastMode, callback));
+        mWorkerList.Add(new DelayedCall(delayTick, stepTick, callback));
         if(!mIsDroppingCycle)
         {
             StartCoroutine(DoDroppingCycle());
@@ -521,100 +528,89 @@ public class InGameManager : MonoBehaviour
 
     private void StartToDrop()
     {
-        AddWorker((nn) => { return DelayedCallRet.Done; });
+        AddWorker(0, 1, (tick) => { return DelayedCallRet.Done; });
     }
 
     IEnumerator DoDroppingCycle()
     {
         mIsUserEventLock = true;
         mIsDroppingCycle = true;
+        
+        yield return new WaitForSeconds(0.1f);
 
-        yield return new WaitForSeconds(0.35f);
-
-        int counter = 0;
         while(mWorkerList.Count > 0)
         {
             DelayedCall[] workers = mWorkerList.ToArray();
             foreach (DelayedCall worker in workers)
             {
-                if(worker.fastMode)
+                worker.tickTotalCount++;
+
+                // 초기 딜레이 시간보다 클때까지 기다림
+                if(worker.tickTotalCount >= worker.tickDelayRef)
                 {
-                    DelayedCallRet ret = worker.callback(worker.callCount);
-                    if (ret == DelayedCallRet.Done)
-                    {
-                        mWorkerList.Remove(worker);
-                    }
-                    else
-                    {
-                        worker.callCount++;
-                    }
-                }
-                else
-                {
-                    if(counter == 0)
+                    // 함수 호출 간격마다 callback 호출
+                    if(worker.tickCurrentCount == 0)
                     {
                         DelayedCallRet ret = worker.callback(worker.callCount);
+                        worker.callCount++;
                         if (ret == DelayedCallRet.Done)
                         {
                             mWorkerList.Remove(worker);
                         }
-                        else
-                        {
-                            worker.callCount++;
-                        }
                     }
+                    worker.tickCurrentCount = (worker.tickCurrentCount + 1) % worker.tickStepRef;
                 }
+                
             }
 
             // 드랍 프로세스 시작
-            if(counter == 0)
+            foreach (VerticalFrames vf in mVerticalFrames)
             {
-                foreach (VerticalFrames vf in mVerticalFrames)
+                if (vf.IsDroppable())
                 {
-                    if (vf.IsDroppable())
+                    // 비어있는 프레임에 새로운 블럭 생성
+                    CreateNewProducts(vf);
+
+                    // 떨어지기 시작
+                    Product[] droppingPros = vf.StartToDrop();
+
+                    if (droppingPros != null && droppingPros.Length > 0)
                     {
-                        // 비어있는 프레임에 새로운 블럭 생성
-                        CreateNewProducts(vf);
-
-                        // 떨어지기 시작
-                        Product[] droppingPros = vf.StartToDrop();
-
-                        if (droppingPros != null && droppingPros.Length > 0)
+                        // 0.3초뒤 드롭된 블록들에 대해 매칭 시도하는 콜백 등록
+                        AddWorker(3, 3, (int callcount) =>
                         {
-                            // 0.3초뒤 드롭된 블록들에 대해 매칭 시도하는 콜백 등록
-                            AddWorker((int callcount) =>
-                            {
+                            // EndDrop 처리
+                            foreach (Product droppingPro in droppingPros)
+                                droppingPro.DropEnd();
+
                             //매칭 가능한 블록들이 있는지 찾는 기능 수행
                             List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
-                                if (matches.Count > 0)
-                                {
+                            if (matches.Count > 0)
+                            {
                                 // 깜빡이는 연출 효과
                                 foreach (Product[] pros in matches)
-                                    {
-                                        LockToMatch(pros);
-                                    }
+                                {
+                                    LockToMatch(pros);
+                                }
 
                                 //재매칭될것 있으면 다음 0.3초뒤에 실제 파괴되는 콜백 등록
-                                AddWorker((int cnt) =>
-                                    {
+                                AddWorker(3, 3, (int cnt) =>
+                                {
                                     // 실제 블럭이 파괴되는 로직 수행
                                     foreach (Product[] pros in matches)
-                                        {
-                                            DoMatchProducts(pros);
-                                        }
-                                        return DelayedCallRet.Done;
-                                    });
-                                }
-                                return DelayedCallRet.Done;
-                            });
-                        }
+                                    {
+                                        DoMatchProducts(pros);
+                                    }
+                                    return DelayedCallRet.Done;
+                                });
+                            }
+                            return DelayedCallRet.Done;
+                        });
                     }
                 }
-
             }
 
-            yield return new WaitForSeconds(0.11f);
-            counter = (counter + 1) % 3;
+            yield return new WaitForSeconds(0.1f);
         }
 
         mIsDroppingCycle = false;
@@ -706,7 +702,7 @@ public class InGameManager : MonoBehaviour
 
         pro.SkillCasted = true;
         pro.transform.DOShakePosition(0.3f, 0.1f);
-        AddWorker((cnt) =>
+        AddWorker(3, 1, (cnt) =>
         {
             if(cnt == 0)
             {
@@ -740,7 +736,7 @@ public class InGameManager : MonoBehaviour
             }
 
             return DelayedCallRet.Keep;
-        }, true);
+        });
     }
     private void CastVerticalProduct(Product pro)
     {
@@ -774,7 +770,7 @@ public class InGameManager : MonoBehaviour
 
         pro.SkillCasted = true;
         pro.transform.DOShakePosition(0.3f, 0.1f);
-        AddWorker((cnt) =>
+        AddWorker(3, 1, (cnt) =>
         {
             if(cnt == 0)
             {
@@ -809,13 +805,13 @@ public class InGameManager : MonoBehaviour
             }
 
             return DelayedCallRet.Keep;
-        }, true);
+        });
     }
     private void CastBombProduct(Product pro)
     {
         pro.SkillCasted = true;
         pro.Animation.Play("destroy");
-        AddWorker((cnt) =>
+        AddWorker(3, 3, (cnt) =>
         {
             CreateExplosionEffect(pro.transform.position);
             Product[] arPros = ScanAroundProducts(pro, 1);
@@ -833,7 +829,7 @@ public class InGameManager : MonoBehaviour
         pro.SkillCasted = true;
         Vector3 startPos = pro.transform.position;
         Product[] samePros = null;
-        AddWorker((idx) =>
+        AddWorker(3, 1, (idx) =>
         {
             if(samePros == null)
             {
@@ -862,7 +858,7 @@ public class InGameManager : MonoBehaviour
             {
                 return DelayedCallRet.Done;
             }
-        }, true);
+        });
     }
     private void CastHammerProduct(Product pro)
     {
@@ -870,7 +866,7 @@ public class InGameManager : MonoBehaviour
         pro.SkillCasted = true;
 
         Frame nextTarget = null;
-        AddWorker((cnt) =>
+        AddWorker(3, 9, (cnt) =>
         {
             if(cnt == 0)
             {
@@ -889,8 +885,9 @@ public class InGameManager : MonoBehaviour
                 Destroy(hammerObj, duration);
 
                 TryDestroy(pro);
+                return DelayedCallRet.Keep;
             }
-            else if(cnt >= 3)
+            else
             {
                 Product destPro = nextTarget.ChildProduct;
                 if(destPro != null && !destPro.IsLocked)
@@ -899,14 +896,13 @@ public class InGameManager : MonoBehaviour
                 }
                 return DelayedCallRet.Done;
             }
-            return DelayedCallRet.Keep;
         });
     }
 
     private void StartSingleSkillLoop()
     {
         int nn = 0;
-        AddWorker((cnt) =>
+        AddWorker(0, 3, (cnt) =>
         {
             Product targetSkill = FindNextSingleSkill();
             if(targetSkill != null)
@@ -929,6 +925,34 @@ public class InGameManager : MonoBehaviour
             return DelayedCallRet.Keep;
         });
     }
+    private void StartRainbowSkillLoop()
+    {
+        AddWorker(0, 3, (cnt) =>
+        {
+            Product target = FindRainbowSkill();
+            if(target != null)
+            {
+                Product[] pros = FindSameColor(target);
+                foreach(Product pro in pros)
+                {
+                    if (IsObstacled(pro.ParentFrame))
+                    {
+                        BreakObstacle(pro.ParentFrame);
+                    }
+                    else
+                    {
+                        pro.DestroyImmediately();
+                    }
+                }
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                StartSingleSkillLoop();
+                return DelayedCallRet.Done;
+            }
+        });
+    }
 
     private Product FindNextSingleSkill()
     {
@@ -946,6 +970,35 @@ public class InGameManager : MonoBehaviour
         }
         return null;
     }
+    private Product FindRainbowSkill()
+    {
+        for (int y = CountY - 1; y >= 0; --y)
+        {
+            for (int x = 0; x < CountX; ++x)
+            {
+                Frame frame = mFrames[x, y];
+                Product pro = frame.ChildProduct;
+                if (pro != null && pro.IsSkillable && !pro.IsLocked && !pro.IsObstacled() && pro.Skill == ProductSkill.SameColor)
+                {
+                    return pro;
+                }
+            }
+        }
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect, int timerCounter)
     {
@@ -1852,7 +1905,8 @@ public class InGameManager : MonoBehaviour
                 () => {
                     //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2, mSFXVolume);
                     Network_ChangeSkill(netInfo.ToArray());
-                    StartCoroutine(DestroySameProductLoop());
+                    StartRainbowSkillLoop();
+                    //StartCoroutine(DestroySameProductLoop());
                 }));
         }
     }
