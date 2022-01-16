@@ -306,7 +306,7 @@ public class InGameManager : MonoBehaviour
             Network_Click(pro);
             mUseCombo = true;
             RemoveLimit();
-            TryDestroy(pro);
+            CastSkillProduct(pro);
             //DestroyProducts(new Product[] { pro });
         }
         else
@@ -530,6 +530,7 @@ public class InGameManager : MonoBehaviour
     {
         AddWorker(0, 1, (tick) => { return DelayedCallRet.Done; });
     }
+    
 
     IEnumerator DoDroppingCycle()
     {
@@ -564,50 +565,20 @@ public class InGameManager : MonoBehaviour
             }
 
             // 드랍 프로세스 시작
-            foreach (VerticalFrames vf in mVerticalFrames)
+            Product[] droppingPros = DoDropProcess();
+            if(droppingPros.Length > 0)
             {
-                if (vf.IsDroppable())
+                // 떨어지는 동안의 delay 후
+                AddWorker(3, 3, (tick) =>
                 {
-                    // 비어있는 프레임에 새로운 블럭 생성
-                    CreateNewProducts(vf);
+                    // EndDrop 처리
+                    foreach (Product droppingPro in droppingPros)
+                        droppingPro.DropEnd();
 
-                    // 떨어지기 시작
-                    Product[] droppingPros = vf.StartToDrop();
-
-                    if (droppingPros != null && droppingPros.Length > 0)
-                    {
-                        // 0.3초뒤 드롭된 블록들에 대해 매칭 시도하는 콜백 등록
-                        AddWorker(3, 3, (int callcount) =>
-                        {
-                            // EndDrop 처리
-                            foreach (Product droppingPro in droppingPros)
-                                droppingPro.DropEnd();
-
-                            //매칭 가능한 블록들이 있는지 찾는 기능 수행
-                            List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
-                            if (matches.Count > 0)
-                            {
-                                // 깜빡이는 연출 효과
-                                foreach (Product[] pros in matches)
-                                {
-                                    LockToMatch(pros);
-                                }
-
-                                //재매칭될것 있으면 다음 0.3초뒤에 실제 파괴되는 콜백 등록
-                                AddWorker(3, 3, (int cnt) =>
-                                {
-                                    // 실제 블럭이 파괴되는 로직 수행
-                                    foreach (Product[] pros in matches)
-                                    {
-                                        DoMatchProducts(pros);
-                                    }
-                                    return DelayedCallRet.Done;
-                                });
-                            }
-                            return DelayedCallRet.Done;
-                        });
-                    }
-                }
+                    // 매치가능한 블럭들이 있으면 재매칭 수행
+                    TryMatchAfterDrop(droppingPros);
+                    return DelayedCallRet.Done;
+                });
             }
 
             yield return new WaitForSeconds(0.1f);
@@ -617,6 +588,27 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = false;
     }
 
+    private Product[] DoDropProcess()
+    {
+        List<Product> pros = new List<Product>();
+        foreach (VerticalFrames vf in mVerticalFrames)
+        {
+            if (vf.IsDroppable())
+            {
+                // 비어있는 프레임에 새로운 블럭 생성
+                CreateNewProducts(vf);
+
+                // 떨어지기 시작
+                Product[] droppingPros = vf.StartToDrop();
+
+                if (droppingPros != null && droppingPros.Length > 0)
+                {
+                    pros.AddRange(droppingPros);
+                }
+            }
+        }
+        return pros.ToArray();
+    }
     private Product[] CreateNewProducts(VerticalFrames vf)
     {
         List<Product> newPros = new List<Product>();
@@ -631,8 +623,34 @@ public class InGameManager : MonoBehaviour
         }
         return newPros.ToArray();
     }
+    private void TryMatchAfterDrop(Product[] droppingPros)
+    {
+        //매칭 가능한 블록들이 있는지 찾는 기능 수행
+        List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
+        if (matches.Count > 0)
+        {
+            // 매치가능한 블럭들이 있다면 매치 수행
 
-    private void TryDestroy(Product pro)
+            // 깜빡이는 연출 효과
+            foreach (Product[] pros in matches)
+            {
+                LockToMatch(pros);
+            }
+
+            //0.3초뒤에 재매칭
+            AddWorker(3, 3, (int cnt) =>
+            {
+                // 실제 블럭이 파괴되는 로직 수행
+                foreach (Product[] pros in matches)
+                {
+                    DoMatchProducts(pros);
+                }
+                return DelayedCallRet.Done;
+            });
+        }
+    }
+
+    private void TryDestroy(Product pro, bool isDelay)
     {
         if(IsObstacled(pro.ParentFrame))
         {
@@ -644,7 +662,19 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            pro.DestroyImmediately();
+            if(isDelay)
+            {
+                pro.ReadyForDestroy(Billboard.CurrentCombo);
+                AddWorker(3, 3, (tick) =>
+                {
+                    pro.DestroyImmediately();
+                    return DelayedCallRet.Done;
+                });
+            }
+            else
+            {
+                pro.DestroyImmediately();
+            }
         }
     }
     private void CastSkillProduct(Product target)
@@ -676,61 +706,48 @@ public class InGameManager : MonoBehaviour
 
     private void CastHorizontalProduct(Product pro)
     {
+        pro.SkillCasted = true;
+
         Frame startFrame = pro.ParentFrame;
         Vector3 startPosition = startFrame.transform.position;
         Vector3 rightEndPosition = startFrame.MostRight().transform.position;
         Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
         float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
         maxDistance += GridSize;
+        rightEndPosition.x = startPosition.x + maxDistance;
+        leftEndPosition.x = startPosition.x - maxDistance;
+        float speed = GridSize / 0.1f;
+        float duration = maxDistance / speed;
 
-        Rocket rocketR = Instantiate(LineRocketPrefab, transform);
-        rocketR.IngameMgr = this;
-        rocketR.transform.position = startPosition;
-        rocketR.transform.DOMoveX(startPosition.x + maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
-        {
-            Destroy(rocketR.gameObject);
-        });
+        CreateRocketEffect(startPosition, rightEndPosition, duration);
+        CreateRocketEffect(startPosition, leftEndPosition, duration);
 
-        Rocket rocketL = Instantiate(LineRocketPrefab, transform);
-        rocketL.IngameMgr = this;
-        rocketL.transform.position = startPosition;
-        rocketL.transform.rotation = Quaternion.Euler(0, 0, 180);
-        rocketL.transform.DOMoveX(startPosition.x - maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
-        {
-            Destroy(rocketL.gameObject);
-        });
+        TryDestroy(pro, false);
 
-        pro.SkillCasted = true;
-        pro.transform.DOShakePosition(0.3f, 0.1f);
-        AddWorker(3, 1, (cnt) =>
+        AddWorker(1, 1, (cnt) =>
         {
-            if(cnt == 0)
-            {
-                TryDestroy(pro);
-                return DelayedCallRet.Keep;
-            }
-            
-            Frame leftFrame = startFrame.Left(cnt);
+            int offIdx = cnt + 1;
+            Frame leftFrame = startFrame.Left(offIdx);
             if (leftFrame != null)
             {
                 Product leftPro = leftFrame.ChildProduct;
                 if (leftPro != null && !leftPro.IsLocked)
                 {
-                    TryDestroy(leftPro);
+                    TryDestroy(leftPro, false);
                 }
             }
 
-            Frame rightFrame = startFrame.Right(cnt);
+            Frame rightFrame = startFrame.Right(offIdx);
             if (rightFrame != null)
             {
                 Product rightPro = rightFrame.ChildProduct;
                 if (rightPro != null && !rightPro.IsLocked)
                 {
-                    TryDestroy(rightPro);
+                    TryDestroy(rightPro, false);
                 }
             }
 
-            if (startFrame.IndexX - cnt < 0 && startFrame.IndexX + cnt >= CountX)
+            if (startFrame.IndexX - offIdx < 0 && startFrame.IndexX + offIdx >= CountX)
             {
                 return DelayedCallRet.Done;
             }
@@ -740,6 +757,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CastVerticalProduct(Product pro)
     {
+        pro.SkillCasted = true;
         Frame startFrame = pro.ParentFrame;
         startFrame.VertFrames.HoldCount++;
 
@@ -748,57 +766,40 @@ public class InGameManager : MonoBehaviour
         Vector3 bottomEndPosition = startFrame.MostDown().transform.position;
         float maxDistance = Mathf.Max(startPosition.y - bottomEndPosition.y, topEndPosition.y - startPosition.y);
         maxDistance += GridSize;
+        topEndPosition.y = startPosition.y + maxDistance;
+        bottomEndPosition.y = startPosition.y - maxDistance;
+        float speed = GridSize / 0.1f;
+        float duration = maxDistance / speed;
 
-        Rocket rocketT = Instantiate(LineRocketPrefab, transform);
-        rocketT.IngameMgr = this;
-        rocketT.transform.position = startPosition;
-        rocketT.transform.rotation = Quaternion.Euler(0, 0, 90);
-        rocketT.transform.DOMoveY(startPosition.y + maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
+        CreateRocketEffect(startPosition, topEndPosition, duration);
+        CreateRocketEffect(startPosition, bottomEndPosition, duration);
+
+        TryDestroy(pro, false);
+
+        AddWorker(1, 1, (cnt) =>
         {
-            Destroy(rocketT.gameObject);
-        });
-
-        Rocket rocketB = Instantiate(LineRocketPrefab, transform);
-        rocketB.IngameMgr = this;
-        rocketB.transform.position = startPosition;
-        rocketB.transform.rotation = Quaternion.Euler(0, 0, 270);
-        rocketB.EventExplosion = (onFrame) =>
-        rocketB.transform.DOMoveY(startPosition.y - maxDistance, 0.5f).SetEase(Ease.InQuad).OnComplete(() =>
-        {
-            Destroy(rocketB.gameObject);
-        });
-
-        pro.SkillCasted = true;
-        pro.transform.DOShakePosition(0.3f, 0.1f);
-        AddWorker(3, 1, (cnt) =>
-        {
-            if(cnt == 0)
-            {
-                TryDestroy(pro);
-                return DelayedCallRet.Keep;
-            }
-
-            Frame upFrame = startFrame.Up(cnt);
+            int offIdx = cnt + 1;
+            Frame upFrame = startFrame.Up(offIdx);
             if (upFrame != null)
             {
                 Product upPro = upFrame.ChildProduct;
                 if (upPro != null && !upPro.IsLocked)
                 {
-                    TryDestroy(upPro);
+                    TryDestroy(upPro, false);
                 }
             }
 
-            Frame downFrame = startFrame.Down(cnt);
+            Frame downFrame = startFrame.Down(offIdx);
             if (downFrame != null)
             {
                 Product downPro = downFrame.ChildProduct;
                 if (downPro != null && !downPro.IsLocked)
                 {
-                    TryDestroy(downPro);
+                    TryDestroy(downPro, false);
                 }
             }
 
-            if (startFrame.IndexY - cnt < 0 && startFrame.IndexY + cnt >= CountY)
+            if (startFrame.IndexY - offIdx < 0 && startFrame.IndexY + offIdx >= CountY)
             {
                 startFrame.VertFrames.HoldCount--;
                 return DelayedCallRet.Done;
@@ -815,18 +816,18 @@ public class InGameManager : MonoBehaviour
         {
             CreateExplosionEffect(pro.transform.position);
             Product[] arPros = ScanAroundProducts(pro, 1);
-            TryDestroy(pro);
+            TryDestroy(pro, false);
             foreach(Product arPro in arPros)
             {
-                TryDestroy(arPro);
+                TryDestroy(arPro, true);
             }
             return DelayedCallRet.Done;
         });
     }
     private void CastRainbowProduct(Product pro)
     {
-        pro.Animation.Play("destroy");
         pro.SkillCasted = true;
+        pro.Animation.Play("destroy");
         Vector3 startPos = pro.transform.position;
         Product[] samePros = null;
         AddWorker(3, 1, (idx) =>
@@ -835,8 +836,8 @@ public class InGameManager : MonoBehaviour
             {
                 ShakeField(0.05f);
                 SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2, mSFXVolume);
-                samePros = FindSameColor(pro, false);
-                TryDestroy(pro);
+                samePros = FindNormalSameColor(pro.Color);
+                TryDestroy(pro, false);
                 if(samePros == null)
                 {
                     return DelayedCallRet.Done;
@@ -849,7 +850,7 @@ public class InGameManager : MonoBehaviour
                 if(curPro != null && !curPro.IsLocked)
                 {
                     CreateLaserEffect(startPos, curPro.transform.position);
-                    TryDestroy(curPro);
+                    TryDestroy(curPro, true);
                 }
                 
                 return DelayedCallRet.Keep;
@@ -862,8 +863,8 @@ public class InGameManager : MonoBehaviour
     }
     private void CastHammerProduct(Product pro)
     {
-        pro.Animation.Play("destroy");
         pro.SkillCasted = true;
+        pro.Animation.Play("destroy");
 
         Frame nextTarget = null;
         AddWorker(3, 9, (cnt) =>
@@ -881,10 +882,13 @@ public class InGameManager : MonoBehaviour
                 hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
                 hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
                 hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f);
-                Destroy(hammerObj, duration);
+                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+                .OnComplete(() =>
+                {
+                    Destroy(hammerObj.gameObject);
+                });
 
-                TryDestroy(pro);
+                TryDestroy(pro, false);
                 return DelayedCallRet.Keep;
             }
             else
@@ -892,7 +896,7 @@ public class InGameManager : MonoBehaviour
                 Product destPro = nextTarget.ChildProduct;
                 if(destPro != null && !destPro.IsLocked)
                 {
-                    TryDestroy(destPro);
+                    TryDestroy(destPro, true);
                 }
                 return DelayedCallRet.Done;
             }
@@ -902,7 +906,7 @@ public class InGameManager : MonoBehaviour
     private void StartSingleSkillLoop()
     {
         int nn = 0;
-        AddWorker(0, 3, (cnt) =>
+        AddWorker(0, 2, (cnt) =>
         {
             Product targetSkill = FindNextSingleSkill();
             if(targetSkill != null)
@@ -932,18 +936,14 @@ public class InGameManager : MonoBehaviour
             Product target = FindRainbowSkill();
             if(target != null)
             {
-                Product[] pros = FindSameColor(target);
+                target.SkillCasted = true;
+                Product[] pros = FindNormalSameColor(target.Color);
                 foreach(Product pro in pros)
                 {
-                    if (IsObstacled(pro.ParentFrame))
-                    {
-                        BreakObstacle(pro.ParentFrame);
-                    }
-                    else
-                    {
-                        pro.DestroyImmediately();
-                    }
+                    TryDestroy(pro, true);
                 }
+
+                TryDestroy(target, true);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1466,7 +1466,7 @@ public class InGameManager : MonoBehaviour
         }
 
         ShakeField(0.05f);
-        Product[] pros = FindSameColor(pro, false);
+        Product[] pros = FindNormalSameColor(pro.Color);
         StartCoroutine(StartElectronicEffect(pro.transform.position, pros, (target) =>
             {
                 DestroyProducts(new Product[1] { target });
@@ -2044,7 +2044,7 @@ public class InGameManager : MonoBehaviour
             if (target == null)
                 break;
 
-            Product[] pros = FindSameColor(target);
+            Product[] pros = FindNormalSameColor(target.Color);
             DestroyProducts(pros, UserSetting.MatchReadyInterval, true);
             yield return new WaitForSeconds(UserSetting.SameSkillInterval);
         }
@@ -2987,7 +2987,7 @@ public class InGameManager : MonoBehaviour
                     continue;
 
                 Product pro = mFrames[x, y].ChildProduct;
-                if (pro != null && !pro.IsLocked)
+                if (pro != null && !pro.IsLocked && pro != target)
                     rets.Add(pro);
             }
         }
@@ -3246,27 +3246,22 @@ public class InGameManager : MonoBehaviour
 
         return new List<Frame>(rets.Values).ToArray();
     }
-    private Product[] FindSameColor(Product target, bool skipSkill = true)
+    private Product[] FindNormalSameColor(ProductColor color)
     {
         List<Product> pros = new List<Product>();
-        foreach (Frame frame in mFrames)
+        for (int y = CountY - 1; y >= 0; --y)
         {
-            Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked)
-                continue;
-
-            if (pro == target)
+            for (int x = 0; x < CountX; ++x)
             {
-                pros.Add(pro);
-                continue;
+                Frame frame = mFrames[x, y];
+                Product pro = frame.ChildProduct;
+                if (pro != null && !pro.IsLocked && pro.Skill == ProductSkill.Nothing && pro.Color == color)
+                {
+                    pros.Add(pro);
+                }
             }
-
-            if (skipSkill && pro.Skill != ProductSkill.Nothing)
-                continue;
-
-            if(pro.Color == target.Color)
-                pros.Add(pro);
         }
+
         return pros.ToArray();
     }
     private List<Product[]> FindMatchedProducts(Product[] targetProducts, int matchCount = UserSetting.MatchCount)
@@ -3490,6 +3485,21 @@ public class InGameManager : MonoBehaviour
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
+    }
+    private void CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration)
+    {
+        Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
+        lookDir.Normalize();
+        Rocket rocket = Instantiate(LineRocketPrefab, transform);
+        rocket.IngameMgr = this;
+        float posZ = rocket.transform.position.z;
+        rocket.transform.position = new Vector3(startPos.x, startPos.y, posZ);
+        rocket.transform.right = lookDir;
+        rocket.transform.DOMove(new Vector3(destPos.x, destPos.y, posZ), duration).SetEase(Ease.Linear)
+        .OnComplete(() =>
+        {
+            Destroy(rocket.gameObject);
+        });
     }
     IEnumerator CreateSmokeInterval(float interval, Frame[] frames, Action<Frame> eventEachEnd, Action eventEnd)
     {
