@@ -65,7 +65,6 @@ public class InGameManager : MonoBehaviour
     public bool IsDroppable {get { return mDropLockCount == 0; } }
     private bool mUseCombo = false;
     private float mStartTime = 0;
-    private int mProductCount = 0;
     private float mSFXVolume = 1;
     private int mPVPTimerCounter = 0;
     private Vector3 mStartPos = Vector3.zero;
@@ -74,7 +73,7 @@ public class InGameManager : MonoBehaviour
 
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
-
+    public float SFXVolume { get { return mSFXVolume; } }
     public Dictionary<int, Product> ProductIDs = new Dictionary<int, Product>();
     public InGameBillboard Billboard = new InGameBillboard();
     public GameFieldType FieldType { get {
@@ -90,7 +89,7 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null && mProductCount == mStageInfo.XCount * mStageInfo.YCount; } }
+    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -201,7 +200,6 @@ public class InGameManager : MonoBehaviour
         mStageInfo = info;
         mUserInfo = userInfo;
         mRandomSeed = new System.Random(info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed);
-        mProductCount = info.XCount * info.YCount;
         mStartPos = transform.position;
 
         int stageCountPerTheme = 20;
@@ -446,7 +444,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
-                destPro.DestroyImmediately();
+                destPro.DestroyImmediately(Billboard.CurrentCombo);
             }
         }
         else
@@ -474,6 +472,8 @@ public class InGameManager : MonoBehaviour
                 destPro.ReadyForMerge(Billboard.CurrentCombo);
             }
         }
+
+        AcquireScore(Billboard.CurrentCombo * pros.Length, pros[0].transform.position);
     }
     private void BreakObstacles(Product[] pros)
     {
@@ -485,6 +485,22 @@ public class InGameManager : MonoBehaviour
             }
         }
 
+    }
+
+    private void AcquireScore(int score, Vector3 position)
+    {
+        DoAttack(Billboard.CurrentScore, Billboard.CurrentScore + score, position);
+
+        Billboard.CurrentScore += score;
+
+        EventBreakTarget?.Invoke(Vector3.zero, StageGoalType.Score);
+    }
+    private void DoAttack(int fromScore, int toScore, Vector3 position)
+    {
+        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
+        int preAttackCount = fromScore / spa;
+        int curAttackCount = toScore / spa;
+        Attack(curAttackCount - preAttackCount, position);
     }
 
     public enum DelayedCallRet { Keep, Done }
@@ -664,16 +680,18 @@ public class InGameManager : MonoBehaviour
         {
             if(isDelay)
             {
+                AcquireScore(Billboard.CurrentCombo, pro.transform.position);
                 pro.ReadyForDestroy(Billboard.CurrentCombo);
                 AddWorker(3, 3, (tick) =>
                 {
-                    pro.DestroyImmediately();
+                    pro.DestroyImmediately(Billboard.CurrentCombo);
                     return DelayedCallRet.Done;
                 });
             }
             else
             {
-                pro.DestroyImmediately();
+                AcquireScore(Billboard.CurrentCombo, pro.transform.position);
+                pro.DestroyImmediately(Billboard.CurrentCombo);
             }
         }
     }
@@ -1013,14 +1031,13 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in destroyedProducts)
         {
             Frame parentFrame = pro.ParentFrame;
-            pro.DestroyImmediately();
+            pro.DestroyImmediately(Billboard.CurrentCombo);
             Product newPro = CreateNewProduct();
             parentFrame.VertFrames.AddNewProduct(newPro);
             newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
             //nextProducts.Add(new ProductInfo(pro.Color, newPro.Color, ProductSkill.Nothing, parentFrame.IndexX, parentFrame.IndexY, pro.InstanceID, newPro.InstanceID));
         }
         //Network_Destroy(nextProducts.ToArray(), ProductSkill.Nothing, withLaserEffect, timerCounter);
-        mProductCount += destroyedProducts.Length;
     }
     public Product[] DestroyProducts(Product[] matches, float delay = UserSetting.MatchReadyInterval, bool ignoreSkill = false)
     {
@@ -1059,7 +1076,6 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
-        mProductCount -= validProducts.Length;
         StartCoroutine(DestroyProductDelay(validProducts, delay, false, mPVPTimerCounter));
 
         int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
@@ -1105,7 +1121,6 @@ public class InGameManager : MonoBehaviour
         else
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1, mSFXVolume);
 
-        mProductCount += mergeProducts.Length;
     }
     private Product[] MergeProducts(Product[] matches, ProductSkill makeSkill)
     {
@@ -1128,7 +1143,6 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
-        mProductCount -= validProducts.Length;
         StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill, mPVPTimerCounter));
 
         int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
@@ -1155,7 +1169,6 @@ public class InGameManager : MonoBehaviour
         Product newPro = CreateNewProduct();
         parentFrame.VertFrames.AddNewProduct(newPro);
         newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
-        mProductCount++;
 
         yield return new WaitForSeconds(0);
     }
@@ -3166,7 +3179,6 @@ public class InGameManager : MonoBehaviour
         mDropLockCount = 0;
         mRandomSeed = null;
         mStartTime = 0;
-        mProductCount = 0;
         mSFXVolume = 1;
         mPVPTimerCounter = 0;
         mUseCombo = false;

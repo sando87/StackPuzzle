@@ -150,6 +150,8 @@ public class Product : MonoBehaviour
         ParentFrame.TouchBush();
         ParentFrame.CreateComboTextEffect(Combo, Color);
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
+
         Animation.Play("spitout");
         StartCoroutine(AnimateFlash(1.3f));
         return true;
@@ -160,6 +162,13 @@ public class Product : MonoBehaviour
         {
             ChangeProductImage(skill);
             IsMerging = false;
+
+            if (skill == ProductSkill.SameColor)
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, Manager.SFXVolume);
+            else if (skill == ProductSkill.Bomb)
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2, Manager.SFXVolume);
+            else
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1, Manager.SFXVolume);
         }
         else
         {
@@ -202,11 +211,14 @@ public class Product : MonoBehaviour
         StartCoroutine(AnimateFlash(1.3f));
         return true;
     }
-    public Frame DestroyImmediately()
+    public Frame DestroyImmediately(int combo)
     {
         if (ParentFrame == null)
             return null;
-        
+
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
+
+        Combo = combo;
         IsDestroying = true;
         Animation.Stop();
         transform.localPosition = new Vector3(0, 0, -1);
