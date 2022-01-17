@@ -923,6 +923,298 @@ public class InGameManager : MonoBehaviour
         });
     }
 
+    private void CastSkillBomb_Stripe(Product productbomb, Product productStripe)
+    {
+        if (productStripe.Skill == ProductSkill.Horizontal)
+        {
+            productbomb.SkillCasted = true;
+            productStripe.SkillCasted = true;
+
+            Frame startFrame = productStripe.ParentFrame;
+            Vector3 startPosition = startFrame.transform.position;
+            Vector3 rightEndPosition = startFrame.MostRight().transform.position;
+            Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
+            float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
+            maxDistance += GridSize;
+            rightEndPosition.x = startPosition.x + maxDistance;
+            leftEndPosition.x = startPosition.x - maxDistance;
+            float speed = GridSize / 0.1f;
+            float duration = maxDistance / speed;
+
+            Rocket rocketR = CreateRocketEffect(startPosition, rightEndPosition, duration, 0.3f);
+            Rocket rocketL = CreateRocketEffect(startPosition, leftEndPosition, duration, 0.3f);
+
+            rocketR.transform.DOScale(2, 0.3f);
+            rocketL.transform.DOScale(2, 0.3f);
+
+            AddWorker(3, 1, (cnt) =>
+            {
+                if(cnt == 0)
+                {
+                    TryDestroy(productbomb, false);
+                    TryDestroy(productStripe, false);
+                }
+
+                int offIdx = cnt;
+                Frame leftFrame = startFrame.Left(offIdx);
+                if (leftFrame != null)
+                {
+                    Product[] arPros = ScanAroundProducts(leftFrame, 1);
+                    foreach (Product arPro in arPros)
+                    {
+                        TryDestroy(arPro, false);
+                    }
+                }
+
+                Frame rightFrame = startFrame.Right(offIdx);
+                if (rightFrame != null)
+                {
+                    Product[] arPros = ScanAroundProducts(rightFrame, 1);
+                    foreach (Product arPro in arPros)
+                    {
+                        TryDestroy(arPro, false);
+                    }
+                }
+
+                if (startFrame.IndexX - offIdx < 0 && startFrame.IndexX + offIdx >= CountX)
+                {
+                    return DelayedCallRet.Done;
+                }
+
+                return DelayedCallRet.Keep;
+            });
+        }
+        else if (productStripe.Skill == ProductSkill.Vertical)
+        {
+            productbomb.SkillCasted = true;
+            productStripe.SkillCasted = true;
+
+            Frame startFrame = productStripe.ParentFrame;
+            startFrame.VertFrames.HoldCount++;
+            if (startFrame.IndexX > 0) startFrame.Left().VertFrames.HoldCount++;
+            if (startFrame.IndexX < CountX - 1) startFrame.Right().VertFrames.HoldCount++;
+
+            Vector3 startPosition = startFrame.transform.position;
+            Vector3 topEndPosition = startFrame.MostUp().transform.position;
+            Vector3 bottomEndPosition = startFrame.MostDown().transform.position;
+            float maxDistance = Mathf.Max(startPosition.y - bottomEndPosition.y, topEndPosition.y - startPosition.y);
+            maxDistance += GridSize;
+            topEndPosition.y = startPosition.y + maxDistance;
+            bottomEndPosition.y = startPosition.y - maxDistance;
+            float speed = GridSize / 0.1f;
+            float duration = maxDistance / speed;
+
+            Rocket rocketT = CreateRocketEffect(startPosition, topEndPosition, duration, 0.3f);
+            Rocket rocketB = CreateRocketEffect(startPosition, bottomEndPosition, duration, 0.3f);
+
+            rocketT.transform.DOScale(2, 0.3f);
+            rocketB.transform.DOScale(2, 0.3f);
+
+            AddWorker(3, 1, (cnt) =>
+            {
+                if (cnt == 0)
+                {
+                    TryDestroy(productbomb, false);
+                    TryDestroy(productStripe, false);
+                }
+
+                int offIdx = cnt;
+                Frame upFrame = startFrame.Up(offIdx);
+                if (upFrame != null)
+                {
+                    Product[] arPros = ScanAroundProducts(upFrame, 1);
+                    foreach (Product arPro in arPros)
+                    {
+                        TryDestroy(arPro, false);
+                    }
+                }
+
+                Frame downFrame = startFrame.Down(offIdx);
+                if (downFrame != null)
+                {
+                    Product[] arPros = ScanAroundProducts(downFrame, 1);
+                    foreach (Product arPro in arPros)
+                    {
+                        TryDestroy(arPro, false);
+                    }
+                }
+
+                if (startFrame.IndexY - offIdx < 0 && startFrame.IndexY + offIdx >= CountY)
+                {
+                    startFrame.VertFrames.HoldCount--;
+                    if (startFrame.IndexX > 0) startFrame.Left().VertFrames.HoldCount--;
+                    if (startFrame.IndexX < CountX - 1) startFrame.Right().VertFrames.HoldCount--;
+                    return DelayedCallRet.Done;
+                }
+
+                return DelayedCallRet.Keep;
+            });
+        }
+    }
+    private void CastSkillStripe_Stripe(Product productStripeA, Product productStripeB)
+    {
+        CastSkillProduct(productStripeA);
+        CastSkillProduct(productStripeB);
+    }
+    private void CastSkillHammer_Bomb(Product productHammer, Product productBomb)
+    {
+        productHammer.SkillCasted = true;
+        productBomb.SkillCasted = true;
+
+        Frame nextTarget = null;
+        AddWorker(1, 9, (cnt) =>
+        {
+            if (cnt == 0)
+            {
+                // 망치가 날아갈 목적지 찾고
+                nextTarget = FindHammerTarget();
+
+                // 날아가는 연출 시작
+                float duration = 0.9f;
+                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
+                hammerObj.transform.position = productBomb.transform.position;
+                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Bomb.GetSprite();
+                float topPosY = hammerObj.transform.position.y + 3;
+                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
+                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+                .OnComplete(() =>
+                {
+                    Destroy(hammerObj.gameObject);
+                });
+
+                TryDestroy(productHammer, false);
+                TryDestroy(productBomb, false);
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                Product destPro = nextTarget.ChildProduct;
+                if(destPro != null && !destPro.IsLocked)
+                {
+                    CreateExplosionEffect(destPro.transform.position);
+                    Product[] arPros = ScanAroundProducts(destPro, 1);
+                    TryDestroy(destPro, true);
+                    foreach (Product arPro in arPros)
+                    {
+                        TryDestroy(arPro, true);
+                    }
+                }
+
+                return DelayedCallRet.Done;
+            }
+        });
+    }
+    private void CastSkillHammer_Hori(Product productHammer, Product productHori)
+    {
+        productHammer.SkillCasted = true;
+        productHori.SkillCasted = true;
+
+        Frame nextTarget = null;
+        AddWorker(1, 9, (cnt) =>
+        {
+            if (cnt == 0)
+            {
+                // 망치가 날아갈 목적지 찾고
+                nextTarget = FindHammerTarget();
+
+                // 날아가는 연출 시작
+                float duration = 0.9f;
+                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
+                hammerObj.transform.position = productHori.transform.position;
+                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Horizontal.GetSprite();
+                float topPosY = hammerObj.transform.position.y + 3;
+                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
+                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+                .OnComplete(() =>
+                {
+                    Destroy(hammerObj.gameObject);
+                });
+
+                TryDestroy(productHammer, false);
+                TryDestroy(productHori, false);
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                Product destPro = nextTarget.ChildProduct;
+                if (destPro != null && !destPro.IsLocked)
+                {
+                    CastHorizontalProduct(destPro);
+                }
+                return DelayedCallRet.Done;
+            }
+        });
+    }
+    private void CastSkillHammer_Vert(Product productHammer, Product productVert)
+    {
+        productHammer.SkillCasted = true;
+        productVert.SkillCasted = true;
+
+        Frame nextTarget = null;
+        AddWorker(1, 9, (cnt) =>
+        {
+            if (cnt == 0)
+            {
+                // 망치가 날아갈 목적지 찾고
+                nextTarget = FindHammerTarget();
+
+                // 날아가는 연출 시작
+                float duration = 0.9f;
+                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
+                hammerObj.transform.position = productVert.transform.position;
+                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Vertical.GetSprite();
+                float topPosY = hammerObj.transform.position.y + 3;
+                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
+                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+                .OnComplete(() =>
+                {
+                    Destroy(hammerObj.gameObject);
+                });
+
+                TryDestroy(productHammer, false);
+                TryDestroy(productVert, false);
+                return DelayedCallRet.Keep;
+            }
+            else
+            {
+                Product destPro = nextTarget.ChildProduct;
+                if (destPro != null && !destPro.IsLocked)
+                {
+                    CastVerticalProduct(destPro);
+                }
+                return DelayedCallRet.Done;
+            }
+        });
+    }
+    private void CastSkillHammer_Hammer(Product productHammerA, Product productHammerB)
+    {
+        List<Product> randomProducts = ScanRandomProducts(7);
+        randomProducts.Add(productHammerA);
+        randomProducts.Add(productHammerB);
+        Product[] pros = randomProducts.ToArray();
+
+        List<ProductInfo> netInfo = new List<ProductInfo>();
+        StartCoroutine(CreateProductBullets(productHammerA, 0.2f, ProductSkill.Hammer, pros,
+            (pro) =>
+            {
+                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
+            },
+            () =>
+            {
+                Network_ChangeSkill(netInfo.ToArray());
+                StartSingleSkillLoop();
+            }));
+    }
+
     private void StartSingleSkillLoop()
     {
         AddWorker(0, 2, (cnt) =>
@@ -1517,40 +1809,40 @@ public class InGameManager : MonoBehaviour
         {
             switch (sub.Skill)
             {
-                case ProductSkill.Horizontal: DestroySkillStripe_Stripe(main, sub); break;
-                case ProductSkill.Vertical: DestroySkillStripe_Stripe(main, sub); break;
-                case ProductSkill.Bomb: StartCoroutine(DestroySkillBomb_Stripe(sub, main)); break;
-                case ProductSkill.Hammer: StartCoroutine(DestroySkillHammer_Hori(sub, main)); break;
+                case ProductSkill.Horizontal: CastSkillStripe_Stripe(main, sub); break;
+                case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
+                case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
+                case ProductSkill.Hammer: CastSkillHammer_Hori(sub, main); break;
             }
         }
         else if (main.Skill == ProductSkill.Vertical)
         {
             switch (sub.Skill)
             {
-                case ProductSkill.Horizontal: DestroySkillStripe_Stripe(main, sub); break;
-                case ProductSkill.Vertical: DestroySkillStripe_Stripe(main, sub); break;
-                case ProductSkill.Bomb: StartCoroutine(DestroySkillBomb_Stripe(sub, main)); break;
-                case ProductSkill.Hammer: StartCoroutine(DestroySkillHammer_Vert(sub, main)); break;
+                case ProductSkill.Horizontal: CastSkillStripe_Stripe(main, sub); break;
+                case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
+                case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
+                case ProductSkill.Hammer: CastSkillHammer_Vert(sub, main); break;
             }
         }
         else if (main.Skill == ProductSkill.Bomb)
         {
             switch (sub.Skill)
             {
-                case ProductSkill.Horizontal: StartCoroutine(DestroySkillBomb_Stripe(main, sub)); break;
-                case ProductSkill.Vertical: StartCoroutine(DestroySkillBomb_Stripe(main, sub)); break;
+                case ProductSkill.Horizontal: CastSkillBomb_Stripe(main, sub); break;
+                case ProductSkill.Vertical: CastSkillBomb_Stripe(main, sub); break;
                 case ProductSkill.Bomb: StartCoroutine(DestroySkillBomb_Bomb(main, sub)); break;
-                case ProductSkill.Hammer: StartCoroutine(DestroySkillHammer_Bomb(sub, main)); break;
+                case ProductSkill.Hammer: CastSkillHammer_Bomb(sub, main); break;
             }
         }
         else if (main.Skill == ProductSkill.Hammer)
         {
             switch (sub.Skill)
             {
-                case ProductSkill.Horizontal: StartCoroutine(DestroySkillHammer_Hori(main, sub)); break;
-                case ProductSkill.Vertical: StartCoroutine(DestroySkillHammer_Vert(main, sub)); break;
-                case ProductSkill.Bomb: StartCoroutine(DestroySkillHammer_Bomb(main, sub)); break;
-                case ProductSkill.Hammer: StartCoroutine(DestroySkillHammer_Hammer(main, sub)); break;
+                case ProductSkill.Horizontal: CastSkillHammer_Hori(main, sub); break;
+                case ProductSkill.Vertical: CastSkillHammer_Vert(main, sub); break;
+                case ProductSkill.Bomb: CastSkillHammer_Bomb(main, sub); break;
+                case ProductSkill.Hammer: CastSkillHammer_Hammer(main, sub); break;
             }
         }
     }
@@ -1597,7 +1889,7 @@ public class InGameManager : MonoBehaviour
             mIsUserEventLock = true;
             yield return new WaitForSeconds(UserSetting.AutoMatchInterval);
             mIsUserEventLock = false;
-            
+
             rocketR.transform.DOMoveX(startPosition.x + maxDistance, 0.3f).SetEase(Ease.InQuad).OnComplete(() =>
             {
                 Destroy(rocketR.gameObject);
@@ -1619,7 +1911,7 @@ public class InGameManager : MonoBehaviour
             Vector3 bottomEndPosition = productStripe.ParentFrame.MostDown().transform.position;
             float maxDistance = Mathf.Max(startPosition.y - bottomEndPosition.y, topEndPosition.y - startPosition.y);
             maxDistance += GridSize;
-            
+
             Rocket rocketT = Instantiate(LineRocketPrefab, transform);
             rocketT.IngameMgr = this;
             rocketT.transform.position = startPosition;
@@ -1675,8 +1967,9 @@ public class InGameManager : MonoBehaviour
     private IEnumerator DestroySkillBomb_Bomb(Product productbombA, Product productbombB)
     {
         mIsUserEventLock = true;
-        mDropLockCount++;
         Vector3 startPos = productbombA.transform.position;
+        productbombA.SkillCasted = true;
+        productbombB.SkillCasted = true;
 
         List<Product> targetsA = new List<Product>();
         List<Product> targetsB = new List<Product>();
@@ -1686,7 +1979,7 @@ public class InGameManager : MonoBehaviour
             {
                 Frame frame = mFrames[x, y];
                 Product pro = frame.ChildProduct;
-                if (pro != null && !pro.IsLocked)
+                if (pro != null && !pro.IsLocked && pro.Skill == ProductSkill.Nothing)
                 {
                     if (y % 2 == 0)
                         targetsA.Add(pro);
@@ -1700,7 +1993,7 @@ public class InGameManager : MonoBehaviour
 
         StartCoroutine(StartElectronicEffect(productbombA.transform.position, targetsA.ToArray(),
             (pro) => {
-                DestroyProducts(new Product[1] { pro }, 0, true);
+                TryDestroy(pro, false);
             }, 
             () => {
                 targetsA.Clear();
@@ -1710,7 +2003,7 @@ public class InGameManager : MonoBehaviour
         StartCoroutine(StartElectronicEffect(productbombB.transform.position, targetsB.ToArray(),
             (pro) =>
             {
-                DestroyProducts(new Product[1] { pro }, 0, true);
+                TryDestroy(pro, false);
             },
             () =>
             {
@@ -1718,9 +2011,11 @@ public class InGameManager : MonoBehaviour
             }));
 
         yield return new WaitUntil(() => { return targetsA.Count == 0 && targetsB.Count == 0; });
+        TryDestroy(productbombA, false);
+        TryDestroy(productbombB, false);
 
-        mDropLockCount--;
         mIsUserEventLock = false;
+        StartToDrop();
     }
     private IEnumerator DestroySkillHammer_Bomb(Product productHammer, Product productBomb)
     {
@@ -3497,7 +3792,7 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
-    private void CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration)
+    private Rocket CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration, float delay = 0)
     {
         Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
         lookDir.Normalize();
@@ -3506,11 +3801,12 @@ public class InGameManager : MonoBehaviour
         float posZ = rocket.transform.position.z;
         rocket.transform.position = new Vector3(startPos.x, startPos.y, posZ);
         rocket.transform.right = lookDir;
-        rocket.transform.DOMove(new Vector3(destPos.x, destPos.y, posZ), duration).SetEase(Ease.Linear)
+        rocket.transform.DOMove(new Vector3(destPos.x, destPos.y, posZ), duration).SetEase(Ease.Linear).SetDelay(delay)
         .OnComplete(() =>
         {
             Destroy(rocket.gameObject);
         });
+        return rocket;
     }
     IEnumerator CreateSmokeInterval(float interval, Frame[] frames, Action<Frame> eventEachEnd, Action eventEnd)
     {
