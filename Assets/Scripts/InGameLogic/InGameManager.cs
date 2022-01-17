@@ -71,6 +71,8 @@ public class InGameManager : MonoBehaviour
     private System.Random mRandomSeed = null;
     private VerticalFrames[] mVerticalFrames = null;
 
+    private bool mIsWorkingCycle = false;
+    private List<DelayedCall> mWorkerList = new List<DelayedCall>();
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
     public float SFXVolume { get { return mSFXVolume; } }
@@ -89,7 +91,7 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null; } }
+    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null && !mIsWorkingCycle; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -528,17 +530,15 @@ public class InGameManager : MonoBehaviour
         }
     }
 
-    private bool mIsDroppingCycle = false;
-    private List<DelayedCall> mWorkerList = new List<DelayedCall>();
 
     // delayTick은 처음 callback함수가 실행되기까지 지연시간(tick당 0.1초)
     // stepTick은 callback함수가 실행되는 간격(tick당 0.1초)
     private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
         mWorkerList.Add(new DelayedCall(delayTick, stepTick, callback));
-        if(!mIsDroppingCycle)
+        if(!mIsWorkingCycle)
         {
-            StartCoroutine(DoDroppingCycle());
+            StartCoroutine(DoWorkerCycle());
         }
     }
 
@@ -548,10 +548,10 @@ public class InGameManager : MonoBehaviour
     }
     
 
-    IEnumerator DoDroppingCycle()
+    IEnumerator DoWorkerCycle()
     {
         mIsUserEventLock = true;
-        mIsDroppingCycle = true;
+        mIsWorkingCycle = true;
         
         yield return new WaitForSeconds(0.1f);
 
@@ -600,7 +600,7 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        mIsDroppingCycle = false;
+        mIsWorkingCycle = false;
         mIsUserEventLock = false;
     }
 
@@ -639,7 +639,7 @@ public class InGameManager : MonoBehaviour
         }
         return newPros.ToArray();
     }
-    private void TryMatchAfterDrop(Product[] droppingPros)
+    private bool TryMatchAfterDrop(Product[] droppingPros)
     {
         //매칭 가능한 블록들이 있는지 찾는 기능 수행
         List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
@@ -663,7 +663,9 @@ public class InGameManager : MonoBehaviour
                 }
                 return DelayedCallRet.Done;
             });
+            return true;
         }
+        return false;
     }
 
     private void TryDestroy(Product pro, bool isDelay)
@@ -923,13 +925,11 @@ public class InGameManager : MonoBehaviour
 
     private void StartSingleSkillLoop()
     {
-        int nn = 0;
         AddWorker(0, 2, (cnt) =>
         {
             Product targetSkill = FindNextSingleSkill();
             if(targetSkill != null)
             {
-                nn = 0;
                 CastSkillProduct(targetSkill);
                 return DelayedCallRet.Keep;
             }
@@ -937,11 +937,8 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsAllProductIdle())
                 {
-                    nn++;
-                    if(nn >= 3)
-                        return DelayedCallRet.Done;
+                    return DelayedCallRet.Done;
                 }
-                    
             }
             
             return DelayedCallRet.Keep;
@@ -3182,6 +3179,8 @@ public class InGameManager : MonoBehaviour
         mSFXVolume = 1;
         mPVPTimerCounter = 0;
         mUseCombo = false;
+        mIsWorkingCycle = false;
+        mWorkerList.Clear();
 
         ProductIDs.Clear();
         Billboard.Reset(this);
@@ -3850,6 +3849,24 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.FlushAttacks)
+            {
+                if (IsIdle && IsAllProductIdle())
+                {
+                    int point = AttackPointFrame.Flush(UserSetting.FlushCount);
+
+                    List<Product> products = GetNextFlushTargets(point);
+                    Product[] rets = products.ToArray();
+                    StartCoroutine(FlushObstacles(rets, 1));
+                    if (products.Count < point)
+                    {
+                        StartFinish(true);
+                        break;
+                    }
+
+                    mNetMessages.RemoveFirst();
+                }
+            }
             
             /*
             else if (body.cmd == PVPCommand.Destroy)
@@ -3923,30 +3940,6 @@ public class InGameManager : MonoBehaviour
                     }
 
                     mNetMessages.RemoveFirst();
-                }
-            }
-            else if (body.cmd == PVPCommand.FlushAttacks)
-            {
-                if (IsIdle && IsAllProductIdle())
-                {
-                    List<Product> rets = new List<Product>();
-                    for (int i = 0; i < body.ArrayCount; ++i)
-                    {
-                        ProductInfo info = body.pros[i];
-                        Product pro = ProductIDs[info.prvInstID];
-                        if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
-                            rets.Add(pro);
-                    }
-
-                    if (rets.Count == body.ArrayCount)
-                    {
-                        AttackPointFrame.Flush(body.ArrayCount);
-                        int blockLevel = body.combo;
-                        StartCoroutine(FlushObstacles(rets.ToArray(), blockLevel, () =>
-                        {
-                            mNetMessages.RemoveFirst();
-                        }));
-                    }
                 }
             }
             else if (body.cmd == PVPCommand.BreakIce)
@@ -4241,7 +4234,6 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_FlushAttacks(ProductInfo[] pros, int level)
     {
-        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
