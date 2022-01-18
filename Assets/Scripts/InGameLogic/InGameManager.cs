@@ -69,6 +69,7 @@ public class InGameManager : MonoBehaviour
     private int mPVPTimerCounter = 0;
     private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
+    private int mStartRandomSeed = -1;
     private VerticalFrames[] mVerticalFrames = null;
 
     private bool mIsWorkingCycle = false;
@@ -201,7 +202,8 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mStageInfo = info;
         mUserInfo = userInfo;
-        mRandomSeed = new System.Random(info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed);
+        mStartRandomSeed = info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed;
+        mRandomSeed = new System.Random(mStartRandomSeed);
         mStartPos = transform.position;
 
         int stageCountPerTheme = 20;
@@ -3509,6 +3511,7 @@ public class InGameManager : MonoBehaviour
         mPVPTimerCounter = 0;
         mUseCombo = false;
         mIsWorkingCycle = false;
+        mStartRandomSeed = -1;
         mWorkerList.Clear();
 
         ProductIDs.Clear();
@@ -4483,7 +4486,7 @@ public class InGameManager : MonoBehaviour
         req.YCount = CountY;
         req.colorCount = mStageInfo.ColorCount;
         req.combo = 0;
-        req.remainTime = mStageInfo.RandomSeed;
+        req.remainTime = mStartRandomSeed;
         req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
