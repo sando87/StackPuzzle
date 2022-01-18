@@ -1197,22 +1197,51 @@ public class InGameManager : MonoBehaviour
     }
     private void CastSkillHammer_Hammer(Product productHammerA, Product productHammerB)
     {
-        List<Product> randomProducts = ScanRandomProducts(7);
-        randomProducts.Add(productHammerA);
-        randomProducts.Add(productHammerB);
-        Product[] pros = randomProducts.ToArray();
+        productHammerA.SkillCasted = true;
+        productHammerB.SkillCasted = true;
+        productHammerA.Animation.Play("destroy");
+        productHammerB.Animation.Play("destroy");
 
-        List<ProductInfo> netInfo = new List<ProductInfo>();
-        StartCoroutine(CreateProductBullets(productHammerA, 0.2f, ProductSkill.Hammer, pros,
-            (pro) =>
+        List<Frame> nextTargets = new List<Frame>();
+        AddWorker(3, 9, (cnt) =>
+        {
+            if (cnt == 0)
             {
-                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
-            },
-            () =>
+                for (int i = 0; i < 3; ++i)
+                {
+                    // 도착블럭 찾고
+                    Frame target = FindHammerTarget();
+                    // 날아가는 연출
+                    CreateHammerEffect(productHammerA.transform.position, target.transform.position, 0.9f);
+                    nextTargets.Add(target);
+                }
+                for (int i = 0; i < 3; ++i)
+                {
+                    // 도착블럭 찾고
+                    Frame target = FindHammerTarget();
+                    // 날아가는 연출
+                    CreateHammerEffect(productHammerB.transform.position, target.transform.position, 0.9f);
+                    nextTargets.Add(target);
+                }
+
+                TryDestroy(productHammerA, false);
+                TryDestroy(productHammerB, false);
+                return DelayedCallRet.Keep;
+            }
+            else
             {
-                Network_ChangeSkill(netInfo.ToArray());
-                StartSingleSkillLoop();
-            }));
+                foreach(Frame frame in nextTargets)
+                {
+                    Product destPro = frame.ChildProduct;
+                    if (destPro != null && !destPro.IsLocked)
+                    {
+                        TryDestroy(destPro, true);
+                    }
+                }
+                
+                return DelayedCallRet.Done;
+            }
+        });
     }
 
     private void StartSingleSkillLoop()
@@ -2944,12 +2973,17 @@ public class InGameManager : MonoBehaviour
     IEnumerator CheckFinishPvpTimer()
     {
         mPVPTimerCounter = 0;
-        float currentTimelimit = 0;
+        float currentTimelimit = mStageInfo.TimeLimit;
         while (true)
         {
             float remain = currentTimelimit - PlayTime;
             if (remain <= 0)
             {
+                while(!IsIdle)
+                {
+                    yield return null;
+                }
+
                 mPVPTimerCounter++;
                 currentTimelimit += mStageInfo.TimeLimit;
                 remain = currentTimelimit - PlayTime;
@@ -3792,6 +3826,23 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
+    private void CreateHammerEffect(Vector2 startPos, Vector2 endPos, float duration)
+    {
+        GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
+        hammerObj.transform.position = startPos;
+        hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Hammer.GetSprite();
+
+        float topPosY = hammerObj.transform.position.y + 3;
+        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear);
+        hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+        hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
+        hammerObj.transform.DOMoveY(endPos.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+        .OnComplete(() =>
+        {
+            Destroy(hammerObj);
+        });
+    }
     private Rocket CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration, float delay = 0)
     {
         Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
@@ -4114,6 +4165,8 @@ public class InGameManager : MonoBehaviour
             PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.StartGame)
             {
+                int randomSeed = body.remainTime;
+                mRandomSeed = new System.Random(randomSeed);
                 for (int i = 0; i < body.ArrayCount; ++i)
                 {
                     ProductInfo info = body.pros[i];
@@ -4162,6 +4215,17 @@ public class InGameManager : MonoBehaviour
 
                     mNetMessages.RemoveFirst();
                 }
+            }
+            else if (body.cmd == PVPCommand.SyncTimer)
+            {
+                if (IsIdle && IsAllProductIdle())
+                {
+                    mPVPTimerCounter = body.combo;
+                    EventRemainTime?.Invoke(body.remainTime);
+
+                    mNetMessages.RemoveFirst();
+                }
+                
             }
             
             /*
@@ -4256,14 +4320,6 @@ public class InGameManager : MonoBehaviour
 
                 //     mNetMessages.RemoveFirst();
                 // }
-            }
-            else if (body.cmd == PVPCommand.SyncTimer)
-            {
-                //play anim timeout
-                EventRemainTime?.Invoke(body.remainTime);
-                //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
-
-                mNetMessages.RemoveFirst();
             }
             else if (body.cmd == PVPCommand.CloseProducts)
             {
@@ -4427,6 +4483,7 @@ public class InGameManager : MonoBehaviour
         req.YCount = CountY;
         req.colorCount = mStageInfo.ColorCount;
         req.combo = 0;
+        req.remainTime = mStageInfo.RandomSeed;
         req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
@@ -4544,7 +4601,6 @@ public class InGameManager : MonoBehaviour
     }
     private void Network_SyncTimer(int remainSec)
     {
-        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -4552,6 +4608,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.SyncTimer;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.remainTime = remainSec;
+        req.combo = mPVPTimerCounter;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }

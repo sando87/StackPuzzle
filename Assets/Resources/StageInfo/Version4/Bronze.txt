@@ -9,7 +9,7 @@ MoveLimit,0
 TimeLimit,50
 ColorCount,4
 StarPoint,30
-RandomSeed,10
+RandomSeed,-1
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
