@@ -2697,48 +2697,25 @@ public class InGameManager : MonoBehaviour
             yield return null;
 
         mIsFlushing = true;
-        List<Tuple<GameObject, Product>> obstacles = new List<Tuple<GameObject, Product>>();
+        float duration = 0.5f;
         foreach (Product target in targets)
         {
             Vector3 startPos = target.ParentFrame.VertFrames.TopFrame.transform.position;
             startPos.y += GridSize;
             startPos.z = target.transform.position.z - 0.5f;
             GameObject obj = Instantiate(ObstaclePrefab, startPos, Quaternion.identity, transform);
-            obstacles.Add(new Tuple<GameObject, Product>(obj, target));
-        }
-
-        float vel = 0;
-        while (true)
-        {
-            vel += 2;
-            bool isDone = true;
-            foreach (var each in obstacles)
+            obj.transform.DOMoveY(target.transform.position.y, duration).SetEase(Ease.InQuad)
+            .OnComplete(() =>
             {
-                GameObject obstacle = each.Item1;
-                Product destProduct = each.Item2;
-                if (destProduct.IsChocoBlock || obstacle == null)
-                    continue;
-
-                isDone = false;
-                float deltaY = vel * Time.deltaTime;
-                if (obstacle.transform.position.y - deltaY <= destProduct.transform.position.y)
-                {
-                    destProduct.IcedBlock.SetDepth(blockLevel);
-                    SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
-                    Destroy(obstacle);
-                }
-                else
-                {
-                    obstacle.transform.position -= new Vector3(0, deltaY, 0);
-                }
-            }
-
-            if (isDone)
-                break;
-            else
-                yield return null;
+                target.IcedBlock.SetDepth(blockLevel);
+                Destroy(obj);
+            });
         }
+
+        yield return new WaitForSeconds(duration);
         ShakeField(0.05f);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectDropIce, mSFXVolume);
+
         eventEnd?.Invoke();
         mIsFlushing = false;
     }
@@ -4205,16 +4182,13 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle())
                 {
-                    int point = AttackPointFrame.Flush(UserSetting.FlushCount);
-
+                    int point = AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> products = GetNextFlushTargets(point);
                     Product[] rets = products.ToArray();
+                    if(body.ArrayCount != rets.Length)
+                        LOG.warn();
+                        
                     StartCoroutine(FlushObstacles(rets, 1));
-                    if (products.Count < point)
-                    {
-                        StartFinish(true);
-                        break;
-                    }
 
                     mNetMessages.RemoveFirst();
                 }
