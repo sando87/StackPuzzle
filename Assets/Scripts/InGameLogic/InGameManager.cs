@@ -388,6 +388,7 @@ public class InGameManager : MonoBehaviour
     #region MatchingLogic
     IEnumerator DoMatchingCycle(Product[] firstMatches)
     {
+        mDropLockCount++;
         ComboReset();
 
         List<Product[]> matchableGroups = new List<Product[]>();
@@ -439,6 +440,7 @@ public class InGameManager : MonoBehaviour
         }
 
         StartToDrop();
+        mDropLockCount--;
     }
 
     private void DoMatchProducts(Product[] pros)
@@ -4180,13 +4182,17 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle())
+                if (IsIdle && IsAllProductIdle() && AttackPointFrame.Points >= body.ArrayCount)
                 {
                     int point = AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> products = GetNextFlushTargets(point);
                     Product[] rets = products.ToArray();
                     if(body.ArrayCount != rets.Length)
-                        LOG.warn();
+                    {
+                        LOG.warn("body: " + body.ArrayCount);
+                        LOG.warn("point,ret: " + point + "," + rets.Length);
+                    }
+                        
                         
                     StartCoroutine(FlushObstacles(rets, 1));
 

@@ -43,7 +43,8 @@ public class Product : MonoBehaviour
     public bool IsDestroying { get; private set; }
     public bool IsMoving { get; private set; }
     public bool IsDropping { get; private set; }
-    public bool SkillCasted { get; set; } = false;
+    private bool mSkillCasted = false;
+    public bool SkillCasted { get { return mSkillCasted; } set { if (!IsObstacled()) mSkillCasted = value; } }
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || SkillCasted; } }
     public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
     public bool IsClosed { get { return false; } }
