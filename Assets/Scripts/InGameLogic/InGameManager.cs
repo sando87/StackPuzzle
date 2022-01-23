@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -4182,7 +4182,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && AttackPointFrame.Points >= body.ArrayCount)
+                if (IsIdle && IsAllProductIdle() && -AttackPointFrame.Points >= body.ArrayCount)
                 {
                     int point = AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> products = GetNextFlushTargets(point);
@@ -4192,7 +4192,6 @@ public class InGameManager : MonoBehaviour
                         LOG.warn("body: " + body.ArrayCount);
                         LOG.warn("point,ret: " + point + "," + rets.Length);
                     }
-                        
                         
                     StartCoroutine(FlushObstacles(rets, 1));
 
