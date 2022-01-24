@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,6 +40,7 @@ public class InGameManager : MonoBehaviour
     public GameObject MeteorPrefab;
     public Rocket LineRocketPrefab;
     public GameObject HammerPrefab;
+    public GameObject HammerHitPrefab;
 
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
@@ -370,6 +371,17 @@ public class InGameManager : MonoBehaviour
                         DestroySkillNormal_Normal(product, targetProduct);
                     }));
                 }
+            });
+        }
+        else if (product.Skill != ProductSkill.Nothing || targetProduct.Skill != ProductSkill.Nothing)
+        {
+            mUseCombo = true;
+            mIsUserEventLock = true;
+            Network_Swipe(product, dir);
+            product.Swipe(targetProduct, () =>
+            {
+                mIsUserEventLock = false;
+                CastSkillProduct(product.Skill != ProductSkill.Nothing ? product : targetProduct);
             });
         }
         else
@@ -779,6 +791,57 @@ public class InGameManager : MonoBehaviour
             return DelayedCallRet.Keep;
         });
     }
+    private void CastHorizontalProduct(Frame frame)
+    {
+        Frame startFrame = frame;
+        Product pro = frame.ChildProduct;
+        Vector3 startPosition = startFrame.transform.position;
+        Vector3 rightEndPosition = startFrame.MostRight().transform.position;
+        Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
+        float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
+        maxDistance += GridSize;
+        rightEndPosition.x = startPosition.x + maxDistance;
+        leftEndPosition.x = startPosition.x - maxDistance;
+        float speed = GridSize / 0.1f;
+        float duration = maxDistance / speed;
+
+        CreateRocketEffect(startPosition, rightEndPosition, duration);
+        CreateRocketEffect(startPosition, leftEndPosition, duration);
+
+        if(pro != null && !pro.IsLocked)
+            TryDestroy(pro, false);
+
+        AddWorker(1, 1, (cnt) =>
+        {
+            int offIdx = cnt + 1;
+            Frame leftFrame = startFrame.Left(offIdx);
+            if (leftFrame != null)
+            {
+                Product leftPro = leftFrame.ChildProduct;
+                if (leftPro != null && !leftPro.IsLocked)
+                {
+                    TryDestroy(leftPro, false);
+                }
+            }
+
+            Frame rightFrame = startFrame.Right(offIdx);
+            if (rightFrame != null)
+            {
+                Product rightPro = rightFrame.ChildProduct;
+                if (rightPro != null && !rightPro.IsLocked)
+                {
+                    TryDestroy(rightPro, false);
+                }
+            }
+
+            if (startFrame.IndexX - offIdx < 0 && startFrame.IndexX + offIdx >= CountX)
+            {
+                return DelayedCallRet.Done;
+            }
+
+            return DelayedCallRet.Keep;
+        });
+    }
     private void CastVerticalProduct(Product pro)
     {
         pro.SkillCasted = true;
@@ -897,20 +960,8 @@ public class InGameManager : MonoBehaviour
             {
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget();
-
-                // 날아가는 연출 시작
-                float duration = 0.9f;
-                GameObject hammerObj = Instantiate(HammerPrefab, transform);
-                hammerObj.transform.position = pro.transform.position;
-                float topPosY = hammerObj.transform.position.y + 3;
-                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
-                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
-                .OnComplete(() =>
-                {
-                    Destroy(hammerObj.gameObject);
-                });
+                // 날아가는 연출
+                CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 0.9f);
 
                 TryDestroy(pro, false);
                 return DelayedCallRet.Keep;
@@ -945,8 +996,8 @@ public class InGameManager : MonoBehaviour
             float speed = GridSize / 0.1f;
             float duration = maxDistance / speed;
 
-            Rocket rocketR = CreateRocketEffect(startPosition, rightEndPosition, duration, 0.3f);
-            Rocket rocketL = CreateRocketEffect(startPosition, leftEndPosition, duration, 0.3f);
+            GameObject rocketR = CreateRocketEffect(startPosition, rightEndPosition, duration, 0.3f);
+            GameObject rocketL = CreateRocketEffect(startPosition, leftEndPosition, duration, 0.3f);
 
             rocketR.transform.DOScale(2, 0.3f);
             rocketL.transform.DOScale(2, 0.3f);
@@ -1008,8 +1059,8 @@ public class InGameManager : MonoBehaviour
             float speed = GridSize / 0.1f;
             float duration = maxDistance / speed;
 
-            Rocket rocketT = CreateRocketEffect(startPosition, topEndPosition, duration, 0.3f);
-            Rocket rocketB = CreateRocketEffect(startPosition, bottomEndPosition, duration, 0.3f);
+            GameObject rocketT = CreateRocketEffect(startPosition, topEndPosition, duration, 0.3f);
+            GameObject rocketB = CreateRocketEffect(startPosition, bottomEndPosition, duration, 0.3f);
 
             rocketT.transform.DOScale(2, 0.3f);
             rocketB.transform.DOScale(2, 0.3f);
@@ -1072,22 +1123,8 @@ public class InGameManager : MonoBehaviour
             {
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget();
-
-                // 날아가는 연출 시작
-                float duration = 0.9f;
-                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
-                hammerObj.transform.position = productBomb.transform.position;
-                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Bomb.GetSprite();
-                float topPosY = hammerObj.transform.position.y + 3;
-                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
-                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
-                .OnComplete(() =>
-                {
-                    Destroy(hammerObj.gameObject);
-                });
+                // 날아가는 연출
+                CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 0.9f);
 
                 TryDestroy(productHammer, false);
                 TryDestroy(productBomb, false);
@@ -1123,22 +1160,8 @@ public class InGameManager : MonoBehaviour
             {
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget();
-
-                // 날아가는 연출 시작
-                float duration = 0.9f;
-                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
-                hammerObj.transform.position = productHori.transform.position;
-                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Horizontal.GetSprite();
-                float topPosY = hammerObj.transform.position.y + 3;
-                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
-                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
-                .OnComplete(() =>
-                {
-                    Destroy(hammerObj.gameObject);
-                });
+                // 날아가는 연출
+                CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 0.9f);
 
                 TryDestroy(productHammer, false);
                 TryDestroy(productHori, false);
@@ -1167,22 +1190,8 @@ public class InGameManager : MonoBehaviour
             {
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget();
-
-                // 날아가는 연출 시작
-                float duration = 0.9f;
-                GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
-                hammerObj.transform.position = productVert.transform.position;
-                hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-                hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Vertical.GetSprite();
-                float topPosY = hammerObj.transform.position.y + 3;
-                hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
-                hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-                hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-                hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
-                .OnComplete(() =>
-                {
-                    Destroy(hammerObj.gameObject);
-                });
+                // 날아가는 연출
+                CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 0.9f);
 
                 TryDestroy(productHammer, false);
                 TryDestroy(productVert, false);
@@ -1216,7 +1225,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget();
                     // 날아가는 연출
-                    CreateHammerEffect(productHammerA.transform.position, target.transform.position, 0.9f);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
                 }
                 for (int i = 0; i < 3; ++i)
@@ -1224,7 +1233,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget();
                     // 날아가는 연출
-                    CreateHammerEffect(productHammerB.transform.position, target.transform.position, 0.9f);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
                 }
 
@@ -2064,7 +2073,7 @@ public class InGameManager : MonoBehaviour
 
         float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
-        yield return StartCoroutine(ThrowOver(bombObj, nextTarget.transform.position, duration));
+        yield return StartCoroutine(ThrowOver(bombObj.transform, nextTarget.transform.position.y, duration));
         Destroy(bombObj);
 
         StartCoroutine(BreakBombProduct(nextTarget, 0));
@@ -2083,7 +2092,7 @@ public class InGameManager : MonoBehaviour
 
         float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
-        yield return StartCoroutine(ThrowOver(horiObj, nextTarget.transform.position, duration));
+        yield return StartCoroutine(ThrowOver(horiObj.transform, nextTarget.transform.position.y, duration));
         Destroy(horiObj);
 
         StartCoroutine(BreakHorizontalProduct(nextTarget, 0));
@@ -2102,7 +2111,7 @@ public class InGameManager : MonoBehaviour
 
         float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
-        yield return StartCoroutine(ThrowOver(horiObj, nextTarget.transform.position, duration));
+        yield return StartCoroutine(ThrowOver(horiObj.transform, nextTarget.transform.position.y, duration));
         Destroy(horiObj);
 
         StartCoroutine(BreakVerticalProduct(nextTarget, 0));
@@ -2129,11 +2138,11 @@ public class InGameManager : MonoBehaviour
         float duration = 0.8f;
         Frame nextTarget = FindHammerTarget();
 
-        StartCoroutine(ThrowOver(horiObjA, nextTarget.transform.position, duration));
+        StartCoroutine(ThrowOver(horiObjA.transform, nextTarget.transform.position.y, duration));
         yield return new WaitForSeconds(0.3f);
-        StartCoroutine(ThrowOver(horiObjB, nextTarget.transform.position, duration));
+        StartCoroutine(ThrowOver(horiObjB.transform, nextTarget.transform.position.y, duration));
         yield return new WaitForSeconds(0.3f);
-        StartCoroutine(ThrowOver(horiObjC, nextTarget.transform.position, duration));
+        StartCoroutine(ThrowOver(horiObjC.transform, nextTarget.transform.position.y, duration));
         
         yield return new WaitForSeconds(0.2f);
         Destroy(horiObjA);
@@ -2153,17 +2162,6 @@ public class InGameManager : MonoBehaviour
         {
             DestroyProducts(new Product[1] { nextTarget.ChildProduct });
         }
-    }
-    private IEnumerator ThrowOver(GameObject target, Vector3 dest, float duration)
-    {
-        float topPosY = target.transform.position.y + 3;
-        target.transform.DOMoveX(dest.x, duration).SetEase(Ease.Linear);
-        target.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-
-        target.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-        yield return new WaitForSeconds(duration * 0.5f);
-        target.transform.DOMoveY(dest.y, duration * 0.5f).SetEase(Ease.InQuad);
-        yield return new WaitForSeconds(duration * 0.5f);
     }
 
     private void DestroySkillWithSamecolor(Product productA, Product productB)
@@ -2681,7 +2679,7 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
                 Network_FlushAttacks(Serialize(rets), 1);
-                StartCoroutine(FlushObstacles(rets, 1));
+                StartCoroutine(FlushObstacles(rets, 3));
                 if (products.Count < point)
                 {
                     StartFinish(false);
@@ -3416,23 +3414,28 @@ public class InGameManager : MonoBehaviour
     private ProductSkill CheckSkillable(Product[] matches)
     {
         if (matches.Length <= UserSetting.MatchCount + 1)
+        {
             return ProductSkill.Nothing;
+        }
+        else if (matches.Length <= UserSetting.MatchCount + 3)
+        {
+            ProductSkill skill = ProductSkill.Nothing;
+            int ran = mRandomSeed.Next() % 4;
+            if (ran == 0)
+                skill = ProductSkill.Horizontal;
+            else if (ran == 1)
+                skill = ProductSkill.Vertical;
+            else if (ran == 2)
+                skill = ProductSkill.Bomb;
+            else if (ran == 3)
+                skill = ProductSkill.Hammer;
 
-        if (matches.Length >= UserSetting.MatchCount + 3)
-            return ProductSkill.SameColor;
-
-        ProductSkill skill = ProductSkill.Nothing;
-        int ran = mRandomSeed.Next() % 4;
-        if (ran == 0)
-            skill = ProductSkill.Horizontal;
-        else if (ran == 1)
-            skill = ProductSkill.Vertical;
-        else if (ran == 2)
-            skill = ProductSkill.Bomb;
+            return skill;
+        }
         else
-            skill = ProductSkill.Hammer;
-
-        return skill;
+        {
+            return ProductSkill.SameColor;
+        }
     }
     private int GetChocoCount()
     {
@@ -3808,38 +3811,74 @@ public class InGameManager : MonoBehaviour
         GameObject obj = GameObject.Instantiate(SmokeParticle, start, Quaternion.identity, transform);
         Destroy(obj, 1.0f);
     }
-    private void CreateHammerEffect(Vector2 startPos, Vector2 endPos, float duration)
+    private void CreateHammerEffect(ProductSkill skillType, Vector2 startPos, Vector2 endPos, float duration)
     {
         GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
         hammerObj.transform.position = startPos;
         hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        hammerObj.GetComponent<SpriteRenderer>().sprite = ProductSkill.Hammer.GetSprite();
+        hammerObj.GetComponent<SpriteRenderer>().sprite = skillType.GetSprite();
 
-        float topPosY = hammerObj.transform.position.y + 3;
-        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear);
+        StartCoroutine(ThrowOver(hammerObj.transform, endPos.y, duration));
         hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-        hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-        hammerObj.transform.DOMoveY(endPos.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f)
+        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear)
         .OnComplete(() =>
         {
+            CreateHammerHit(endPos);
             Destroy(hammerObj);
         });
     }
-    private Rocket CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration, float delay = 0)
+    private IEnumerator ThrowOver(Transform target, float endY, float duration)
+    {
+        float startY = target.transform.position.y;
+        // 목표지점까지 포물선을 그리며 도달한다
+        float t = 0;
+        float gravity = -40.0f; // 중력가속도
+        //초기 투사체 발사 속도를 구하는 2차 방정식의 해
+        // v = -gt + vs
+        // y = -(g/2)t^2 + vst + ys
+        // vs = (ye - ys + (g/2)t^2) / t
+        float velocityStart = (endY - startY - gravity * 0.5f * duration * duration) / duration;
+        while(true)
+        {
+            Vector3 pos = target.transform.position;
+            velocityStart += gravity * Time.deltaTime;
+            pos.y += velocityStart * Time.deltaTime;
+            target.transform.position = pos;
+            
+            t += Time.deltaTime;
+            if(duration <= t)
+                break;
+            else
+                yield return null;
+        }
+
+        Vector3 curPos = target.transform.position;
+        curPos.y = endY;
+        target.transform.position = curPos;
+    }
+    private void CreateHammerHit(Vector3 startPos)
+    {
+        GameObject hammerHit = Instantiate(HammerHitPrefab, startPos, Quaternion.identity, transform);
+        hammerHit.GetComponent<SpriteRenderer>().DOFade(0, 0.2f).SetDelay(0.3f);
+        hammerHit.transform.DOScale(0.7f, 0.5f).From(0.4f).SetEase(Ease.OutQuart)
+        .OnComplete(() => Destroy(hammerHit));
+    }
+    private GameObject CreateRocketEffect(Vector2 startPos, Vector2 destPos, float duration, float delay = 0)
     {
         Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
         lookDir.Normalize();
-        Rocket rocket = Instantiate(LineRocketPrefab, transform);
-        rocket.IngameMgr = this;
-        float posZ = rocket.transform.position.z;
-        rocket.transform.position = new Vector3(startPos.x, startPos.y, posZ);
-        rocket.transform.right = lookDir;
-        rocket.transform.DOMove(new Vector3(destPos.x, destPos.y, posZ), duration).SetEase(Ease.Linear).SetDelay(delay)
+
+        GameObject projectail = Instantiate(MissilePrefab, startPos, Quaternion.identity, transform);
+        projectail.transform.right = lookDir;
+        projectail.transform.DOMove(new Vector2(destPos.x, destPos.y), duration).SetEase(Ease.Linear).SetDelay(delay)
         .OnComplete(() =>
         {
-            Destroy(rocket.gameObject);
+            projectail.GetComponent<SpriteRenderer>().enabled = false;
+            projectail.transform.GetChild(1).gameObject.SetActive(true);
+            Destroy(projectail, 1.0f);
         });
-        return rocket;
+
+        return projectail;
     }
     IEnumerator CreateSmokeInterval(float interval, Frame[] frames, Action<Frame> eventEachEnd, Action eventEnd)
     {
@@ -4193,7 +4232,7 @@ public class InGameManager : MonoBehaviour
                         LOG.warn("point,ret: " + point + "," + rets.Length);
                     }
                         
-                    StartCoroutine(FlushObstacles(rets, 1));
+                    StartCoroutine(FlushObstacles(rets, 3));
 
                     mNetMessages.RemoveFirst();
                 }

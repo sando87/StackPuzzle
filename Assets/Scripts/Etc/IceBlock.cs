@@ -44,7 +44,7 @@ public class IceBlock : MonoBehaviour
         GetComponent<SpriteRenderer>().sprite = IceBlockImages[BreakDepth];
         //ComboText.text = BreakDepth.ToString();
         transform.localScale = Vector3.one;
-        transform.localPosition = Vector3.zero;
+        transform.localPosition = new Vector3(0, 0, -0.5f);
     }
 
     private IEnumerator AnimatePickedUp(GameObject obj)

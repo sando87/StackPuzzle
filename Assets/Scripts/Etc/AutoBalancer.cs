@@ -89,8 +89,9 @@ public class AutoBalancer : MonoBehaviour
             int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Product cenPro = mgr.Frame(x, fixedY).ChildProduct;
-                if (cenPro == null || cenPro.IsLocked || cenPro.IsChocoBlock || cenPro.Skill != ProductSkill.Nothing)
+                Frame frame = mgr.Frame(x, fixedY);
+                Product cenPro = frame.ChildProduct;
+                if (!IsValid(frame) || cenPro.Skill != ProductSkill.Nothing)
                     continue;
 
                 AutoBalancerInfo info = new AutoBalancerInfo();
@@ -149,8 +150,9 @@ public class AutoBalancer : MonoBehaviour
             int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Product pro = mgr.Frame(x, fixedY).ChildProduct;
-                if (pro == null || pro.IsLocked || pro.IsChocoBlock)
+                Frame frame = mgr.Frame(x, fixedY);
+                Product pro = frame.ChildProduct;
+                if (!IsValid(frame))
                     continue;
 
                 if(pro.Skill != ProductSkill.Nothing)
@@ -183,26 +185,34 @@ public class AutoBalancer : MonoBehaviour
             int fixedY = (y + yOff) % mCntY;
             for (int x = 0; x < mCntX; ++x)
             {
-                Product pro = mgr.Frame(x, fixedY).ChildProduct;
-                if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill == ProductSkill.Nothing)
+                Frame frame = mgr.Frame(x, fixedY);
+                Product pro = frame.ChildProduct;
+                if (!IsValid(frame) || pro.Skill == ProductSkill.Nothing)
                     continue;
 
-                if (pro.Left() != null && pro.Left().Skill != ProductSkill.Nothing)
+                Frame nextFrame = frame.Left();
+                if (IsValid(nextFrame) && nextFrame.ChildProduct.Skill != ProductSkill.Nothing)
                 {
                     dir = SwipeDirection.LEFT;
                     return pro;
                 }
-                else if (pro.Right() != null && pro.Right().Skill != ProductSkill.Nothing)
+
+                nextFrame = frame.Right();
+                if (IsValid(nextFrame) && nextFrame.ChildProduct.Skill != ProductSkill.Nothing)
                 {
                     dir = SwipeDirection.RIGHT;
                     return pro;
                 }
-                else if (pro.Up() != null && pro.Up().Skill != ProductSkill.Nothing)
+
+                nextFrame = frame.Up();
+                if (IsValid(nextFrame) && nextFrame.ChildProduct.Skill != ProductSkill.Nothing)
                 {
                     dir = SwipeDirection.UP;
                     return pro;
                 }
-                else if (pro.Down() != null && pro.Down().Skill != ProductSkill.Nothing)
+
+                nextFrame = frame.Down();
+                if (IsValid(nextFrame) && nextFrame.ChildProduct.Skill != ProductSkill.Nothing)
                 {
                     dir = SwipeDirection.DOWN;
                     return pro;
@@ -224,7 +234,7 @@ public class AutoBalancer : MonoBehaviour
             for (int x = 0; x < mCntX; ++x)
             {
                 Product pro = mgr.Frame(x, fixedY).ChildProduct;
-                if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill == ProductSkill.Nothing)
+                if (pro == null || pro.IsLocked || pro.ParentFrame.IsObstacled() || pro.IsObstacled() || pro.Skill == ProductSkill.Nothing)
                     continue;
 
                 return pro;
@@ -268,5 +278,9 @@ public class AutoBalancer : MonoBehaviour
             default: break;
         }
         return UnityEngine.Random.Range(3, 7);
+    }
+    private bool IsValid(Frame frame)
+    {
+        return frame != null && !frame.IsObstacled() && frame.ChildProduct != null && !frame.ChildProduct.IsLocked && !frame.ChildProduct.IsObstacled();
     }
 }
