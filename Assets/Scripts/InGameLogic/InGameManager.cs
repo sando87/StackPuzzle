@@ -2562,10 +2562,16 @@ public class InGameManager : MonoBehaviour
             }
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
-            StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
+
+            Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Opponent.AttackPointFrame.transform.position;
+            StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(-1);
+
+                if(AttackPointFrame.Points > 0)
+                    AttackPointFrame.AddPoints(-1);
+                else
+                    InstPVP_Opponent.AttackPointFrame.AddPoints(1);
             }));
         }
         else if (FieldType == GameFieldType.pvpOpponent)
@@ -2579,10 +2585,15 @@ public class InGameManager : MonoBehaviour
             }
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
-            StartCoroutine(AnimateAttack(objs, AttackPointFrame.transform.position, (destObj) =>
+            Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Player.AttackPointFrame.transform.position;
+            StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
             {
                 Destroy(destObj);
-                AttackPointFrame.AddPoints(1);
+
+                if (AttackPointFrame.Points > 0)
+                    AttackPointFrame.AddPoints(-1);
+                else
+                    InstPVP_Player.AttackPointFrame.AddPoints(1);
             }));
         }
     }
@@ -4221,7 +4232,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && -AttackPointFrame.Points >= body.ArrayCount)
+                if (IsIdle && IsAllProductIdle() && AttackPointFrame.Points >= body.ArrayCount)
                 {
                     int point = AttackPointFrame.Flush(body.ArrayCount);
                     List<Product> products = GetNextFlushTargets(point);
