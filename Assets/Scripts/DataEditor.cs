@@ -28,6 +28,11 @@ public class DataEditor : EditorWindow
         {
             UserSetting.DeleteUserInfo();
         }
+        if (GUILayout.Button("Purchases", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+            Purchases.AddGold(1000);
+            Purchases.PurchaseDiamond(10);
+        }
         if (GUILayout.Button("Reserve1", new GUILayoutOption[] { GUILayout.Width(150) }))
         {
         }

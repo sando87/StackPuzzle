@@ -234,8 +234,13 @@ public class MenuBattle : MonoBehaviour
                 InGameManager.InstPVP_Player.UseItemExtendsLimits(btn.transform.position, PlayerLimit.transform.position);
                 break;
             case PurchaseItemType.RemoveIce:
-                InGameManager.InstPVP_Player.UseItemBreakce(btn.transform.position, 10);
-                break;
+                {
+                    bool ret = InGameManager.InstPVP_Player.UseItemBreakce(btn.transform.position, 10);
+                    if (ret)
+                        break;
+                    else
+                        return;
+                }
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 10);
                 break;

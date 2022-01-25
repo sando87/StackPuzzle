@@ -13,7 +13,7 @@ public class IceBlock : MonoBehaviour
     public int BreakDepth { get; set; } = 0;
     public Frame ParentFrame { get { return transform.GetComponentInParent<Frame>(); } }
 
-    public bool BreakBlock()
+    public bool BreakBlock(int count)
     {
         if (!IsIced)
         {
@@ -21,11 +21,11 @@ public class IceBlock : MonoBehaviour
         }
 
         StartCoroutine(AnimShake());
-        BreakAction();
+        BreakAction(count);
 
         return true;
     }
-    private void BreakAction()
+    private void BreakAction(int count)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
 
@@ -34,7 +34,7 @@ public class IceBlock : MonoBehaviour
         obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
 
-        SetDepth(BreakDepth - 1);
+        SetDepth(Mathf.Max(0, BreakDepth - count));
     }
     public void SetDepth(int depth)
     {

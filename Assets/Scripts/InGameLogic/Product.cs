@@ -187,15 +187,15 @@ public class Product : MonoBehaviour
 
         return false;
     }
-    public void BreakObstacle()
+    public void BreakObstacle(int count = 1)
     {
         if (IsCapped)
         {
-            BreakCap();
+            BreakCap(count);
         }
         else if(IsChocoBlock)
         {
-            BreakChocoBlock();
+            BreakChocoBlock(count);
         }
     }
     public bool ReadyForDestroy(int combo)
@@ -582,12 +582,12 @@ public class Product : MonoBehaviour
     }
 
 
-    private bool BreakChocoBlock()
+    private bool BreakChocoBlock(int count = 1)
     {
         if (!IcedBlock.IsIced)
             return false;
 
-        if(IcedBlock.BreakBlock())
+        if(IcedBlock.BreakBlock(count))
         {
             EventUnWrapChoco?.Invoke();
             return true;
@@ -603,12 +603,12 @@ public class Product : MonoBehaviour
         CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
         CapObject.SetActive(IsCapped);
     }
-    private void BreakCap()
+    private void BreakCap(int count = 1)
     {
         if (CapIndex <= 0)
             return;
 
-        CapIndex--;
+        CapIndex = Mathf.Max(0, CapIndex - count);
         ChangeCapImage();
         
         if (CapIndex <= 0)

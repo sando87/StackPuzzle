@@ -79,12 +79,12 @@ public class Frame : MonoBehaviour
     }
 
 
-    public void BreakCover()
+    public void BreakCover(int count = 1)
     {
         if (mCoverCount <= 0)
             return;
 
-        mCoverCount--;
+        mCoverCount = Mathf.Max(0, mCoverCount - count);
         CoverRenderer.sprite = Covers[mCoverCount];
         CoverRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mCoverCount - 1)), 0.5f, RotateMode.FastBeyond360);
         CreateBreakStoneEffect();
@@ -147,12 +147,12 @@ public class Frame : MonoBehaviour
         Destroy(obj, 1.0f);
     }
 
-    public void BreakBush()
+    public void BreakBush(int count = 1)
     {
         if (!IsBushed)
             return;
 
-        mBushIndex--;
+        mBushIndex = Mathf.Max(0, mBushIndex - count);
         Instantiate(BushEffectPrefab, transform.position, Quaternion.identity, transform);
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBush);
         TouchBush();
@@ -245,15 +245,15 @@ public class Frame : MonoBehaviour
 
         return false;
     }
-    public void BreakObstacle()
+    public void BreakObstacle(int count = 1)
     {
         if (IsBushed)
         {
-            BreakBush();
+            BreakBush(count);
         }
         else if (IsCovered)
         {
-            BreakCover();
+            BreakCover(count);
         }
     }
 

@@ -170,8 +170,13 @@ public class MenuInGame : MonoBehaviour
                 InGameManager.InstStage.UseItemExtendsLimits(btn.transform.position, Limit.transform.position);
                 break;
             case PurchaseItemType.RemoveIce:
-                InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
-                break;
+                {
+                    bool ret = InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
+                    if (ret)
+                        break;
+                    else
+                        return;
+                }
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
                 break;

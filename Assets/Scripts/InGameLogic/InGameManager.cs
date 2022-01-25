@@ -2409,11 +2409,13 @@ public class InGameManager : MonoBehaviour
             }
         }));
     }
-    public void UseItemBreakce(Vector3 startWorldPos, int count)
+    public bool UseItemBreakce(Vector3 startWorldPos, int count)
     {
-        mIsItemEffect = true;
         Product[] icedBlocks = GetTopIceBlocks(count);
+        if(icedBlocks.Length <= 0)
+            return false;
 
+        mIsItemEffect = true;
         List<ProductInfo> netPros = new List<ProductInfo>();
         foreach (Product target in icedBlocks)
             netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
@@ -2423,14 +2425,16 @@ public class InGameManager : MonoBehaviour
             (pro) =>
             {
                 if(pro.ParentFrame.IsObstacled())
-                    pro.ParentFrame.BreakObstacle();
+                    pro.ParentFrame.BreakObstacle(3);
                 else if(pro.IsObstacled())
-                    pro.BreakObstacle();
+                    pro.BreakObstacle(3);
             },
             () =>
             {
                 mIsItemEffect = false;
             }));
+
+        return true;
     }
     public void UseItemMakeSkill1(Vector3 startWorldPos, int count)
     {
@@ -2502,19 +2506,16 @@ public class InGameManager : MonoBehaviour
         Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeCombo);
 
         mIsItemEffect = true;
-        mDropLockCount++;
         StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.2f, frames.ToArray(),
             (frame) =>
             {
                 ComboUp();
                 Product pro = frame.ChildProduct;
-                List<Product> rets = new List<Product>();
-                pro.SearchMatchedProducts(rets, pro.Color);
-                DestroyProducts(rets.ToArray());
+                TryDestroy(pro, true);
             },
             () =>
             {
-                mDropLockCount--;
+                StartToDrop();
                 mIsItemEffect = false;
             }));
     }
@@ -2528,20 +2529,34 @@ public class InGameManager : MonoBehaviour
             netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
         Network_UseItem(netPros.ToArray(), PurchaseItemType.Meteor);
 
-        StartCoroutine(CreateMeteor(idleFrames, 
-            (frame) => {
+        int idx = 0;
+        Frame preFrame = null;
+        AddWorker(1, 4, (tick) =>
+        {
+            if(preFrame != null)
+            {
                 ShakeField(0.05f);
-                Product[] scan = ScanAroundProducts(frame, 1);
-                List<Product> rets = new List<Product>();
-                foreach (Product pro in scan)
-                    if (!pro.IsLocked)
-                        rets.Add(pro);
-                DestroyProducts(rets.ToArray());
-            },
-            () =>
+                Product[] arPros = ScanAroundProducts(preFrame, 1);
+                preFrame = null;
+                foreach (Product pro in arPros)
+                    TryDestroy(pro, false);
+            }
+
+            if(idx < idleFrames.Length)
+            {
+                CreateMeteor(idleFrames[idx].transform.position, 0.4f);
+                preFrame = idleFrames[idx];
+                idx++;
+            }
+            
+            if(idx >= idleFrames.Length && preFrame == null)
             {
                 mIsItemEffect = false;
-            }));
+                return DelayedCallRet.Done;
+            }
+
+            return DelayedCallRet.Keep;
+        });
     }
 
     private void Attack(int count, Vector3 fromPos)
@@ -3380,12 +3395,15 @@ public class InGameManager : MonoBehaviour
             for (int x = CountX - 1; x >= 0; x--)
             {
                 Product pro = mFrames[x, y].ChildProduct;
-                if (pro == null || pro.IsLocked || !pro.IsChocoBlock)
+                if (mFrames[x, y].Empty || pro == null || pro.IsLocked)
                     continue;
 
-                icedProducts.Add(pro);
-                if (icedProducts.Count >= count)
-                    return icedProducts.ToArray();
+                if(mFrames[x, y].IsObstacled() || pro.IsObstacled())
+                {
+                    icedProducts.Add(pro);
+                    if (icedProducts.Count >= count)
+                        return icedProducts.ToArray();
+                }
             }
         }
 
@@ -3627,7 +3645,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked || pro.IsChocoBlock || pro.Skill != ProductSkill.Nothing)
+            if (pro == null || pro.IsLocked || frame.IsObstacled() || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
                 continue;
 
             if (matchedPro.ContainsKey(pro))
@@ -4043,6 +4061,19 @@ public class InGameManager : MonoBehaviour
 
         mItemLooping = false;
         eventEnd?.Invoke();
+    }
+    private void CreateMeteor(Vector3 destPos, float duration)
+    {
+        Vector3 startPos = destPos + new Vector3(7, 7, 0);
+        GameObject meteor = Instantiate(MeteorPrefab, startPos, Quaternion.identity, transform);
+        StartCoroutine(UnityUtils.MoveAccelerate(meteor, destPos, duration, () =>
+        {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectLightBomb, mSFXVolume);
+            meteor.transform.GetChild(1).gameObject.SetActive(true);
+            meteor.transform.GetChild(2).gameObject.SetActive(true);
+            //meteor.GetComponentInChildren<Animator>().StartPlayback();
+            Destroy(meteor, 1.0f);
+        }));
     }
     IEnumerator AnimateMagnet(GameObject obj, Vector2 startDir, Vector3 dest, float power, Action eventEnd)
     {
