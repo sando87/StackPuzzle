@@ -146,11 +146,13 @@ public class MenuStages : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
 
-        // if (UserSetting.GetHighestStageNumber() < UserSetting.BattleModeUnlockStage)
-        // {
-        //     MenuMessageBox.PopUp("You need to clear " + UserSetting.BattleModeUnlockStage + " Stages.", false, null);
-        //     return;
-        // }
+#if UNITY_ANDROID || UNITY_IOS
+        if (UserSetting.GetHighestStageNumber() < UserSetting.BattleModeUnlockStage)
+        {
+            MenuMessageBox.PopUp("You need to clear " + UserSetting.BattleModeUnlockStage + " Stages.", false, null);
+            return;
+        }
+#endif
 
         MenuWaitMatch.PopUp();
         Hide();

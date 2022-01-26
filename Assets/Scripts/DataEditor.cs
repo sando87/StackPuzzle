@@ -33,8 +33,17 @@ public class DataEditor : EditorWindow
             Purchases.AddGold(1000);
             Purchases.PurchaseDiamond(10);
         }
-        if (GUILayout.Button("Reserve1", new GUILayoutOption[] { GUILayout.Width(150) }))
+        if (GUILayout.Button("AddTutorial", new GUILayoutOption[] { GUILayout.Width(150) }))
         {
+            UserSetting.TutorialNumber++;
+        }
+        if (GUILayout.Button("SubTutorial", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+            UserSetting.TutorialNumber--;
+        }
+        if (GUILayout.Button("AddStage", new GUILayoutOption[] { GUILayout.Width(150) }))
+        {
+            UserSetting.StageUnLock(UserSetting.GetHighestStageNumber() + 1);
         }
 
         GUILayout.EndVertical();
