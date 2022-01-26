@@ -2264,7 +2264,7 @@ public class InGameManager : MonoBehaviour
             if(skillType == ProductSkill.Bomb || skillType == ProductSkill.Hammer)
                 skillIndex = skillType;
             else
-                skillIndex = mRandomSeed.Next() % 2 == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical;
+                skillIndex = mRandomSeed.Next(2) == 0 ? ProductSkill.Horizontal : ProductSkill.Vertical;
             effect.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
 
             StartCoroutine(UnityUtils.MoveLinear(effect, pro.transform.position, 0.3f, 50.0f, () =>
@@ -2447,7 +2447,7 @@ public class InGameManager : MonoBehaviour
 
         Network_UseItem(PurchaseItemType.MakeSkill1);
 
-        int offIdx = mRandomSeed.Next() % 10;
+        int offIdx = mRandomSeed.Next(10);
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
             (pro) =>
             {
@@ -2941,7 +2941,7 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator RewardEach(GameObject obj, Action eventEnd)
     {
-        ProductSkill skillIndex = (ProductSkill)((mRandomSeed.Next() % 3) + 1);
+        ProductSkill skillIndex = (ProductSkill)(mRandomSeed.Next(3) + 1);
         obj.GetComponent<SpriteRenderer>().sprite = skillIndex.GetSprite();
 
         while (true)
@@ -3451,7 +3451,7 @@ public class InGameManager : MonoBehaviour
         else if (matches.Length <= UserSetting.MatchCount + 3)
         {
             ProductSkill skill = ProductSkill.Nothing;
-            int ran = mRandomSeed.Next() % 4;
+            int ran = mRandomSeed.Next(4);
             if (ran == 0)
                 skill = ProductSkill.Horizontal;
             else if (ran == 1)
@@ -3481,16 +3481,16 @@ public class InGameManager : MonoBehaviour
     }
     private int RandomNextColor()
     {
-        return mRandomSeed.Next() % (int)mStageInfo.ColorCount;
+        //return mRandomSeed.Next((int)mStageInfo.ColorCount);
 
         float colorCount = mStageInfo.ColorCount;
-        if (FieldType == GameFieldType.pvpPlayer)
-        {
-            //pvp 에서 역전을 위한 장치 (방해블럭이 많을수록 colorCount값이 낮아진다)
-            float rate = GetChocoCount() / (mFrames.Length * 0.5f);
-            rate = Mathf.Min(rate, 1.0f);
-            colorCount = colorCount - rate;
-        }
+        // if (FieldType == GameFieldType.pvpPlayer)
+        // {
+        //     //pvp 에서 역전을 위한 장치 (방해블럭이 많을수록 colorCount값이 낮아진다)
+        //     float rate = GetChocoCount() / (mFrames.Length * 0.5f);
+        //     rate = Mathf.Min(rate, 1.0f);
+        //     colorCount = colorCount - rate;
+        // }
 
         int range = (int)(colorCount * 10.0f);
         int ran = mRandomSeed.Next(range);
@@ -3587,7 +3587,7 @@ public class InGameManager : MonoBehaviour
         while (rets.Count < count && loopCount < totalCount)
         {
             loopCount++;
-            int ranIdx = mRandomSeed.Next() % totalCount;
+            int ranIdx = mRandomSeed.Next(totalCount);
             if (rets.ContainsKey(ranIdx))
                 continue;
 
@@ -3703,7 +3703,7 @@ public class InGameManager : MonoBehaviour
         while (true)
         {
             curIdx++;
-            curIdx = (mRandomSeed.Next() % step) + curIdx;
+            curIdx = mRandomSeed.Next(step) + curIdx;
             if (curIdx >= totalCount)
                 break;
 
@@ -4146,7 +4146,7 @@ public class InGameManager : MonoBehaviour
     private Frame FindHammerTarget()
     {
         Frame scenaryFrame = null;
-        int randomStartIndex = mRandomSeed.Next() % mFrames.Length;
+        int randomStartIndex = mRandomSeed.Next(mFrames.Length);
         for (int i = 0; i < mFrames.Length; ++i)
         {
             int ranIdx = (i + randomStartIndex) % mFrames.Length;
