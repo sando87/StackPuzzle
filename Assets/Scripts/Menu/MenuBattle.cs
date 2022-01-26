@@ -88,6 +88,7 @@ public class MenuBattle : MonoBehaviour
         mMenu = null;
         ComboPlayer.Clear();
         ComboOpponent.Clear();
+        TimeoutEffectAnim.SetActive(false);
         //PlayerName.text = InGameManager.InstPVP_Player.UserInfo.userName;
         //OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
         //PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
@@ -99,6 +100,7 @@ public class MenuBattle : MonoBehaviour
         {
             PlayerItemSlots[i].SetItem(items[i]);
             PlayerItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
+            PlayerItemSlots[i].HideItemCount();
         }
 
         items = InGameManager.InstPVP_Opponent.UserInfo.PvpItems;
@@ -106,6 +108,7 @@ public class MenuBattle : MonoBehaviour
         {
             OpponentItemSlots[i].SetItem(items[i]);
             OpponentItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
+            OpponentItemSlots[i].HideItemCount();
         }
 
 
@@ -245,8 +248,13 @@ public class MenuBattle : MonoBehaviour
                 InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
             case PurchaseItemType.MakeCombo:
-                InGameManager.InstPVP_Player.UseItemMatch(btn.transform.position);
-                break;
+                {
+                    bool ret = InGameManager.InstPVP_Player.UseItemMatch(btn.transform.position);
+                    if (ret)
+                        break;
+                    else
+                        return;
+                }
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
@@ -263,6 +271,58 @@ public class MenuBattle : MonoBehaviour
         string log = "[UseItem] " + "PVP:" + oppName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }
+
+    public void UseOpponentItem(PurchaseItemType itemType)
+    {
+        ItemButton btn = null;
+        foreach(ItemButton itemBtn in OpponentItemSlots)
+        {
+            if(itemBtn.GetItem() == itemType)
+            {
+                btn = itemBtn;
+                break;
+            }
+        }
+
+        if(null == btn)
+            return;
+
+        switch (itemType)
+        {
+            case PurchaseItemType.ExtendLimit:
+                InGameManager.InstPVP_Opponent.UseItemExtendsLimits(btn.transform.position, OpponentLimit.transform.position);
+                break;
+            case PurchaseItemType.RemoveIce:
+                {
+                    bool ret = InGameManager.InstPVP_Opponent.UseItemBreakce(btn.transform.position, 10);
+                    if (ret)
+                        break;
+                    else
+                        return;
+                }
+            case PurchaseItemType.MakeSkill1:
+                InGameManager.InstPVP_Opponent.UseItemMakeSkill1(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.MakeCombo:
+                {
+                    bool ret = InGameManager.InstPVP_Opponent.UseItemMatch(btn.transform.position);
+                    if (ret)
+                        break;
+                    else
+                        return;
+                }
+            case PurchaseItemType.MakeSkill2:
+                InGameManager.InstPVP_Opponent.UseItemMakeSkill2(btn.transform.position, 10);
+                break;
+            case PurchaseItemType.Meteor:
+                InGameManager.InstPVP_Opponent.UseItemMeteor(5);
+                break;
+            default: break;
+        }
+
+        btn.SetEnable(false);
+    }
+
     IEnumerator DisplayOppTimeLimit(int _remain)
     {
         int remain = _remain;
@@ -296,7 +356,7 @@ public class MenuBattle : MonoBehaviour
     IEnumerator AnimTimeout()
     {
         TimeoutEffectAnim.SetActive(true);
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(1.5f);
         TimeoutEffectAnim.SetActive(false);
     }
 

@@ -48,6 +48,11 @@ public class ItemButton : MonoBehaviour
         }
     }
 
+    public void HideItemCount()
+    {
+        ItemCount.gameObject.SetActive(false);
+    }
+
     public void SetEnable(bool enable)
     {
         ItemImg.color = enable ? Color.white : Color.gray;

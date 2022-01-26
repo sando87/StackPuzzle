@@ -9,13 +9,13 @@ public class MenuInformBox : MonoBehaviour
 {
     public TextMeshProUGUI MessageText;
 
-    public static MenuInformBox PopUp(string message)
+    public static MenuInformBox PopUp(string message, float duration = UserSetting.InfoBoxDisplayTime)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MenuInformBox", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuInformBox box = objMenu.GetComponent<MenuInformBox>();
         box.MessageText.text = message;
-        Destroy(box.gameObject, UserSetting.InfoBoxDisplayTime);
+        Destroy(box.gameObject, duration);
         return box;
     }
 

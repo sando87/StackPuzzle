@@ -141,9 +141,12 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         MenuItemSelector.PopUp((item) =>
         {
-            curBtn.SetItem(item);
-            int idx = curBtn.transform.GetSiblingIndex();
-            UserSetting.UserInfo.PvpItems[idx] = item;
+            if(item.GetCount() > 0)
+            {
+                curBtn.SetItem(item);
+                int idx = curBtn.transform.GetSiblingIndex();
+                UserSetting.UserInfo.PvpItems[idx] = item;
+            }
         });
     }
 
@@ -313,6 +316,11 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
         {
+            if(btn.GetItem() != PurchaseItemType.None && btn.GetItem().GetCount() == 0)
+            {
+                btn.SetItem(PurchaseItemType.None);
+            }
+
             btn.UpdateItem();
             int idx = btn.transform.GetSiblingIndex();
             UserSetting.UserInfo.PvpItems[idx] = btn.GetItem();

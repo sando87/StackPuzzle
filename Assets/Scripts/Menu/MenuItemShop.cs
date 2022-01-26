@@ -58,7 +58,7 @@ public class MenuItemShop : MonoBehaviour
         if (Purchases.ChargeItemUseGold(type.ToItemType(), cnt, cost))
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCashGold);
-            MenuInformBox.PopUp("Success.");
+            MenuInformBox.PopUp("Success.", 0.8f);
         }
         else
         {
@@ -83,7 +83,7 @@ public class MenuItemShop : MonoBehaviour
             {
                 if(Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost))
                 {
-                    MenuInformBox.PopUp("Success.");
+                    MenuInformBox.PopUp("Success.", 0.8f);
 
                     string log = "[Purchase Item] "
                     + "ItemType:" + type

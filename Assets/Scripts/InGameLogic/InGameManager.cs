@@ -2391,16 +2391,20 @@ public class InGameManager : MonoBehaviour
     public void UseItemExtendsLimits(Vector3 startWorldPos, Vector3 destWorldPos)
     {
         mIsItemEffect = true;
-        Network_UseItem(new ProductInfo[0], PurchaseItemType.ExtendLimit);
+        Network_UseItem(PurchaseItemType.ExtendLimit);
         GameObject missile = GameObject.Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
         StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
         {
             mIsItemEffect = false;
             if (mStageInfo.TimeLimit > 0)
             {
-                mStartTime += 10; //10초 연장
-                float remainTime = mStageInfo.TimeLimit - PlayTime;
-                EventRemainTime?.Invoke((int)remainTime);
+                if(FieldType == GameFieldType.pvpPlayer)
+                {
+                    mStartTime += 10; //10초 연장
+                    float remainTime = mStageInfo.TimeLimit - PlayTime;
+                    EventRemainTime?.Invoke((int)remainTime);
+                    Network_SyncTimer((int)remainTime);
+                }
             }
             else
             {
@@ -2416,10 +2420,7 @@ public class InGameManager : MonoBehaviour
             return false;
 
         mIsItemEffect = true;
-        List<ProductInfo> netPros = new List<ProductInfo>();
-        foreach (Product target in icedBlocks)
-            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.RemoveIce);
+        Network_UseItem(PurchaseItemType.RemoveIce);
 
         StartCoroutine(CreateMagnetMissiles(startWorldPos, icedBlocks,
             (pro) =>
@@ -2442,29 +2443,26 @@ public class InGameManager : MonoBehaviour
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
 
-        List<ProductInfo> netPros = new List<ProductInfo>();
-        foreach (Product target in idlePros)
-            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeSkill1);
+        Network_UseItem(PurchaseItemType.MakeSkill1);
 
-        List<ProductInfo> netInfo = new List<ProductInfo>();
+        int offIdx = mRandomSeed.Next() % 10;
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
             (pro) =>
             {
-                int ran = mRandomSeed.Next() % 3;
+                int ran = (pro.ParentFrame.IndexX + pro.ParentFrame.IndexY + offIdx) % 4;
                 if (ran == 0)
                     pro.ChangeProductImage(ProductSkill.Horizontal);
                 else if (ran == 1)
                     pro.ChangeProductImage(ProductSkill.Vertical);
-                else
+                else if (ran == 2)
                     pro.ChangeProductImage(ProductSkill.Bomb);
+                else
+                    pro.ChangeProductImage(ProductSkill.Hammer);
 
-                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 pro.FlashProduct();
             },
             () =>
             {
-                Network_ChangeSkill(netInfo.ToArray());
                 mIsItemEffect = false;
             }));
     }
@@ -2474,60 +2472,61 @@ public class InGameManager : MonoBehaviour
         Frame[] idleFrames = GetRandomIdleFrames(count);
         Product[] idlePros = ToProducts(idleFrames);
 
-        List<ProductInfo> netPros = new List<ProductInfo>();
-        foreach (Product target in idlePros)
-            netPros.Add(new ProductInfo(target.Color, target.Color, ProductSkill.Nothing, target.ParentFrame.IndexX, target.ParentFrame.IndexY, target.InstanceID, target.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeSkill2);
+        Network_UseItem(PurchaseItemType.MakeSkill2);
 
-        List<ProductInfo> netInfo = new List<ProductInfo>();
         StartCoroutine(CreateMagnetTrails(TrailingPrefab, idlePros,
             (pro) =>
             {
                 pro.ChangeProductImage(ProductSkill.SameColor);
-                netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 pro.FlashProduct();
             },
             () =>
             {
-                Network_ChangeSkill(netInfo.ToArray());
                 mIsItemEffect = false;
             }));
     }
-    public void UseItemMatch(Vector3 startWorldPos)
+    public bool UseItemMatch(Vector3 startWorldPos)
     {
         List<Product[]> matchesGroup = FindMatchedAllProducts();
+        if(matchesGroup.Count <= 0)
+            return false;
+
         List<Frame> frames = new List<Frame>();
         foreach (Product[] matchedPros in matchesGroup)
             frames.Add(matchedPros[0].ParentFrame);
 
-        List<ProductInfo> netPros = new List<ProductInfo>();
-        foreach (Frame target in frames)
-            netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.MakeCombo);
+        Network_UseItem(PurchaseItemType.MakeCombo);
 
         mIsItemEffect = true;
-        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.2f, frames.ToArray(),
+        ComboReset();
+        int idx = 0;
+        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.4f, frames.ToArray(),
             (frame) =>
             {
+                Product[] pros = matchesGroup[idx];
+                LockToMatch(pros);
+                StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
+                {
+                    DoMatchProducts(pros);
+                }));
+                
+                idx++;
                 ComboUp();
-                Product pro = frame.ChildProduct;
-                TryDestroy(pro, true);
             },
             () =>
             {
                 StartToDrop();
                 mIsItemEffect = false;
             }));
+
+        return true;
     }
     public void UseItemMeteor(int count)
     {
         mIsItemEffect = true;
         Frame[] idleFrames = GetRandomIdleFrames(count);
 
-        List<ProductInfo> netPros = new List<ProductInfo>();
-        foreach (Frame target in idleFrames)
-            netPros.Add(new ProductInfo(target.ChildProduct.Color, target.ChildProduct.Color, ProductSkill.Nothing, target.IndexX, target.IndexY, target.ChildProduct.InstanceID, target.ChildProduct.InstanceID));
-        Network_UseItem(netPros.ToArray(), PurchaseItemType.Meteor);
+        Network_UseItem(PurchaseItemType.Meteor);
 
         int idx = 0;
         Frame preFrame = null;
@@ -2979,6 +2978,7 @@ public class InGameManager : MonoBehaviour
     {
         mPVPTimerCounter = 0;
         float currentTimelimit = mStageInfo.TimeLimit;
+        Network_SyncTimer((int)currentTimelimit);
         while (true)
         {
             float remain = currentTimelimit - PlayTime;
@@ -3592,7 +3592,10 @@ public class InGameManager : MonoBehaviour
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro == null || pro.IsLocked || pro.Skill != ProductSkill.Nothing)
+            if(mFrames[idxX, idxY].Empty || mFrames[idxX, idxY].IsObstacled())
+                continue;
+
+            if (pro == null || pro.IsLocked || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
                 continue;
 
             rets[ranIdx] = pro.ParentFrame;
@@ -4288,163 +4291,16 @@ public class InGameManager : MonoBehaviour
 
                     mNetMessages.RemoveFirst();
                 }
-                
-            }
-            
-            /*
-            else if (body.cmd == PVPCommand.Destroy)
-            {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.pros[i];
-                    Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
-                {
-                    Billboard.CurrentCombo = body.combo;
-                    EventCombo?.Invoke(Billboard.CurrentCombo);
-
-                    int score = body.combo * body.ArrayCount;
-
-                    int pvpTimerCounter = body.remainTime;
-                    int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * pvpTimerCounter));
-                    int preAttackCount = Billboard.CurrentScore / spa;
-                    int curAttackCount = (Billboard.CurrentScore + score) / spa;
-
-                    Billboard.CurrentScore += score;
-                    Billboard.DestroyCount += body.ArrayCount;
-                    EventBreakTarget?.Invoke(transform.position, StageGoalType.Score);
-
-                    Attack(curAttackCount - preAttackCount, products[0].transform.position);
-
-                    if (body.skill == ProductSkill.Nothing)
-                    {
-                        for (int idx = 0; idx < body.ArrayCount; ++idx)
-                        {
-                            if (body.withLaserEffect)
-                            {
-                                if (idx == 0)
-                                    CreateLaserEffect(transform.position, products[idx].transform.position);
-                            }
-                            else
-                            {
-                                CreateSkillEffect(products[idx]);
-                            }
-                            Frame parentFrame = products[idx].ParentFrame;
-                            products[idx].Combo = body.combo;
-                            products[idx].DestroyImmediately();
-                            Product newPro = CreateNewProduct(body.pros[idx].nextColor, body.pros[idx].nextInstID);
-                            newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                            //newPro.transform.SetParent(parentFrame.VertFrames.transform);
-                            parentFrame.VertFrames.AddNewProduct(newPro);
-                            newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
-                        }
-                    }
-                    else
-                    {
-                        for (int idx = 0; idx < body.ArrayCount; ++idx)
-                        {
-                            Frame parentFrame = products[idx].ParentFrame;
-                            products[idx].Combo = body.combo;
-                            products[idx].MergeImImmediately(products[0], body.skill);
-                            if (idx != 0)
-                            {
-                                Product newPro = CreateNewProduct(body.pros[idx].nextColor, body.pros[idx].nextInstID);
-                                newPro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
-                                //newPro.transform.SetParent(parentFrame.VertFrames.transform);
-                                parentFrame.VertFrames.AddNewProduct(newPro);
-                                newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
-                            }
-                        }
-                    }
-
-                    mNetMessages.RemoveFirst();
-                }
-            }
-            else if (body.cmd == PVPCommand.BreakIce)
-            {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.pros[i];
-                    Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor && pro.IsChocoBlock)
-                        products.Add(pro);
-                }
-
-                // if (products.Count == body.ArrayCount)
-                // {
-                //     foreach (Product pro in products)
-                //         pro.BreakChocoBlock(body.combo);
-
-                //     mNetMessages.RemoveFirst();
-                // }
-            }
-            else if (body.cmd == PVPCommand.CloseProducts)
-            {
-                if (IsIdle && IsAllProductIdle())
-                {
-                    EventRemainTime?.Invoke(body.remainTime);
-                    if(body.ArrayCount > 0)
-                    {
-                        StartCoroutine(StartToPushStoneOpp(body.pros, body.ArrayCount));
-                    }
-
-                    mNetMessages.RemoveFirst();
-                }
             }
             else if (body.cmd == PVPCommand.UseItem)
             {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
+                if (IsIdle && IsAllProductIdle())
                 {
-                    ProductInfo info = body.pros[i];
-                    Product pro = ProductIDs[info.prvInstID];
-                    if (pro != null && !pro.IsLocked && pro.Color == info.prvColor)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
-                {
-                    CastItemEffectOnOpponent(products.ToArray(), body.item);
-                    mNetMessages.RemoveFirst();
-                }
-            }
-            else if (body.cmd == PVPCommand.DropPause)
-            {
-                mDropLockCount++;
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.DropResume)
-            {
-                mDropLockCount--;
-                mNetMessages.RemoveFirst();
-            }
-            else if (body.cmd == PVPCommand.ChangeSkill)
-            {
-                List<Product> products = new List<Product>();
-                for (int i = 0; i < body.ArrayCount; ++i)
-                {
-                    ProductInfo info = body.pros[i];
-                    Product pro = mFrames[info.idxX, info.idxY].ChildProduct;
-                    if (pro != null && !pro.IsLocked)
-                        products.Add(pro);
-                }
-
-                if (products.Count == body.ArrayCount)
-                {
-                    for (int i = 0; i < body.ArrayCount; ++i)
-                        products[i].ChangeProductImage(body.pros[i].skill);
+                    MenuBattle.Inst().UseOpponentItem(body.item);
 
                     mNetMessages.RemoveFirst();
                 }
-
             }
-            */
         }
     }
     private void CastItemEffectOnOpponent(Product[] pros, PurchaseItemType item)
@@ -4618,9 +4474,8 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_UseItem(ProductInfo[] pros, PurchaseItemType item)
+    private void Network_UseItem(PurchaseItemType item)
     {
-        return;
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
 
@@ -4629,7 +4484,7 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.item = item;
-        req.pros = pros;
+        //req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
