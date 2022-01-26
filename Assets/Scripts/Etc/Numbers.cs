@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class Numbers : MonoBehaviour
@@ -104,5 +105,15 @@ public class Numbers : MonoBehaviour
             SecondOutline.gameObject.SetActive(Outline);
             ThirdOutline.gameObject.SetActive(Outline);
         }
+    }
+
+    public void FadeOut()
+    {
+        First.DOFade(0, 0.5f);
+        FirstOutline.DOFade(0, 0.5f);
+        Second.DOFade(0, 0.5f);
+        SecondOutline.DOFade(0, 0.5f);
+        Third.DOFade(0, 0.5f);
+        ThirdOutline.DOFade(0, 0.5f);
     }
 }

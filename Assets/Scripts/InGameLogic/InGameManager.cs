@@ -251,6 +251,8 @@ public class InGameManager : MonoBehaviour
         InitDropGroupFrames();
 
         AttackPointFrame.ResetPoints();
+        Vector3 rightTopPosition = mFrames[CountX - 1, CountY - 1].transform.position + new Vector3(0, GridSize, 0);
+        AttackPointFrame.transform.position = rightTopPosition;
     }
     public void InitProducts()
     {
@@ -4095,8 +4097,9 @@ public class InGameManager : MonoBehaviour
             Vector3 curSpeed = curStartSpeed + dir * destFactor;
             obj.transform.position += curSpeed * Time.deltaTime;
             curSpeed.Normalize();
-            float deg = Mathf.Acos(Vector3.Dot(Vector3.right, curSpeed)) * Mathf.Rad2Deg;
-            obj.transform.localRotation = Quaternion.Euler(0, 0, deg);
+            // float deg = Mathf.Acos(Vector3.Dot(Vector3.right, curSpeed)) * Mathf.Rad2Deg;
+            // obj.transform.localRotation = Quaternion.Euler(0, 0, deg);
+            obj.transform.right = curSpeed;
 
             float nextSpeed = startSpeed.Item2 - (startSpeed.Item2 * startSpeed.Item2 * dragFactor);
             nextSpeed = Mathf.Max(0, nextSpeed);

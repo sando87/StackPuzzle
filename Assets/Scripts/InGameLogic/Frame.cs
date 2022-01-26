@@ -214,10 +214,25 @@ public class Frame : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
 
-        StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () => {
-            EventScoreText?.Invoke(combo);
-            Destroy(obj);
-        }));
+        if(GameManager == InGameManager.InstStage)
+        {
+            StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () =>
+            {
+                EventScoreText?.Invoke(combo);
+                Destroy(obj);
+            }));
+        }
+        else
+        {
+            numComp.FadeOut();
+            numComp.transform.DOLocalMoveY(numComp.transform.localPosition.y + 0.5f, 0.5f)
+            .OnComplete(() =>
+            {
+                EventScoreText?.Invoke(combo);
+                Destroy(numComp.gameObject);
+            });
+        }
+
     }
     IEnumerator DisappearGoingUP(GameObject obj, float duration)
     {

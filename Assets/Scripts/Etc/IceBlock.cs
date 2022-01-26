@@ -31,6 +31,8 @@ public class IceBlock : MonoBehaviour
 
         IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
         obj.SetDepth(BreakDepth);
+        obj.GetComponent<SpriteRenderer>().sortingLayerName = "UIParticle";
+        obj.GetComponent<SpriteRenderer>().sortingOrder = 1;
         obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
 
