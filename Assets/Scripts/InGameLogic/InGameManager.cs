@@ -722,15 +722,15 @@ public class InGameManager : MonoBehaviour
 
         if (target.Skill == ProductSkill.Horizontal)
         {
-            CastHorizontalProduct(target);
+            CastHorizontalProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
-            CastVerticalProduct(target);
+            CastVerticalProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.Bomb)
         {
-            CastBombProduct(target);
+            CastBombProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.SameColor)
         {
@@ -742,61 +742,15 @@ public class InGameManager : MonoBehaviour
         }
     }
 
-    private void CastHorizontalProduct(Product pro)
+    private void CastHorizontalProduct(Frame startFrame)
     {
-        pro.SkillCasted = true;
-
-        Frame startFrame = pro.ParentFrame;
-        Vector3 startPosition = startFrame.transform.position;
-        Vector3 rightEndPosition = startFrame.MostRight().transform.position;
-        Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
-        float maxDistance = Mathf.Max(startPosition.x - leftEndPosition.x, rightEndPosition.x - startPosition.x);
-        maxDistance += GridSize;
-        rightEndPosition.x = startPosition.x + maxDistance;
-        leftEndPosition.x = startPosition.x - maxDistance;
-        float speed = GridSize / 0.1f;
-        float duration = maxDistance / speed;
-
-        CreateRocketEffect(startPosition, rightEndPosition, duration);
-        CreateRocketEffect(startPosition, leftEndPosition, duration);
-
-        TryDestroy(pro, false);
-
-        AddWorker(1, 1, (cnt) =>
+        Product pro = startFrame.ChildProduct;
+        if(pro != null && !pro.IsLocked)
         {
-            int offIdx = cnt + 1;
-            Frame leftFrame = startFrame.Left(offIdx);
-            if (leftFrame != null)
-            {
-                Product leftPro = leftFrame.ChildProduct;
-                if (leftPro != null && !leftPro.IsLocked)
-                {
-                    TryDestroy(leftPro, false);
-                }
-            }
+            pro.SkillCasted = true;
+            TryDestroy(pro, false);
+        }
 
-            Frame rightFrame = startFrame.Right(offIdx);
-            if (rightFrame != null)
-            {
-                Product rightPro = rightFrame.ChildProduct;
-                if (rightPro != null && !rightPro.IsLocked)
-                {
-                    TryDestroy(rightPro, false);
-                }
-            }
-
-            if (startFrame.IndexX - offIdx < 0 && startFrame.IndexX + offIdx >= CountX)
-            {
-                return DelayedCallRet.Done;
-            }
-
-            return DelayedCallRet.Keep;
-        });
-    }
-    private void CastHorizontalProduct(Frame frame)
-    {
-        Frame startFrame = frame;
-        Product pro = frame.ChildProduct;
         Vector3 startPosition = startFrame.transform.position;
         Vector3 rightEndPosition = startFrame.MostRight().transform.position;
         Vector3 leftEndPosition = startFrame.MostLeft().transform.position;
@@ -844,10 +798,15 @@ public class InGameManager : MonoBehaviour
             return DelayedCallRet.Keep;
         });
     }
-    private void CastVerticalProduct(Product pro)
+    private void CastVerticalProduct(Frame startFrame)
     {
-        pro.SkillCasted = true;
-        Frame startFrame = pro.ParentFrame;
+        Product pro = startFrame.ChildProduct;
+        if (pro != null && !pro.IsLocked)
+        {
+            pro.SkillCasted = true;
+            TryDestroy(pro, false);
+        }
+
         startFrame.VertFrames.HoldCount++;
 
         Vector3 startPosition = startFrame.transform.position;
@@ -862,8 +821,6 @@ public class InGameManager : MonoBehaviour
 
         CreateRocketEffect(startPosition, topEndPosition, duration);
         CreateRocketEffect(startPosition, bottomEndPosition, duration);
-
-        TryDestroy(pro, false);
 
         AddWorker(1, 1, (cnt) =>
         {
@@ -897,21 +854,34 @@ public class InGameManager : MonoBehaviour
             return DelayedCallRet.Keep;
         });
     }
-    private void CastBombProduct(Product pro)
+    private void CastBombProduct(Frame frame)
     {
-        pro.SkillCasted = true;
-        pro.Animation.Play("destroy");
-        AddWorker(3, 3, (cnt) =>
+        Product pro = frame.ChildProduct;
+        if(pro != null && !pro.IsLocked)
         {
-            CreateExplosionEffect(pro.transform.position);
-            Product[] arPros = ScanAroundProducts(pro, 1);
-            TryDestroy(pro, false);
-            foreach(Product arPro in arPros)
+            pro.SkillCasted = true;
+            pro.Animation.Play("destroy");
+            AddWorker(3, 3, (cnt) =>
+            {
+                CreateExplosionEffect(pro.transform.position);
+                Product[] arPros = ScanAroundProducts(pro, 1);
+                TryDestroy(pro, false);
+                foreach (Product arPro in arPros)
+                {
+                    TryDestroy(arPro, true);
+                }
+                return DelayedCallRet.Done;
+            });
+        }
+        else
+        {
+            CreateExplosionEffect(frame.transform.position);
+            Product[] arPros = ScanAroundProducts(frame, 1);
+            foreach (Product arPro in arPros)
             {
                 TryDestroy(arPro, true);
             }
-            return DelayedCallRet.Done;
-        });
+        }
     }
     private void CastRainbowProduct(Product pro)
     {
@@ -1134,18 +1104,7 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                Product destPro = nextTarget.ChildProduct;
-                if(destPro != null && !destPro.IsLocked)
-                {
-                    CreateExplosionEffect(destPro.transform.position);
-                    Product[] arPros = ScanAroundProducts(destPro, 1);
-                    TryDestroy(destPro, true);
-                    foreach (Product arPro in arPros)
-                    {
-                        TryDestroy(arPro, true);
-                    }
-                }
-
+                CastBombProduct(nextTarget);
                 return DelayedCallRet.Done;
             }
         });
@@ -1171,11 +1130,7 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                Product destPro = nextTarget.ChildProduct;
-                if (destPro != null && !destPro.IsLocked)
-                {
-                    CastHorizontalProduct(destPro);
-                }
+                CastHorizontalProduct(nextTarget);
                 return DelayedCallRet.Done;
             }
         });
@@ -1201,11 +1156,7 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                Product destPro = nextTarget.ChildProduct;
-                if (destPro != null && !destPro.IsLocked)
-                {
-                    CastVerticalProduct(destPro);
-                }
+                CastVerticalProduct(nextTarget);
                 return DelayedCallRet.Done;
             }
         });
@@ -2957,13 +2908,13 @@ public class InGameManager : MonoBehaviour
                 yield return StartCoroutine(UnityUtils.MoveLinear(obj, frame.transform.position, 0.5f, 50.0f));
 
                 Product pro = frame.ChildProduct;
-                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                if (pro != null && !pro.IsLocked && !pro.IsObstacled())
                 {
                     pro.ChangeProductImage(skillIndex);
                     eventEnd?.Invoke();
                     Destroy(obj);
-                    if (!mItemLooping)
-                        StartCoroutine(DestroySkillSimpleLoop());
+                    if (!mIsWorkingCycle)
+                        StartSingleSkillLoop();
                     break;
                 }
                 else
