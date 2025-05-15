@@ -21,9 +21,9 @@ public class MenuDiamondShop : MonoBehaviour
 
     private void Start()
     {
-        UnityEngine.Purchasing.IAPButton[] btns = GetComponentsInChildren<UnityEngine.Purchasing.IAPButton>();
-        foreach (UnityEngine.Purchasing.IAPButton btn in btns)
-            btn.IsOKPurchase = OnClickPurchase;
+        // UnityEngine.Purchasing.IAPButton[] btns = GetComponentsInChildren<UnityEngine.Purchasing.IAPButton>();
+        // foreach (UnityEngine.Purchasing.IAPButton btn in btns)
+        //     btn.IsOKPurchase = OnClickPurchase;
     }
 
     public void OnClose()

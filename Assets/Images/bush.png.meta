@@ -39,7 +39,7 @@ TextureImporter:
       213: 2688729739628691311
     second: bush_3
   externalObjects: {}
-  serializedVersion: 11
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -59,6 +59,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -67,9 +69,9 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: -1
-    mipBias: -100
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -90,10 +92,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 0
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -150,7 +156,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 1052d68abfccf2a20800000000000000
-      internalID: 3039873654732956929
+      internalID: 6545382614753218560
       vertices: []
       indices: 
       edges: []
@@ -171,7 +177,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 55f38955bebedbcc0800000000000000
-      internalID: -3693536723388055723
+      internalID: -2393253423863688536
       vertices: []
       indices: 
       edges: []
@@ -192,7 +198,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 1359816d080a58b50800000000000000
-      internalID: 6594853704562152753
+      internalID: 4493076713092915932
       vertices: []
       indices: 
       edges: []
@@ -213,7 +219,7 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: f6fb893e379405520800000000000000
-      internalID: 2688729739628691311
+      internalID: 7868427244287921197
       vertices: []
       indices: 
       edges: []
@@ -228,6 +234,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      bush_0: 6545382614753218560
+      bush_1: -2393253423863688536
+      bush_2: 4493076713092915932
+      bush_3: 7868427244287921197
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
