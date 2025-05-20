@@ -5,7 +5,10 @@ CREATE TABLE users (
 	score integer,
 	deviceName varchar,
 	ipAddress varchar,
-	firstTime timestamp
+	firstTime timestamp,
+	win integer,
+	lose integer,
+	total integer,
 );
 CREATE TABLE log (
 	logPk SERIAL primary key,
