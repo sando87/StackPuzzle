@@ -646,16 +646,66 @@ public class InGameManager : MonoBehaviour
     private Product[] CreateNewProducts(VerticalFrames vf)
     {
         List<Product> newPros = new List<Product>();
-        foreach(Frame frame in vf.Frames)
+        int count = 0;
+        Product curTopProduct = null; // 기존에 있는 Products중 가장 위에 있는 것
+        foreach (Frame frame in vf.Frames)
         {
-            if(frame.ChildProduct == null)
+            if (frame.ChildProduct == null)
             {
+                count++;
+            }
+            else
+            {
+                if(curTopProduct == null || curTopProduct.transform.position.y < frame.ChildProduct.transform.position.y)
+                {
+                    curTopProduct = frame.ChildProduct;
+                }
+            }
+        }
+
+        if(count > 0)
+        {
+            Frame curDropFrame = vf.Frames[vf.FrameCount - count]; // 새로 생성될 Product가 떨어질 첫번째 프레임
+            for (int i = 0; i < count; i++)
+            {
+                // 새로 생성될 Product가 드랍 후 매칭되지 않도록 하는 색상으로 결정
+                // ProductColor color = ProductColorForUnMatching(curDropFrame, curTopProduct);
+                // Product newPro = CreateNewProduct(color);
+
                 Product newPro = CreateNewProduct();
                 vf.AddNewProduct(newPro);
                 newPro.EnableMasking(vf.MaskOrder);
+
+                curDropFrame = curDropFrame.Up();
+                curTopProduct = newPro;
             }
         }
+
         return newPros.ToArray();
+    }
+    private ProductColor ProductColorForUnMatching(Frame dropFrame, Product downProduct)
+    {
+        // dropFrame 주변에 Product들을 조사해서 매칭되지 않아야 하는 색상을 찾아서 반환
+        ProductColor retColor = ProductColor.None;
+
+        ProductColor leftColor = (dropFrame.Left() != null && dropFrame.Left().ChildProduct != null) ? dropFrame.Left().ChildProduct.Color : ProductColor.None;
+        ProductColor rightColor = (dropFrame.Right() != null && dropFrame.Right().ChildProduct != null) ? dropFrame.Right().ChildProduct.Color : ProductColor.None;
+        ProductColor downColor = downProduct != null ? downProduct.Color : ProductColor.None;
+
+        int colorCount = (int)mStageInfo.ColorCount;
+        int startRandomIdx = RandomNextColor();
+        for (int i = 0; i < colorCount; i++)
+        {
+            int idx = (startRandomIdx + i) % colorCount;
+            ProductColor color = (ProductColor)(idx + 1);
+            if(color == leftColor || color == rightColor || color == downColor)
+                continue;
+
+            retColor = color;
+            break;
+        }
+
+        return retColor;
     }
     private bool TryMatchAfterDrop(Product[] droppingPros)
     {
