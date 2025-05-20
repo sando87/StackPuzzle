@@ -13,7 +13,7 @@ public class NetClientApp : MonoBehaviour
 
     public static NetClientApp mInst = null;
     public int ServerPort = 9435;
-    private string ServerAddress = "sjleeserver.iptime.org"; //27.117.158.3
+    private string ServerAddress = "localhost"; //"sjleeserver.iptime.org"; //27.117.158.3
     //private string ServerAddress = "ec2-3-35-208-197.ap-northeast-2.compute.amazonaws.com"; //3.35.208.197
 
     TcpClient mSession = null;
