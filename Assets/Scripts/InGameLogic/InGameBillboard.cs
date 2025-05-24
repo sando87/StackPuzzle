@@ -67,4 +67,20 @@ public class InGameBillboard
 
         return 0;
     }
+    public int GetGoalValue(StageGoalType type)
+    {
+        switch (type)
+        {
+            case StageGoalType.Score: return CurrentScore;
+            case StageGoalType.Combo: return CurrentCombo;
+            case StageGoalType.ItemOneMore: return ItemOneMoreCount;
+            case StageGoalType.ItemKeepCombo: return ItemKeepComboCount;
+            case StageGoalType.ItemSameColor: return ItemSameColorCount;
+            case StageGoalType.Cover: return CoverCount;
+            case StageGoalType.Choco: return ChocoCount;
+            case StageGoalType.Cap: return CapCount;
+            case StageGoalType.Bush: return BushCount;
+            default: return 0;
+        }
+    }
 }

@@ -27,10 +27,13 @@ public class MenuInGame : MonoBehaviour
     public GameObject[] ItemSlots;
     public Button PauseButton;
     public Button SkipButton;
+    public Image LimitFG;
+    public Image GoalFG;
+    public GameObject StarA = null;
+    public GameObject StarB = null;
+    public GameObject StarC = null;
 
     public GameObject EffectParent;
-
-    public int RemainLimit { get { return int.Parse(Limit.text); } }
 
     private void Update()
     {
@@ -44,7 +47,7 @@ public class MenuInGame : MonoBehaviour
 
     public static MenuInGame Inst()
     {
-        if(mInst == null)
+        if (mInst == null)
             mInst = GameObject.Find(UIObjName).GetComponent<MenuInGame>();
         return mInst;
     }
@@ -68,26 +71,31 @@ public class MenuInGame : MonoBehaviour
         SkipButton.gameObject.SetActive(false);
         LevelCompleted.gameObject.SetActive(false);
         LevelFailed.gameObject.SetActive(false);
-        Limit.text = info.MoveLimit.ToString();
+
+        if (info.MoveLimit != 0)
+            UpdateMoveLimit(info.MoveLimit);
+        else if (info.TimeLimit != 0)
+            UpdateTimeLimit(info.TimeLimit);
+
         if (info.GoalTypeEnum == StageGoalType.Score)
         {
             TargetType.gameObject.SetActive(false);
             TargetScoreText.gameObject.SetActive(true);
-            TargetScoreText.text = info.GoalValue.ToString();
+            UpdateGoalValue();
         }
         else
         {
             TargetScoreText.gameObject.SetActive(false);
             TargetType.gameObject.SetActive(true);
             TargetType.sprite = info.GoalTypeImage;
-            TargetValue.text = info.GoalValue.ToString();
+            UpdateGoalValue();
         }
         ComboNumber.Clear();
 
         ScoreBarObj.Init(info.StarPoint);
 
         PurchaseItemType[] items = MenuPlay.Inst().GetSelectedItems();
-        for(int i = 0; i < ItemSlots.Length; ++i)
+        for (int i = 0; i < ItemSlots.Length; ++i)
         {
             if (i < items.Length)
             {
@@ -106,41 +114,52 @@ public class MenuInGame : MonoBehaviour
             }
         }
 
-        InGameManager.InstStage.EventBreakTarget = (pos, type) => {
-            ReduceGoalValue(pos, type);
+        InGameManager.InstStage.EventBreakTarget = (pos, type) =>
+        {
+            UpdateGoalValue();
         };
-        InGameManager.InstStage.EventScore = (score) => {
+        InGameManager.InstStage.EventScore = (score) =>
+        {
             ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + score);
         };
-        InGameManager.InstStage.EventFinishPre = (success) => {
+        InGameManager.InstStage.EventFinishPre = (success) =>
+        {
             ShowFinishMessage(success);
         };
-        InGameManager.InstStage.EventReward = (rewardCount, interval) => {
+        InGameManager.InstStage.EventReward = (rewardCount, interval) =>
+        {
             StartCoroutine(AnimateRewardCounting(rewardCount, interval));
         };
-        InGameManager.InstStage.EventFinish = (success) => {
+        InGameManager.InstStage.EventFinish = (success) =>
+        {
             FinishGame(success);
         };
-        InGameManager.InstStage.EventFinishFirst = (success) => {
+        InGameManager.InstStage.EventFinishFirst = (success) =>
+        {
             if (success)
             {
                 PauseButton.gameObject.SetActive(false);
                 SkipButton.gameObject.SetActive(true);
             }
         };
-        InGameManager.InstStage.EventReduceLimit = () => {
-            ReduceMoveLimit();
+        InGameManager.InstStage.EventReduceLimit = () =>
+        {
+            int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
+            UpdateMoveLimit(remain);
         };
-        InGameManager.InstStage.EventCombo = (combo) => {
+        InGameManager.InstStage.EventCombo = (combo) =>
+        {
             CurrentCombo = combo;
         };
-        InGameManager.InstStage.EventRemainTime = (remainSec) => {
-            if(remainSec == 10 && Limit.text.Equals("00:11"))
+        InGameManager.InstStage.EventRemainTime = (remainSec) =>
+        {
+            if (remainSec == 10 && Limit.text.Equals("00:11"))
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
                 StartCoroutine(UnityUtils.AnimateStandOut(Limit.gameObject));
             }
-            Limit.text = TimeToString(remainSec);
+
+            UpdateTimeLimit(remainSec);
         };
     }
 
@@ -164,7 +183,7 @@ public class MenuInGame : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
         PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
-        switch(itemType)
+        switch (itemType)
         {
             case PurchaseItemType.ExtendLimit:
                 InGameManager.InstStage.UseItemExtendsLimits(btn.transform.position, Limit.transform.position);
@@ -205,13 +224,6 @@ public class MenuInGame : MonoBehaviour
         LOG.echo(log);
     }
 
-    public void ReduceMoveLimit()
-    {
-        int remain = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
-        remain = Mathf.Max(0, remain);
-        Limit.text = remain.ToString();
-    }
-
     public string TimeToString(int second)
     {
         if (second < 0)
@@ -222,13 +234,32 @@ public class MenuInGame : MonoBehaviour
         return string.Format("{0:00}:{1:00}", min, sec);
     }
 
+    int GetStarCount()
+    {
+        float remainRate = 0;
+        if (mStageInfo.TimeLimit > 0)
+            remainRate = (float)MenuBattle.StringToSec(Limit.text) / mStageInfo.TimeLimit;
+        else
+            remainRate = (float)(mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount) / mStageInfo.MoveLimit;
+
+        return remainRate >= 0.5f ? 3 : (remainRate >= 0.25f ? 2 : 1);
+    }
+    void UpdateStarCountUI()
+    {
+        int starCount = GetStarCount();
+
+        StarA.SetActive(starCount >= 1);
+        StarB.SetActive(starCount >= 2);
+        StarC.SetActive(starCount >= 3);
+    }
+
     public void FinishGame(bool success)
     {
         if (success)
         {
             //int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
             float limitRate = InGameManager.InstStage.LimitRate;
-            int starCount = ScoreBarObj.CurrentStarCount;
+            int starCount = GetStarCount();
             bool isFirstThreeStar = starCount == 3 && UserSetting.GetStageStarCount(mStageInfo.Num) < 3;
             MapStage currentStage = MenuStages.Inst.FindStage(mStageInfo.Num);
             currentStage.UpdateStarCount(starCount);
@@ -277,25 +308,30 @@ public class MenuInGame : MonoBehaviour
             }
         }
     }
-    public void ReduceGoalValue(Vector3 worldPos, StageGoalType type)
+    public void UpdateGoalValue()
     {
-        if (type != mStageInfo.GoalTypeEnum)
-            return;
-
-        if (type == StageGoalType.Score)
+        if (mStageInfo.GoalTypeEnum == StageGoalType.Score)
         {
-            int remainScore = mStageInfo.GoalValue - InGameManager.InstStage.Billboard.CurrentScore;
-            remainScore = Mathf.Max(remainScore, 0);
-            TargetScoreText.text = remainScore.ToString();
+            int currentScore = InGameManager.InstStage.Billboard.GetGoalValue(mStageInfo.GoalTypeEnum);
+            TargetScoreText.text = currentScore + " / " + mStageInfo.GoalValue;
             StartCoroutine(UnityUtils.AnimateStandOut(TargetScoreText.gameObject));
-            return;
+
+            Vector2 size = GoalFG.rectTransform.sizeDelta;
+            float goalRate = (float)currentScore / mStageInfo.GoalValue;
+            size.x = GoalFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * goalRate;
+            GoalFG.rectTransform.sizeDelta = size;
         }
         else
         {
-            int value = int.Parse(TargetValue.text) - 1;
-            value = Mathf.Max(0, value);
-            TargetValue.text = value.ToString();
+            int currentValue = InGameManager.InstStage.Billboard.GetGoalValue(mStageInfo.GoalTypeEnum);
+            currentValue = Mathf.Max(0, currentValue);
+            TargetValue.text = currentValue + " / " + mStageInfo.GoalValue;
             StartCoroutine(UnityUtils.AnimateStandOut(TargetValue.transform.parent.gameObject));
+
+            Vector2 size = GoalFG.rectTransform.sizeDelta;
+            float goalRate = (float)currentValue / mStageInfo.GoalValue;
+            size.x = GoalFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * goalRate;
+            GoalFG.rectTransform.sizeDelta = size;
         }
     }
     IEnumerator AnimateItem(GameObject obj, Vector3 worldDest, Action action)
@@ -373,7 +409,7 @@ public class MenuInGame : MonoBehaviour
         if (mStageInfo.TimeLimit > 0)
             curLimit = MenuBattle.StringToSec(Limit.text);
         else
-            curLimit = float.Parse(Limit.text);
+            curLimit = mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount;
 
         float step = curLimit / count;
         while (loopCnt < count)
@@ -381,13 +417,35 @@ public class MenuInGame : MonoBehaviour
             curLimit -= step;
 
             if (mStageInfo.TimeLimit > 0)
-                Limit.text = TimeToString((int)curLimit);
+                UpdateTimeLimit((int)curLimit);
             else
-                Limit.text = ((int)curLimit).ToString();
+                UpdateMoveLimit((int)curLimit);
 
             loopCnt++;
             yield return new WaitForSeconds(interval);
         }
+    }
+
+    void UpdateMoveLimit(int remainMove)
+    {
+        float remainRate = remainMove / (float)mStageInfo.MoveLimit;
+        Limit.text = remainMove + " / " + mStageInfo.MoveLimit;
+        Vector2 size = LimitFG.rectTransform.sizeDelta;
+        size.x = LimitFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * remainRate;
+        LimitFG.rectTransform.sizeDelta = size;
+
+        UpdateStarCountUI();
+    }
+    void UpdateTimeLimit(int remainTimeSec)
+    {
+        Limit.text = TimeToString(remainTimeSec);
+
+        float remainRate = (float)remainTimeSec / mStageInfo.TimeLimit;
+        Vector2 size = LimitFG.rectTransform.sizeDelta;
+        size.x = LimitFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * remainRate;
+        LimitFG.rectTransform.sizeDelta = size;
+
+        UpdateStarCountUI();
     }
 
 }

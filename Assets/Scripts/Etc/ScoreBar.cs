@@ -58,9 +58,9 @@ public class ScoreBar : MonoBehaviour
         float rate = CurrentScore / (float)ScorePerBar;;
         MainBar.normalizedValue = Mathf.Min(1.0f, rate);
 
-        StarA.SetActive(rate >= 0.5f);
-        StarB.SetActive(rate >= 0.75f);
-        StarC.SetActive(rate >= 1);
+        // StarA.SetActive(rate >= 0.5f);
+        // StarB.SetActive(rate >= 0.75f);
+        // StarC.SetActive(rate >= 1);
     }
 
     private void UpdateSplitBar()
