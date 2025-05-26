@@ -375,6 +375,14 @@ public static class MyExtensions
     {
         tr.localPosition = new Vector3(val.x, val.y, tr.localPosition.z);
     }
+    public static void SetAnchoredPosX(this RectTransform rectTr, float posX)
+    {
+        rectTr.anchoredPosition = new Vector2(posX, rectTr.anchoredPosition.y);
+    }
+    public static void SetAnchoredWidth(this RectTransform rectTr, float width)
+    {
+        rectTr.sizeDelta = new Vector2(width, rectTr.sizeDelta.y);
+    }
     public static Sprite GetSprite(this ProductSkill skill)
     {
         switch(skill)
