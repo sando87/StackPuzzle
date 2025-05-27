@@ -229,6 +229,7 @@ namespace ServerApp
 
             requestBody.userPk = newUserPk;
             requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
+            requestBody.rank = DBManager.Inst().GetRank(requestBody.score);
             mCurrentSession.UserInfo = requestBody;
             return requestBody;
         }
@@ -244,6 +245,7 @@ namespace ServerApp
             int userPk = DBManager.Inst().UpdateUserInfo(requestBody);
             requestBody.userPk = userPk;
             requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
+            requestBody.rank = DBManager.Inst().GetRank(requestBody.score);
             mCurrentSession.UserInfo = requestBody;
             return requestBody;
         }
@@ -261,6 +263,7 @@ namespace ServerApp
         {
             requestBody = DBManager.Inst().GetUser(requestBody.userPk);
             requestBody.rankingRate = DBManager.Inst().GetRankingRate(requestBody.score);
+            requestBody.rank = DBManager.Inst().GetRank(requestBody.score);
             return requestBody;
         }
         private UserInfo[] ProcGetUsers()
@@ -578,6 +581,7 @@ namespace ServerApp
             user.UserInfo.total++;
             DBManager.Inst().UpdateUserInfo(user.UserInfo);
             user.UserInfo.rankingRate = DBManager.Inst().GetRankingRate(user.UserInfo.score);
+            user.UserInfo.rank = DBManager.Inst().GetRank(user.UserInfo.score);
             return user.UserInfo;
         }
         private void ServerMonitoring()

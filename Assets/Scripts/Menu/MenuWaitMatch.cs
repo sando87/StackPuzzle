@@ -330,8 +330,14 @@ public class MenuWaitMatch : MonoBehaviour
     private void UpdateUserInfo(UserInfo info)
     {
         WinLose.text = info.win + " / " + info.lose;
-        int rank = (int)(info.rankingRate * 100.0f);
-        Ranking.text = "Top " + rank + "%";
+
+        int rank = info.rank;
+        if (rank > 0)
+        {
+            string suffix = rank == 1 ? "st" : rank == 2 ? "nd" : rank == 3 ? "rd" : "th";
+            Ranking.text = rank + suffix;
+        }
+        
         UpdateExpBar(info.score);
         //string text =
         //    "ID : #" + info.userPk + "\n" +

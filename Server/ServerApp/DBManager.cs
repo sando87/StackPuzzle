@@ -296,5 +296,29 @@ namespace ServerApp
             return 1;
         }
 
+        public int GetRank(int score)
+        {
+            try
+            {
+                using (var cmd = new NpgsqlCommand())
+                {
+                    string query = String.Format("SELECT count(*) as cnt FROM users WHERE score > {0}", score);
+                    cmd.Connection = mDBSession;
+                    cmd.CommandText = query;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            int rank = (int)reader["cnt"] + 1;
+                            return rank;
+                        }
+                    }
+                }
+            }
+            catch (NpgsqlException ex) { LOG.warn(ex.Message); }
+            catch (Exception ex) { LOG.warn(ex.Message); }
+            return 0;
+        }
+
     }
 }
