@@ -41,6 +41,7 @@ public class InGameManager : MonoBehaviour
     public Rocket LineRocketPrefab;
     public GameObject HammerPrefab;
     public GameObject HammerHitPrefab;
+    public SwipChain SwipChainPrefab;
 
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
@@ -350,13 +351,29 @@ public class InGameManager : MonoBehaviour
         if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock || targetProduct.ParentFrame.IsCovered)
             return;
 
+        if (product.Chain != targetProduct.Chain)
+        {
+            if (product.Chain != null)
+            {
+                product.Chain.DoEffectChainLocked(targetProduct);
+            }
+
+            if (targetProduct.Chain != null)
+            {
+                targetProduct.Chain.DoEffectChainLocked(product);
+            }
+
+            return;
+        }
+
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
             mUseCombo = true;
             mIsUserEventLock = true;
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
-            product.Swipe(targetProduct, () => {
+            product.Swipe(targetProduct, () =>
+            {
                 if (isSameColor)
                 {
                     mIsUserEventLock = false;
@@ -374,6 +391,7 @@ public class InGameManager : MonoBehaviour
                     }));
                 }
             });
+            ToggleSwipChain(product, targetProduct);
         }
         else if (product.Skill != ProductSkill.Nothing || targetProduct.Skill != ProductSkill.Nothing)
         {
@@ -385,18 +403,36 @@ public class InGameManager : MonoBehaviour
                 mIsUserEventLock = false;
                 CastSkillProduct(product.Skill != ProductSkill.Nothing ? product : targetProduct);
             });
+            ToggleSwipChain(product, targetProduct);
         }
         else
         {
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
-            product.Swipe(targetProduct, () => {
+            product.Swipe(targetProduct, () =>
+            {
                 mIsUserEventLock = false;
             });
+            ToggleSwipChain(product, targetProduct);
         }
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Swipe, mSFXVolume);
         RemoveLimit();
+    }
+
+    void ToggleSwipChain(Product product, Product targetProduct)
+    {
+        if (product.Chain != null && product.Chain == targetProduct.Chain)
+        {
+            product.Chain.DestroyChain();
+        }
+        else
+        {
+            SwipChain chain = Instantiate(SwipChainPrefab, product.transform.position, Quaternion.identity, transform);
+            Vector3 dir = targetProduct.transform.position - product.transform.position;
+            chain.transform.right = dir.normalized;
+            chain.InitChain(product, targetProduct);
+        }
     }
 
     #region MatchingLogic

@@ -49,6 +49,7 @@ public class Product : MonoBehaviour
     public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
     public bool IsClosed { get { return false; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
+    public SwipChain Chain { get; set; } = null;
 
     public void AttachTo(Frame parentFrame)
     {
@@ -174,6 +175,8 @@ public class Product : MonoBehaviour
         else
         {
             Frame parent = Detach(Manager.transform);
+            if (Chain != null)
+                Chain.DestroyChain();
             Manager.ProductIDs.Remove(InstanceID);
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
                 Destroy(gameObject);
@@ -226,6 +229,8 @@ public class Product : MonoBehaviour
         transform.localScale = new Vector3(0.6f, 0.6f, 1);
         ParentFrame.CreateComboTextEffect(Combo, Color);
         Frame parent = Detach(Manager.transform);
+        if (Chain != null)
+            Chain.DestroyChain();
         WaterDropParticle.SetActive(true);
         Manager.ProductIDs.Remove(InstanceID);
         StartCoroutine(AnimateDestroy());
@@ -239,6 +244,8 @@ public class Product : MonoBehaviour
         transform.localPosition = new Vector3(0, 0, -1);
         transform.localScale = new Vector3(0.6f, 0.6f, 1);
         Detach(Manager.transform);
+        if (Chain != null)
+            Chain.DestroyChain();
         Manager.ProductIDs.Remove(InstanceID);
         Destroy(gameObject);
     }
@@ -263,6 +270,8 @@ public class Product : MonoBehaviour
         IsDestroying = true;
         Animation.Stop();
         Detach(Manager.transform);
+        if (Chain != null)
+            Chain.DestroyChain();
         Manager.ProductIDs.Remove(InstanceID);
         Destroy(gameObject);
     }
@@ -284,6 +293,9 @@ public class Product : MonoBehaviour
 
         if(ParentFrame != null)
             Detach(ParentFrame.VertFrames.transform);
+            
+        if (Chain != null)
+            Chain.DestroyChain();
 
         DropSpeed = 0;
         IsDropping = true;
@@ -306,6 +318,9 @@ public class Product : MonoBehaviour
     {
         if (ParentFrame != null)
             Detach(ParentFrame.VertFrames.transform);
+
+        if (Chain != null)
+            Chain.DestroyChain();
 
         IsDropping = true;
         AttachTo(frame);
