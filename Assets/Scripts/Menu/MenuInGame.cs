@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -20,7 +21,8 @@ public class MenuInGame : MonoBehaviour
     public TextMeshProUGUI TargetScoreText;
     public Image TargetType;
     public NumbersUI ComboNumber;
-    public ScoreBar ScoreBarObj;
+    public GameObject GoldBundleImage;
+    public TextMeshProUGUI GoldBundleText;
     public TextMeshProUGUI LevelCompleted;
     public TextMeshProUGUI LevelFailed;
     public Sprite ItemEmptyImage;
@@ -29,11 +31,14 @@ public class MenuInGame : MonoBehaviour
     public Button SkipButton;
     public Image LimitFG;
     public Image GoalFG;
+    public Image ScoreFG;
     public GameObject StarA = null;
     public GameObject StarB = null;
     public GameObject StarC = null;
 
     public GameObject EffectParent;
+
+    public int CurrentScore { get; private set; }
 
     private void Update()
     {
@@ -53,8 +58,8 @@ public class MenuInGame : MonoBehaviour
     }
     public static void PopUp(StageInfo info)
     {
-        Inst().InitUIState(info);
         Inst().gameObject.SetActive(true);
+        Inst().InitUIState(info);
     }
     public static void Hide()
     {
@@ -92,7 +97,12 @@ public class MenuInGame : MonoBehaviour
         }
         ComboNumber.Clear();
 
-        ScoreBarObj.Init(info.StarPoint);
+        // ScoreBarObj.Init(info.StarPoint);
+        Vector2 scoreSize = ScoreFG.rectTransform.sizeDelta;
+        scoreSize.x = 0;
+        ScoreFG.rectTransform.sizeDelta = scoreSize;
+        CurrentScore = 0;
+        GoldBundleText.text = "x0";
 
         PurchaseItemType[] items = MenuPlay.Inst().GetSelectedItems();
         for (int i = 0; i < ItemSlots.Length; ++i)
@@ -120,7 +130,7 @@ public class MenuInGame : MonoBehaviour
         };
         InGameManager.InstStage.EventScore = (score) =>
         {
-            ScoreBarObj.SetScore(ScoreBarObj.CurrentScore + score);
+            AddScore(score);
         };
         InGameManager.InstStage.EventFinishPre = (success) =>
         {
@@ -272,12 +282,12 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
-            string log = "[STAGE] " + "success," + mStageInfo.Num + "," + starCount + "," + ScoreBarObj.CurrentScore;
+            string log = "[STAGE] " + "success," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
             LOG.echo(log);
 
             SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuComplete.PopUp(mStageInfo.Num, starCount, ScoreBarObj.CurrentScore, isFirstClear, isFirstThreeStar);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, CurrentScore, isFirstClear, isFirstThreeStar);
             InGameManager.InstStage.CleanUpGame();
             Hide();
         }
@@ -318,6 +328,7 @@ public class MenuInGame : MonoBehaviour
 
             Vector2 size = GoalFG.rectTransform.sizeDelta;
             float goalRate = (float)currentScore / mStageInfo.GoalValue;
+            goalRate = Mathf.Clamp(goalRate, 0, 1);
             size.x = GoalFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * goalRate;
             GoalFG.rectTransform.sizeDelta = size;
         }
@@ -330,6 +341,7 @@ public class MenuInGame : MonoBehaviour
 
             Vector2 size = GoalFG.rectTransform.sizeDelta;
             float goalRate = (float)currentValue / mStageInfo.GoalValue;
+            goalRate = Mathf.Clamp(goalRate, 0, 1);
             size.x = GoalFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * goalRate;
             GoalFG.rectTransform.sizeDelta = size;
         }
@@ -429,6 +441,7 @@ public class MenuInGame : MonoBehaviour
     void UpdateMoveLimit(int remainMove)
     {
         float remainRate = remainMove / (float)mStageInfo.MoveLimit;
+        remainRate = Mathf.Clamp(remainRate, 0, 1);
         Limit.text = remainMove + " / " + mStageInfo.MoveLimit;
         Vector2 size = LimitFG.rectTransform.sizeDelta;
         size.x = LimitFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * remainRate;
@@ -441,11 +454,31 @@ public class MenuInGame : MonoBehaviour
         Limit.text = TimeToString(remainTimeSec);
 
         float remainRate = (float)remainTimeSec / mStageInfo.TimeLimit;
+        remainRate = Mathf.Clamp(remainRate, 0, 1);
         Vector2 size = LimitFG.rectTransform.sizeDelta;
         size.x = LimitFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * remainRate;
         LimitFG.rectTransform.sizeDelta = size;
 
         UpdateStarCountUI();
+    }
+
+    void AddScore(int score)
+    {
+        int goldBundleUnit = 100;
+        int prevGoldBundleCount = CurrentScore / goldBundleUnit;
+        CurrentScore += score;
+        int newGoldBundleCount = CurrentScore / goldBundleUnit;
+
+        if (newGoldBundleCount > prevGoldBundleCount)
+        {
+            GoldBundleImage.transform.DOScale(1.2f, 0.1f).From(1).SetLoops(2, LoopType.Yoyo);
+        }
+
+        int goldRemain = CurrentScore % goldBundleUnit;
+        float scoreBarRate = goldRemain / (float)goldBundleUnit;
+        float newWidth = ScoreFG.transform.parent.GetComponent<RectTransform>().sizeDelta.x * scoreBarRate;
+        ScoreFG.rectTransform.sizeDelta = new Vector2(newWidth, ScoreFG.rectTransform.sizeDelta.y);
+        GoldBundleText.text = "x" + newGoldBundleCount;
     }
 
 }
