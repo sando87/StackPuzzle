@@ -11,33 +11,78 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Image ScoreSubBar = null;
     [SerializeField] private Transform RootScoreArea = null;
     [SerializeField] private Image CurrentScoreBar = null;
+    [SerializeField] public Image HitPoint = null;
 
     public int CurrentScore { get; private set; } = 0;
+    public bool IsFlushable { get { return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval && CurrentScore >= UserSetting.ScorePerAttack; } }
 
     private Image mPrevSub = null;
+    private float mTouchedTime = 0;
 
     void Awake()
     {
         mPrevSub = CurrentScoreBar;
     }
 
+    public void Init()
+    {
+        CurrentScore = 0;
+        CurrentScoreBar.transform.SetParent(RootScoreArea);
+        CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
+        CurrentScoreBar.rectTransform.SetAnchoredWidth(0);
+
+        HitPoint.transform.SetParent(CurrentScoreBar.transform);
+        HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
+
+        mPrevSub = CurrentScoreBar;
+    }
+
     public void AddScore(int score)
     {
-        if (CurrentScore * score > 0)
+        int newScore = CurrentScore + score;
+        if(CurrentScore != 0 && newScore * CurrentScore <= 0)
         {
-            DoEffectAddScore(Mathf.Abs(score));
+            // 점수가 반대방향으로 전환될 때 예외처리
+            HitPoint.transform.SetParent(RootScoreArea);
+            if(CurrentScoreBar.transform.childCount > 0)
+            {
+                Destroy(CurrentScoreBar.transform.GetChild(0).gameObject);
+            }
+
+            float newWidth = Mathf.Abs(newScore);
+            CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
+            CurrentScoreBar.color = newScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+
+            HitPoint.transform.SetParent(CurrentScoreBar.transform);
+            HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+            HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+            HitPoint.rectTransform.SetAnchoredPosX(0);
+
+            mPrevSub = CurrentScoreBar;
         }
         else
         {
-            DoEffectSubScore(Mathf.Abs(score));
+            if (CurrentScore * score >= 0)
+            {
+                // 게이지가 증가해야 할때(양수에 더하거나 음수에서 뺄 때)
+                DoEffectAddScore(score);
+            }
+            else
+            {
+                // 게이지가 감소해야 할때(양수에서 빼거나 음수에서 더할 때)
+                DoEffectSubScore(score);
+            }
         }
 
         CurrentScore += score;
+        mTouchedTime = Time.time;
     }
 
-    public void DoEffectAddScore(float score)
+    void DoEffectAddScore(float score)
     {
-        float width = score;
+        float width = Mathf.Abs(score);
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Add";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -48,15 +93,32 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
 
+        HitPoint.transform.SetParent(newSubScoreBar.transform);
+        HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
+
         mPrevSub = newSubScoreBar;
         
-        newSubScoreBar.DOColor(Color.white, 5.5f).From(Color.green)
+        Color startColor = score > 0 ? new Color(0.7f, 1, 0.7f, 1) : new Color(1, 0.7f, 0.7f, 1);
+        Color endColor = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+        newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x + width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
+            CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
 
-            if (newSubScoreBar.transform.childCount > 0)
+            if (mPrevSub == newSubScoreBar)
+            {
+                HitPoint.transform.SetParent(CurrentScoreBar.transform);
+                HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+                HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+                HitPoint.rectTransform.SetAnchoredPosX(0);
+
+                mPrevSub = CurrentScoreBar;
+            }
+            else
             {
                 Transform childSubBar = newSubScoreBar.transform.GetChild(0);
                 childSubBar.SetParent(CurrentScoreBar.transform);
@@ -65,17 +127,13 @@ public class PVPScoreBar : MonoBehaviour
                 childRect.anchorMin = new Vector2(1, 0.5f);
                 childRect.anchorMax = new Vector2(1, 0.5f);
             }
-            else
-            {
-                mPrevSub = CurrentScoreBar;
-            }
 
             Destroy(newSubScoreBar.gameObject);
         });
     }
-    public void DoEffectSubScore(int score)
+    void DoEffectSubScore(int score)
     {
-        float width = score;
+        float width = Mathf.Abs(score);
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Sub";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -86,15 +144,32 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
 
+        HitPoint.transform.SetParent(newSubScoreBar.transform);
+        HitPoint.rectTransform.anchorMin = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
+
         mPrevSub = newSubScoreBar;
 
-        newSubScoreBar.DOColor(Color.white, 5.5f).From(Color.red)
+        Color startColor = score > 0 ? new Color(0, 1, 0, 1) : new Color(1, 0, 0, 1);
+        Color endColor = score > 0 ? new Color(1, 1, 1, 1) : new Color(1, 1, 1, 1);
+        newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x - width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
+            CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
 
-            if (newSubScoreBar.transform.childCount > 0)
+            if (mPrevSub == newSubScoreBar)
+            {
+                HitPoint.transform.SetParent(CurrentScoreBar.transform);
+                HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+                HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+                HitPoint.rectTransform.SetAnchoredPosX(0);
+
+                mPrevSub = CurrentScoreBar;
+            }
+            else
             {
                 Transform childSubBar = newSubScoreBar.transform.GetChild(0);
                 childSubBar.SetParent(CurrentScoreBar.transform);
@@ -103,16 +178,15 @@ public class PVPScoreBar : MonoBehaviour
                 childRect.anchorMin = new Vector2(1, 0.5f);
                 childRect.anchorMax = new Vector2(1, 0.5f);
             }
-            else
-            {
-                mPrevSub = CurrentScoreBar;
-            }
 
             Destroy(newSubScoreBar.gameObject);
         });
     }
-    public void DoFlush(int score)
+    public int DoFlush(int _score)
     {
+        mTouchedTime = Time.time;
+
+        int score = Mathf.Min(_score, CurrentScore);
         float width = score;
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
@@ -134,9 +208,7 @@ public class PVPScoreBar : MonoBehaviour
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
             Destroy(newSubScoreBar.gameObject);
         });
+
+        return score;
     }
-
-
-
-
 }

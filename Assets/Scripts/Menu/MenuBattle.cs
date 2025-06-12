@@ -94,7 +94,6 @@ public class MenuBattle : MonoBehaviour
         //PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
         //OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
-
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
         for(int i = 0; i < 3; ++i)
         {

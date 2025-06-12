@@ -50,6 +50,7 @@ public class InGameManager : MonoBehaviour
     public AttackPoints AttackPointFrame;
     public GameObject AttackBullet;
     public GameObject ScoreTextDest;
+    public PVPScoreBar PVPScoreBar;
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -251,9 +252,10 @@ public class InGameManager : MonoBehaviour
         InitFrameBorders();
         InitDropGroupFrames();
 
-        AttackPointFrame.ResetPoints();
-        Vector3 rightTopPosition = mFrames[CountX - 1, CountY - 1].transform.position + new Vector3(0, GridSize, 0);
-        AttackPointFrame.transform.position = rightTopPosition;
+        // AttackPointFrame.ResetPoints();
+        // Vector3 rightTopPosition = mFrames[CountX - 1, CountY - 1].transform.position + new Vector3(0, GridSize, 0);
+        // AttackPointFrame.transform.position = rightTopPosition;
+        PVPScoreBar.Init();
     }
     public void InitProducts()
     {
@@ -545,7 +547,8 @@ public class InGameManager : MonoBehaviour
 
     private void AcquireScore(int score, Vector3 position)
     {
-        DoAttack(Billboard.CurrentScore, Billboard.CurrentScore + score, position);
+        // DoAttack(Billboard.CurrentScore, Billboard.CurrentScore + score, position);
+        AttackNew(score, position);
 
         Billboard.CurrentScore += score;
 
@@ -1448,10 +1451,7 @@ public class InGameManager : MonoBehaviour
 
         StartCoroutine(DestroyProductDelay(validProducts, delay, false, mPVPTimerCounter));
 
-        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
-        int preAttackCount = Billboard.CurrentScore / spa;
-        int curAttackCount = (Billboard.CurrentScore + addedScore) / spa;
-        Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
+        AttackNew(addedScore, validProducts[0].transform.position);
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += validProducts.Length;
@@ -1515,10 +1515,11 @@ public class InGameManager : MonoBehaviour
 
         StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill, mPVPTimerCounter));
 
-        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
-        int preAttackCount = Billboard.CurrentScore / spa;
-        int curAttackCount = (Billboard.CurrentScore + addedScore) / spa;
-        Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
+        // int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
+        // int preAttackCount = Billboard.CurrentScore / spa;
+        // int curAttackCount = (Billboard.CurrentScore + addedScore) / spa;
+        // Attack(curAttackCount - preAttackCount, validProducts[0].transform.position);
+        AttackNew(addedScore, validProducts[0].transform.position);
 
         Billboard.CurrentScore += addedScore;
         Billboard.DestroyCount += validProducts.Length;
@@ -2597,6 +2598,39 @@ public class InGameManager : MonoBehaviour
         });
     }
 
+    private void AttackNew(int score, Vector3 fromPos)
+    {
+        if (FieldType == GameFieldType.Stage)
+            return;
+        else if (FieldType == GameFieldType.pvpPlayer)
+        {
+            fromPos.z -= 1;
+
+            GameObject projectileEffect = Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+
+            StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
+            {
+                PVPScoreBar.AddScore(score);
+            }));
+        }
+        else if (FieldType == GameFieldType.pvpOpponent)
+        {
+            fromPos.z -= 1;
+
+            GameObject projectileEffect = Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+
+            StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
+            {
+                PVPScoreBar.AddScore(-score);
+            }));
+        }
+    }
     private void Attack(int count, Vector3 fromPos)
     {
         if (count <= 0)
@@ -2650,30 +2684,46 @@ public class InGameManager : MonoBehaviour
             }));
         }
     }
-    IEnumerator AnimateThrowOver(GameObject obj, Action action = null)
+    IEnumerator AnimateAttackNew(GameObject obj, Transform destTr, Action EventEnd)
     {
-        float time = 0;
-        float duration = 1.0f;
-        Vector3 startPos = obj.transform.position;
-        Vector3 destPos = AttackPointFrame.transform.position;
-        Vector3 dir = destPos - startPos;
-        Vector3 offset = Vector3.zero;
-        Vector3 axisZ = new Vector3(0, 0, 1);
-        float slopeY = -dir.y / (duration * duration);
-        float slopeX = -dir.x / (duration * duration);
-        while (time < duration)
-        {
-            float nowT = time - duration;
-            offset.x = slopeX * nowT * nowT + dir.x;
-            offset.y = slopeY * nowT * nowT + dir.y;
-            obj.transform.position = startPos + offset;
-            obj.transform.Rotate(axisZ, (offset - dir).magnitude);
+        yield return null;
+        float dragFactor = 0.015f;
+        float destFactor = 0;
 
-            time += Time.deltaTime;
+        float rad = UnityEngine.Random.Range(195, 345) * Mathf.Deg2Rad;
+        if (obj.transform.position.y > destTr.position.y)
+            rad += Mathf.PI;
+
+        Vector2 force = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+        float rotSpeed = UnityEngine.Random.Range(35, 45);
+
+        while (true)
+        {
+            Vector3 curStartSpeed = force * rotSpeed;
+            Vector3 dir = destTr.position - obj.transform.position;
+            dir.z = 0;
+            dir.Normalize();
+            Vector3 curSpeed = curStartSpeed + dir * destFactor;
+            obj.transform.position += curSpeed * Time.deltaTime;
+            obj.transform.Rotate(Vector3.forward, rotSpeed * 5.0f);
+
+            float nextSpeed = rotSpeed - (rotSpeed * rotSpeed * dragFactor);
+            nextSpeed = Mathf.Max(0, nextSpeed);
+            rotSpeed = nextSpeed;
+
+            Vector3 afterDir = destTr.position - obj.transform.position;
+            afterDir.z = 0;
+            afterDir.Normalize();
+            if (Vector3.Dot(afterDir, dir) < 0)
+            {
+                EventEnd?.Invoke();
+                Destroy(obj);
+                break;
+            }
+
+            destFactor += 0.7f;
             yield return null;
         }
-
-        action?.Invoke();
     }
     IEnumerator AnimateAttack(GameObject[] objs, Vector3 dest, Action<GameObject> EventEndEach)
     {
@@ -2734,11 +2784,12 @@ public class InGameManager : MonoBehaviour
     {
         while (true)
         {
-            if (AttackPointFrame.Points > 0
-                && Time.realtimeSinceStartup > AttackPointFrame.TouchedTime + UserSetting.ChocoFlushInterval
-                && IsIdle)
+            if (PVPScoreBar.IsFlushable && IsIdle)
             {
-                int point = AttackPointFrame.Flush(UserSetting.FlushCount);
+                int point = PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
+                point = Mathf.Min(point, UserSetting.FlushMaxCount);
+
+                PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
 
                 List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
@@ -3544,7 +3595,8 @@ public class InGameManager : MonoBehaviour
         EventFinish = null;
         EventReduceLimit = null;
 
-        AttackPointFrame.ResetPoints();
+        //AttackPointFrame.ResetPoints();
+        PVPScoreBar.Init();
         mIsFinished = false;
         mIsItemEffect = false;
         mIsDropping = false;
@@ -4306,9 +4358,10 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && AttackPointFrame.Points >= body.ArrayCount)
+                if (IsIdle && IsAllProductIdle() && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
                 {
-                    int point = AttackPointFrame.Flush(body.ArrayCount);
+                    int point = body.ArrayCount;
+                    PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
                     List<Product> products = GetNextFlushTargets(point);
                     Product[] rets = products.ToArray();
                     if(body.ArrayCount != rets.Length)
