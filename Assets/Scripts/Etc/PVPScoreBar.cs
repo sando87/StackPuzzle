@@ -12,6 +12,9 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Transform RootScoreArea = null;
     [SerializeField] private Image CurrentScoreBar = null;
     [SerializeField] public Image HitPoint = null;
+    [SerializeField] private Transform[] SubGroup = null;
+    [SerializeField] private Sprite[] FlushImages = null;
+    [SerializeField] private Image FlushImagePrafab = null;
 
     public int CurrentScore { get; private set; } = 0;
     public bool IsFlushable 
@@ -47,11 +50,77 @@ public class PVPScoreBar : MonoBehaviour
 
         mPrevSub = CurrentScoreBar;
         mIsTweening = 0;
+
+        InitFlushImageObjects();
+    }
+
+    void InitFlushImageObjects()
+    {
+        if(SubGroup[0].childCount > 0)
+            return;
+
+        int maxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
+        float stepWidth = UserSetting.ScorePerAttack * UserSetting.WidthPerScore;
+        int step = 1;
+
+        for (int i = step; i <= maxAttackCount; i += step)
+        {
+            if(i % 4 == 0) continue;
+
+            float offsetPosX = i * stepWidth;
+            Image image = Instantiate(FlushImagePrafab, SubGroup[0]);
+            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.sprite = FlushImages[0];
+        }
+
+        step = 4;
+        for (int i = step; i <= maxAttackCount; i += step)
+        {
+            if (i % 16 == 0) continue;
+
+            float offsetPosX = i * stepWidth;
+            Image image = Instantiate(FlushImagePrafab, SubGroup[1]);
+            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.sprite = FlushImages[1];
+        }
+
+        step = 16;
+        for (int i = step; i <= maxAttackCount; i += step)
+        {
+            if (i % 64 == 0) continue;
+
+            float offsetPosX = i * stepWidth;
+            Image image = Instantiate(FlushImagePrafab, SubGroup[2]);
+            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.sprite = FlushImages[2];
+        }
+
+        step = 64;
+        for (int i = step; i <= maxAttackCount; i += step)
+        {
+            if (i % 256 == 0) continue;
+
+            float offsetPosX = i * stepWidth;
+            Image image = Instantiate(FlushImagePrafab, SubGroup[3]);
+            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.sprite = FlushImages[3];
+        }
+
+        step = 256;
+        for (int i = step; i <= maxAttackCount; i += step)
+        {
+            if (i % 1024 == 0) continue;
+
+            float offsetPosX = i * stepWidth;
+            Image image = Instantiate(FlushImagePrafab, SubGroup[4]);
+            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.sprite = FlushImages[4];
+        }
     }
 
     void UpdateCurrentScoreBar(int score)
     {
-        float newWidth = Mathf.Abs(score);
+        float newWidth = Mathf.Abs(score) * UserSetting.WidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
         CurrentScoreBar.color = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
     }
@@ -98,7 +167,7 @@ public class PVPScoreBar : MonoBehaviour
 
     void DoEffectAddScore(float score)
     {
-        float width = Mathf.Abs(score);
+        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Add";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -154,7 +223,7 @@ public class PVPScoreBar : MonoBehaviour
     }
     void DoEffectSubScore(int score)
     {
-        float width = Mathf.Abs(score);
+        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Sub";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -213,7 +282,7 @@ public class PVPScoreBar : MonoBehaviour
         if(Mathf.Abs(score) > Mathf.Abs(CurrentScore))
             return 0;
         
-        float width = Mathf.Abs(score);
+        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
         newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
