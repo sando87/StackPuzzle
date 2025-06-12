@@ -14,10 +14,19 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] public Image HitPoint = null;
 
     public int CurrentScore { get; private set; } = 0;
-    public bool IsFlushable { get { return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval && CurrentScore >= UserSetting.ScorePerAttack; } }
+    public bool IsFlushable 
+    { 
+        get 
+        { 
+            return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval 
+                    && Mathf.Abs(CurrentScore) >= UserSetting.ScorePerAttack 
+                    && mIsTweening == 0; 
+        }
+    }
 
     private Image mPrevSub = null;
     private float mTouchedTime = 0;
+    private int mIsTweening = 0;
 
     void Awake()
     {
@@ -37,6 +46,14 @@ public class PVPScoreBar : MonoBehaviour
         HitPoint.rectTransform.SetAnchoredPosX(0);
 
         mPrevSub = CurrentScoreBar;
+        mIsTweening = 0;
+    }
+
+    void UpdateCurrentScoreBar(int score)
+    {
+        float newWidth = Mathf.Abs(score);
+        CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
+        CurrentScoreBar.color = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
     }
 
     public void AddScore(int score)
@@ -51,9 +68,7 @@ public class PVPScoreBar : MonoBehaviour
                 Destroy(CurrentScoreBar.transform.GetChild(0).gameObject);
             }
 
-            float newWidth = Mathf.Abs(newScore);
-            CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-            CurrentScoreBar.color = newScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+            UpdateCurrentScoreBar(newScore);
 
             HitPoint.transform.SetParent(CurrentScoreBar.transform);
             HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
@@ -61,6 +76,7 @@ public class PVPScoreBar : MonoBehaviour
             HitPoint.rectTransform.SetAnchoredPosX(0);
 
             mPrevSub = CurrentScoreBar;
+            mIsTweening = 0;
         }
         else
         {
@@ -99,12 +115,15 @@ public class PVPScoreBar : MonoBehaviour
         HitPoint.rectTransform.SetAnchoredPosX(0);
 
         mPrevSub = newSubScoreBar;
-        
+
+        mIsTweening++;
         Color startColor = score > 0 ? new Color(0.7f, 1, 0.7f, 1) : new Color(1, 0.7f, 0.7f, 1);
         Color endColor = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
         newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
+            mIsTweening--;
+            mTouchedTime = Time.time;
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x + width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
             CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
@@ -117,6 +136,8 @@ public class PVPScoreBar : MonoBehaviour
                 HitPoint.rectTransform.SetAnchoredPosX(0);
 
                 mPrevSub = CurrentScoreBar;
+                mIsTweening = 0;
+                UpdateCurrentScoreBar(CurrentScore);
             }
             else
             {
@@ -151,11 +172,14 @@ public class PVPScoreBar : MonoBehaviour
 
         mPrevSub = newSubScoreBar;
 
+        mIsTweening++;
         Color startColor = score > 0 ? new Color(0, 1, 0, 1) : new Color(1, 0, 0, 1);
         Color endColor = score > 0 ? new Color(1, 1, 1, 1) : new Color(1, 1, 1, 1);
         newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
+            mIsTweening--;
+            mTouchedTime = Time.time;
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x - width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
             CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
@@ -168,6 +192,8 @@ public class PVPScoreBar : MonoBehaviour
                 HitPoint.rectTransform.SetAnchoredPosX(0);
 
                 mPrevSub = CurrentScoreBar;
+                mIsTweening = 0;
+                UpdateCurrentScoreBar(CurrentScore);
             }
             else
             {
@@ -182,12 +208,12 @@ public class PVPScoreBar : MonoBehaviour
             Destroy(newSubScoreBar.gameObject);
         });
     }
-    public int DoFlush(int _score)
+    public int DoFlush(int score)
     {
-        mTouchedTime = Time.time;
-
-        int score = Mathf.Min(_score, CurrentScore);
-        float width = score;
+        if(Mathf.Abs(score) > Mathf.Abs(CurrentScore))
+            return 0;
+        
+        float width = Mathf.Abs(score);
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
         newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
@@ -201,9 +227,14 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.rectTransform.SetAnchoredPosX(width);
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
 
-        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 5.5f)
+        CurrentScore = CurrentScore > 0 ? CurrentScore - score : CurrentScore + score;
+
+        mIsTweening = 1;
+        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.InQuad)
         .OnComplete(() =>
         {
+            mIsTweening = 0;
+            mTouchedTime = Time.time;
             CurrentScoreBar.transform.SetParent(RootScoreArea);
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
             Destroy(newSubScoreBar.gameObject);

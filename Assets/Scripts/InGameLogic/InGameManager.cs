@@ -2784,9 +2784,9 @@ public class InGameManager : MonoBehaviour
     {
         while (true)
         {
-            if (PVPScoreBar.IsFlushable && IsIdle)
+            if (IsIdle && PVPScoreBar.IsFlushable && PVPScoreBar.CurrentScore < 0)
             {
-                int point = PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
+                int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
                 point = Mathf.Min(point, UserSetting.FlushMaxCount);
 
                 PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
