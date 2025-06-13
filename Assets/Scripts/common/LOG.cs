@@ -17,7 +17,6 @@ class LOG
     static public Func<byte[], bool> LogBytesWriterDB = (data) => { return false; } ;
 
     static private Thread mThread = null;
-    static private bool mRunFlag = false;
     static private string mFileLogPath = null;
     static private ConcurrentQueue<string> mQueue = new ConcurrentQueue<string>();
 
@@ -30,10 +29,6 @@ class LOG
         DirectoryInfo di = new DirectoryInfo(mFileLogPath);
         if (di.Exists == false)
             di.Create();
-
-        //mRunFlag = true;
-        //mThread = new Thread(new ThreadStart(Run));
-        //mThread.Start();
     }
     static public void UnInitialize()
     {
@@ -41,15 +36,6 @@ class LOG
         if (logs.Length > 0)
         {
             WriteLogsToFile(logs);
-        }
-    }
-    static void Run()
-    {
-        while(mRunFlag)
-        {
-            Thread.Sleep(1000);
-
-            ProcessToFlushLog();
         }
     }
     public static void ProcessToFlushLog()

@@ -3,58 +3,165 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Android;
+using System;
 
 public class MenuTitle : MonoBehaviour
 {
-    private const float mMaxTimeout = 3;
+
+    private bool mIsTouched = false;
 
     public Slider LoadingBar;
+    public TextMeshProUGUI LoadingText;
     public TextMeshProUGUI StartText;
     public GameObject StartButton;
-    public GameObject NetworkObject;
+    public Image ForegroundImage;
+
+    [SerializeField] LogWriter _LogWriter;
+    [SerializeField] NetClientApp _NetworkObject;
+    [SerializeField] LogToGoogleForms _LogToGoogleForms;
+    [SerializeField] GameObject _SoundManager;
+    [SerializeField] GameObject _ObjectPooling;
+    [SerializeField] GameObject _AutoBotSystem;
+    [SerializeField] GameObject _GoogleAd;
+    [SerializeField] GameObject _Tutorial;
 
     private void Awake()
     {
+        StartCoroutine(CoIntializer());
+    }
+
+    IEnumerator CoIntializer()
+    {
+        LoadingBar.value = 0;
+        yield return StartCoroutine(CoFadeInOut(true, 0.5f));
+        StartCoroutine(nameof(Loading));
+        LoadingText.text = "0%";
+
 #if PLATFORM_ANDROID
         if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
             Permission.RequestUserPermission(Permission.ExternalStorageRead);
 #endif
 
-        Consolation.ConsoleInGame cig = FindObjectOfType<Consolation.ConsoleInGame>();
-        if (cig != null)
-            cig.Init();
+        // 로그 - 로컬파일
+        InitLogSystem();
+        LoadingText.text = "5%";
+        yield return new WaitForSeconds(1.2f);
+        LoadingText.text = "10%";
 
-        LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
+        // 로컬 파일 IO
+        UserSetting.Initialize();
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "15%";
 
-        Application.targetFrameRate = 30; //FPS 30프레임 고정
-        Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
+        Purchases.Initialize();
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "20%";
 
-        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
-
-        if (UserSetting.IsTermsAgreement)
-        {
-            InitOnAwake();
-        }
-        else
+        // 약정 동의
+        if (!UserSetting.IsTermsAgreement)
         {
             MenuTermsAndConditions.PopUp(() =>
             {
                 LOG.echo("TermsAgreed");
-                InitOnAwake();
+                UserSetting.IsTermsAgreement = true;
             });
+
+            yield return new WaitUntil(() => UserSetting.IsTermsAgreement);
         }
+
+        // 네트워크매니저
+        _NetworkObject.EventConnection = OnNetConnected;
+        _NetworkObject.gameObject.SetActive(true);
+        yield return new WaitUntil(() => !_NetworkObject.IsTryingConnect);
+        LoadingText.text = "45%";
+
+        // 로그 - 구글폼
+        _LogToGoogleForms.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "50%";
+
+        // 사운드매니저
+        _SoundManager.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicMap);
+        LoadingText.text = "60%";
+
+        // 오브젝트풀링
+        _ObjectPooling.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "70%";
+
+        // 자동봇시스템
+        _AutoBotSystem.SetActive(true);
+        UserSetting.ConfigAutoBot();
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "80%";
+
+        // 구글광고
+        _GoogleAd.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "90%";
+
+        // 튜토리얼
+        _Tutorial.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "95%";
+
+        // 기타 시스템 설정 초기화
+        Application.targetFrameRate = 30; //FPS 30프레임 고정
+        Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "100%";
+
+        mIsTouched = false;
+        ReadyAndWaitForTouch();
+        yield return new WaitUntil(() => mIsTouched);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        gameObject.SetActive(false);
+        MenuStages.PopUp();
     }
 
-    private void InitOnAwake()
-    {
-        LOG.echo("Start App");
-        NetworkObject.SetActive(true);
-        NetClientApp.GetInstance().EventConnection = OnNetConnected;
-        InitLogSystem();
-        UserSetting.Initialize();
-        Purchases.Initialize();
 
-        StartCoroutine("Loading");
+
+    IEnumerator Loading()
+    {
+        float time = 0;
+        while (true)
+        {
+            float rate = time - (int)time;
+            LoadingBar.value = rate;
+            yield return null;
+            time += Time.deltaTime;
+        }
+    }
+    private void ReadyAndWaitForTouch()
+    {
+        StopCoroutine(nameof(Loading));
+        LoadingBar.gameObject.SetActive(false);
+        StartText.gameObject.SetActive(true);
+        StartButton.gameObject.SetActive(true);
+        StartCoroutine(FlinkerStartText());
+    }
+
+    public void OnTouchScreen()
+    {
+        mIsTouched = true;
+    }
+
+    IEnumerator CoFadeInOut(bool isFadeIn, float duration = 1f)
+    {
+        float time = 0;
+        while (time < duration)
+        {
+            if(isFadeIn)
+                ForegroundImage.color = new Color(0, 0, 0, (duration - time) / duration);
+            else
+                ForegroundImage.color = new Color(0, 0, 0, time / duration);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+        ForegroundImage.color = new Color(0, 0, 0, isFadeIn ? 0 : 1);
     }
 
     public void OnNetConnected()
@@ -64,51 +171,15 @@ public class MenuTitle : MonoBehaviour
             UserSetting.AddNewUserInfoToServer();
         else
             UserSetting.LoadUserInfoFromServer();
-        
-        if(gameObject.activeInHierarchy)
-        {
-            Ready();
-        }
+
+        LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
     }
 
-    private void Ready()
-    {
-        StopCoroutine("Loading");
-        LoadingBar.gameObject.SetActive(false);
-        StartText.gameObject.SetActive(true);
-        StartButton.gameObject.SetActive(true);
-        StartCoroutine(FlinkerStartText());
-    }
-
-    IEnumerator Loading()
-    {
-        float time = 0;
-        TextMeshProUGUI loadingText = LoadingBar.GetComponentInChildren<TextMeshProUGUI>();
-        while (time < mMaxTimeout)
-        {
-            float rate = time / mMaxTimeout;
-            LoadingBar.value = rate;
-            int percent = (int)(rate * 100.0f);
-            loadingText.text = percent.ToString() + "%";
-            yield return null;
-            time += Time.deltaTime;
-        }
-        LoadingBar.value = 1.0f;
-        loadingText.text = "100%";
-
-        Ready();
-    }
-
-    public void OnTouchScreen()
-    {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        gameObject.SetActive(false);
-        MenuStages.PopUp();
-    }
 
     private void InitLogSystem()
     {
-        LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
+        LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
+        // LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
         LOG.LogStringWriterDB = (msg) => {
             LogInfo info = new LogInfo();
             info.userPk = UserSetting.UserPK;
@@ -122,6 +193,7 @@ public class MenuTitle : MonoBehaviour
             return NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
         };
         LOG.Initialize(Application.persistentDataPath);
+        _LogWriter.gameObject.SetActive(true);
     }
 
 

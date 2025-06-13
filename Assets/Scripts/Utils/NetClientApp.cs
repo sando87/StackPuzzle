@@ -28,6 +28,7 @@ public class NetClientApp : MonoBehaviour
     public UnityEventClick EventMessage = null;
     public Action EventConnection = null;
 
+    public bool IsTryingConnect { get { return mIsTryingConnect; } }
 
     static public NetClientApp GetInstance()
     {
@@ -149,6 +150,7 @@ public class NetClientApp : MonoBehaviour
     private IEnumerator WaitTimeout(float timeout)
     {
         yield return new WaitForSeconds(timeout);
+        mIsTryingConnect = false;
         DisConnect();
     }
     private void DisConnect()
@@ -265,7 +267,10 @@ public class NetClientApp : MonoBehaviour
             else
             {
                 if (IsDisconnected())
+                {
                     ConnectASync();
+                    yield return new WaitUntil(() => !mIsTryingConnect);
+                }
             }
             
             yield return new WaitForSeconds(1);

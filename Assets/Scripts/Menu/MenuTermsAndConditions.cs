@@ -50,7 +50,6 @@ public class MenuTermsAndConditions : MonoBehaviour
 
     public void OnAgree()
     {
-        UserSetting.IsTermsAgreement = true;
         EventAgree?.Invoke();
         gameObject.SetActive(false);
     }
