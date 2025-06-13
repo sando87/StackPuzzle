@@ -21,7 +21,6 @@ public class UserSetting
     public const float SkillDestroyInterval = 0.2f; //1단계 스킬블럭들 터지는 시간
     public const float ChocoFlushInterval = 1.5f;
     public const int MatchCount = 3;
-    public const float WidthPerScore = 5.0f;
     public const int ScorePerAttack = 50;
     public const int FlushMaxCount = 20;
     public const int scorePerProduct = 1;

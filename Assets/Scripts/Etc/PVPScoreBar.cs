@@ -12,6 +12,7 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Transform RootScoreArea = null;
     [SerializeField] private Image CurrentScoreBar = null;
     [SerializeField] public Image HitPoint = null;
+    [SerializeField] private Image flushImageRoot = null;
     [SerializeField] private Transform[] SubGroup = null;
     [SerializeField] private Sprite[] FlushImages = null;
     [SerializeField] private Image FlushImagePrafab = null;
@@ -30,10 +31,15 @@ public class PVPScoreBar : MonoBehaviour
     private Image mPrevSub = null;
     private float mTouchedTime = 0;
     private int mIsTweening = 0;
+    private int mZoomIndex = 0;
+    private float mWidthPerScore = 4.0f; // 스코어 1점을 UI상 표현하는 너비
+    private int mMaxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
+    private int MaxZoomCount { get { return SubGroup.Length - 1; } }
 
     void Awake()
     {
         mPrevSub = CurrentScoreBar;
+        StartCoroutine(CoZoomInOut());
     }
 
     public void Init()
@@ -50,7 +56,11 @@ public class PVPScoreBar : MonoBehaviour
 
         mPrevSub = CurrentScoreBar;
         mIsTweening = 0;
+        mZoomIndex = 0;
+        RootScoreArea.DOKill();
+        RootScoreArea.localScale = Vector3.one;
 
+        InitZoomUISet();
         InitFlushImageObjects();
     }
 
@@ -59,68 +69,135 @@ public class PVPScoreBar : MonoBehaviour
         if(SubGroup[0].childCount > 0)
             return;
 
-        int maxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
-        float stepWidth = UserSetting.ScorePerAttack * UserSetting.WidthPerScore;
+        float stepWidth = UserSetting.ScorePerAttack * mWidthPerScore;
+        float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
+        flushImageRoot.rectTransform.SetAnchoredWidth(totalWidth);
         int step = 1;
 
-        for (int i = step; i <= maxAttackCount; i += step)
+        for (int i = step; i <= mMaxAttackCount; i += step)
         {
             if(i % 4 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[0]);
-            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[0];
         }
 
         step = 4;
-        for (int i = step; i <= maxAttackCount; i += step)
+        for (int i = step; i <= mMaxAttackCount; i += step)
         {
             if (i % 16 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[1]);
-            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[1];
         }
 
         step = 16;
-        for (int i = step; i <= maxAttackCount; i += step)
+        for (int i = step; i <= mMaxAttackCount; i += step)
         {
             if (i % 64 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[2]);
-            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[2];
         }
 
         step = 64;
-        for (int i = step; i <= maxAttackCount; i += step)
+        for (int i = step; i <= mMaxAttackCount; i += step)
         {
             if (i % 256 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[3]);
-            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[3];
         }
 
         step = 256;
-        for (int i = step; i <= maxAttackCount; i += step)
+        for (int i = step; i <= mMaxAttackCount; i += step)
         {
             if (i % 1024 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[4]);
-            image.rectTransform.SetAnchoredPosX(offsetPosX);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[4];
         }
     }
 
+
+    void InitZoomUISet()
+    {
+        mZoomIndex = 0;
+        float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
+        Vector2 sizeDelta = flushImageRoot.rectTransform.sizeDelta;
+        flushImageRoot.rectTransform.DOKill();
+        CurrentScoreBar.transform.DOKill();
+        flushImageRoot.rectTransform.sizeDelta = new Vector2(totalWidth, sizeDelta.y);
+        CurrentScoreBar.transform.localScale = Vector3.one;
+        foreach (Transform sub in SubGroup)
+        {
+            sub.gameObject.SetActive(true);
+        }
+    }
+    IEnumerator CoZoomInOut()
+    {
+        while (true)
+        {
+            int nextZoomIndex = TryZoomInOut(mZoomIndex, 0.5f);
+            if (nextZoomIndex != mZoomIndex)
+            {
+                mZoomIndex = nextZoomIndex;
+                yield return new WaitForSeconds(0.5f);
+            }
+            yield return null;
+        }
+    }
+
+    // 현재 스코어가 일정 수준 이상 또는 이하이면 UI 스코어Bar를 줌인 또는 줌아웃한다
+    // 줌인/아웃이 수행되면 다음 줌레벨을 반환하고 그렇지 않으면 현재 줌레벨을 반환한다
+    int TryZoomInOut(int currentZoomIndex, float zommingDuration)
+    {
+        float zoomingTriggerRate = 0.2f;
+        Vector2 sizeDelta = flushImageRoot.rectTransform.sizeDelta;
+        float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
+        float scorePerBar = 50 * Mathf.Pow(4, currentZoomIndex + 1);
+        if (scorePerBar * (1f - zoomingTriggerRate) < Mathf.Abs(CurrentScore) && currentZoomIndex < MaxZoomCount)
+        {
+            float pow = Mathf.Pow(4, currentZoomIndex + 1);
+            CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
+            flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
+            .OnComplete(() => SubGroup[currentZoomIndex].gameObject.SetActive(false));
+            return currentZoomIndex + 1;
+        }
+        else if (scorePerBar * (zoomingTriggerRate * 0.5f) > Mathf.Abs(CurrentScore) && currentZoomIndex > 0)
+        {
+            float pow = Mathf.Pow(4, currentZoomIndex - 1);
+            CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
+            flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
+            .OnComplete(() => SubGroup[currentZoomIndex - 1].gameObject.SetActive(true));
+            return currentZoomIndex - 1;
+        }
+        return currentZoomIndex;
+    }
+
     void UpdateCurrentScoreBar(int score)
     {
-        float newWidth = Mathf.Abs(score) * UserSetting.WidthPerScore;
+        float newWidth = Mathf.Abs(score) * mWidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
         CurrentScoreBar.color = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
     }
@@ -167,7 +244,7 @@ public class PVPScoreBar : MonoBehaviour
 
     void DoEffectAddScore(float score)
     {
-        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
+        float width = Mathf.Abs(score) * mWidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Add";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -223,7 +300,7 @@ public class PVPScoreBar : MonoBehaviour
     }
     void DoEffectSubScore(int score)
     {
-        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
+        float width = Mathf.Abs(score) * mWidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
         newSubScoreBar.name = "Sub";
         bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
@@ -282,7 +359,7 @@ public class PVPScoreBar : MonoBehaviour
         if(Mathf.Abs(score) > Mathf.Abs(CurrentScore))
             return 0;
         
-        float width = Mathf.Abs(score) * UserSetting.WidthPerScore;
+        float width = Mathf.Abs(score) * mWidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
         newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
@@ -306,6 +383,7 @@ public class PVPScoreBar : MonoBehaviour
             mTouchedTime = Time.time;
             CurrentScoreBar.transform.SetParent(RootScoreArea);
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
+            CurrentScoreBar.transform.SetAsFirstSibling();
             Destroy(newSubScoreBar.gameObject);
         });
 
