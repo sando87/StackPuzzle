@@ -11,6 +11,7 @@ public class UserSetting
 {
 
     #region Game System Config Values
+    public const int GameVersion = 1;
     public const int NameLengthMin = 3;
     public const int StageTotalCount = 100;
     public const float SameSkillInterval = 0.3f; //SameSkill2 매칭 간격
@@ -232,6 +233,7 @@ class UserSettingInfo
 {
     private const string KeyVersion = "usi2";
 
+    [SerializeField] private int mVersion = UserSetting.GameVersion;
     [SerializeField] private bool mIsTermsAgreement = false;
     [SerializeField] private Int64 mFirstLaunchDate = 0;
     [SerializeField] private MatchingLevel mMatchLevel = MatchingLevel.Bronze;
@@ -244,6 +246,7 @@ class UserSettingInfo
 
     public UserSettingInfo()
     {
+        mVersion = UserSetting.GameVersion;
         mIsTermsAgreement = false;
         mFirstLaunchDate = DateTime.Now.Ticks;
         mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
