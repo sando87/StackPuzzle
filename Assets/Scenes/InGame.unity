@@ -72490,7 +72490,7 @@ MonoBehaviour:
   AttackBullet: {fileID: 5081829746968103039, guid: f7051f857a854084091d9873b5be7663,
     type: 3}
   ScoreTextDest: {fileID: 370309612}
-  PVPScoreBar: {fileID: 0}
+  PVPScoreBar: {fileID: 471867519}
 --- !u!95 &1050245874
 Animator:
   serializedVersion: 5
