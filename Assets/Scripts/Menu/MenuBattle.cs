@@ -246,7 +246,7 @@ public class MenuBattle : MonoBehaviour
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.MakeCombo:
+            case PurchaseItemType.KeepCombo:
                 {
                     bool ret = InGameManager.InstPVP_Player.UseItemMatch(btn.transform.position);
                     if (ret)
@@ -302,7 +302,7 @@ public class MenuBattle : MonoBehaviour
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstPVP_Opponent.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.MakeCombo:
+            case PurchaseItemType.KeepCombo:
                 {
                     bool ret = InGameManager.InstPVP_Opponent.UseItemMatch(btn.transform.position);
                     if (ret)

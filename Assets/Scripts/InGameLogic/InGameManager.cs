@@ -42,6 +42,7 @@ public class InGameManager : MonoBehaviour
     public GameObject HammerPrefab;
     public GameObject HammerHitPrefab;
     public SwipChain SwipChainPrefab;
+    public KeepComboNum KeepComboPrefab;
 
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
@@ -312,7 +313,6 @@ public class InGameManager : MonoBehaviour
         if(pro.Skill != ProductSkill.Nothing)
         {
             Network_Click(pro);
-            mUseCombo = true;
             RemoveLimit();
             CastSkillProduct(pro);
             //DestroyProducts(new Product[] { pro });
@@ -370,7 +370,6 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
-            mUseCombo = true;
             mIsUserEventLock = true;
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
@@ -379,6 +378,7 @@ public class InGameManager : MonoBehaviour
                 if (isSameColor)
                 {
                     mIsUserEventLock = false;
+                    mUseCombo = true;
                     DestroySkillWithSamecolor(product, targetProduct);
                 }
                 else
@@ -397,7 +397,6 @@ public class InGameManager : MonoBehaviour
         }
         else if (product.Skill != ProductSkill.Nothing || targetProduct.Skill != ProductSkill.Nothing)
         {
-            mUseCombo = true;
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () =>
@@ -438,10 +437,10 @@ public class InGameManager : MonoBehaviour
     }
 
     #region MatchingLogic
-    IEnumerator DoMatchingCycle(Product[] firstMatches)
+    IEnumerator DoMatchingCycle(Product[] firstMatches, int startCombo = 1)
     {
         mDropLockCount++;
-        ComboReset();
+        ComboReset(startCombo);
 
         List<Product[]> matchableGroups = new List<Product[]>();
         matchableGroups.Add(firstMatches);
@@ -811,23 +810,32 @@ public class InGameManager : MonoBehaviour
 
         if (target.Skill == ProductSkill.Horizontal)
         {
+            mUseCombo = true;
             CastHorizontalProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.Vertical)
         {
+            mUseCombo = true;
             CastVerticalProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.Bomb)
         {
+            mUseCombo = true;
             CastBombProduct(target.ParentFrame);
         }
         else if (target.Skill == ProductSkill.SameColor)
         {
+            mUseCombo = true;
             CastRainbowProduct(target);
         }
         else if (target.Skill == ProductSkill.Hammer)
         {
+            mUseCombo = true;
             CastHammerProduct(target);
+        }
+        else if (target.Skill == ProductSkill.KeepCombo)
+        {
+            CastKeepComboProduct(target);
         }
     }
 
@@ -1038,9 +1046,19 @@ public class InGameManager : MonoBehaviour
             }
         });
     }
+    private void CastKeepComboProduct(Product pro)
+    {
+        pro.SkillCasted = true;
+        pro.Animation.Play("destroy");
+
+        Network_Click(pro);
+        StartCoroutine(DoMatchingCycle(new Product[] { pro }, Billboard.CurrentCombo));
+        RemoveLimit();
+    }
 
     private void CastSkillBomb_Stripe(Product productbomb, Product productStripe)
     {
+        mUseCombo = true;
         if (productStripe.Skill == ProductSkill.Horizontal)
         {
             productbomb.SkillCasted = true;
@@ -1169,11 +1187,13 @@ public class InGameManager : MonoBehaviour
     }
     private void CastSkillStripe_Stripe(Product productStripeA, Product productStripeB)
     {
+        mUseCombo = true;
         CastSkillProduct(productStripeA);
         CastSkillProduct(productStripeB);
     }
     private void CastSkillHammer_Bomb(Product productHammer, Product productBomb)
     {
+        mUseCombo = true;
         productHammer.SkillCasted = true;
         productBomb.SkillCasted = true;
 
@@ -1200,6 +1220,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CastSkillHammer_Hori(Product productHammer, Product productHori)
     {
+        mUseCombo = true;
         productHammer.SkillCasted = true;
         productHori.SkillCasted = true;
 
@@ -1226,6 +1247,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CastSkillHammer_Vert(Product productHammer, Product productVert)
     {
+        mUseCombo = true;
         productHammer.SkillCasted = true;
         productVert.SkillCasted = true;
 
@@ -1252,6 +1274,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CastSkillHammer_Hammer(Product productHammerA, Product productHammerB)
     {
+        mUseCombo = true;
         productHammerA.SkillCasted = true;
         productHammerB.SkillCasted = true;
         productHammerA.Animation.Play("destroy");
@@ -1895,6 +1918,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
                 case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
                 case ProductSkill.Hammer: CastSkillHammer_Hori(sub, main); break;
+                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
             }
         }
         else if (main.Skill == ProductSkill.Vertical)
@@ -1905,6 +1929,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
                 case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
                 case ProductSkill.Hammer: CastSkillHammer_Vert(sub, main); break;
+                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
             }
         }
         else if (main.Skill == ProductSkill.Bomb)
@@ -1915,6 +1940,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillBomb_Stripe(main, sub); break;
                 case ProductSkill.Bomb: StartCoroutine(DestroySkillBomb_Bomb(main, sub)); break;
                 case ProductSkill.Hammer: CastSkillHammer_Bomb(sub, main); break;
+                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
             }
         }
         else if (main.Skill == ProductSkill.Hammer)
@@ -1925,6 +1951,18 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillHammer_Vert(main, sub); break;
                 case ProductSkill.Bomb: CastSkillHammer_Bomb(main, sub); break;
                 case ProductSkill.Hammer: CastSkillHammer_Hammer(main, sub); break;
+                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
+            }
+        }
+        else if (main.Skill == ProductSkill.KeepCombo)
+        {
+            switch (sub.Skill)
+            {
+                case ProductSkill.Horizontal: CastSkillProduct(sub); break;
+                case ProductSkill.Vertical: CastSkillProduct(sub); break;
+                case ProductSkill.Bomb: CastSkillProduct(sub); break;
+                case ProductSkill.Hammer: CastSkillProduct(sub); break;
+                case ProductSkill.KeepCombo: CastSkillProduct(sub); break;
             }
         }
     }
@@ -2048,6 +2086,7 @@ public class InGameManager : MonoBehaviour
     }
     private IEnumerator DestroySkillBomb_Bomb(Product productbombA, Product productbombB)
     {
+        mUseCombo = true;
         mIsUserEventLock = true;
         Vector3 startPos = productbombA.transform.position;
         productbombA.SkillCasted = true;
@@ -2527,39 +2566,39 @@ public class InGameManager : MonoBehaviour
     }
     public bool UseItemMatch(Vector3 startWorldPos)
     {
-        List<Product[]> matchesGroup = FindMatchedAllProducts();
-        if(matchesGroup.Count <= 0)
+        if(Billboard.CurrentCombo <= 1)
             return false;
 
-        List<Frame> frames = new List<Frame>();
-        foreach (Product[] matchedPros in matchesGroup)
-            frames.Add(matchedPros[0].ParentFrame);
-
-        Network_UseItem(PurchaseItemType.MakeCombo);
-
         mIsItemEffect = true;
-        ComboReset();
-        int idx = 0;
-        StartCoroutine(CreateDirectBeamInterval(TrailingPrefab, startWorldPos, 0.4f, frames.ToArray(),
-            (frame) =>
+        Frame[] idleFrames = GetRandomIdleFrames(1);
+        Product[] idlePros = ToProducts(idleFrames);
+
+        Network_UseItem(PurchaseItemType.KeepCombo);
+
+        StartCoroutine(CreateMagnetTrails(TrailingPrefab, startWorldPos, idlePros,
+            (pro) =>
             {
-                Product[] pros = matchesGroup[idx];
-                LockToMatch(pros);
-                StartCoroutine(UnityUtils.CallAfterSeconds(0.3f, () =>
-                {
-                    DoMatchProducts(pros);
-                }));
-                
-                idx++;
-                ComboUp();
+                pro.ChangeProductImage(ProductSkill.KeepCombo);
+
+                KeepComboNum keepCombo = Instantiate(KeepComboPrefab, pro.transform.position, Quaternion.identity, pro.transform);
+                keepCombo.SetNumber(Billboard.CurrentCombo);
+                keepCombo.StartCoroutine(CoUpdateKeepComboNumber(keepCombo));
+
+                pro.FlashProduct();
             },
             () =>
             {
-                StartToDrop();
                 mIsItemEffect = false;
             }));
-
         return true;
+    }
+    IEnumerator CoUpdateKeepComboNumber(KeepComboNum keepCombo)
+    {
+        while(true)
+        {
+            keepCombo.SetNumber(Billboard.CurrentCombo);
+            yield return null;
+        }
     }
     public void UseItemMeteor(int count)
     {
@@ -3472,9 +3511,9 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentCombo++;
         EventCombo?.Invoke(Billboard.CurrentCombo);
     }
-    private void ComboReset()
+    private void ComboReset(int startCombo = 1)
     {
-        Billboard.CurrentCombo = 1;
+        Billboard.CurrentCombo = startCombo;
         EventCombo?.Invoke(Billboard.CurrentCombo);
     }
     private Product[] GetTopIceBlocks(int count)
@@ -4436,7 +4475,7 @@ public class InGameManager : MonoBehaviour
         {
             StartCoroutine(CreateMagnetTrails(TrailingPrefab, pros, null, null));
         }
-        else if (item == PurchaseItemType.MakeCombo)
+        else if (item == PurchaseItemType.KeepCombo)
         {
             List<Frame> frames = new List<Frame>();
             foreach (Product pro in pros)

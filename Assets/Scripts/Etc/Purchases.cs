@@ -23,7 +23,7 @@ public static class PurchaseItemTypeExtensions
                 case PurchaseItemType.ExtendLimit: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_time"); break;
                 case PurchaseItemType.RemoveIce: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_missile"); break;
                 case PurchaseItemType.MakeSkill1: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_bombs"); break;
-                case PurchaseItemType.MakeCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_up"); break;
+                case PurchaseItemType.KeepCombo: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_keep"); break;
                 case PurchaseItemType.MakeSkill2: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_same"); break;
                 case PurchaseItemType.Meteor: ItemImages[i] = Resources.Load<Sprite>("Images/Items/item_arrow"); break;
                 default: ItemImages[i] = Resources.Load<Sprite>("Images/Items/equipment_equip_icon"); break; 
@@ -47,7 +47,7 @@ public static class PurchaseItemTypeExtensions
             case PurchaseItemType.ExtendLimit: return "Extends limits(Move/Time).";
             case PurchaseItemType.RemoveIce: return "Break freezed blocks.";
             case PurchaseItemType.MakeSkill1: return "Make skill blocks.";
-            case PurchaseItemType.MakeCombo: return "Raise combo.";
+            case PurchaseItemType.KeepCombo: return "Keep combo.";
             case PurchaseItemType.MakeSkill2: return "Make great skill block.";
             case PurchaseItemType.Meteor: return "Meteor";
             default: return "Unknown Item.";
@@ -60,7 +60,7 @@ public static class PurchaseItemTypeExtensions
             case PurchaseItemType.ExtendLimit: return "TimeKeeper";
             case PurchaseItemType.RemoveIce: return "Missile";
             case PurchaseItemType.MakeSkill1: return "Bomb";
-            case PurchaseItemType.MakeCombo: return "Combo";
+            case PurchaseItemType.KeepCombo: return "Combo";
             case PurchaseItemType.MakeSkill2: return "Rainbow";
             case PurchaseItemType.Meteor: return "Meteor";
             default: return "Unknown Item.";

@@ -209,7 +209,7 @@ public class MenuInGame : MonoBehaviour
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
                 break;
-            case PurchaseItemType.MakeCombo:
+            case PurchaseItemType.KeepCombo:
                 {
                     bool ret = InGameManager.InstStage.UseItemMatch(btn.transform.position);
                     if (ret)

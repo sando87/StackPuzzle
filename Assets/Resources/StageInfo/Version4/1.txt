@@ -1,6 +1,6 @@
 # 0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)
 # Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
-# enum PurchaseItemType {None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, Meteor}
+# enum PurchaseItemType {None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor}
 # Reward,gold/100
 # Reward,dia/5
 # Reward,life/1

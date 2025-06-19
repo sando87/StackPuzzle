@@ -22,11 +22,11 @@ public enum SwipeDirection
 };
 public enum ProductSkill
 {
-    Nothing, Horizontal, Vertical, Bomb, SameColor, Hammer
+    Nothing, Horizontal, Vertical, Bomb, SameColor, Hammer, KeepCombo
 };
 public enum PurchaseItemType
 {
-    None, ExtendLimit, RemoveIce, MakeSkill1, MakeCombo, MakeSkill2, Meteor
+    None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
 }
 
 public interface ByteSerializer
