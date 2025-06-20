@@ -3773,6 +3773,46 @@ public class InGameManager : MonoBehaviour
         }
         return list;
     }
+    public List<Product[]> FindAllLinkedProductGroups(List<Product> firstMatches, Dictionary<Product, int> donePros)
+    {
+        List<Product[]> rets = new List<Product[]>();
+
+        List<Product[]> matchableGroups = new List<Product[]>();
+        rets.Add(firstMatches.ToArray());
+        foreach(Product pro in firstMatches)
+            donePros[pro] = 1;
+
+        matchableGroups.Add(firstMatches.ToArray());
+        while (true)
+        {
+            // 주변 블럭 리스트 얻어옴
+            List<Product> aroundPros = new List<Product>();
+            foreach (Product[] pros in matchableGroups)
+            {
+                FindAroundProducts(pros, aroundPros, donePros);
+            }
+
+            Product[] aroundProducts = aroundPros.ToArray();
+            //터질때 주변에 매칭가능하면 연쇄하여 파괴하며 콤보 올라감
+            matchableGroups.Clear();
+            matchableGroups = FindMatchedProducts(aroundProducts);
+            if (matchableGroups.Count > 0)
+            {
+                rets.AddRange(matchableGroups);
+                foreach(Product[] pros in matchableGroups)
+                {
+                    foreach(Product pro in pros)
+                        donePros[pro] = 1;
+                }
+            }
+            else
+            {
+                //주변 매칭가능한 블럭들이 없으면 종료
+                break;
+            }
+        }
+        return rets;
+    }
     private List<Product[]> FindMatchedAllProducts(int matchCount = UserSetting.MatchCount)
     {
         Dictionary<Product, int> matchedPro = new Dictionary<Product, int>();
@@ -3797,7 +3837,7 @@ public class InGameManager : MonoBehaviour
         }
         return list;
     }
-    private void FindAroundProducts(Product[] targets, List<Product> rets)
+    private void FindAroundProducts(Product[] targets, List<Product> rets, Dictionary<Product, int> donePros = null)
     {
         foreach (Product target in targets)
         {
@@ -3807,6 +3847,9 @@ public class InGameManager : MonoBehaviour
                 Product arPro = sub.ChildProduct;
                 if (arPro != null && !arPro.IsLocked)
                 {
+                    if(donePros != null && donePros.ContainsKey(arPro))
+                        continue;
+
                     if(!rets.Contains(arPro))
                     {
                         rets.Add(arPro);

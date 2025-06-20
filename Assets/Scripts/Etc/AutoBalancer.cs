@@ -9,6 +9,13 @@ public class AutoBalancerInfo
     public Product targetProduct = null;
     public int maxCount = 0;
     public SwipeDirection direct = SwipeDirection.LEFT;
+
+    public void Reset()
+    {
+        targetProduct = null;
+        maxCount = 0;
+        direct = SwipeDirection.LEFT;
+    }
 }
 
 public class AutoBalancer : MonoBehaviour
@@ -20,9 +27,84 @@ public class AutoBalancer : MonoBehaviour
         set
         {
             if (value)
-                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StartCoroutine("DoAutoBalancer");
+                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StartCoroutine("DoAutoBalancerNew");
             else
-                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StopCoroutine("DoAutoBalancer");
+                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StopCoroutine("DoAutoBalancerNew");
+        }
+    }
+
+    IEnumerator DoAutoBalancerNew()
+    {
+        yield return null;
+        ParseBotLevel();
+        InGameManager mgr = null;
+        const int MODE_SWIPE = 1;
+        const int MODE_COMBOUP = 2;
+        const int MODE_ATTACK = 3;
+        int mode = MODE_SWIPE;
+        List<Product> swipedProducts = new List<Product>();
+        while (true)
+        {
+            while(mgr == null)
+            {
+                if (InGameManager.InstStage.gameObject.activeInHierarchy)
+                    mgr = InGameManager.InstStage;
+                else if (InGameManager.InstPVP_Player.gameObject.activeInHierarchy)
+                    mgr = InGameManager.InstPVP_Player;
+
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(NextDelaySec());
+            yield return new WaitUntil(() => mgr.IsIdle && mgr.IsAllProductIdle());
+
+            int skipCount = 0;
+            if(mode == MODE_SWIPE)
+            {
+                if(AutoSwipeNextProduct(mgr, swipedProducts))
+                {
+                    continue;
+                }
+                else
+                {
+                    swipedProducts.Clear();
+                    mode = MODE_COMBOUP;
+                    skipCount++;
+                }
+            }
+
+            if (mode == MODE_COMBOUP)
+            {
+                if (AutoClickNextProduct(mgr))
+                {
+                    mode = MODE_ATTACK;
+                    continue;
+                }
+                else
+                {
+                    mode = MODE_ATTACK;
+                    skipCount++;
+                }
+            }
+
+            if (mode == MODE_ATTACK)
+            {
+                if(AutoAttackSkill(mgr))
+                {
+                    mode = MODE_SWIPE;
+                    continue;
+                }
+                else
+                {
+                    mode = MODE_SWIPE;
+                    skipCount++;
+                }
+            }
+
+            if(skipCount >= 3)
+            {
+                // gave up game...
+            }
         }
     }
 
@@ -67,20 +149,23 @@ public class AutoBalancer : MonoBehaviour
                 {
                     counter = 0;
                     counterLimit = NextSwipeCount();
-                    if(!AutoClickNextProduct(mgr))
-                        AutoSwipeNextProduct(mgr);
+                    // if(!AutoClickNextProduct(mgr))
+                    //     AutoSwipeNextProduct(mgr);
 
                     continue;
                 }
 
                 counter++;
-                AutoSwipeNextProduct(mgr);
+                // AutoSwipeNextProduct(mgr);
             }
         }
     }
 
-    bool AutoSwipeNextProduct(InGameManager mgr)
+    bool AutoSwipeNextProduct(InGameManager mgr, List<Product> swipedProducts)
     {
+        AutoBalancerInfo info = new AutoBalancerInfo();
+        List<Product> matches = new List<Product>();
+        List<SwipeDirection> dirs = new List<SwipeDirection>();
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
         int yOff = UnityEngine.Random.Range(0, mCntY);
@@ -94,45 +179,54 @@ public class AutoBalancer : MonoBehaviour
                 if (!IsValid(frame) || cenPro.Skill != ProductSkill.Nothing)
                     continue;
 
-                AutoBalancerInfo info = new AutoBalancerInfo();
-                List<Product> matches = new List<Product>();
+                if(swipedProducts.Contains(cenPro))
+                    continue;
+
+                info.Reset();
+                matches.Clear();
                 cenPro.SearchMatchedProducts(matches, cenPro.Color);
                 if (matches.Count >= UserSetting.MatchCount)
                     continue;
 
-
+                dirs.Clear();
                 int leftMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.LEFT);
-                if(leftMatchCount > info.maxCount)
+                if(leftMatchCount >= UserSetting.MatchCount)
                 {
+                    dirs.Add(SwipeDirection.LEFT);
                     info.maxCount = leftMatchCount;
                     info.direct = SwipeDirection.LEFT;
                     info.targetProduct = cenPro.Left();
                 }
                 int rightMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.RIGHT);
-                if (rightMatchCount > info.maxCount)
+                if (rightMatchCount >= UserSetting.MatchCount)
                 {
+                    dirs.Add(SwipeDirection.RIGHT);
                     info.maxCount = rightMatchCount;
                     info.direct = SwipeDirection.RIGHT;
                     info.targetProduct = cenPro.Right();
                 }
                 int upMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.UP);
-                if (upMatchCount > info.maxCount)
+                if (upMatchCount >= UserSetting.MatchCount)
                 {
+                    dirs.Add(SwipeDirection.UP);
                     info.maxCount = upMatchCount;
                     info.direct = SwipeDirection.UP;
                     info.targetProduct = cenPro.Up();
                 }
                 int downMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.DOWN);
-                if (downMatchCount > info.maxCount)
+                if (downMatchCount >= UserSetting.MatchCount)
                 {
+                    dirs.Add(SwipeDirection.DOWN);
                     info.maxCount = downMatchCount;
                     info.direct = SwipeDirection.DOWN;
                     info.targetProduct = cenPro.Down();
                 }
 
-                if(info.maxCount > 1)
+                if(dirs.Count > 0)
                 {
-                    mgr.OnSwipe(cenPro.gameObject, info.direct);
+                    SwipeDirection selectedDir = dirs[UnityEngine.Random.Range(0, dirs.Count)];
+                    swipedProducts.Add(cenPro);
+                    mgr.OnSwipe(cenPro.gameObject, selectedDir);
                     return true;
                 }
             }
@@ -142,9 +236,13 @@ public class AutoBalancer : MonoBehaviour
     }
     bool AutoClickNextProduct(InGameManager mgr)
     {
+        Dictionary<Product, int> donePros = new Dictionary<Product, int>();
+        List<Product> firstMatches = new List<Product>();
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
         int yOff = UnityEngine.Random.Range(0, mCntY);
+        Product retPro = null;
+        int maxCombo = 0;
         for (int y = 0; y < mCntY; ++y)
         {
             int fixedY = (y + yOff) % mCntY;
@@ -155,27 +253,69 @@ public class AutoBalancer : MonoBehaviour
                 if (!IsValid(frame))
                     continue;
 
-                if(pro.Skill != ProductSkill.Nothing)
+                if(pro.Skill == ProductSkill.Nothing)
                 {
-                    mgr.OnClick(pro.gameObject);
-                    return true;
-                }
-                else
-                {
-                    List<Product> matchedList = new List<Product>();
-                    pro.SearchMatchedProducts(matchedList, pro.Color);
-                    if (matchedList.Count >= UserSetting.MatchCount)
+                    donePros.Clear();
+                    firstMatches.Clear();
+                    pro.SearchMatchedProducts(firstMatches, pro.Color);
+                    if (firstMatches.Count >= UserSetting.MatchCount)
                     {
-                        mgr.OnClick(pro.gameObject);
-                        return true;
+                        List<Product[]> groups = mgr.FindAllLinkedProductGroups(firstMatches, donePros);
+                        int curCombo = groups.Count;
+                        if (curCombo > maxCombo)
+                        {
+                            maxCombo = curCombo;
+                            retPro = pro;
+                        }
                     }
                 }
             }
         }
+
+        if(retPro != null)
+        {
+            mgr.OnClick(retPro.gameObject);
+            return true;
+        }
+
         return false;
     }
 
-    private Product FindSkill2(InGameManager mgr, ref SwipeDirection dir)
+    private bool AutoAttackSkill(InGameManager mgr)
+    {
+        SwipeDirection dir = SwipeDirection.LEFT;
+        Product nextTarget = FindSkill2(mgr, ref dir, ProductSkill.SameColor);
+        if (nextTarget != null)
+        {
+            mgr.OnSwipe(nextTarget.gameObject, dir);
+            return true;
+        }
+
+        nextTarget = FindSkill2(mgr, ref dir);
+        if (nextTarget != null)
+        {
+            mgr.OnSwipe(nextTarget.gameObject, dir);
+            return true;
+        }
+
+        nextTarget = FindSkill1(mgr, ProductSkill.SameColor);
+        if (nextTarget != null)
+        {
+            mgr.OnClick(nextTarget.gameObject);
+            return true;
+        }
+
+        nextTarget = FindSkill1(mgr);
+        if (nextTarget != null)
+        {
+            mgr.OnClick(nextTarget.gameObject);
+            return true;
+        }
+
+        return false;
+    }
+
+    private Product FindSkill2(InGameManager mgr, ref SwipeDirection dir, ProductSkill firstSkill = ProductSkill.Nothing)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
@@ -188,6 +328,9 @@ public class AutoBalancer : MonoBehaviour
                 Frame frame = mgr.Frame(x, fixedY);
                 Product pro = frame.ChildProduct;
                 if (!IsValid(frame) || pro.Skill == ProductSkill.Nothing)
+                    continue;
+
+                if(firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
                     continue;
 
                 Frame nextFrame = frame.Left();
@@ -223,7 +366,7 @@ public class AutoBalancer : MonoBehaviour
         dir = SwipeDirection.LEFT;
         return null;
     }
-    private Product FindSkill1(InGameManager mgr)
+    private Product FindSkill1(InGameManager mgr, ProductSkill firstSkill = ProductSkill.Nothing)
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
@@ -237,12 +380,16 @@ public class AutoBalancer : MonoBehaviour
                 if (pro == null || pro.IsLocked || pro.ParentFrame.IsObstacled() || pro.IsObstacled() || pro.Skill == ProductSkill.Nothing)
                     continue;
 
+                if(firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
+                    continue;
+
                 return pro;
             }
         }
 
         return null;
     }
+    
     private void ParseBotLevel()
     {
         string[] strs = UserSetting.UserInfo.deviceName.Split('_');
@@ -255,12 +402,12 @@ public class AutoBalancer : MonoBehaviour
     {
         switch (BotLevel)
         {
-            case 0: return UnityEngine.Random.Range(5, 10);
-            case 1: return UnityEngine.Random.Range(5, 7);
-            case 2: return UnityEngine.Random.Range(3, 8);
-            case 3: return UnityEngine.Random.Range(3, 5);
+            case 0: return UnityEngine.Random.Range(3, 8);
+            case 1: return UnityEngine.Random.Range(2, 8);
+            case 2: return UnityEngine.Random.Range(2, 6);
+            case 3: return UnityEngine.Random.Range(1, 6);
             case 4: return UnityEngine.Random.Range(1, 3);
-            case 5: return UnityEngine.Random.Range(0.5f, 1);
+            case 5: return UnityEngine.Random.Range(0.5f, 2);
             default: break;
         }
         return UnityEngine.Random.Range(2, 7);
