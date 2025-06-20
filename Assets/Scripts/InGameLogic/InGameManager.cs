@@ -423,6 +423,8 @@ public class InGameManager : MonoBehaviour
 
     void ToggleSwipChain(Product product, Product targetProduct)
     {
+        return;
+        
         if (product.Chain != null && product.Chain == targetProduct.Chain)
         {
             product.Chain.DestroyChain();
