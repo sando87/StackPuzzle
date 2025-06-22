@@ -187,11 +187,49 @@ public class MenuInGame : MonoBehaviour
                 ComboNumber.SetNumber(value);
         }
     }
+    
+    public bool IsItemPossible(PurchaseItemType itemType)
+    {
+        foreach (GameObject itemButton in ItemSlots)
+        {
+            if (int.TryParse(itemButton.name, out int btnItemType))
+            {
+                if (btnItemType == (int)itemType)
+                {
+                    Button btn = itemButton.GetComponentInChildren<Button>();
+                    return btn.enabled;
+                }
+            }
+        }
+        return false;
+    }
+    public void UseItemByAutoBot(PurchaseItemType itemType)
+    {
+        foreach (GameObject itemButton in ItemSlots)
+        {
+            if (int.TryParse(itemButton.name, out int btnItemType))
+            {
+                if (btnItemType == (int)itemType)
+                {
+                    Button btn = itemButton.GetComponentInChildren<Button>();
+                    if (btn.enabled)
+                    {
+                        UseItem(btn);
+                    }
+                }
+            }
+        }
+    }
 
     public void OnClickItem()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+        UseItem(btn);
+    }
+
+    void UseItem(Button btn)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
         switch (itemType)
         {

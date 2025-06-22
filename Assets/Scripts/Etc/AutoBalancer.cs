@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,11 +34,12 @@ public class AutoBalancer : MonoBehaviour
         }
     }
 
+    InGameManager mCurrentManager = null;
+
     IEnumerator DoAutoBalancerNew()
     {
         yield return null;
         ParseBotLevel();
-        InGameManager mgr = null;
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
@@ -45,37 +47,56 @@ public class AutoBalancer : MonoBehaviour
         List<Product> swipedProducts = new List<Product>();
         while (true)
         {
-            while(mgr == null)
+            while (mCurrentManager == null)
             {
                 if (InGameManager.InstStage.gameObject.activeInHierarchy)
-                    mgr = InGameManager.InstStage;
+                    mCurrentManager = InGameManager.InstStage;
                 else if (InGameManager.InstPVP_Player.gameObject.activeInHierarchy)
-                    mgr = InGameManager.InstPVP_Player;
+                    mCurrentManager = InGameManager.InstPVP_Player;
 
                 yield return null;
             }
 
-            yield return new WaitForSeconds(NextDelaySec());
-            yield return new WaitUntil(() => mgr.IsIdle && mgr.IsAllProductIdle());
+            yield return new WaitForSeconds(1);
+            yield return new WaitUntil(() => mCurrentManager.IsIdle && mCurrentManager.IsAllProductIdle());
+
+            if (IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable())
+            {
+                UseItem(PurchaseItemType.ExtendLimit);
+                continue;
+            }
 
             int skipCount = 0;
-            if(mode == MODE_SWIPE)
+            if (mode == MODE_SWIPE)
             {
-                if(AutoSwipeNextProduct(mgr, swipedProducts))
+                if (AutoSwipeNextProduct(mCurrentManager, swipedProducts))
                 {
                     continue;
                 }
                 else
                 {
-                    swipedProducts.Clear();
-                    mode = MODE_COMBOUP;
-                    skipCount++;
+                    if (IsItemPossible(PurchaseItemType.RemoveIce) && CountIceBlocks() > 10)
+                    {
+                        UseItem(PurchaseItemType.RemoveIce);
+                        continue;
+                    }
+                    else
+                    {
+                        swipedProducts.Clear();
+                        mode = MODE_COMBOUP;
+                        skipCount++;
+                    }
                 }
             }
 
             if (mode == MODE_COMBOUP)
             {
-                if (AutoClickNextProduct(mgr))
+                if (AutoClickKeepCombo())
+                {
+                    mode = MODE_ATTACK;
+                    continue;
+                }
+                else if (AutoClickNextProduct(mCurrentManager))
                 {
                     mode = MODE_ATTACK;
                     continue;
@@ -89,8 +110,32 @@ public class AutoBalancer : MonoBehaviour
 
             if (mode == MODE_ATTACK)
             {
-                if(AutoAttackSkill(mgr))
+                if (AutoAttackSkill(mCurrentManager))
                 {
+                    mode = MODE_SWIPE;
+                    continue;
+                }
+                else if (IsItemPossible(PurchaseItemType.KeepCombo))
+                {
+                    UseItem(PurchaseItemType.KeepCombo);
+                    mode = MODE_SWIPE;
+                    continue;
+                }
+                else if (IsItemPossible(PurchaseItemType.MakeSkill1))
+                {
+                    UseItem(PurchaseItemType.MakeSkill1);
+                    mode = MODE_ATTACK;
+                    continue;
+                }
+                else if (IsItemPossible(PurchaseItemType.MakeSkill2))
+                {
+                    UseItem(PurchaseItemType.MakeSkill2);
+                    mode = MODE_ATTACK;
+                    continue;
+                }
+                else if (IsItemPossible(PurchaseItemType.Meteor))
+                {
+                    UseItem(PurchaseItemType.Meteor);
                     mode = MODE_SWIPE;
                     continue;
                 }
@@ -101,7 +146,7 @@ public class AutoBalancer : MonoBehaviour
                 }
             }
 
-            if(skipCount >= 3)
+            if (skipCount >= 3)
             {
                 // gave up game...
             }
@@ -179,7 +224,7 @@ public class AutoBalancer : MonoBehaviour
                 if (!IsValid(frame) || cenPro.Skill != ProductSkill.Nothing)
                     continue;
 
-                if(swipedProducts.Contains(cenPro))
+                if (swipedProducts.Contains(cenPro))
                     continue;
 
                 info.Reset();
@@ -190,7 +235,7 @@ public class AutoBalancer : MonoBehaviour
 
                 dirs.Clear();
                 int leftMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.LEFT);
-                if(leftMatchCount >= UserSetting.MatchCount)
+                if (UserSetting.MatchCount <= leftMatchCount && leftMatchCount <= UserSetting.MatchCount + 1)
                 {
                     dirs.Add(SwipeDirection.LEFT);
                     info.maxCount = leftMatchCount;
@@ -198,7 +243,7 @@ public class AutoBalancer : MonoBehaviour
                     info.targetProduct = cenPro.Left();
                 }
                 int rightMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.RIGHT);
-                if (rightMatchCount >= UserSetting.MatchCount)
+                if (UserSetting.MatchCount <= rightMatchCount && rightMatchCount <= UserSetting.MatchCount + 1)
                 {
                     dirs.Add(SwipeDirection.RIGHT);
                     info.maxCount = rightMatchCount;
@@ -206,7 +251,7 @@ public class AutoBalancer : MonoBehaviour
                     info.targetProduct = cenPro.Right();
                 }
                 int upMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.UP);
-                if (upMatchCount >= UserSetting.MatchCount)
+                if (UserSetting.MatchCount <= upMatchCount && upMatchCount <= UserSetting.MatchCount + 1)
                 {
                     dirs.Add(SwipeDirection.UP);
                     info.maxCount = upMatchCount;
@@ -214,7 +259,7 @@ public class AutoBalancer : MonoBehaviour
                     info.targetProduct = cenPro.Up();
                 }
                 int downMatchCount = mgr.NextMatchCount(cenPro, SwipeDirection.DOWN);
-                if (downMatchCount >= UserSetting.MatchCount)
+                if (UserSetting.MatchCount <= downMatchCount && downMatchCount <= UserSetting.MatchCount + 1)
                 {
                     dirs.Add(SwipeDirection.DOWN);
                     info.maxCount = downMatchCount;
@@ -222,10 +267,11 @@ public class AutoBalancer : MonoBehaviour
                     info.targetProduct = cenPro.Down();
                 }
 
-                if(dirs.Count > 0)
+                if (dirs.Count > 0)
                 {
                     SwipeDirection selectedDir = dirs[UnityEngine.Random.Range(0, dirs.Count)];
                     swipedProducts.Add(cenPro);
+                    swipedProducts.Add(cenPro.Dir(selectedDir));
                     mgr.OnSwipe(cenPro.gameObject, selectedDir);
                     return true;
                 }
@@ -241,7 +287,7 @@ public class AutoBalancer : MonoBehaviour
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
         int yOff = UnityEngine.Random.Range(0, mCntY);
-        Product retPro = null;
+        List<Product[]> productGroups = null;
         int maxCombo = 0;
         for (int y = 0; y < mCntY; ++y)
         {
@@ -253,7 +299,7 @@ public class AutoBalancer : MonoBehaviour
                 if (!IsValid(frame))
                     continue;
 
-                if(pro.Skill == ProductSkill.Nothing)
+                if (pro.Skill == ProductSkill.Nothing)
                 {
                     donePros.Clear();
                     firstMatches.Clear();
@@ -265,16 +311,17 @@ public class AutoBalancer : MonoBehaviour
                         if (curCombo > maxCombo)
                         {
                             maxCombo = curCombo;
-                            retPro = pro;
+                            productGroups = groups;
                         }
                     }
                 }
             }
         }
 
-        if(retPro != null)
+        if (productGroups != null)
         {
-            mgr.OnClick(retPro.gameObject);
+            Product[] lastOne = productGroups.Last();
+            mgr.OnClick(lastOne[0].gameObject);
             return true;
         }
 
@@ -330,7 +377,7 @@ public class AutoBalancer : MonoBehaviour
                 if (!IsValid(frame) || pro.Skill == ProductSkill.Nothing)
                     continue;
 
-                if(firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
+                if (firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
                     continue;
 
                 Frame nextFrame = frame.Left();
@@ -380,7 +427,7 @@ public class AutoBalancer : MonoBehaviour
                 if (pro == null || pro.IsLocked || pro.ParentFrame.IsObstacled() || pro.IsObstacled() || pro.Skill == ProductSkill.Nothing)
                     continue;
 
-                if(firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
+                if (firstSkill != ProductSkill.Nothing && pro.Skill != firstSkill)
                     continue;
 
                 return pro;
@@ -389,7 +436,48 @@ public class AutoBalancer : MonoBehaviour
 
         return null;
     }
-    
+
+    private int CountIceBlocks()
+    {
+        int ret = 0;
+        int mCntX = mCurrentManager.CountX;
+        int mCntY = mCurrentManager.CountY;
+        for (int y = 0; y < mCntY; ++y)
+        {
+            for (int x = 0; x < mCntX; ++x)
+            {
+                Product pro = mCurrentManager.Frame(x, y).ChildProduct;
+                if (pro == null || pro.IsLocked)
+                    continue;
+
+                if (pro.IsChocoBlock)
+                    ret++;
+            }
+        }
+
+        return ret;
+    }
+    private Product FindKeepCombo()
+    {
+        int mCntX = mCurrentManager.CountX;
+        int mCntY = mCurrentManager.CountY;
+        for (int y = 0; y < mCntY; ++y)
+        {
+            for (int x = 0; x < mCntX; ++x)
+            {
+                Product pro = mCurrentManager.Frame(x, y).ChildProduct;
+                if (pro == null || pro.IsLocked)
+                    continue;
+
+                if (pro.Skill == ProductSkill.KeepCombo)
+                    return pro;
+            }
+        }
+
+        return null;
+    }
+
+
     private void ParseBotLevel()
     {
         string[] strs = UserSetting.UserInfo.deviceName.Split('_');
@@ -429,5 +517,47 @@ public class AutoBalancer : MonoBehaviour
     private bool IsValid(Frame frame)
     {
         return frame != null && !frame.IsObstacled() && frame.ChildProduct != null && !frame.ChildProduct.IsLocked && !frame.ChildProduct.IsObstacled();
+    }
+
+    bool IsItemPossible(PurchaseItemType itemType)
+    {
+        if (mCurrentManager == InGameManager.InstPVP_Player)
+        {
+            return MenuBattle.Inst().IsItemPossible(itemType);
+        }
+        else if (mCurrentManager == InGameManager.InstStage)
+        {
+            return MenuInGame.Inst().IsItemPossible(itemType);
+        }
+        return false;
+    }
+    void UseItem(PurchaseItemType itemType)
+    {
+        if (mCurrentManager == InGameManager.InstPVP_Player)
+        {
+            MenuBattle.Inst().UseItemByAutoBot(itemType);
+        }
+        else if (mCurrentManager == InGameManager.InstStage)
+        {
+            MenuInGame.Inst().UseItemByAutoBot(itemType);
+        }
+    }
+    bool IsFlushedable()
+    {
+        return mCurrentManager.PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack;
+    }
+
+    bool AutoClickKeepCombo()
+    {
+        Product keepCombo = FindKeepCombo();
+        if (keepCombo == null)
+            return false;
+
+        if (mCurrentManager.IsPossibleKeepCombo(keepCombo))
+        {
+            mCurrentManager.OnClick(keepCombo.gameObject);
+            return true;
+        }
+        return false;
     }
 }

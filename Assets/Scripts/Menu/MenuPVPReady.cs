@@ -55,7 +55,7 @@ public class MenuPVPReady : MonoBehaviour
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         
         yield return new WaitForSeconds(2);
-
+        
         pos = MenuBattle.Inst().PlayerRect.transform.position;
         InGameManager.InstPVP_Player.transform.SetPosition2D(pos);
         pos = MenuBattle.Inst().AttackPointFrame.transform.position;

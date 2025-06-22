@@ -2825,7 +2825,7 @@ public class InGameManager : MonoBehaviour
     {
         while (true)
         {
-            if (IsIdle && PVPScoreBar.IsFlushable && PVPScoreBar.CurrentScore < 0)
+            if (IsIdle && PVPScoreBar.IsFlushable && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack)
             {
                 int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
                 point = Mathf.Min(point, UserSetting.FlushMaxCount);
@@ -3554,22 +3554,32 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    public int NextMatchCount(Product pro, SwipeDirection dir)
+    public int NextMatchCount(Product mainPro, SwipeDirection dir)
     {
-        Product target = pro.Dir(dir);
-        if (target == null || target.Color == pro.Color || target.IsChocoBlock || target.Skill != ProductSkill.Nothing)
+        Product subPro = mainPro.Dir(dir);
+        if (subPro == null || subPro.Color == mainPro.Color || subPro.IsChocoBlock || subPro.Skill != ProductSkill.Nothing)
             return 0;
 
-        List<Product> matches = new List<Product>();
-        Product[] pros = target.GetAroundProducts(target.ParentFrame);
+        List<Product> matchesMain = new List<Product>();
+        Product[] pros = subPro.GetAroundProducts(subPro.ParentFrame);
         foreach (Product each in pros)
         {
-            if (each == pro)
+            if (each == mainPro)
                 continue;
 
-            each.SearchMatchedProducts(matches, pro.Color);
+            each.SearchMatchedProducts(matchesMain, mainPro.Color);
         }
-        return matches.Count;
+
+        List<Product> matchesSub = new List<Product>();
+        Product[] subs = mainPro.GetAroundProducts(mainPro.ParentFrame);
+        foreach (Product each in subs)
+        {
+            if (each == subPro)
+                continue;
+
+            each.SearchMatchedProducts(matchesSub, subPro.Color);
+        }
+        return Mathf.Max(matchesMain.Count + 1, matchesSub.Count + 1);
     }
     private ProductSkill CheckSkillable(Product[] matches)
     {
@@ -3799,9 +3809,9 @@ public class InGameManager : MonoBehaviour
             if (matchableGroups.Count > 0)
             {
                 rets.AddRange(matchableGroups);
-                foreach(Product[] pros in matchableGroups)
+                foreach (Product[] pros in matchableGroups)
                 {
-                    foreach(Product pro in pros)
+                    foreach (Product pro in pros)
                         donePros[pro] = 1;
                 }
             }
@@ -3857,6 +3867,19 @@ public class InGameManager : MonoBehaviour
                 }
             }
         }
+    }
+    public bool IsPossibleKeepCombo(Product keepCombo)
+    {
+        List<Product> aroundPros = new List<Product>();
+        FindAroundProducts(new Product[1] { keepCombo }, aroundPros);
+
+        Product[] aroundProducts = aroundPros.ToArray();
+        List<Product[]> matchableGroups = FindMatchedProducts(aroundProducts);
+        if (matchableGroups.Count > 0)
+        {
+            return true;
+        }
+        return false;
     }
     public Frame FrameOfWorldPos(float worldPosX, float worldPosY)
     {

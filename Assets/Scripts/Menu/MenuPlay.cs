@@ -32,6 +32,10 @@ public class MenuPlay : MonoBehaviour
     IEnumerator AutoStart()
     {
         yield return new WaitForSeconds(1);
+        // ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        // btns[0].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 1));
+        // btns[1].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 3));
+        // btns[2].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 5));
         OnPlay();
     }
     public void UpdateUIState(StageInfo info)

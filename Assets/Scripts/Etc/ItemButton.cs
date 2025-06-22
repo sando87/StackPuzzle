@@ -59,6 +59,11 @@ public class ItemButton : MonoBehaviour
         GetComponent<Button>().enabled = enable;
     }
 
+    public bool IsEnabled()
+    {
+        return GetComponent<Button>().enabled;
+    }
+
     public void AddEvent(Action<PurchaseItemType> eventClick)
     {
         GetComponent<Button>().onClick.AddListener(() => eventClick(ItemType));

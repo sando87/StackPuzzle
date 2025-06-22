@@ -289,6 +289,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         gameObject.SetActive(false);
         SoundPlayer.Inst.StopBackMusic();
+        
         MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo, pvpInfo.Level);
     }
     private void FailMatch()
@@ -299,6 +300,20 @@ public class MenuWaitMatch : MonoBehaviour
     private IEnumerator AutoMatch()
     {
         yield return new WaitForSeconds(1);
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+
+        PurchaseItemType item1 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 1);
+        btns[0].SetItem(item1);
+        UserSetting.UserInfo.PvpItems[0] = item1;
+        
+        PurchaseItemType item2 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 3);
+        btns[1].SetItem(item2);
+        UserSetting.UserInfo.PvpItems[1] = item2;
+        
+        PurchaseItemType item3 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 5);
+        btns[2].SetItem(item3);
+        UserSetting.UserInfo.PvpItems[2] = item3;
+        
         OnMatch();
     }
     private void ResetMatchUI()

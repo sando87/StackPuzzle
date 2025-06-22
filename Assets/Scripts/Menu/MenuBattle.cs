@@ -95,7 +95,7 @@ public class MenuBattle : MonoBehaviour
         //OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
 
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
-        for(int i = 0; i < 3; ++i)
+        for (int i = 0; i < 3; ++i)
         {
             PlayerItemSlots[i].SetItem(items[i]);
             PlayerItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
@@ -111,29 +111,35 @@ public class MenuBattle : MonoBehaviour
         }
 
 
-        InGameManager.InstPVP_Player.EventFinish = (success) => {
+        InGameManager.InstPVP_Player.EventFinish = (success) =>
+        {
             FinishGame(success);
         };
-        InGameManager.InstPVP_Player.EventCombo = (combo) => {
+        InGameManager.InstPVP_Player.EventCombo = (combo) =>
+        {
             if (combo <= 0)
                 ComboPlayer.BreakCombo();
             else
                 ComboPlayer.SetNumber(combo);
         };
-        InGameManager.InstPVP_Opponent.EventFinish = (success) => {
+        InGameManager.InstPVP_Opponent.EventFinish = (success) =>
+        {
             FinishGame(!success);
         };
-        InGameManager.InstPVP_Opponent.EventCombo = (combo) => {
+        InGameManager.InstPVP_Opponent.EventCombo = (combo) =>
+        {
             if (combo <= 0)
                 ComboOpponent.BreakCombo();
             else
                 ComboOpponent.SetNumber(combo);
         };
-        InGameManager.InstPVP_Player.EventRemainTime = (remainSec) => {
-            if(gameObject.activeInHierarchy)
+        InGameManager.InstPVP_Player.EventRemainTime = (remainSec) =>
+        {
+            if (gameObject.activeInHierarchy)
                 PlayerLimit.text = TimeToString(remainSec);
         };
-        InGameManager.InstPVP_Opponent.EventRemainTime = (remainSec) => {
+        InGameManager.InstPVP_Opponent.EventRemainTime = (remainSec) =>
+        {
             if (gameObject.activeInHierarchy)
             {
                 StopCoroutine("DisplayOppTimeLimit");
@@ -225,10 +231,38 @@ public class MenuBattle : MonoBehaviour
         }
     }
 
+    public bool IsItemPossible(PurchaseItemType itemType)
+    {
+        foreach (ItemButton itemButton in PlayerItemSlots)
+        {
+            if (itemButton.GetItem() == itemType)
+            {
+                return itemButton.IsEnabled();
+            }
+        }
+        return false;
+    }
+    public void UseItemByAutoBot(PurchaseItemType itemType)
+    {
+        foreach (ItemButton itemButton in PlayerItemSlots)
+        {
+            if (itemButton.GetItem() == itemType && itemButton.IsEnabled())
+            {
+                UseItem(itemButton);
+                return;
+            }
+        }
+    }
+
     public void OnClickItem()
     {
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
+        UseItem(btn);
+    }
+
+    void UseItem(ItemButton btn)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         PurchaseItemType itemType = btn.GetItem();
         switch (itemType)
         {
