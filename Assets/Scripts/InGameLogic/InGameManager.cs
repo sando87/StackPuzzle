@@ -2477,20 +2477,23 @@ public class InGameManager : MonoBehaviour
         StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
         {
             mIsItemEffect = false;
-            if (mStageInfo.TimeLimit > 0)
+            if (FieldType == GameFieldType.Stage)
             {
-                if(FieldType == GameFieldType.pvpPlayer)
+                if (mStageInfo.TimeLimit > 0)
                 {
                     mStartTime += 10; //10초 연장
                     float remainTime = mStageInfo.TimeLimit - PlayTime;
                     EventRemainTime?.Invoke((int)remainTime);
-                    Network_SyncTimer((int)remainTime);
+                }
+                else
+                {
+                    Billboard.MoveCount -= 5; //5번 이동 추가
+                    EventReduceLimit?.Invoke();
                 }
             }
-            else
+            else if (FieldType == GameFieldType.pvpPlayer)
             {
-                Billboard.MoveCount -= 5; //5번 이동 추가
-                EventReduceLimit?.Invoke();
+                // Network_SyncTimer();
             }
         }));
     }
