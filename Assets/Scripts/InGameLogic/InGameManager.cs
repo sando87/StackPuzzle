@@ -70,7 +70,7 @@ public class InGameManager : MonoBehaviour
     private bool mUseCombo = false;
     private float mStartTime = 0;
     private float mSFXVolume = 1;
-    private int mPVPTimerCounter = 0;
+    private int mPVPIceBlockLevel = 0;
     private Vector3 mStartPos = Vector3.zero;
     private System.Random mRandomSeed = null;
     private int mStartRandomSeed = -1;
@@ -554,13 +554,6 @@ public class InGameManager : MonoBehaviour
         Billboard.CurrentScore += score;
 
         EventBreakTarget?.Invoke(Vector3.zero, StageGoalType.Score);
-    }
-    private void DoAttack(int fromScore, int toScore, Vector3 position)
-    {
-        int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
-        int preAttackCount = fromScore / spa;
-        int curAttackCount = toScore / spa;
-        Attack(curAttackCount - preAttackCount, position);
     }
 
     public enum DelayedCallRet { Keep, Done }
@@ -1416,7 +1409,7 @@ public class InGameManager : MonoBehaviour
 
 
 
-    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect, int timerCounter)
+    IEnumerator DestroyProductDelay(Product[] destroyedProducts, float delay, bool withLaserEffect)
     {
         if(delay > 0)
         {
@@ -1474,7 +1467,7 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
-        StartCoroutine(DestroyProductDelay(validProducts, delay, false, mPVPTimerCounter));
+        StartCoroutine(DestroyProductDelay(validProducts, delay, false));
 
         AttackNew(addedScore, validProducts[0].transform.position);
 
@@ -1484,7 +1477,7 @@ public class InGameManager : MonoBehaviour
 
         return validProducts;
     }
-    IEnumerator MergeProductDelay(Product[] mergeProducts, float delay, ProductSkill skill, int timerCounter)
+    IEnumerator MergeProductDelay(Product[] mergeProducts, float delay, ProductSkill skill)
     {
         yield return new WaitForSeconds(delay);
 
@@ -1507,7 +1500,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        Network_Destroy(nextProducts.ToArray(), skill, false, timerCounter);
+        Network_Destroy(nextProducts.ToArray(), skill, false, 0);
 
         if (skill == ProductSkill.SameColor)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, mSFXVolume);
@@ -1538,7 +1531,7 @@ public class InGameManager : MonoBehaviour
         if (validProducts.Length <= 0)
             return validProducts;
 
-        StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill, mPVPTimerCounter));
+        StartCoroutine(MergeProductDelay(validProducts, UserSetting.MatchReadyInterval, makeSkill));
 
         // int spa = Mathf.Max(10, UserSetting.ScorePerAttack - (10 * mPVPTimerCounter));
         // int preAttackCount = Billboard.CurrentScore / spa;
@@ -2837,8 +2830,8 @@ public class InGameManager : MonoBehaviour
 
                 List<Product> products = GetNextFlushTargets(point);
                 Product[] rets = products.ToArray();
-                Network_FlushAttacks(Serialize(rets), 1);
-                StartCoroutine(FlushObstacles(rets, 3));
+                Network_FlushAttacks(Serialize(rets), mPVPIceBlockLevel);
+                StartCoroutine(FlushObstacles(rets, mPVPIceBlockLevel));
                 if (products.Count < point)
                 {
                     StartFinish(false);
@@ -3110,29 +3103,20 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator CheckFinishPvpTimer()
     {
-        mPVPTimerCounter = 0;
+        mPVPIceBlockLevel = 1;
         float currentTimelimit = mStageInfo.TimeLimit;
-        Network_SyncTimer((int)currentTimelimit);
         while (true)
         {
             float remain = currentTimelimit - PlayTime;
-            if (remain <= 0)
+            if (remain <= 0 && mPVPIceBlockLevel < 4)
             {
-                while(!IsIdle)
-                {
-                    yield return null;
-                }
-
-                mPVPTimerCounter++;
-                currentTimelimit += mStageInfo.TimeLimit;
-                remain = currentTimelimit - PlayTime;
-
-                Network_SyncTimer((int)remain);
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
-                MenuBattle.Inst().AnimTimeoutEffect(mPVPTimerCounter);
+                MenuBattle.Inst().AnimTimeoutEffect(mPVPIceBlockLevel + 1);
+                yield return new WaitForSeconds(1);
+                mPVPIceBlockLevel++;
+                currentTimelimit += mStageInfo.TimeLimit;
             }
 
-            EventRemainTime?.Invoke((int)remain);
             if (IsNoMoreMatchableProducts()) //더이상 움직일 수 있는 블럭이 없을 경우 실패
             {
                 yield return new WaitForSeconds(1);
@@ -3664,7 +3648,7 @@ public class InGameManager : MonoBehaviour
         mRandomSeed = null;
         mStartTime = 0;
         mSFXVolume = 1;
-        mPVPTimerCounter = 0;
+        mPVPIceBlockLevel = 0;
         mUseCombo = false;
         mIsWorkingCycle = false;
         mStartRandomSeed = -1;
@@ -4471,6 +4455,7 @@ public class InGameManager : MonoBehaviour
                 if (IsIdle && IsAllProductIdle() && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
                 {
                     int point = body.ArrayCount;
+                    int iceBlockLevel = body.combo;
                     PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
                     List<Product> products = GetNextFlushTargets(point);
                     Product[] rets = products.ToArray();
@@ -4480,21 +4465,21 @@ public class InGameManager : MonoBehaviour
                         LOG.warn("point,ret: " + point + "," + rets.Length);
                     }
                         
-                    StartCoroutine(FlushObstacles(rets, 3));
+                    StartCoroutine(FlushObstacles(rets, iceBlockLevel));
 
                     mNetMessages.RemoveFirst();
                 }
             }
-            else if (body.cmd == PVPCommand.SyncTimer)
-            {
-                if (IsIdle && IsAllProductIdle())
-                {
-                    mPVPTimerCounter = body.combo;
-                    EventRemainTime?.Invoke(body.remainTime);
+            // else if (body.cmd == PVPCommand.SyncTimer)
+            // {
+            //     if (IsIdle && IsAllProductIdle())
+            //     {
+            //         mPVPTimerCounter = body.combo;
+            //         EventRemainTime?.Invoke(body.remainTime);
 
-                    mNetMessages.RemoveFirst();
-                }
-            }
+            //         mNetMessages.RemoveFirst();
+            //     }
+            // }
             else if (body.cmd == PVPCommand.UseItem)
             {
                 if (IsIdle && IsAllProductIdle())
@@ -4729,7 +4714,7 @@ public class InGameManager : MonoBehaviour
         req.cmd = PVPCommand.SyncTimer;
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.remainTime = remainSec;
-        req.combo = mPVPTimerCounter;
+        req.combo = 0;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }

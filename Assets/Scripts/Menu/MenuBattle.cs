@@ -27,8 +27,9 @@ public class MenuBattle : MonoBehaviour
     public ItemButton[] PlayerItemSlots;
     public ItemButton[] OpponentItemSlots;
     public GameObject TimeoutEffectAnim;
-    public TextMeshProUGUI FromMulti;
-    public TextMeshProUGUI ToMulti;
+    public GameObject IceBlockUp1;
+    public GameObject IceBlockUp2;
+    public GameObject IceBlockUp3;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;
@@ -366,30 +367,21 @@ public class MenuBattle : MonoBehaviour
             yield return new WaitForSeconds(1);
         }
     }
-    public void AnimTimeoutEffect(int timerCounter)
+    public void AnimTimeoutEffect(int iceBlockLevel)
     {
-        if (timerCounter <= 1)
+        if (iceBlockLevel <= 1 || 5 <= iceBlockLevel)
             return;
 
-        string from = "";
-        string to = "";
-        switch (timerCounter)
-        {
-            case 2: from = "x1.0"; to = "x1.2"; break;
-            case 3: from = "x1.2"; to = "x1.4"; break;
-            case 4: from = "x1.4"; to = "x1.6"; break;
-            case 5: from = "x1.6"; to = "x1.8"; break;
-            default: from = "x1.8"; to = "x2.0"; break;
-        }
+        IceBlockUp1.SetActive(iceBlockLevel == 2);
+        IceBlockUp2.SetActive(iceBlockLevel == 3);
+        IceBlockUp3.SetActive(iceBlockLevel == 4);
 
-        FromMulti.text = from;
-        ToMulti.text = to;
         StartCoroutine(AnimTimeout());
     }
     IEnumerator AnimTimeout()
     {
         TimeoutEffectAnim.SetActive(true);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(3.0f);
         TimeoutEffectAnim.SetActive(false);
     }
 
