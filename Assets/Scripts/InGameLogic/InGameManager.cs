@@ -2821,7 +2821,7 @@ public class InGameManager : MonoBehaviour
     {
         while (true)
         {
-            if (IsIdle && PVPScoreBar.IsFlushable && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack)
+            if (IsIdle && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack)
             {
                 int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
                 point = Mathf.Min(point, UserSetting.FlushMaxCount);
@@ -4452,7 +4452,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
+                if (IsIdle && IsAllProductIdle() && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
                 {
                     int point = body.ArrayCount;
                     int iceBlockLevel = body.combo;

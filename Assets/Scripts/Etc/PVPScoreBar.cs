@@ -18,13 +18,11 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Image FlushImagePrafab = null;
 
     public int CurrentScore { get; private set; } = 0;
-    public bool IsFlushable 
+    public bool IsIdle 
     { 
         get 
         { 
-            return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval 
-                    && Mathf.Abs(CurrentScore) >= UserSetting.ScorePerAttack 
-                    && mIsTweening == 0; 
+            return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval && mIsTweening == 0;
         }
     }
 
@@ -158,41 +156,52 @@ public class PVPScoreBar : MonoBehaviour
     {
         while (true)
         {
-            int nextZoomIndex = TryZoomInOut(mZoomIndex, 0.5f);
-            if (nextZoomIndex != mZoomIndex)
+            int nextZoomLevel = CalculateCurrentZoomLevel();
+            if (mZoomIndex < nextZoomLevel)
             {
-                mZoomIndex = nextZoomIndex;
+                SetZoomLevel(nextZoomLevel, 0.5f);
+                mZoomIndex = nextZoomLevel;
                 yield return new WaitForSeconds(0.5f);
+            }
+            else if (mZoomIndex > nextZoomLevel)
+            {
+                if(IsIdle && Mathf.Abs(CurrentScore) < UserSetting.ScorePerAttack)
+                {
+                    SetZoomLevel(0, 0.5f);
+                    mZoomIndex = 0;
+                    yield return new WaitForSeconds(0.5f);
+                }
             }
             yield return null;
         }
     }
 
-    // 현재 스코어가 일정 수준 이상 또는 이하이면 UI 스코어Bar를 줌인 또는 줌아웃한다
-    // 줌인/아웃이 수행되면 다음 줌레벨을 반환하고 그렇지 않으면 현재 줌레벨을 반환한다
-    int TryZoomInOut(int currentZoomIndex, float zommingDuration)
+    void SetZoomLevel(int zoomLevel, float zommingDuration)
     {
-        float zoomingTriggerRate = 0.2f;
         Vector2 sizeDelta = flushImageRoot.rectTransform.sizeDelta;
         float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
-        float scorePerBar = 50 * Mathf.Pow(4, currentZoomIndex + 1);
-        if (scorePerBar * (1f - zoomingTriggerRate) < Mathf.Abs(CurrentScore) && currentZoomIndex < MaxZoomCount)
+
+        float pow = Mathf.Pow(4, zoomLevel);
+        CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
+        flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
+        .OnComplete(() => SubGroup[zoomLevel].gameObject.SetActive(false));
+    }
+    int CalculateCurrentZoomLevel()
+    {
+        float zoomingTriggerRate = 0.2f;
+        float currentScore = Mathf.Abs(CurrentScore);
+        for (int zoomLevel = 0; zoomLevel < MaxZoomCount; zoomLevel++)
         {
-            float pow = Mathf.Pow(4, currentZoomIndex + 1);
-            CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
-            flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
-            .OnComplete(() => SubGroup[currentZoomIndex].gameObject.SetActive(false));
-            return currentZoomIndex + 1;
+            float scorePerBar = 50 * Mathf.Pow(4, zoomLevel + 1);
+            float minScore = zoomLevel == 0 ? 0 :scorePerBar * (zoomingTriggerRate * 0.5f);
+            float maxScore = zoomLevel == MaxZoomCount ? scorePerBar : scorePerBar * (1f - zoomingTriggerRate);
+            if (minScore <= currentScore && currentScore <= maxScore)
+            {
+                return zoomLevel;
+            }
         }
-        else if (scorePerBar * (zoomingTriggerRate * 0.5f) > Mathf.Abs(CurrentScore) && currentZoomIndex > 0)
-        {
-            float pow = Mathf.Pow(4, currentZoomIndex - 1);
-            CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
-            flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
-            .OnComplete(() => SubGroup[currentZoomIndex - 1].gameObject.SetActive(true));
-            return currentZoomIndex - 1;
-        }
-        return currentZoomIndex;
+
+        return 0;
     }
 
     void UpdateCurrentScoreBar(int score)
