@@ -2580,7 +2580,6 @@ public class InGameManager : MonoBehaviour
 
                 KeepComboNum keepCombo = Instantiate(KeepComboPrefab, pro.transform.position, Quaternion.identity, pro.transform);
                 keepCombo.SetNumber(Billboard.CurrentCombo);
-                keepCombo.StartCoroutine(CoUpdateKeepComboNumber(keepCombo));
 
                 pro.FlashProduct();
             },
@@ -2589,14 +2588,6 @@ public class InGameManager : MonoBehaviour
                 mIsItemEffect = false;
             }));
         return true;
-    }
-    IEnumerator CoUpdateKeepComboNumber(KeepComboNum keepCombo)
-    {
-        while(true)
-        {
-            keepCombo.SetNumber(Billboard.CurrentCombo);
-            yield return null;
-        }
     }
     public void UseItemMeteor(int count)
     {
