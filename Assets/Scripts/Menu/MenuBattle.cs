@@ -30,7 +30,6 @@ public class MenuBattle : MonoBehaviour
     public GameObject IceBlockUp1;
     public GameObject IceBlockUp2;
     public GameObject IceBlockUp3;
-    public Sprite ItemAdsImage;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;
@@ -99,12 +98,12 @@ public class MenuBattle : MonoBehaviour
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
-            if(items[i] == PurchaseItemType.None)
+            if (items[i] == PurchaseItemType.None)
             {
                 PlayerItemSlots[i].name = "ads" + i;
-                PlayerItemSlots[i].GetComponent<Image>().sprite = ItemAdsImage;
-                PlayerItemSlots[i].GetComponent<Image>().color = Color.white;
-                PlayerItemSlots[i].GetComponent<Button>().enabled = true;
+                PlayerItemSlots[i].SetAdsImage();
+                PlayerItemSlots[i].SetEnable(true);
+                PlayerItemSlots[i].HideItemCount();
             }
             else
             {
@@ -120,8 +119,9 @@ public class MenuBattle : MonoBehaviour
             if(items[i] == PurchaseItemType.None)
             {
                 OpponentItemSlots[i].name = "ads" + i;
-                OpponentItemSlots[i].GetComponent<Image>().sprite = ItemAdsImage;
-                OpponentItemSlots[i].GetComponent<Image>().color = Color.white;
+                OpponentItemSlots[i].SetAdsImage();
+                OpponentItemSlots[i].SetEnable(true);
+                OpponentItemSlots[i].HideItemCount();
                 OpponentItemSlots[i].GetComponent<Button>().enabled = false;
             }
             else
@@ -286,6 +286,7 @@ public class MenuBattle : MonoBehaviour
             
             int adsIndex = int.Parse(btn.name.Substring(3));
             PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
+            PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
             PlayerItemSlots[adsIndex].SetItem(itemType);
             PlayerItemSlots[adsIndex].SetEnable(true);
             PlayerItemSlots[adsIndex].HideItemCount();

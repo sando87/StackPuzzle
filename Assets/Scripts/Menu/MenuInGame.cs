@@ -225,11 +225,12 @@ public class MenuInGame : MonoBehaviour
     public void OnClickItem()
     {
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        if (btn.name.StartsWith("ads"))
+        string btnTypeName = btn.transform.parent.name;
+        if (btnTypeName.StartsWith("ads"))
         {
-            int adsIndex = int.Parse(btn.name.Substring(3));
+            int adsIndex = int.Parse(btnTypeName.Substring(3));
             AdsType adsType = adsIndex == 0 ? AdsType.InGameItemA : (adsIndex == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
-            if(GoogleADMob.Inst.IsLoaded(adsType))
+            if (GoogleADMob.Inst.IsLoaded(adsType))
             {
                 GoogleADMob.Inst.Show(adsType, (reward) =>
                 {
@@ -246,7 +247,7 @@ public class MenuInGame : MonoBehaviour
         else
         {
             UseItem(btn);
-            btn.GetComponent<Image>().color = Color.gray;
+            btn.GetComponentInChildren<Image>().color = Color.gray;
             btn.enabled = false;
         }
     }

@@ -94,9 +94,10 @@ public class PurchaseInfo
     public int countDiamond;
     public int infiniteHeart;
     public int adsSkip;
+    public int remainAdsCount;
     public int[] countItem = new int[16];
     public int[] attendFlags = new int[30];
-    public int remainAdsCount = 0;
+    
     public PurchaseInfo()
     {
         maxHeart = 20;
@@ -351,6 +352,10 @@ public class Purchases
         byte[] encryptInfo = Utils.Encrypt(bInfo);
         string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
         PlayerPrefs.SetString(prefsKeyName, hexStr);
+    }
+    public static void DeletePurchaseInfo()
+    {
+        PlayerPrefs.DeleteKey(prefsKeyName);
     }
     public static void AddAdsCount()
     {

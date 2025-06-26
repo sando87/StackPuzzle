@@ -21,6 +21,11 @@ public class ItemButton : MonoBehaviour
         ItemType = item;
         UpdateItem();
     }
+    public void SetAdsImage()
+    {
+        ItemType = PurchaseItemType.None;
+        UpdateItem();
+    }
 
     public PurchaseItemType GetItem()
     {
