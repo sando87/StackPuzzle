@@ -2486,7 +2486,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (FieldType == GameFieldType.pvpPlayer)
             {
-                // Network_SyncTimer();
+                PVPScoreBar.SetLock(10.0f);
             }
         }));
     }
@@ -2812,7 +2812,7 @@ public class InGameManager : MonoBehaviour
     {
         while (true)
         {
-            if (IsIdle && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack)
+            if (IsIdle && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack && !PVPScoreBar.IsLocked)
             {
                 int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
                 point = Mathf.Min(point, UserSetting.FlushMaxCount);

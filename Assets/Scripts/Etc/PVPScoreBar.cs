@@ -16,6 +16,7 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Transform[] SubGroup = null;
     [SerializeField] private Sprite[] FlushImages = null;
     [SerializeField] private Image FlushImagePrafab = null;
+    [SerializeField] private Image LockImage = null;
 
     public int CurrentScore { get; private set; } = 0;
     public bool IsIdle 
@@ -397,5 +398,38 @@ public class PVPScoreBar : MonoBehaviour
         });
 
         return score;
+    }
+
+    public bool IsLocked { get { return LockImage.gameObject.activeSelf; } }
+    public void SetLock(float duration)
+    {
+        LockImage.gameObject.SetActive(true);
+        StopCoroutine(nameof(CoFlickLockImage));
+        LockImage.DOKill();
+        LockImage.DOFade(1, duration * 0.7f).From(1).OnComplete(() =>
+        {
+            StopCoroutine(nameof(CoFlickLockImage));
+            StartCoroutine(CoFlickLockImage(0.3f));
+        });
+        LockImage.DOFade(1, duration * 0.9f).From(1).OnComplete(() =>
+        {
+            StopCoroutine(nameof(CoFlickLockImage));
+            StartCoroutine(CoFlickLockImage(0.1f));
+        });
+        LockImage.DOFade(1, duration).From(1).OnComplete(() =>
+        {
+            StopCoroutine(nameof(CoFlickLockImage));
+            LockImage.gameObject.SetActive(false);
+        });
+    }
+    IEnumerator CoFlickLockImage(float interval)
+    {
+        while(true)
+        {
+            LockImage.enabled = false;
+            yield return new WaitForSeconds(interval);
+            LockImage.enabled = true;
+            yield return new WaitForSeconds(interval);
+        }
     }
 }
