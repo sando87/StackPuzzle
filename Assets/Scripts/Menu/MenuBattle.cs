@@ -30,6 +30,7 @@ public class MenuBattle : MonoBehaviour
     public GameObject IceBlockUp1;
     public GameObject IceBlockUp2;
     public GameObject IceBlockUp3;
+    public Sprite ItemAdsImage;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;
@@ -98,17 +99,38 @@ public class MenuBattle : MonoBehaviour
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
-            PlayerItemSlots[i].SetItem(items[i]);
-            PlayerItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
-            PlayerItemSlots[i].HideItemCount();
+            if(items[i] == PurchaseItemType.None)
+            {
+                PlayerItemSlots[i].name = "ads" + i;
+                PlayerItemSlots[i].GetComponent<Image>().sprite = ItemAdsImage;
+                PlayerItemSlots[i].GetComponent<Image>().color = Color.white;
+                PlayerItemSlots[i].GetComponent<Button>().enabled = true;
+            }
+            else
+            {
+                PlayerItemSlots[i].SetItem(items[i]);
+                PlayerItemSlots[i].SetEnable(true);
+                PlayerItemSlots[i].HideItemCount();
+            }
         }
 
         items = InGameManager.InstPVP_Opponent.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
-            OpponentItemSlots[i].SetItem(items[i]);
-            OpponentItemSlots[i].SetEnable(items[i] != PurchaseItemType.None);
-            OpponentItemSlots[i].HideItemCount();
+            if(items[i] == PurchaseItemType.None)
+            {
+                OpponentItemSlots[i].name = "ads" + i;
+                OpponentItemSlots[i].GetComponent<Image>().sprite = ItemAdsImage;
+                OpponentItemSlots[i].GetComponent<Image>().color = Color.white;
+                OpponentItemSlots[i].GetComponent<Button>().enabled = false;
+            }
+            else
+            {
+                OpponentItemSlots[i].SetItem(items[i]);
+                OpponentItemSlots[i].SetEnable(true);
+                OpponentItemSlots[i].HideItemCount();
+                OpponentItemSlots[i].GetComponent<Button>().enabled = false;
+            }
         }
 
 
@@ -258,7 +280,21 @@ public class MenuBattle : MonoBehaviour
     public void OnClickItem()
     {
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
-        UseItem(btn);
+        if (btn.name.StartsWith("ads"))
+        {
+            Purchases.AddAdsCount();
+            
+            int adsIndex = int.Parse(btn.name.Substring(3));
+            PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
+            PlayerItemSlots[adsIndex].SetItem(itemType);
+            PlayerItemSlots[adsIndex].SetEnable(true);
+            PlayerItemSlots[adsIndex].HideItemCount();
+        }
+        else
+        {
+            UseItem(btn);
+            btn.SetEnable(false);
+        }
     }
 
     void UseItem(ItemButton btn)
@@ -298,10 +334,9 @@ public class MenuBattle : MonoBehaviour
             default: break;
         }
 
-        btn.SetEnable(false);
         Purchases.UseItem(itemType);
-        string oppName = InGameManager.InstPVP_Opponent.UserInfo.userName;
 
+        string oppName = InGameManager.InstPVP_Opponent.UserInfo.userName;
         string log = "[UseItem] " + "PVP:" + oppName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
         LOG.echo(log);
     }

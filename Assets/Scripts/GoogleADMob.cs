@@ -6,7 +6,7 @@ using System;
 
 public enum AdsType
 {
-    None, ChargeLifeA, ChargeLifeB, RewardItem, MissionFailed
+    None, ChargeLifeA, ChargeLifeB, RewardItem, MissionFailed, InGameItemA, InGameItemB, InGameItemC
 }
 
 public class GoogleADMob : MonoBehaviour
@@ -40,6 +40,9 @@ public class GoogleADMob : MonoBehaviour
         AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
         AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.RewardItem, new TimeSpan(0, 0, 0));
         AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
+        AdsUnits[AdsType.InGameItemA] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemA, new TimeSpan(0, 30, 0));
+        AdsUnits[AdsType.InGameItemB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemB, new TimeSpan(0, 30, 0));
+        AdsUnits[AdsType.InGameItemC] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemC, new TimeSpan(0, 60, 0));
 #elif UNITY_IPHONE
 #endif
 

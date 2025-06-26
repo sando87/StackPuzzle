@@ -74797,6 +74797,7 @@ MonoBehaviour:
   IceBlockUp1: {fileID: 1767381970}
   IceBlockUp2: {fileID: 762801059}
   IceBlockUp3: {fileID: 643886048}
+  ItemAdsImage: {fileID: 21300000, guid: d535ffb65bf754dda95c3181d7389600, type: 3}
 --- !u!1 &1144136512
 GameObject:
   m_ObjectHideFlags: 0
@@ -175442,7 +175443,7 @@ MonoBehaviour:
   GoldBundleText: {fileID: 327558164}
   LevelCompleted: {fileID: 333965033}
   LevelFailed: {fileID: 1596954965}
-  ItemEmptyImage: {fileID: 21300000, guid: ec3859de72a8c42bcaf1df54a25b2179, type: 3}
+  ItemAdsImage: {fileID: 21300000, guid: d535ffb65bf754dda95c3181d7389600, type: 3}
   ItemSlots:
   - {fileID: 122550234}
   - {fileID: 1827182715}

@@ -96,6 +96,7 @@ public class PurchaseInfo
     public int adsSkip;
     public int[] countItem = new int[16];
     public int[] attendFlags = new int[30];
+    public int remainAdsCount = 0;
     public PurchaseInfo()
     {
         maxHeart = 20;
@@ -105,6 +106,7 @@ public class PurchaseInfo
         countDiamond = 10;
         infiniteHeart = 0;
         adsSkip = 0;
+        remainAdsCount = 0;
 
         for (int i = 0; i < countItem.Length; ++i)
             countItem[i] = 0;
@@ -122,6 +124,7 @@ public class PurchaseInfo
         bytes.AddRange(BitConverter.GetBytes(countDiamond));
         bytes.AddRange(BitConverter.GetBytes(infiniteHeart));
         bytes.AddRange(BitConverter.GetBytes(adsSkip));
+        bytes.AddRange(BitConverter.GetBytes(remainAdsCount));
 
         for (int i = 0; i < countItem.Length; ++i)
             bytes.AddRange(BitConverter.GetBytes(countItem[i]));
@@ -141,6 +144,7 @@ public class PurchaseInfo
         countDiamond = BitConverter.ToInt32(data, off); off += 4;
         infiniteHeart = BitConverter.ToInt32(data, off); off += 4;
         adsSkip = BitConverter.ToInt32(data, off); off += 4;
+        remainAdsCount = BitConverter.ToInt32(data, off); off += 4;
 
         for (int i = 0; i < countItem.Length; ++i)
             countItem[i] = BitConverter.ToInt32(data, off + i * 4);
@@ -347,5 +351,19 @@ public class Purchases
         byte[] encryptInfo = Utils.Encrypt(bInfo);
         string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
         PlayerPrefs.SetString(prefsKeyName, hexStr);
+    }
+    public static void AddAdsCount()
+    {
+        mInfo.remainAdsCount++;
+        UpdatePurchaseInfo(mInfo);
+    }
+    public static int GetRemainAdsCount()
+    {
+        return mInfo.remainAdsCount;
+    }
+    public static void RemoveAdsCount()
+    {
+        mInfo.remainAdsCount--;
+        UpdatePurchaseInfo(mInfo);
     }
 }

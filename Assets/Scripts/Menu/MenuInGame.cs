@@ -25,7 +25,7 @@ public class MenuInGame : MonoBehaviour
     public TextMeshProUGUI GoldBundleText;
     public TextMeshProUGUI LevelCompleted;
     public TextMeshProUGUI LevelFailed;
-    public Sprite ItemEmptyImage;
+    public Sprite ItemAdsImage;
     public GameObject[] ItemSlots;
     public Button PauseButton;
     public Button SkipButton;
@@ -117,9 +117,10 @@ public class MenuInGame : MonoBehaviour
             }
             else
             {
-                ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
-                ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
-                ItemSlots[i].GetComponentInChildren<Image>().sprite = ItemEmptyImage;
+                ItemSlots[i].name = "ads" + i;
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
+                ItemSlots[i].GetComponentInChildren<Image>().sprite = ItemAdsImage;
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
                 //ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
             }
         }
@@ -224,7 +225,30 @@ public class MenuInGame : MonoBehaviour
     public void OnClickItem()
     {
         Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        UseItem(btn);
+        if (btn.name.StartsWith("ads"))
+        {
+            int adsIndex = int.Parse(btn.name.Substring(3));
+            AdsType adsType = adsIndex == 0 ? AdsType.InGameItemA : (adsIndex == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
+            if(GoogleADMob.Inst.IsLoaded(adsType))
+            {
+                GoogleADMob.Inst.Show(adsType, (reward) =>
+                {
+                    PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
+                    ItemSlots[adsIndex].name = itemType.ToInt().ToString();
+                    ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
+                });
+            }
+            else
+            {
+                MenuMessageBox.PopUp("Not Ready Ads", false, null);
+            }
+        }
+        else
+        {
+            UseItem(btn);
+            btn.GetComponent<Image>().color = Color.gray;
+            btn.enabled = false;
+        }
     }
 
     void UseItem(Button btn)
@@ -264,8 +288,6 @@ public class MenuInGame : MonoBehaviour
             default: break;
         }
 
-        btn.GetComponent<Image>().color = Color.gray;
-        btn.enabled = false;
         Purchases.UseItem(itemType);
 
         string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();

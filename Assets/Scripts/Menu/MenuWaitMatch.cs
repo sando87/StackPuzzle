@@ -180,6 +180,18 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
+        if(Purchases.GetRemainAdsCount() > 0)
+        {
+            MenuMessageBox.PopUp("You have unpaid ads left over.", false, (isOK) =>
+            {
+                if(isOK)
+                {
+                    StartCoroutine(nameof(ShowRemainAds));
+                }
+            });
+            return;
+        }
+
         RequestMatch();
 
         mIsSearching = true;
@@ -188,6 +200,24 @@ public class MenuWaitMatch : MonoBehaviour
         BtnCancle.SetActive(true);
 
         StartCoroutine("WaitOpponent");
+    }
+
+    IEnumerator ShowRemainAds()
+    {
+        int remainAds = Purchases.GetRemainAdsCount();
+        for(int i = 0; i < remainAds; ++i)
+        {
+            bool adsDone = false;
+            int adsIdx = i % 3;
+            AdsType adsType = adsIdx == 0 ? AdsType.InGameItemA : (adsIdx == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
+            GoogleADMob.Inst.Show(adsType, (reward) =>
+            {
+                adsDone = true;
+            });
+            yield return new WaitUntil(() => adsDone);
+            Purchases.RemoveAdsCount();
+        }
+        MenuMessageBox.PopUp("All Ads have been paid for.", false, null);
     }
 
     IEnumerator WaitOpponent()
