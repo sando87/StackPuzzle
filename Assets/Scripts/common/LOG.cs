@@ -136,7 +136,7 @@ class LOG
         LogHeader log = new LogHeader();
         log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
-        log.logType = "echo";
+        log.logType = "trace";
         log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
