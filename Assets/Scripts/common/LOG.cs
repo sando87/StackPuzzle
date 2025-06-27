@@ -127,28 +127,8 @@ class LOG
 
 
 
-    //디버깅용: 코드 흐름 추적을 위한 정보를 콘솔창에 남긴다.
-    static public void trace(
-        [CallerFilePath] string file = null,
-        [CallerMemberName] string caller = null,
-        [CallerLineNumber] int lineNumber = 0 )
-    {
-        LogHeader log = new LogHeader();
-        log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-        log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
-        log.logType = "trace";
-        log.fileName = file.Split('\\').Last();
-        log.funcName = caller;
-        log.lineNumber = lineNumber.ToString();
-        log.message = "";
-        log.stackTrace = "";
-        string msg = log.ToString();
-        LogWriterConsole?.Invoke(msg);
-        AddLog(msg);
-    }
-
     //디버깅용: 간단한 정보와 함께 콘솔창에 남긴다.
-    static public void echo<T>(T val,
+    static public void trace<T>(T val,
         [CallerFilePath] string file = null,
         [CallerMemberName] string caller = null,
         [CallerLineNumber] int lineNumber = 0)
@@ -237,6 +217,6 @@ class LogHeader
     public string stackTrace;
     override public string ToString()
     {
-        return time + "," + threadID + ",\t" + logType + ",\t" + fileName + ",\t" + funcName + ",\t" + lineNumber + ",\t" + message + ",\t" + stackTrace;
+        return time + "," + threadID + "," + logType + "," + fileName + "," + funcName + "," + lineNumber + "," + message + "," + stackTrace;
     }
 }

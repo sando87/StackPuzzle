@@ -181,33 +181,33 @@ public class AdsUnit
 
     private void HandleRewardedAdLoaded(object sender, EventArgs args)
     {
-        LOG.echo("[" + Type + "] HandleRewardedAdLoaded event received");
+        LOG.trace("[" + Type + "] HandleRewardedAdLoaded event received");
         State = AdsUnitState.Loaded;
     }
 
     private void HandleRewardedAdFailedToLoad(object sender, AdErrorEventArgs args)
     {
-        LOG.echo("[" + Type + "] HandleRewardedAdFailedToLoad event received with message: "
+        LOG.trace("[" + Type + "] HandleRewardedAdFailedToLoad event received with message: "
                 + args.Message);
         State = AdsUnitState.UnLoaded;
     }
 
     private void HandleRewardedAdOpening(object sender, EventArgs args)
     {
-        LOG.echo("[" + Type + "] HandleRewardedAdOpening event received");
+        LOG.trace("[" + Type + "] HandleRewardedAdOpening event received");
         State = AdsUnitState.Showing;
     }
 
     private void HandleRewardedAdFailedToShow(object sender, AdErrorEventArgs args)
     {
-        LOG.echo("[" + Type + "] HandleRewardedAdFailedToShow event received with message: "
+        LOG.trace("[" + Type + "] HandleRewardedAdFailedToShow event received with message: "
                  + args.Message);
         State = AdsUnitState.UnLoaded;
     }
 
     private void HandleRewardedAdClosed(object sender, EventArgs args)
     {
-        LOG.echo("[" + Type + "] HandleRewardedAdClosed event received");
+        LOG.trace("[" + Type + "] HandleRewardedAdClosed event received");
         State = AdsUnitState.UnLoaded;
     }
 
@@ -215,7 +215,7 @@ public class AdsUnit
     {
         string type = args.Type;
         double amount = args.Amount;
-        LOG.echo("[" + Type + "] HandleRewardedAdRewarded event received for "
+        LOG.trace("[" + Type + "] HandleRewardedAdRewarded event received for "
                  + amount.ToString() + " " + type);
 
         LastTime = DateTime.Now;

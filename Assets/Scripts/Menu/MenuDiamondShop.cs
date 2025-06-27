@@ -51,12 +51,12 @@ public class MenuDiamondShop : MonoBehaviour
     }
     public void HandleOnPurchaseOK(UnityEngine.Purchasing.Product pro)
     {
-        LOG.echo(pro.definition.id);
+        LOG.trace(pro.definition.id);
         OnSccuessPurchaseDiamond(pro.definition.id);
     }
     public void HandleOnPurchaseError(UnityEngine.Purchasing.Product pro, UnityEngine.Purchasing.PurchaseFailureReason reason)
     {
-        LOG.echo(reason.ToString());
+        LOG.trace(reason.ToString());
         MenuMessageBox.PopUp(reason.ToString(), false, null);
     }
 
@@ -75,7 +75,7 @@ public class MenuDiamondShop : MonoBehaviour
         MenuInformBox.PopUp("Success Purchase!!");
 
         string log = "[Response Purchase] " + "ProductID:" + productID + ", CurrentTotalDia:" + Purchases.CountDiamond();
-        LOG.echo(log);
+        LOG.trace(log);
     }
 
 }

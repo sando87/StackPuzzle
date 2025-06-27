@@ -138,7 +138,7 @@ public class NetClientApp : MonoBehaviour
         if (mSession != null && mSession.Connected)
         {
             mStream = mSession.GetStream();
-            LOG.echo(mSession.Client.LocalEndPoint.ToString());
+            LOG.trace(mSession.Client.LocalEndPoint.ToString());
             EventConnection?.Invoke();
         }
         else
@@ -157,7 +157,7 @@ public class NetClientApp : MonoBehaviour
     {
         if (mStream != null)
         {
-            LOG.echo(mSession.Client.LocalEndPoint.ToString());
+            LOG.trace(mSession.Client.LocalEndPoint.ToString());
             mStream.Close();
             mStream = null;
         }

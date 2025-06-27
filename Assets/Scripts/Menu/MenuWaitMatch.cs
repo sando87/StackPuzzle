@@ -303,7 +303,7 @@ public class MenuWaitMatch : MonoBehaviour
             Purchases.UseHeart();
 
             string log = "[PVP Start] " + "OppUserPK:" + pvpInfo.OppUserInfo.userPk + ", HeartCount:" + Purchases.CountHeart();
-            LOG.echo(log);
+            LOG.trace(log);
         }
 
         //SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;

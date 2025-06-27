@@ -90,7 +90,7 @@ public class MenuItemShop : MonoBehaviour
                     + ", Count:" + cnt
                     + ", Cost:" + cost
                     + ", Current:" + type.ToItemType().GetCount();
-                    LOG.echo(log);
+                    LOG.trace(log);
                 }
                 else
                     MenuInformBox.PopUp("Not enough Diamonds.");

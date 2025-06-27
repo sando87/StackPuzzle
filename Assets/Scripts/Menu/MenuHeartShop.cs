@@ -61,7 +61,7 @@ public class MenuHeartShop : MonoBehaviour
             }
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeA + "/" + Purchases.CountHeart());
+            LOG.trace("[Request Charge Heart] " + AdsType.ChargeLifeA + "/" + Purchases.CountHeart());
             GoogleADMob.Inst.Show(AdsType.ChargeLifeA, (rewardSuccess) =>
             {
                 if(rewardSuccess)
@@ -89,7 +89,7 @@ public class MenuHeartShop : MonoBehaviour
             }
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            LOG.echo("[Request Charge Heart] " + AdsType.ChargeLifeB + "/" + Purchases.CountHeart());
+            LOG.trace("[Request Charge Heart] " + AdsType.ChargeLifeB + "/" + Purchases.CountHeart());
             GoogleADMob.Inst.Show(AdsType.ChargeLifeB, (rewardSuccess) =>
             {
                 if (rewardSuccess)
@@ -115,7 +115,7 @@ public class MenuHeartShop : MonoBehaviour
                             string log = "[Charge Heart] "
                             + "Dia:" + diamond + "/" + Purchases.CountDiamond()
                             + ", Heart:" + Purchases.CountHeart();
-                            LOG.echo(log);
+                            LOG.trace(log);
                         }
                         else
                             MenuInformBox.PopUp("Not enough Diamonds.");
@@ -140,7 +140,7 @@ public class MenuHeartShop : MonoBehaviour
                         string log = "[Charge Heart] "
                         + "Dia:" + diamond + "/" + Purchases.CountDiamond()
                         + ", Heart:" + (Purchases.IsInfinite() ? "Infinite" : Purchases.CountHeart().ToString());
-                        LOG.echo(log);
+                        LOG.trace(log);
                     }
                     else
                     {
@@ -169,7 +169,7 @@ public class MenuHeartShop : MonoBehaviour
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("finished playing video ");
 
-        LOG.echo("[Response Charge Heart] " + type + "/" + Purchases.CountHeart());
+        LOG.trace("[Response Charge Heart] " + type + "/" + Purchases.CountHeart());
     }
 
     private IEnumerator TimerCount()

@@ -62,7 +62,7 @@ public class MenuTitle : MonoBehaviour
         {
             MenuTermsAndConditions.PopUp(() =>
             {
-                LOG.echo("TermsAgreed");
+                LOG.trace("TermsAgreed");
                 UserSetting.IsTermsAgreement = true;
             });
 
@@ -166,7 +166,7 @@ public class MenuTitle : MonoBehaviour
 
     public void OnNetConnected()
     {
-        LOG.echo("NetConnection[ OK ]");
+        LOG.trace("NetConnection[ OK ]");
         if (UserSetting.UserInfo.userPk < 0)
             UserSetting.AddNewUserInfoToServer();
         else
