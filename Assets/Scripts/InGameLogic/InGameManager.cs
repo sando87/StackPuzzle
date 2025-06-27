@@ -2659,59 +2659,59 @@ public class InGameManager : MonoBehaviour
             }));
         }
     }
-    private void Attack(int count, Vector3 fromPos)
-    {
-        if (count <= 0)
-            return;
+    // private void Attack(int count, Vector3 fromPos)
+    // {
+    //     if (count <= 0)
+    //         return;
 
-        if (FieldType == GameFieldType.Stage)
-            return;
-        else if (FieldType == GameFieldType.pvpPlayer)
-        {
-            fromPos.z -= 1;
-            GameObject[] objs = new GameObject[count];
-            for (int i = 0; i < count; ++i)
-            {
-                objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
-                objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            }
+    //     if (FieldType == GameFieldType.Stage)
+    //         return;
+    //     else if (FieldType == GameFieldType.pvpPlayer)
+    //     {
+    //         fromPos.z -= 1;
+    //         GameObject[] objs = new GameObject[count];
+    //         for (int i = 0; i < count; ++i)
+    //         {
+    //             objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+    //             objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+    //         }
 
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+    //         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
-            Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Opponent.AttackPointFrame.transform.position;
-            StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
-            {
-                Destroy(destObj);
+    //         Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Opponent.AttackPointFrame.transform.position;
+    //         StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
+    //         {
+    //             Destroy(destObj);
 
-                if(AttackPointFrame.Points > 0)
-                    AttackPointFrame.AddPoints(-1);
-                else
-                    InstPVP_Opponent.AttackPointFrame.AddPoints(1);
-            }));
-        }
-        else if (FieldType == GameFieldType.pvpOpponent)
-        {
-            fromPos.z -= 1;
-            GameObject[] objs = new GameObject[count];
-            for (int i = 0; i < count; ++i)
-            {
-                objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
-                objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            }
+    //             if(AttackPointFrame.Points > 0)
+    //                 AttackPointFrame.AddPoints(-1);
+    //             else
+    //                 InstPVP_Opponent.AttackPointFrame.AddPoints(1);
+    //         }));
+    //     }
+    //     else if (FieldType == GameFieldType.pvpOpponent)
+    //     {
+    //         fromPos.z -= 1;
+    //         GameObject[] objs = new GameObject[count];
+    //         for (int i = 0; i < count; ++i)
+    //         {
+    //             objs[i] = GameObject.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+    //             objs[i].transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+    //         }
 
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
-            Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Player.AttackPointFrame.transform.position;
-            StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
-            {
-                Destroy(destObj);
+    //         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+    //         Vector3 destPos = AttackPointFrame.Points > 0 ? AttackPointFrame.transform.position : InstPVP_Player.AttackPointFrame.transform.position;
+    //         StartCoroutine(AnimateAttack(objs, destPos, (destObj) =>
+    //         {
+    //             Destroy(destObj);
 
-                if (AttackPointFrame.Points > 0)
-                    AttackPointFrame.AddPoints(-1);
-                else
-                    InstPVP_Player.AttackPointFrame.AddPoints(1);
-            }));
-        }
-    }
+    //             if (AttackPointFrame.Points > 0)
+    //                 AttackPointFrame.AddPoints(-1);
+    //             else
+    //                 InstPVP_Player.AttackPointFrame.AddPoints(1);
+    //         }));
+    //     }
+    // }
     IEnumerator AnimateAttackNew(GameObject obj, Transform destTr, Action EventEnd)
     {
         yield return null;

@@ -22,8 +22,6 @@ public class MenuBattle : MonoBehaviour
     public GameObject OpponentRect;
     public TextMeshProUGUI PlayerLimit;
     public TextMeshProUGUI OpponentLimit;
-    public GameObject AttackPointFrame;
-    public Sprite ItemEmptyImage;
     public ItemButton[] PlayerItemSlots;
     public ItemButton[] OpponentItemSlots;
     public GameObject TimeoutEffectAnim;
