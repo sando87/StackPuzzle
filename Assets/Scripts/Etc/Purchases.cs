@@ -158,7 +158,8 @@ public class PurchaseInfo
 
 public class Purchases
 {
-    private const string prefsKeyName = "pcInfo5";
+    private const string prefsKeyName5 = "pcInfo5";
+    private const string prefsKeyName6 = "pcInfo6";
     private static PurchaseInfo mInfo = null;
 
     public static void Initialize()
@@ -329,9 +330,14 @@ public class Purchases
 
     private static PurchaseInfo LoadPurchaseInfo()
     {
-        if (PlayerPrefs.HasKey(prefsKeyName))
+        if (PlayerPrefs.HasKey(prefsKeyName5))
         {
-            string hexStr = PlayerPrefs.GetString(prefsKeyName);
+            PlayerPrefs.DeleteKey(prefsKeyName5);
+        }
+        
+        if (PlayerPrefs.HasKey(prefsKeyName6))
+        {
+            string hexStr = PlayerPrefs.GetString(prefsKeyName6);
             byte[] bytes = Utils.HexStringToByteArray(hexStr);
             byte[] originData = Utils.Decrypt(bytes);
             PurchaseInfo info = new PurchaseInfo();
@@ -351,11 +357,12 @@ public class Purchases
         byte[] bInfo = info.Serialize();
         byte[] encryptInfo = Utils.Encrypt(bInfo);
         string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
-        PlayerPrefs.SetString(prefsKeyName, hexStr);
+        PlayerPrefs.SetString(prefsKeyName6, hexStr);
     }
     public static void DeletePurchaseInfo()
     {
-        PlayerPrefs.DeleteKey(prefsKeyName);
+        PlayerPrefs.DeleteKey(prefsKeyName5);
+        PlayerPrefs.DeleteKey(prefsKeyName6);
     }
     public static void AddAdsCount()
     {
