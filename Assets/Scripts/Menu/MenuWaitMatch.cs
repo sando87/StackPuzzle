@@ -22,7 +22,6 @@ public class MenuWaitMatch : MonoBehaviour
     public TextMeshProUGUI Exp;
     public TextMeshProUGUI WinLose;
     public Slider ExpBar;
-    public Image RankImage;
     public GameObject BtnFriend;
     public GameObject BtnMatch;
     public GameObject BtnCancle;
@@ -374,7 +373,7 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void UpdateUserInfo(UserInfo info)
     {
-        WinLose.text = info.win + " / " + info.lose;
+        // WinLose.text = info.win + " / " + info.lose;
 
         int rank = info.rank;
         if (rank > 0)
@@ -410,7 +409,7 @@ public class MenuWaitMatch : MonoBehaviour
         {
             btn.gameObject.SetActive(false);
             continue;
-            
+
             int idx = btn.transform.GetSiblingIndex();
             MatchingLevel level = (MatchingLevel)(idx + 1);
             if(level == UserSetting.MatchLevel)
