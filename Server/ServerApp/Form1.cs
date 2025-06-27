@@ -147,7 +147,7 @@ namespace ServerApp
         {
             if (!mUsers.ContainsKey(endPoint))
             {
-                LOG.echo(endPoint);
+                LOG.trace(endPoint);
                 return null;
             }
             return mUsers[endPoint];
@@ -166,9 +166,9 @@ namespace ServerApp
                 mCurrentSession = GetUser(pack.Key);
                 if (mCurrentSession == null)
                 {
-                    LOG.echo(pack.Key);
-                    LOG.echo(requestMsg.Cmd);
-                    LOG.echo(body.Length);
+                    LOG.trace(pack.Key);
+                    LOG.trace(requestMsg.Cmd);
+                    LOG.trace(body.Length);
                     continue;
                 }
 
@@ -491,7 +491,7 @@ namespace ServerApp
             SessionUser destSession = GetUser(endPoint);
             if (destSession == null)
             {
-                LOG.echo(endPoint);
+                LOG.trace(endPoint);
                 return;
             }
 
@@ -562,7 +562,7 @@ namespace ServerApp
             {
                 if (user.IsPulseTimeout())
                 {
-                    LOG.echo("DeadSession : " + user.Endpoint);
+                    LOG.trace("DeadSession : " + user.Endpoint);
                     DisconnectUser(user.Endpoint);
                 }
             }
@@ -601,7 +601,7 @@ namespace ServerApp
             }
 
             string msg = mMonitoringInfo.ToMessage();
-            LOG.echo(msg);
+            LOG.trace(msg);
             mMonitoringInfo.Reset();
         }
     }

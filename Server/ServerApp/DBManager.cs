@@ -309,8 +309,8 @@ namespace ServerApp
                     {
                         if (reader.Read())
                         {
-                            int rank = (int)reader["cnt"] + 1;
-                            return rank;
+                            Int64 rank = (Int64)reader["cnt"] + 1;
+                            return (int)rank;
                         }
                     }
                 }

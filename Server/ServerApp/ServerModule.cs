@@ -28,14 +28,14 @@ namespace ServerApp
             endPoint = ep.Address.ToString() + ":" + ep.Port;
             ringBuffer = new RingBuffer();
             recvBuffer = new byte[ServerModule.RECV_BUFSIZE];
-            LOG.echo("Connect " + endPoint);
+            LOG.trace("Connect " + endPoint);
         }
         public void Disconnect()
         {
             streamWriter.Close();
             streamReader.Close();
             tcpClient.Close();
-            LOG.echo("Disconnect " + endPoint);
+            LOG.trace("Disconnect " + endPoint);
         }
     }
     class ServerModule
@@ -61,7 +61,7 @@ namespace ServerApp
 
             if (mListener == null)
             {
-                LOG.echo("Open Server");
+                LOG.trace("Open Server");
                 new Thread(() => AcceptClient(port)).Start();
             }
                 
@@ -77,14 +77,14 @@ namespace ServerApp
             {
                 mListener.Stop();
                 mListener = null;
-                LOG.echo("Close Server");
+                LOG.trace("Close Server");
             }
         }
         public int SendData(string endPoint, byte[] data)
         {
             if (!mClients.ContainsKey(endPoint))
             {
-                LOG.echo(endPoint);
+                LOG.trace(endPoint);
                 return 0;
             }
 
