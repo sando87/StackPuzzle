@@ -18,6 +18,9 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Image FlushImagePrafab = null;
     [SerializeField] private Image LockImage = null;
 
+    private Color SocreColorPlayer = new Color(30f / 255f, 199f / 255f, 26f / 255f, 1);
+    private Color SocreColorOpponent = new Color(199f / 255f, 47f / 255f, 26f / 255f, 1);
+
     public int CurrentScore { get; private set; } = 0;
     public bool IsIdle 
     { 
@@ -222,7 +225,7 @@ public class PVPScoreBar : MonoBehaviour
     {
         float newWidth = Mathf.Abs(score) * mWidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-        CurrentScoreBar.color = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+        CurrentScoreBar.color = score > 0 ? SocreColorPlayer : SocreColorOpponent;
     }
 
     public void AddScore(int score)
@@ -286,8 +289,8 @@ public class PVPScoreBar : MonoBehaviour
         mPrevSub = newSubScoreBar;
 
         mIsTweening++;
-        Color startColor = score > 0 ? new Color(0.7f, 1, 0.7f, 1) : new Color(1, 0.7f, 0.7f, 1);
-        Color endColor = score > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+        Color startColor = Color.white;
+        Color endColor = score > 0 ? SocreColorPlayer : SocreColorOpponent;
         newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
@@ -295,7 +298,7 @@ public class PVPScoreBar : MonoBehaviour
             mTouchedTime = Time.time;
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x + width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-            CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+            CurrentScoreBar.color = CurrentScore > 0 ? SocreColorPlayer : SocreColorOpponent;
 
             if (mPrevSub == newSubScoreBar)
             {
@@ -342,8 +345,8 @@ public class PVPScoreBar : MonoBehaviour
         mPrevSub = newSubScoreBar;
 
         mIsTweening++;
-        Color startColor = score > 0 ? new Color(0, 1, 0, 1) : new Color(1, 0, 0, 1);
-        Color endColor = score > 0 ? new Color(1, 1, 1, 1) : new Color(1, 1, 1, 1);
+        Color startColor = Color.white;
+        Color endColor = Color.white;
         newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
         .OnComplete(() =>
         {
@@ -351,7 +354,7 @@ public class PVPScoreBar : MonoBehaviour
             mTouchedTime = Time.time;
             float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x - width;
             CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-            CurrentScoreBar.color = CurrentScore > 0 ? new Color(0.2f, 1, 0.2f, 1) : new Color(1, 0.2f, 0.2f, 1);
+            CurrentScoreBar.color = Color.white;
 
             if (mPrevSub == newSubScoreBar)
             {
