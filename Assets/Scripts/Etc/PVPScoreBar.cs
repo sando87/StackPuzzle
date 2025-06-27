@@ -187,7 +187,7 @@ public class PVPScoreBar : MonoBehaviour
         float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
 
         float pow = Mathf.Pow(4, zoomLevel);
-        CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
+        RootScoreArea.transform.DOScaleX(1f / pow, zommingDuration);
         flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration);
         BlocksZoomingEffect(zoomLevel - 1, 0, zommingDuration);
         BlocksZoomingEffect(zoomLevel, 1, zommingDuration);
