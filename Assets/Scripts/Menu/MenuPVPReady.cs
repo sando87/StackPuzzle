@@ -39,9 +39,11 @@ public class MenuPVPReady : MonoBehaviour
     private void UpdateUserInfo(UserInfo player, UserInfo opponent)
     {
         PlayerLeague.sprite = player.maxLeague.GetSprite();
+        PlayerLeague.gameObject.SetActive(false);
         PlayerName.text = player.userName;
         PlayerLevel.text = "Lv." + Utils.ToLevel(player.score);
         OpponentLeague.sprite = opponent.maxLeague.GetSprite();
+        OpponentLeague.gameObject.SetActive(false);
         OpponentName.text = opponent.userName;
         OpponentLevel.text = "Lv." + Utils.ToLevel(opponent.score);
     }

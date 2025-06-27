@@ -498,7 +498,7 @@ namespace ServerApp
             SearchOpponentInfo body = new SearchOpponentInfo();
             body.MyUserInfo = destSession.UserInfo;
             body.OppUserInfo = opponent;
-            body.Level = destSession.MatchLevel != MatchingLevel.All ? destSession.MatchLevel : (oppLevel != MatchingLevel.All ? oppLevel : MatchingLevel.Silver);
+            body.Level = MatchingLevel.Bronze; // destSession.MatchLevel != MatchingLevel.All ? destSession.MatchLevel : (oppLevel != MatchingLevel.All ? oppLevel : MatchingLevel.Silver);
             body.State = state;
 
             Header responseMsg = new Header();
@@ -526,11 +526,11 @@ namespace ServerApp
                 if (me == opp)
                     continue;
 
-                if(me.MatchLevel != MatchingLevel.All && opp.MatchLevel != MatchingLevel.All)
-                {
-                    if (me.MatchLevel != opp.MatchLevel)
-                        continue;
-                }
+                // if(me.MatchLevel != MatchingLevel.All && opp.MatchLevel != MatchingLevel.All)
+                // {
+                //     if (me.MatchLevel != opp.MatchLevel)
+                //         continue;
+                // }
 
                 float detectRange = (me.MatchingTime() + 1) * 50;
                 float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);

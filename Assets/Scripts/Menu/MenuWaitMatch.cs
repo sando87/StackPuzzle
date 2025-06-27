@@ -166,13 +166,13 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
-        if (currentPossibleLeague < UserSetting.MatchLevel && UserSetting.MatchLevel != MatchingLevel.All)
-        {
-            int levelForNext = Utils.LevelForNextLeague(UserSetting.UserScore);
-            MenuMessageBox.PopUp("Required\n" + levelForNext + " Level", false, null);
-            return;
-        }
+        // MatchingLevel currentPossibleLeague = Utils.ToLeagueLevel(UserSetting.UserScore);
+        // if (currentPossibleLeague < UserSetting.MatchLevel && UserSetting.MatchLevel != MatchingLevel.All)
+        // {
+        //     int levelForNext = Utils.LevelForNextLeague(UserSetting.UserScore);
+        //     MenuMessageBox.PopUp("Required\n" + levelForNext + " Level", false, null);
+        //     return;
+        // }
 
         if (Purchases.CountHeart() <= 0)
         {
@@ -408,6 +408,9 @@ public class MenuWaitMatch : MonoBehaviour
     {
         foreach(Button btn in LeagueLevelBtns)
         {
+            btn.gameObject.SetActive(false);
+            continue;
+            
             int idx = btn.transform.GetSiblingIndex();
             MatchingLevel level = (MatchingLevel)(idx + 1);
             if(level == UserSetting.MatchLevel)
