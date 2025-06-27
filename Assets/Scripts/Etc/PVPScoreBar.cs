@@ -72,6 +72,7 @@ public class PVPScoreBar : MonoBehaviour
         float totalWidth = UserSetting.ScorePerAttack * mMaxAttackCount * mWidthPerScore;
         flushImageRoot.rectTransform.SetAnchoredWidth(totalWidth);
         int step = 1;
+        float height = 0.25f;
 
         for (int i = step; i <= mMaxAttackCount; i += step)
         {
@@ -79,8 +80,8 @@ public class PVPScoreBar : MonoBehaviour
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[0]);
-            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
-            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, height);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, height);
             image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[0];
         }
@@ -92,8 +93,8 @@ public class PVPScoreBar : MonoBehaviour
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[1]);
-            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
-            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, height);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, height);
             image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[1];
         }
@@ -105,8 +106,8 @@ public class PVPScoreBar : MonoBehaviour
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[2]);
-            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
-            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, height);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, height);
             image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[2];
         }
@@ -118,8 +119,8 @@ public class PVPScoreBar : MonoBehaviour
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[3]);
-            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
-            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, height);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, height);
             image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[3];
         }
@@ -131,8 +132,8 @@ public class PVPScoreBar : MonoBehaviour
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[4]);
-            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, 0.5f);
-            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, 0.5f);
+            image.rectTransform.anchorMin = new Vector2(offsetPosX / totalWidth, height);
+            image.rectTransform.anchorMax = new Vector2(offsetPosX / totalWidth, height);
             image.rectTransform.SetAnchoredPosX(0);
             image.sprite = FlushImages[4];
         }
@@ -184,8 +185,20 @@ public class PVPScoreBar : MonoBehaviour
 
         float pow = Mathf.Pow(4, zoomLevel);
         CurrentScoreBar.transform.DOScaleX(1f / pow, zommingDuration);
-        flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration)
-        .OnComplete(() => SubGroup[zoomLevel].gameObject.SetActive(false));
+        flushImageRoot.rectTransform.DOSizeDelta(new Vector2(totalWidth / pow, sizeDelta.y), zommingDuration);
+        BlocksZoomingEffect(zoomLevel - 1, 0, zommingDuration);
+        BlocksZoomingEffect(zoomLevel, 1, zommingDuration);
+        BlocksZoomingEffect(zoomLevel + 1, 1, zommingDuration);
+    }
+    void BlocksZoomingEffect(int targetZoomLevel, float zoomScale, float duration)
+    {
+        if(targetZoomLevel < 0 || targetZoomLevel >= SubGroup.Length)
+            return;
+
+        foreach(Transform block in SubGroup[targetZoomLevel])
+        {
+            block.DOScale(zoomScale, duration);
+        }
     }
     int CalculateCurrentZoomLevel()
     {
