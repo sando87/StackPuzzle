@@ -376,7 +376,7 @@ public class MenuWaitMatch : MonoBehaviour
         // WinLose.text = info.win + " / " + info.lose;
 
         int rank = info.rank;
-        if (rank > 0)
+        if (info.score > 0)
         {
             string suffix = rank == 1 ? "st" : rank == 2 ? "nd" : rank == 3 ? "rd" : "th";
             Ranking.text = rank + suffix;
