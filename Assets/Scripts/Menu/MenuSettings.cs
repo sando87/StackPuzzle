@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -60,7 +61,8 @@ public class MenuSettings : MonoBehaviour
         mTouchCount++;
         if(mTouchCount >= 5)
         {
-            string currentDeviceName = UserSetting.UserInfo.deviceName;
+            int botAILevel = 3;
+            string currentDeviceName = botAILevel + "_" + DateTime.Now.Ticks.ToString();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             MenuEditBox.PopUp("DeviceName\n(off:disable)", currentDeviceName,(isOK, inputText) =>
             {

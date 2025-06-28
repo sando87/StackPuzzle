@@ -152,7 +152,13 @@ public class UserSetting
         else
         {
             UserInfo info = new UserInfo();
+
+#if UNITY_EDITOR
+            info.deviceName = "Editor" + SystemInfo.deviceUniqueIdentifier;
+#else
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
+#endif
+            
             return info;
         }
     }
