@@ -125,7 +125,24 @@ class LOG
         return log.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
     }
 
-
+    static public void trace(string val = "",
+        [CallerFilePath] string file = null,
+        [CallerMemberName] string caller = null,
+        [CallerLineNumber] int lineNumber = 0)
+    {
+        LogHeader log = new LogHeader();
+        log.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        log.threadID = Thread.CurrentThread.ManagedThreadId.ToString();
+        log.logType = "trace";
+        log.fileName = file.Split('\\').Last();
+        log.funcName = caller;
+        log.lineNumber = lineNumber.ToString();
+        log.message = val;
+        log.stackTrace = "";
+        string msg = log.ToString();
+        LogWriterConsole?.Invoke(msg);
+        AddLog(msg);
+    }
 
     //디버깅용: 간단한 정보와 함께 콘솔창에 남긴다.
     static public void trace<T>(T val,
