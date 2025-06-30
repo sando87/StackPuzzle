@@ -51,7 +51,8 @@ public class InGameManager : MonoBehaviour
     public AttackPoints AttackPointFrame;
     public GameObject AttackBullet;
     public GameObject ScoreTextDest;
-    public PVPScoreBar PVPScoreBar;
+
+    public PVPScoreBar PVPScoreBar { get { return MenuBattle.Inst().PVPScoreBar; } }
 
     private Frame[,] mFrames = null;
     private StageInfo mStageInfo = null;
@@ -256,7 +257,6 @@ public class InGameManager : MonoBehaviour
         // AttackPointFrame.ResetPoints();
         // Vector3 rightTopPosition = mFrames[CountX - 1, CountY - 1].transform.position + new Vector3(0, GridSize, 0);
         // AttackPointFrame.transform.position = rightTopPosition;
-        PVPScoreBar.Init();
     }
     public void InitProducts()
     {
@@ -3625,7 +3625,6 @@ public class InGameManager : MonoBehaviour
         EventReduceLimit = null;
 
         //AttackPointFrame.ResetPoints();
-        PVPScoreBar.Init();
         mIsFinished = false;
         mIsItemEffect = false;
         mIsDropping = false;

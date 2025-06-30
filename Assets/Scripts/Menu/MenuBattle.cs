@@ -28,9 +28,12 @@ public class MenuBattle : MonoBehaviour
     public GameObject IceBlockUp1;
     public GameObject IceBlockUp2;
     public GameObject IceBlockUp3;
+    public PVPScoreBar PVPScoreBarPrefab;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;
+
+    public PVPScoreBar PVPScoreBar { get; private set; } = null;
 
     private void Update()
     {
@@ -92,6 +95,8 @@ public class MenuBattle : MonoBehaviour
         //OpponentName.text = InGameManager.InstPVP_Opponent.UserInfo.userName;
         //PlayerScore.text = InGameManager.InstPVP_Player.UserInfo.score.ToString();
         //OpponentScore.text = InGameManager.InstPVP_Opponent.UserInfo.score.ToString();
+
+        InitPVPScoreBar();
 
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
@@ -419,4 +424,14 @@ public class MenuBattle : MonoBehaviour
         TimeoutEffectAnim.SetActive(false);
     }
 
+    void InitPVPScoreBar()
+    {
+        if (PVPScoreBar != null)
+        {
+            Destroy(PVPScoreBar.gameObject);
+        }
+
+        PVPScoreBar = Instantiate(PVPScoreBarPrefab, transform);
+        PVPScoreBar.Init();
+    }
 }
