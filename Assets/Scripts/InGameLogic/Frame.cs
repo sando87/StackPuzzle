@@ -8,13 +8,13 @@ using UnityEngine;
 
 public class Frame : MonoBehaviour
 {
-    private int mCoverCount;
+    private int mRopeCount;
     private int mBushIndex;
 
-    public Sprite[] Covers;
+    public Sprite[] Ropes;
     public Sprite[] Bushes;
     public SpriteRenderer[] Borders;
-    public SpriteRenderer CoverRenderer;
+    public SpriteRenderer RopeRenderer;
     public GameObject BreakStonesParticle;
     public GameObject BushObject;
     public GameObject BushEffectPrefab;
@@ -28,10 +28,10 @@ public class Frame : MonoBehaviour
     public bool IsBottom { get { return IndexY == 0; } }
     public bool IsTop { get { return IndexY == GameManager.CountY - 1; } }
     public Product ChildProduct { get; set; }
-    public bool IsCovered { get { return mCoverCount > 0; } }
+    public bool IsRope { get { return mRopeCount > 0; } }
     public bool IsBushed { get { return mBushIndex > 0; } }
 
-    public Action<Frame> EventBreakCover;
+    public Action<Frame> EventBreakRope;
     public Action<Frame> EventBreakBush;
     public Action<int> EventScoreText;
 
@@ -46,7 +46,7 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int coverCount, int bushIndex = 0)
+    public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int ropeCount, int bushIndex = 0)
     {
         GameManager = mgr;
         IndexX = idxX;
@@ -55,17 +55,17 @@ public class Frame : MonoBehaviour
         if (isDisabled)
         {
             Empty = true;
-            mCoverCount = 0;
-            CoverRenderer.sprite = Covers[0];
+            mRopeCount = 0;
+            RopeRenderer.sprite = Ropes[0];
             gameObject.SetActive(false);
         }
         else
         {
             Empty = false;
-            mCoverCount = coverCount;
-            CoverRenderer.sprite = Covers[mCoverCount];
-            float deg = 90 * (mCoverCount - 1);
-            CoverRenderer.transform.rotation = Quaternion.Euler(0, 0, deg);
+            mRopeCount = ropeCount;
+            RopeRenderer.sprite = Ropes[mRopeCount];
+            float deg = 90 * (mRopeCount - 1);
+            RopeRenderer.transform.rotation = Quaternion.Euler(0, 0, deg);
         }
 
         mBushIndex = bushIndex;
@@ -79,17 +79,17 @@ public class Frame : MonoBehaviour
     }
 
 
-    public void BreakCover(int count = 1)
+    public void BreakRope(int count = 1)
     {
-        if (mCoverCount <= 0)
+        if (mRopeCount <= 0)
             return;
 
-        mCoverCount = Mathf.Max(0, mCoverCount - count);
-        CoverRenderer.sprite = Covers[mCoverCount];
-        CoverRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mCoverCount - 1)), 0.5f, RotateMode.FastBeyond360);
+        mRopeCount = Mathf.Max(0, mRopeCount - count);
+        RopeRenderer.sprite = Ropes[mRopeCount];
+        RopeRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mRopeCount - 1)), 0.5f, RotateMode.FastBeyond360);
         CreateBreakStoneEffect();
-        if(mCoverCount <= 0)
-            EventBreakCover?.Invoke(this);
+        if(mRopeCount <= 0)
+            EventBreakRope?.Invoke(this);
     }
 
     public Frame Left(int offX = 1)
@@ -255,7 +255,7 @@ public class Frame : MonoBehaviour
     }
     public bool IsObstacled()
     {
-        if (IsBushed || IsCovered)
+        if (IsBushed || IsRope)
             return true;
 
         return false;
@@ -266,9 +266,9 @@ public class Frame : MonoBehaviour
         {
             BreakBush(count);
         }
-        else if (IsCovered)
+        else if (IsRope)
         {
-            BreakCover(count);
+            BreakRope(count);
         }
     }
 

@@ -26,7 +26,7 @@ public class PVPScoreBar : MonoBehaviour
     { 
         get 
         { 
-            return Time.time > mTouchedTime + UserSetting.ChocoFlushInterval && mIsTweening == 0;
+            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && mIsTweening == 0;
         }
     }
 

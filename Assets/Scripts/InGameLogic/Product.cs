@@ -10,7 +10,6 @@ public class Product : MonoBehaviour
     public Animation Animation;
     public SpriteRenderer Renderer;
     public Sprite[] Images;
-    public Sprite[] Chocos;
     public Sprite[] CapImages;
     public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
@@ -27,7 +26,7 @@ public class Product : MonoBehaviour
     public GameObject CapBreakingEffectPrefab;
     public IceBlock IcedBlock;
 
-    public Action EventUnWrapChoco;
+    public Action EventUnWrapIce;
     public Action EventUnWrapCap;
 
     public bool IsSkillable { get { return Skill != ProductSkill.Nothing && !SkillCasted; } }
@@ -47,7 +46,7 @@ public class Product : MonoBehaviour
     private bool mSkillCasted = false;
     public bool SkillCasted { get { return mSkillCasted; } set { if (!IsObstacled()) mSkillCasted = value; } }
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || SkillCasted; } }
-    public bool IsChocoBlock { get { return IcedBlock.IsIced; } }
+    public bool IsIceBlock { get { return IcedBlock.IsIced; } }
     public bool IsClosed { get { return false; } }
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
     public SwipChain Chain { get; set; } = null;
@@ -186,7 +185,7 @@ public class Product : MonoBehaviour
     }
     public bool IsObstacled()
     {
-        if (IsCapped || IsChocoBlock)
+        if (IsCapped || IsIceBlock)
             return true;
 
         return false;
@@ -197,9 +196,9 @@ public class Product : MonoBehaviour
         {
             BreakCap(count);
         }
-        else if(IsChocoBlock)
+        else if(IsIceBlock)
         {
-            BreakChocoBlock(count);
+            BreakIceBlock(count);
         }
     }
     public bool ReadyForDestroy(int combo)
@@ -601,14 +600,14 @@ public class Product : MonoBehaviour
     }
 
 
-    private bool BreakChocoBlock(int count = 1)
+    private bool BreakIceBlock(int count = 1)
     {
         if (!IcedBlock.IsIced)
             return false;
 
         if(IcedBlock.BreakBlock(count))
         {
-            EventUnWrapChoco?.Invoke();
+            EventUnWrapIce?.Invoke();
             return true;
         }
         return false;

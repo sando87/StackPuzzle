@@ -1,4 +1,4 @@
-GoalType,Cover
+GoalType,Cap
 GoalValue,9
 MoveLimit,20
 TimeLimit,0

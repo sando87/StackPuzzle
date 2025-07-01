@@ -450,7 +450,7 @@ public class AutoBalancer : MonoBehaviour
                 if (pro == null || pro.IsLocked)
                     continue;
 
-                if (pro.IsChocoBlock)
+                if (pro.IsIceBlock)
                     ret++;
             }
         }

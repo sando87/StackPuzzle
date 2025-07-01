@@ -7,8 +7,8 @@ public class InGameBillboard
     public int ItemOneMoreCount;
     public int ItemKeepComboCount;
     public int ItemSameColorCount;
-    public int CoverCount;
-    public int ChocoCount;
+    public int RopeCount;
+    public int IceCount;
     public int CapCount;
     public int BushCount;
     public int CurrentScore;
@@ -24,8 +24,8 @@ public class InGameBillboard
         ItemOneMoreCount = 0;
         ItemKeepComboCount = 0;
         ItemSameColorCount = 0;
-        CoverCount = 0;
-        ChocoCount = 0;
+        RopeCount = 0;
+        IceCount = 0;
         CapCount = 0;
         BushCount = 0;
         CurrentScore = 0;
@@ -42,8 +42,8 @@ public class InGameBillboard
         + ItemOneMoreCount + ","
         + ItemKeepComboCount + ","
         + ItemSameColorCount + ","
-        + CoverCount + ","
-        + ChocoCount + ","
+        + RopeCount + ","
+        + IceCount + ","
         + CapCount + ","
         + BushCount + ","
         + CurrentScore + ","
@@ -76,8 +76,8 @@ public class InGameBillboard
             case StageGoalType.ItemOneMore: return ItemOneMoreCount;
             case StageGoalType.ItemKeepCombo: return ItemKeepComboCount;
             case StageGoalType.ItemSameColor: return ItemSameColorCount;
-            case StageGoalType.Cover: return CoverCount;
-            case StageGoalType.Choco: return ChocoCount;
+            case StageGoalType.Rope: return RopeCount;
+            case StageGoalType.Ice: return IceCount;
             case StageGoalType.Cap: return CapCount;
             case StageGoalType.Bush: return BushCount;
             default: return 0;

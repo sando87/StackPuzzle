@@ -5,28 +5,28 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco, Cap, Bush }
+public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Rope, Ice, Cap, Bush }
 
 public class StageInfoCell
 {
-    public int ChocoCount;
+    public int IceCount;
     public int CapCount;
-    public int CoverCount;
+    public int RopeCount;
     public int BushCount;
     public bool IsDisabled;
 
-    public StageInfoCell(bool isDisabled, int chocoCount, int coverCount, int capCount, int bushCount)
+    public StageInfoCell(bool isDisabled, int iceCount, int ropeCount, int capCount, int bushCount)
     {
-        ChocoCount = chocoCount;
-        CoverCount = coverCount;
+        IceCount = iceCount;
+        RopeCount = ropeCount;
         CapCount = capCount;
         BushCount = bushCount;
         IsDisabled = isDisabled;
     }
     public StageInfoCell()
     {
-        ChocoCount = 0;
-        CoverCount = 0;
+        IceCount = 0;
+        RopeCount = 0;
         CapCount = 0;
         BushCount = 0;
         IsDisabled = false;
@@ -148,10 +148,10 @@ public class StageInfo
         GoalTypeEnum = StringToType(GoalType);
         if (GoalValue <= 0)
         {
-            if (GoalTypeEnum == StageGoalType.Choco)
-                GoalValue = GetChocoCount();
-            else if (GoalTypeEnum == StageGoalType.Cover)
-                GoalValue = GetCoverCount();
+            if (GoalTypeEnum == StageGoalType.Ice)
+                GoalValue = GetIceCount();
+            else if (GoalTypeEnum == StageGoalType.Rope)
+                GoalValue = GetRopeCount();
             else if (GoalTypeEnum == StageGoalType.Cap)
                 GoalValue = GetCapCount();
             else if (GoalTypeEnum == StageGoalType.Bush)
@@ -210,8 +210,8 @@ public class StageInfo
             case "ItemOneMore": image = Resources.Load<Sprite>("Images/itemOneMore"); break;
             case "ItemKeepCombo": image = Resources.Load<Sprite>("Images/itemKeepCombo"); break;
             case "ItemSameColor": image = Resources.Load<Sprite>("Images/itemSameColor"); break;
-            case "Cover": image = Resources.Load<Sprite>("Images/cover"); break;
-            case "Choco": image = Resources.Load<Sprite>("Images/choco"); break;
+            case "Rope": image = Resources.Load<Sprite>("Images/rope"); break;
+            case "Ice": image = Resources.Load<Sprite>("Images/ice"); break;
             case "Cap": image = Resources.Load<Sprite>("Images/cap"); break;
             case "Bush": image = Resources.Load<Sprite>("Images/bush"); break;
             default: break;
@@ -233,8 +233,8 @@ public class StageInfo
             case "ItemOneMore": type = StageGoalType.ItemOneMore; break;
             case "ItemKeepCombo": type = StageGoalType.ItemKeepCombo; break;
             case "ItemSameColor": type = StageGoalType.ItemSameColor; break;
-            case "Cover": type = StageGoalType.Cover; break;
-            case "Choco": type = StageGoalType.Choco; break;
+            case "Rope": type = StageGoalType.Rope; break;
+            case "Ice": type = StageGoalType.Ice; break;
             case "Cap": type = StageGoalType.Cap; break;
             case "Bush": type = StageGoalType.Bush; break;
             default: break;
@@ -317,10 +317,10 @@ public class StageInfo
             {
                 bool isDisabled = keyValue[0] == "x" ? true : false;
                 int productCapCount = int.Parse(keyValue[1]);
-                int productChocoCount = int.Parse(keyValue[2]);
+                int productIceCount = int.Parse(keyValue[2]);
                 int frameBushCount = int.Parse(keyValue[3]);
-                int frameCoverCount = int.Parse(keyValue[4]);
-                cells[xIdx] = new StageInfoCell(isDisabled, productChocoCount, frameCoverCount, productCapCount, frameBushCount);
+                int frameRopeCount = int.Parse(keyValue[4]);
+                cells[xIdx] = new StageInfoCell(isDisabled, productIceCount, frameRopeCount, productCapCount, frameBushCount);
             }
         }
         BoardInfo.Add(cells);
@@ -332,7 +332,7 @@ public class StageInfo
         {
             StageInfoCell cell = GetCell(xIdx, rowIndex);
             string isDis = cell.IsDisabled ? "x" : "o";
-            rowString += isDis + "/" + cell.CapCount + "/" + cell.ChocoCount + "/" + cell.BushCount + "/" + cell.CoverCount + " ";
+            rowString += isDis + "/" + cell.CapCount + "/" + cell.IceCount + "/" + cell.BushCount + "/" + cell.RopeCount + " ";
         }
         return "Rows," + rowString + NewLine;
     }
@@ -340,27 +340,27 @@ public class StageInfo
     {
         return BoardInfo[idxY][idxX];
     }
-    public int GetChocoCount()
+    public int GetIceCount()
     {
         int count = 0;
         foreach(StageInfoCell[] row in BoardInfo)
         {
             foreach(StageInfoCell cell in row)
             {
-                if (cell.ChocoCount > 0)
+                if (cell.IceCount > 0)
                     count++;
             }
         }
         return count;
     }
-    public int GetCoverCount()
+    public int GetRopeCount()
     {
         int count = 0;
         foreach (StageInfoCell[] row in BoardInfo)
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.CoverCount > 0)
+                if (cell.RopeCount > 0)
                     count++;
             }
         }
@@ -420,8 +420,8 @@ public class StageInfo
         string fullname = "Assets/Resources/StageInfo/Version" + Version + "/" + Num + ".txt";
         string data =
         // comments
-        "# 0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)" + NewLine +
-        "# GoalType : Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco" + NewLine +
+        "# 0/0/0/0 => cap(b)/ice(b)/bush(f)/rope(f)" + NewLine +
+        "# GoalType : Score,ComboN, ItemOneMore, ItemKeepCombo, ItemSameColor, Cap, Ice, Bush, Rope" + NewLine +
         "# Reward,gold/100" + NewLine +
         "# Reward,dia/5" + NewLine +
         "# Reward,life/1" + NewLine +

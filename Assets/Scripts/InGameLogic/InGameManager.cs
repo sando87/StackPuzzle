@@ -236,10 +236,10 @@ public class InGameManager : MonoBehaviour
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 StageInfoCell cellInfo = GetCellInversed(x, y);
-                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.CoverCount, cellInfo.BushCount);
-                mFrames[x, y].EventBreakCover = (frame) => {
-                    Billboard.CoverCount++;
-                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cover);
+                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount);
+                mFrames[x, y].EventBreakRope = (frame) => {
+                    Billboard.RopeCount++;
+                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
                 };
                 mFrames[x, y].EventBreakBush = (frame) => {
                     Billboard.BushCount++;
@@ -271,14 +271,14 @@ public class InGameManager : MonoBehaviour
                 Product pro = CreateNewProduct(mFrames[x, y]);
 
                 StageInfoCell cellInfo = GetCellInversed(x, y);
-                int chocoCount = cellInfo.ChocoCount;
-                if(chocoCount > 0)
-                    pro.IcedBlock.SetDepth(chocoCount);
+                int iceCount = cellInfo.IceCount;
+                if(iceCount > 0)
+                    pro.IcedBlock.SetDepth(iceCount);
 
                 pro.InitCap(cellInfo.CapCount);
-                pro.EventUnWrapChoco = () => {
-                    Billboard.ChocoCount++;
-                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Choco);
+                pro.EventUnWrapIce = () => {
+                    Billboard.IceCount++;
+                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Ice);
                 };
                 pro.EventUnWrapCap = () => {
                     Billboard.CapCount++;
@@ -307,7 +307,7 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
-        if (pro.ParentFrame.IsCovered)
+        if (pro.ParentFrame.IsRope)
             return;
 
         if(pro.Skill != ProductSkill.Nothing)
@@ -338,7 +338,7 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product product = swipeObj.GetComponent<Product>();
-        if (product.IsLocked || product.IsChocoBlock || product.ParentFrame.IsCovered)
+        if (product.IsLocked || product.IsIceBlock || product.ParentFrame.IsRope)
             return;
 
         Product targetProduct = null;
@@ -350,7 +350,7 @@ public class InGameManager : MonoBehaviour
             case SwipeDirection.RIGHT: targetProduct = product.Right(); break;
         }
 
-        if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsChocoBlock || targetProduct.ParentFrame.IsCovered)
+        if (targetProduct == null || targetProduct.IsLocked || targetProduct.IsIceBlock || targetProduct.ParentFrame.IsRope)
             return;
 
         if (product.Chain != targetProduct.Chain)
@@ -2829,7 +2829,7 @@ public class InGameManager : MonoBehaviour
                     break;
                 }
 
-                yield return new WaitForSeconds(UserSetting.ChocoFlushInterval);
+                yield return new WaitForSeconds(UserSetting.IceFlushInterval);
             }
             yield return null;
         }
@@ -2873,7 +2873,7 @@ public class InGameManager : MonoBehaviour
                 if (frame.Empty)
                     continue;
                 Product pro = frame.ChildProduct;
-                if (pro == null || pro.IsChocoBlock)
+                if (pro == null || pro.IsIceBlock)
                     continue;
 
                 products.Add(pro);
@@ -2996,12 +2996,12 @@ public class InGameManager : MonoBehaviour
                 if (Billboard.ItemSameColorCount >= targetCount)
                     isSuccess = true;
                 break;
-            case StageGoalType.Cover:
-                if (Billboard.CoverCount >= targetCount)
+            case StageGoalType.Rope:
+                if (Billboard.RopeCount >= targetCount)
                     isSuccess = true;
                 break;
-            case StageGoalType.Choco:
-                if (Billboard.ChocoCount >= targetCount)
+            case StageGoalType.Ice:
+                if (Billboard.IceCount >= targetCount)
                     isSuccess = true;
                 break;
             case StageGoalType.Cap:
@@ -3353,7 +3353,7 @@ public class InGameManager : MonoBehaviour
         for (int x = 0; x < CountX; ++x)
         {
             Product pro = mFrames[x, idxY].ChildProduct;
-            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+            if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                 rets.Add(pro);
         }
 
@@ -3363,7 +3363,7 @@ public class InGameManager : MonoBehaviour
             for (int x = 0; x < CountX; ++x)
             {
                 Product pro = mFrames[x, idxYUp].ChildProduct;
-                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                     rets.Add(pro);
             }
         }
@@ -3374,7 +3374,7 @@ public class InGameManager : MonoBehaviour
             for (int x = 0; x < CountX; ++x)
             {
                 Product pro = mFrames[x, idxYDown].ChildProduct;
-                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                     rets.Add(pro);
             }
         }
@@ -3392,7 +3392,7 @@ public class InGameManager : MonoBehaviour
         for (int y = 0; y < CountY; ++y)
         {
             Product pro = mFrames[idxX, y].ChildProduct;
-            if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+            if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                 rets.Add(pro);
         }
 
@@ -3402,7 +3402,7 @@ public class InGameManager : MonoBehaviour
             for (int y = 0; y < CountY; ++y)
             {
                 Product pro = mFrames[idxXRight, y].ChildProduct;
-                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                     rets.Add(pro);
             }
         }
@@ -3413,7 +3413,7 @@ public class InGameManager : MonoBehaviour
             for (int y = 0; y < CountY; ++y)
             {
                 Product pro = mFrames[idxXLeft, y].ChildProduct;
-                if (pro != null && !pro.IsLocked && !pro.IsChocoBlock)
+                if (pro != null && !pro.IsLocked && !pro.IsIceBlock)
                     rets.Add(pro);
             }
         }
@@ -3535,7 +3535,7 @@ public class InGameManager : MonoBehaviour
     public int NextMatchCount(Product mainPro, SwipeDirection dir)
     {
         Product subPro = mainPro.Dir(dir);
-        if (subPro == null || subPro.Color == mainPro.Color || subPro.IsChocoBlock || subPro.Skill != ProductSkill.Nothing)
+        if (subPro == null || subPro.Color == mainPro.Color || subPro.IsIceBlock || subPro.Skill != ProductSkill.Nothing)
             return 0;
 
         List<Product> matchesMain = new List<Product>();
@@ -3585,13 +3585,13 @@ public class InGameManager : MonoBehaviour
             return ProductSkill.SameColor;
         }
     }
-    private int GetChocoCount()
+    private int GetIceCount()
     {
         int count = 0;
         foreach(Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro != null && pro.IsChocoBlock)
+            if (pro != null && pro.IsIceBlock)
                 count++;
         }
         return count;
@@ -3604,7 +3604,7 @@ public class InGameManager : MonoBehaviour
         // if (FieldType == GameFieldType.pvpPlayer)
         // {
         //     //pvp 에서 역전을 위한 장치 (방해블럭이 많을수록 colorCount값이 낮아진다)
-        //     float rate = GetChocoCount() / (mFrames.Length * 0.5f);
+        //     float rate = GetIceCount() / (mFrames.Length * 0.5f);
         //     rate = Mathf.Min(rate, 1.0f);
         //     colorCount = colorCount - rate;
         // }
@@ -3680,7 +3680,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsChocoBlock || pro.IsCapped)
+            if (pro == null || pro.IsIceBlock || pro.IsCapped)
                 continue;
 
             if (pro.Skill != ProductSkill.Nothing)

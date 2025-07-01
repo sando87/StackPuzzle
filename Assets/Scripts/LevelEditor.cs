@@ -408,17 +408,17 @@ public class LevelEditor : EditorWindow
         {
             GUI.Box(GUILayoutUtility.GetLastRect(), CapImages[block.CapCount - 1].texture);
         }
-        if (block.ChocoCount > 0)
+        if (block.IceCount > 0)
         {
-            GUI.Box(GUILayoutUtility.GetLastRect(), IceImages[block.ChocoCount - 1].texture);
+            GUI.Box(GUILayoutUtility.GetLastRect(), IceImages[block.IceCount - 1].texture);
         }
         if (block.BushCount > 0)
         {
             GUI.Box(GUILayoutUtility.GetLastRect(), BushImages[block.BushCount - 1].texture);
         }
-        if (block.CoverCount > 0)
+        if (block.RopeCount > 0)
         {
-            GUI.Box(GUILayoutUtility.GetLastRect(), RopeImages[block.CoverCount - 1].texture);
+            GUI.Box(GUILayoutUtility.GetLastRect(), RopeImages[block.RopeCount - 1].texture);
         }
     }
     private void OnClickBlock(int idxX, int idxY)
@@ -439,8 +439,8 @@ public class LevelEditor : EditorWindow
                 }
             case SelectType.IceProduct:
                 {
-                    block.ChocoCount++;
-                    block.ChocoCount %= IceImages.Length + 1;
+                    block.IceCount++;
+                    block.IceCount %= IceImages.Length + 1;
                     break;
                 }
             case SelectType.BushFrame:
@@ -451,8 +451,8 @@ public class LevelEditor : EditorWindow
                 }
             case SelectType.RopeFrame:
                 {
-                    block.CoverCount++;
-                    block.CoverCount %= RopeImages.Length + 1;
+                    block.RopeCount++;
+                    block.RopeCount %= RopeImages.Length + 1;
                     break;
                 }
         }
@@ -512,9 +512,9 @@ public class LevelEditor : EditorWindow
         {
             case StageGoalType.Score: GoalTypeIndex = 0; return;
             case StageGoalType.Cap: GoalTypeIndex = 1; return;
-            case StageGoalType.Choco: GoalTypeIndex = 2; return;
+            case StageGoalType.Ice: GoalTypeIndex = 2; return;
             case StageGoalType.Bush: GoalTypeIndex = 3; return;
-            case StageGoalType.Cover: GoalTypeIndex = 4; return;
+            case StageGoalType.Rope: GoalTypeIndex = 4; return;
         }
     }
     private void ChangeGoalTypeTo(int index)
@@ -524,9 +524,9 @@ public class LevelEditor : EditorWindow
         {
             case 0: goalTypeString = "Score"; break;
             case 1: goalTypeString = "Cap"; break;
-            case 2: goalTypeString = "Choco"; break;
+            case 2: goalTypeString = "Ice"; break;
             case 3: goalTypeString = "Bush"; break;
-            case 4: goalTypeString = "Cover"; break;
+            case 4: goalTypeString = "Rope"; break;
         }
 
         mStageInfo.GoalType = goalTypeString;
@@ -537,9 +537,9 @@ public class LevelEditor : EditorWindow
         switch (mStageInfo.GoalTypeEnum)
         {
             case StageGoalType.Cap: return mStageInfo.GetCapCount();
-            case StageGoalType.Choco: return mStageInfo.GetChocoCount();
+            case StageGoalType.Ice: return mStageInfo.GetIceCount();
             case StageGoalType.Bush: return mStageInfo.GetBushCount();
-            case StageGoalType.Cover: return mStageInfo.GetCoverCount();
+            case StageGoalType.Rope: return mStageInfo.GetRopeCount();
         }
         return 0;
     }
