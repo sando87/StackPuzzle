@@ -421,12 +421,13 @@ public class StageInfo
         string data =
         // comments
         "# 0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)" + NewLine +
-        "# Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco" + NewLine +
-        "# enum PurchaseItemType {None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor}" + NewLine +
+        "# GoalType : Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco" + NewLine +
         "# Reward,gold/100" + NewLine +
         "# Reward,dia/5" + NewLine +
         "# Reward,life/1" + NewLine +
         "# Reward,1/1 2/1 3/1" + NewLine +
+        "# Reward,PurchaseItemType/Count" + NewLine +
+        "# PurchaseItemType : None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor" + NewLine +
 
         // data
         "GoalType," + GoalType + NewLine +

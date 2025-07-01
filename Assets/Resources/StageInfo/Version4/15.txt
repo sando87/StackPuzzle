@@ -1,0 +1,13 @@
+GoalType,Cover
+GoalValue,4
+MoveLimit,18
+TimeLimit,0
+ColorCount,4
+StarPoint,30
+RandomSeed,1984634515
+Rows,o/0/0/0/0 o/4/0/0/0 o/4/0/0/0 o/0/0/0/0
+Rows,o/0/0/0/0 o/4/0/0/0 o/4/0/0/0 o/0/0/0/0
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0

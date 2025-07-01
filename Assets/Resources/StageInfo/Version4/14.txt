@@ -1,12 +1,13 @@
-GoalType,Score
-GoalValue,200
-MoveLimit,30
+GoalType,Cover
+GoalValue,15
+MoveLimit,23
 TimeLimit,0
 ColorCount,4
 StarPoint,30
-RandomSeed,1984634507
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
+RandomSeed,1984634514
+Rows,o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0
+Rows,o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0
+Rows,o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0 o/1/0/0/0
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0

@@ -1,21 +1,21 @@
 # 0/0/0/0 => cap(b)/ice(b)/bush(f)/lope(f)
-# Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
-# enum PurchaseItemType {None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor}
+# GoalType : Score,Combo3n, ItemOneMore, ItemKeepCombo, ItemSameColor, Cover, Choco
 # Reward,gold/100
 # Reward,dia/5
 # Reward,life/1
 # Reward,1/1 2/1 3/1
+# Reward,PurchaseItemType/Count
+# PurchaseItemType : None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
 GoalType,Score
-GoalValue,99999
-MoveLimit,50
+GoalValue,250
+MoveLimit,30
 TimeLimit,0
 ColorCount,4
 StarPoint,30
 RandomSeed,10
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
-Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
+Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
