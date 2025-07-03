@@ -22,6 +22,8 @@ public class PVPScoreBar : MonoBehaviour
     private Color SocreColorOpponent = new Color(199f / 255f, 47f / 255f, 26f / 255f, 1);
 
     public int CurrentScore { get; private set; } = 0;
+    public Vector3 RootPosition { get { return RootScoreArea.position; } }
+    public Vector3 HitPointPosition { get { return HitPoint.transform.position; } }
     public bool IsIdle 
     { 
         get 
@@ -205,13 +207,12 @@ public class PVPScoreBar : MonoBehaviour
     }
     int CalculateCurrentZoomLevel()
     {
-        float zoomingTriggerRate = 0.2f;
         float currentScore = Mathf.Abs(CurrentScore);
         for (int zoomLevel = 0; zoomLevel < MaxZoomCount; zoomLevel++)
         {
             float scorePerBar = 50 * Mathf.Pow(4, zoomLevel + 1);
-            float minScore = zoomLevel == 0 ? 0 :scorePerBar * (zoomingTriggerRate * 0.5f);
-            float maxScore = zoomLevel == MaxZoomCount ? scorePerBar : scorePerBar * (1f - zoomingTriggerRate);
+            float minScore = zoomLevel == 0 ? 0 :scorePerBar * 0.1f;
+            float maxScore = zoomLevel == MaxZoomCount ? scorePerBar : scorePerBar * 1.0f;
             if (minScore <= currentScore && currentScore <= maxScore)
             {
                 return zoomLevel;

@@ -307,7 +307,7 @@ public class InGameManager : MonoBehaviour
             return;
 
         Product pro = clickedObj.GetComponent<Product>();
-        if (pro.ParentFrame.IsRope)
+        if (pro == null || pro.ParentFrame == null || pro.ParentFrame.IsRope)
             return;
 
         if(pro.Skill != ProductSkill.Nothing)

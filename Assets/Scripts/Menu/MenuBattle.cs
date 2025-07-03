@@ -308,7 +308,7 @@ public class MenuBattle : MonoBehaviour
         switch (itemType)
         {
             case PurchaseItemType.ExtendLimit:
-                InGameManager.InstPVP_Player.UseItemExtendsLimits(btn.transform.position, PlayerLimit.transform.position);
+                InGameManager.InstPVP_Player.UseItemExtendsLimits(btn.transform.position, PVPScoreBar.RootPosition);
                 break;
             case PurchaseItemType.RemoveIce:
                 {
@@ -363,7 +363,7 @@ public class MenuBattle : MonoBehaviour
         switch (itemType)
         {
             case PurchaseItemType.ExtendLimit:
-                InGameManager.InstPVP_Opponent.UseItemExtendsLimits(btn.transform.position, OpponentLimit.transform.position);
+                InGameManager.InstPVP_Opponent.UseItemExtendsLimits(btn.transform.position, PVPScoreBar.RootPosition);
                 break;
             case PurchaseItemType.RemoveIce:
                 {
