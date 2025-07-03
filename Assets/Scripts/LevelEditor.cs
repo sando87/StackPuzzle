@@ -16,7 +16,7 @@ public class LevelEditor : EditorWindow
     public Sprite[] RopeImages = null;
 
     //블럭 사이즈 정의
-    private GUILayoutOption[] GridButtonSize = new GUILayoutOption[2] { GUILayout.Width(50), GUILayout.Height(50) };
+    private GUILayoutOption[] GridButtonSize = new GUILayoutOption[2] { GUILayout.Width(15), GUILayout.Height(15) };
     private GUILayoutOption[] GridButtonSizeHalf = new GUILayoutOption[2] { GUILayout.Width(25), GUILayout.Height(25) };
 
     private Vector2 ScrollPosition = Vector2.zero;
@@ -97,17 +97,27 @@ public class LevelEditor : EditorWindow
         GUILayout.BeginHorizontal();
 
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("New", new GUILayoutOption[] { GUILayout.Width(90) }))
+        if (GUILayout.Button("Auto", new GUILayoutOption[] { GUILayout.Width(50) }))
+        {
+            AutoCreateNewStageAndSave();
+        }
+        if (GUILayout.Button("New", new GUILayoutOption[] { GUILayout.Width(60) }))
         {
             CreateNewStage();
         }
-        if (GUILayout.Button("Save", new GUILayoutOption[] { GUILayout.Width(90) }))
+        if (GUILayout.Button("Save", new GUILayoutOption[] { GUILayout.Width(60) }))
         {
             SaveToFile();
         }
-        if (GUILayout.Button("Refresh", new GUILayoutOption[] { GUILayout.Width(90) }))
+        if (GUILayout.Button("Refresh", new GUILayoutOption[] { GUILayout.Width(60) }))
         {
             RefreshStage();
+        }
+        if (GUILayout.Button("GoLast", new GUILayoutOption[] { GUILayout.Width(60) }))
+        {
+            int lastStageNum = StageInfo.GetMaxStageNum();
+            TextFieldLevel = lastStageNum.ToString();
+            LoadFromFile(lastStageNum);
         }
 
         GUILayout.EndHorizontal();
@@ -715,6 +725,46 @@ public class LevelEditor : EditorWindow
         RewardCountB = 0;
         RewardChest = "None";
         TextFieldLevel = newStageNum.ToString();
+    }
+    private void AutoCreateNewStageAndSave()
+    {
+        int stageCount = StageInfo.GetMaxStageNum();
+        int refStageNum = UnityEngine.Random.Range(1, stageCount);
+        mStageInfo = StageInfo.Load(refStageNum);
+        int newStageNum = stageCount + 1;
+        mStageInfo.Num = newStageNum;
+        mStageInfo.GoalType = "Score";
+        int goalValue = (UnityEngine.Random.Range(250, 700) / 20) * 20;
+        mStageInfo.GoalValue = goalValue;
+        mStageInfo.GoalTypeEnum = StageGoalType.Score;
+        int moveLimit = (UnityEngine.Random.Range(20, 40) / 2) * 2;
+        mStageInfo.MoveLimit = moveLimit;
+        mStageInfo.TimeLimit = 0;
+        mStageInfo.ColorCount = 5;
+        mStageInfo.StarPoint = 0;
+        mStageInfo.RandomSeed = 0;
+        RewardTypeA = 0;
+        RewardCountA = 0;
+        RewardTypeB = 0;
+        RewardCountB = 0;
+        RewardChest = "None";
+
+        GoalTypeIndex = 0;
+        TextFieldLevel = newStageNum.ToString();
+
+        foreach (var item in mStageInfo.BoardInfo)
+        {
+            foreach (var cell in item)
+            {
+                cell.IsDisabled = false;
+                cell.CapCount = 0;
+                cell.IceCount = 0;
+                cell.BushCount = 0;
+                cell.RopeCount = 0;
+            }
+        }
+
+        SaveToFile();
     }
     private void RefreshStage()
     {
