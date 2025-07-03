@@ -4371,10 +4371,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (frame.ChildProduct.IsCapped)
             {
-                if (Billboard.CurrentCombo >= frame.ChildProduct.CapIndex)
-                {
-                    frame.ChildProduct.BreakObstacle(frame.ChildProduct.CapIndex);
-                }
+                frame.ChildProduct.BreakObstacle(Billboard.CurrentCombo);
             }
         }
     }
