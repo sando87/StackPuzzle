@@ -24,6 +24,12 @@ public class LevelEditor : EditorWindow
     private string TextFieldLevel = "";
     private int GoalTypeIndex = 0;
     string[] GoalTypeList = new string[] { "Score", "Cap", "Ice", "Bush", "Rope" };
+    string[] RewardTypeList = new string[] { "None", "gold", "dia", "life", "ExtendLimit", "RemoveIce", "MakeSkill1", "KeepCombo", "MakeSkill2", "Meteor" };
+    int RewardTypeA = 0;
+    int RewardCountA = 0;
+    int RewardTypeB = 0;
+    int RewardCountB = 0;
+    string RewardChest = "None";
 
     private StageInfo mStageInfo = null;
 
@@ -38,6 +44,9 @@ public class LevelEditor : EditorWindow
 
     private void Initialze()
     {
+        LOG.LogWriterConsole += (msg) => {
+            Debug.Log(msg);
+        };
         LoadResources();
         LoadFromFile(1);
 
@@ -210,19 +219,48 @@ public class LevelEditor : EditorWindow
         mStageInfo.ColorCount = EditorGUILayout.FloatField(mStageInfo.ColorCount, new GUILayoutOption[1] { GUILayout.Width(100) });
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(10);
+        // GUILayout.Space(10);
 
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("StarPoint", EditorStyles.label);
-        GUILayout.FlexibleSpace();
-        mStageInfo.StarPoint = EditorGUILayout.IntField(mStageInfo.StarPoint, new GUILayoutOption[1] { GUILayout.Width(100) });
-        GUILayout.EndHorizontal();
+        // GUILayout.BeginHorizontal();
+        // GUILayout.Label("StarPoint", EditorStyles.label);
+        // GUILayout.FlexibleSpace();
+        // mStageInfo.StarPoint = EditorGUILayout.IntField(mStageInfo.StarPoint, new GUILayoutOption[1] { GUILayout.Width(100) });
+        // GUILayout.EndHorizontal();
 
         GUILayout.BeginHorizontal();
         GUILayout.Label("RandomSeed", EditorStyles.label);
         GUILayout.FlexibleSpace();
         mStageInfo.RandomSeed = EditorGUILayout.IntField(mStageInfo.RandomSeed, new GUILayoutOption[1] { GUILayout.Width(100) });
         GUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+
+        GUILayout.BeginHorizontal();
+        RewardTypeA = EditorGUILayout.Popup("RewardTypeA", RewardTypeA, RewardTypeList);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("RewardCountA", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        RewardCountA = EditorGUILayout.IntField(RewardCountA, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        RewardTypeB = EditorGUILayout.Popup("RewardTypeB", RewardTypeB, RewardTypeList);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("RewardCountB", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        RewardCountB = EditorGUILayout.IntField(RewardCountB, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Reward(1/1 2/1 3/1)", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        RewardChest = EditorGUILayout.TextField(RewardChest, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
 
         GUILayout.EndVertical();
     }
@@ -423,36 +461,43 @@ public class LevelEditor : EditorWindow
     }
     private void OnClickBlock(int idxX, int idxY)
     {
+        Event e = Event.current;
+        int addCount = e.button == 0 ? 1 : -1;
+
         StageInfoCell block = ToCell(idxX, idxY);
         switch(CurrentSelection)
         {
             case SelectType.NoBlock:
                 {
                     block.IsDisabled = !block.IsDisabled;
+                    block.CapCount = 0;
+                    block.IceCount = 0;
+                    block.BushCount = 0;
+                    block.RopeCount = 0;
                     break;
                 }
             case SelectType.CapProduct:
                 {
-                    block.CapCount++;
-                    block.CapCount %= CapImages.Length + 1;
+                    int nextCount = block.CapCount + addCount;
+                    block.CapCount = nextCount < 0 ? CapImages.Length : nextCount % (CapImages.Length + 1);
                     break;
                 }
             case SelectType.IceProduct:
                 {
-                    block.IceCount++;
-                    block.IceCount %= IceImages.Length + 1;
+                    int nextCount = block.IceCount + addCount;
+                    block.IceCount = nextCount < 0 ? IceImages.Length : nextCount % (IceImages.Length + 1);
                     break;
                 }
             case SelectType.BushFrame:
                 {
-                    block.BushCount++;
-                    block.BushCount %= BushImages.Length + 1;
+                    int nextCount = block.BushCount + addCount;
+                    block.BushCount = nextCount < 0 ? BushImages.Length : nextCount % (BushImages.Length + 1);
                     break;
                 }
             case SelectType.RopeFrame:
                 {
-                    block.RopeCount++;
-                    block.RopeCount %= RopeImages.Length + 1;
+                    int nextCount = block.RopeCount + addCount;
+                    block.RopeCount = nextCount < 0 ? RopeImages.Length : nextCount % (RopeImages.Length + 1);
                     break;
                 }
         }
@@ -497,11 +542,77 @@ public class LevelEditor : EditorWindow
         }
         TextFieldLevel = levelNum.ToString();
         UpdateGoalTypeIndex();
+
+        RewardTypeA = 0;
+        RewardCountA = 0;
+        RewardTypeB = 0;
+        RewardCountB = 0;
+        RewardChest = "None";
+
+        foreach (string reward in mStageInfo.Rewards)
+        {
+            if(reward.Split(' ').Length > 1)
+            {
+                RewardChest = reward;
+            }
+            else if(RewardTypeA == 0)
+            {
+                string[] rewardParts = reward.Split('/');
+                if(rewardParts.Length == 2)
+                {
+                    RewardTypeA = rewardParts[0] == "gold" ? 1 : rewardParts[0] == "dia" ? 2 : rewardParts[0] == "life" ? 3 : rewardParts[0] == "1" ? 4 : rewardParts[0] == "2" ? 5 : rewardParts[0] == "3" ? 6 : rewardParts[0] == "4" ? 7 : rewardParts[0] == "5" ? 8 : 9;
+                    RewardCountA = int.Parse(rewardParts[1]);
+                }
+            }
+            else if(RewardTypeB == 0)
+            {
+                string[] rewardParts = reward.Split('/');
+                if(rewardParts.Length == 2)
+                {
+                    RewardTypeB = rewardParts[0] == "gold" ? 1 : rewardParts[0] == "dia" ? 2 : rewardParts[0] == "life" ? 3 : rewardParts[0] == "1" ? 4 : rewardParts[0] == "2" ? 5 : rewardParts[0] == "3" ? 6 : rewardParts[0] == "4" ? 7 : rewardParts[0] == "5" ? 8 : 9;
+                    RewardCountB = int.Parse(rewardParts[1]);
+                }
+            }
+        }
         return true;
     }
     private void SaveToFile()
     {
         if(mStageInfo == null) return;
+
+        mStageInfo.Rewards.Clear();
+        switch (RewardTypeA)
+        {
+            case 0: break;
+            case 1: mStageInfo.Rewards.Add("gold/" + RewardCountA); break;
+            case 2: mStageInfo.Rewards.Add("dia/" + RewardCountA); break;
+            case 3: mStageInfo.Rewards.Add("life/" + RewardCountA); break;
+            case 4: mStageInfo.Rewards.Add("1/" + RewardCountA); break;
+            case 5: mStageInfo.Rewards.Add("2/" + RewardCountA); break;
+            case 6: mStageInfo.Rewards.Add("3/" + RewardCountA); break;
+            case 7: mStageInfo.Rewards.Add("4/" + RewardCountA); break;
+            case 8: mStageInfo.Rewards.Add("5/" + RewardCountA); break;
+            case 9: mStageInfo.Rewards.Add("6/" + RewardCountA); break;
+        }
+
+        switch (RewardTypeB)
+        {
+            case 0: break;
+            case 1: mStageInfo.Rewards.Add("gold/" + RewardCountB); break;
+            case 2: mStageInfo.Rewards.Add("dia/" + RewardCountB); break;
+            case 3: mStageInfo.Rewards.Add("life/" + RewardCountB); break;
+            case 4: mStageInfo.Rewards.Add("1/" + RewardCountB); break;
+            case 5: mStageInfo.Rewards.Add("2/" + RewardCountB); break;
+            case 6: mStageInfo.Rewards.Add("3/" + RewardCountB); break;
+            case 7: mStageInfo.Rewards.Add("4/" + RewardCountB); break;
+            case 8: mStageInfo.Rewards.Add("5/" + RewardCountB); break;
+            case 9: mStageInfo.Rewards.Add("6/" + RewardCountB); break;
+        }
+
+        if(RewardChest != "" && RewardChest != "None" && RewardChest != "0")
+        {
+            mStageInfo.Rewards.Add(RewardChest);
+        }
 
         mStageInfo.SaveToFile();
     }
@@ -588,7 +699,20 @@ public class LevelEditor : EditorWindow
         int stageCount = StageInfo.GetMaxStageNum();
         int newStageNum = stageCount + 1;
         mStageInfo = StageInfo.Load(1);
+        StageInfo prevStageInfo = StageInfo.Load(stageCount);
         mStageInfo.Num = newStageNum;
+        mStageInfo.GoalType = prevStageInfo.GoalType;
+        mStageInfo.GoalValue = 0;
+        mStageInfo.MoveLimit = prevStageInfo.MoveLimit;
+        mStageInfo.TimeLimit = prevStageInfo.TimeLimit;
+        mStageInfo.ColorCount = prevStageInfo.ColorCount;
+        mStageInfo.StarPoint = prevStageInfo.StarPoint;
+        mStageInfo.RandomSeed = 0;
+        RewardTypeA = 0;
+        RewardCountA = 0;
+        RewardTypeB = 0;
+        RewardCountB = 0;
+        RewardChest = "None";
         TextFieldLevel = newStageNum.ToString();
     }
     private void RefreshStage()
