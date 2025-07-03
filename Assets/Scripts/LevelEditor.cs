@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -703,6 +703,7 @@ public class LevelEditor : EditorWindow
         mStageInfo.Num = newStageNum;
         mStageInfo.GoalType = prevStageInfo.GoalType;
         mStageInfo.GoalValue = 0;
+        mStageInfo.GoalTypeEnum = prevStageInfo.GoalTypeEnum;
         mStageInfo.MoveLimit = prevStageInfo.MoveLimit;
         mStageInfo.TimeLimit = prevStageInfo.TimeLimit;
         mStageInfo.ColorCount = prevStageInfo.ColorCount;

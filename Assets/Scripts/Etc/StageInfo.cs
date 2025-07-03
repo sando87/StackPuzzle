@@ -126,6 +126,7 @@ public class StageInfo
             {
                 case "GoalType": info.GoalType = tokens[1]; break;
                 case "GoalValue": info.GoalValue = int.Parse(tokens[1]); break;
+                case "GoalTypeEnum": info.GoalTypeEnum = StringToType(tokens[1]); break;
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
                 case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
