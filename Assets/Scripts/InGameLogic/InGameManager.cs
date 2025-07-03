@@ -4365,9 +4365,16 @@ public class InGameManager : MonoBehaviour
 
         if (frame.ChildProduct != null)
         {
-            if (frame.ChildProduct.IsObstacled())
+            if (frame.ChildProduct.IsIceBlock)
             {
                 frame.ChildProduct.BreakObstacle();
+            }
+            else if (frame.ChildProduct.IsCapped)
+            {
+                if (Billboard.CurrentCombo >= frame.ChildProduct.CapIndex)
+                {
+                    frame.ChildProduct.BreakObstacle(frame.ChildProduct.CapIndex);
+                }
             }
         }
     }
