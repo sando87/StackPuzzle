@@ -86,7 +86,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 66865917ad48870439e331acb17b3fea, type: 2}
+  - {fileID: 2100000, guid: d31bc6c6b47c51a468033b439de78981, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -175,7 +175,7 @@ GameObject:
   - component: {fileID: 8750561817957320835}
   - component: {fileID: 2038462869922168616}
   m_Layer: 0
-  m_Name: AttackEffect
+  m_Name: AttackEffectOpp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5080,8 +5080,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 262931d1e2a64ee4ca0267625000d044, type: 2}
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 129280f5f87b75f43810937c578db42f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

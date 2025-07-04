@@ -2718,9 +2718,21 @@ public class InGameManager : MonoBehaviour
         float dragFactor = 0.015f;
         float destFactor = 0;
 
-        float rad = UnityEngine.Random.Range(195, 345) * Mathf.Deg2Rad;
-        if (obj.transform.position.y > destTr.position.y)
-            rad += Mathf.PI;
+        float rad = 0;
+        if(FieldType == GameFieldType.pvpPlayer)
+        {
+            rad = UnityEngine.Random.Range(330, 420) * Mathf.Deg2Rad;
+        }
+        else if(FieldType == GameFieldType.pvpOpponent)
+        {
+            rad = UnityEngine.Random.Range(150, 240) * Mathf.Deg2Rad;
+        }
+        else
+        {
+            rad = UnityEngine.Random.Range(195, 345) * Mathf.Deg2Rad;
+            if (obj.transform.position.y > destTr.position.y)
+                rad += Mathf.PI;
+        }
 
         Vector2 force = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
         float rotSpeed = UnityEngine.Random.Range(35, 45);
@@ -2745,11 +2757,14 @@ public class InGameManager : MonoBehaviour
             if (Vector3.Dot(afterDir, dir) < 0)
             {
                 EventEnd?.Invoke();
-                Destroy(obj);
+                // obj.transform.position = destTr.position;
+                obj.GetComponentInChildren<ParticleSystem>().Play();
+                Destroy(obj, 1);
                 break;
             }
 
             destFactor += 0.7f;
+            destFactor = Mathf.Min(destFactor, 15.0f);
             yield return null;
         }
     }

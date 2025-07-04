@@ -54408,7 +54408,7 @@ MonoBehaviour:
   LaserParticle: {fileID: 3942962343302958454, guid: 43c69a786c032e449a47b970fdc31a4a,
     type: 3}
   AttackPointFrame: {fileID: 1549164802}
-  AttackBullet: {fileID: 5081829746968103039, guid: f7051f857a854084091d9873b5be7663,
+  AttackBullet: {fileID: 5081829746968103039, guid: fb6d4d6a9812bfa45bed4ab27908a895,
     type: 3}
   ScoreTextDest: {fileID: 0}
 --- !u!95 &673266192
