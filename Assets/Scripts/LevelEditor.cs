@@ -728,41 +728,40 @@ public class LevelEditor : EditorWindow
     }
     private void AutoCreateNewStageAndSave()
     {
-        int stageCount = StageInfo.GetMaxStageNum();
-        int refStageNum = UnityEngine.Random.Range(1, stageCount);
-        mStageInfo = StageInfo.Load(refStageNum);
-        int newStageNum = stageCount + 1;
+        mStageInfo = new StageInfo();
+        int newStageNum = StageInfo.GetMaxStageNum() + 1;
         mStageInfo.Num = newStageNum;
         mStageInfo.GoalType = "Score";
-        int goalValue = (UnityEngine.Random.Range(250, 700) / 20) * 20;
+        int goalValue = (UnityEngine.Random.Range(350, 700) / 20) * 20;
         mStageInfo.GoalValue = goalValue;
         mStageInfo.GoalTypeEnum = StageGoalType.Score;
-        int moveLimit = (UnityEngine.Random.Range(20, 40) / 2) * 2;
+        int moveLimit = (UnityEngine.Random.Range(30, 50) / 2) * 2;
         mStageInfo.MoveLimit = moveLimit;
         mStageInfo.TimeLimit = 0;
-        mStageInfo.ColorCount = 5;
         mStageInfo.StarPoint = 0;
         mStageInfo.RandomSeed = 0;
+
+        int countX = UnityEngine.Random.Range(5, 10);
+        int countY = UnityEngine.Random.Range(6, 14);
+        for (int y = 0; y < countY; ++y)
+        {
+            List<StageInfoCell> row = new List<StageInfoCell>();
+            for (int x = 0; x < countX; ++x)
+            {
+                row.Add(new StageInfoCell());
+            }
+            mStageInfo.BoardInfo.Add(row.ToArray());
+        }
+
+        mStageInfo.ColorCount = countX > 7 && countY > 8 ? 5 : 4;
+
         RewardTypeA = 0;
         RewardCountA = 0;
         RewardTypeB = 0;
         RewardCountB = 0;
         RewardChest = "None";
-
         GoalTypeIndex = 0;
         TextFieldLevel = newStageNum.ToString();
-
-        foreach (var item in mStageInfo.BoardInfo)
-        {
-            foreach (var cell in item)
-            {
-                cell.IsDisabled = false;
-                cell.CapCount = 0;
-                cell.IceCount = 0;
-                cell.BushCount = 0;
-                cell.RopeCount = 0;
-            }
-        }
 
         SaveToFile();
     }
