@@ -8,7 +8,7 @@ CREATE TABLE users (
 	firstTime timestamp,
 	win integer,
 	lose integer,
-	total integer,
+	total integer
 );
 CREATE TABLE log (
 	logPk SERIAL primary key,
