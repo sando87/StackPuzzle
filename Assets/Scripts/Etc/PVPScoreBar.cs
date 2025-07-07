@@ -242,28 +242,29 @@ public class PVPScoreBar : MonoBehaviour
         }
 
         CurrentScore += score;
+        int absScore = Mathf.Abs(score);
 
-        if(mZoomIndex == 0 && score > 0)
+        if (mZoomIndex == 0 && absScore > 0)
         {
             mTouchedTime = Time.time;
         }
-        else if(mZoomIndex == 1 && score > 10)
+        else if (mZoomIndex == 1 && absScore > 10)
         {
             mTouchedTime = Time.time;
         }
-        else if (mZoomIndex == 2 && score > 30)
+        else if (mZoomIndex == 2 && absScore > 30)
         {
             mTouchedTime = Time.time;
         }
-        else if (mZoomIndex == 3 && score > 60)
+        else if (mZoomIndex == 3 && absScore > 60)
         {
             mTouchedTime = Time.time;
         }
-        else if (mZoomIndex == 4 && score > 100)
+        else if (mZoomIndex == 4 && absScore > 100)
         {
             mTouchedTime = Time.time;
         }
-        else if (score > 150)
+        else if (absScore > 150)
         {
             mTouchedTime = Time.time;
         }
@@ -277,9 +278,9 @@ public class PVPScoreBar : MonoBehaviour
     {
         CurrentScoreBar.DOKill();
         CurrentScoreBar.rectTransform.DOKill();
-        if (CurrentScoreBar.transform.childCount > 0)
+        for(int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
         {
-            Destroy(CurrentScoreBar.transform.GetChild(0).gameObject);
+            Destroy(CurrentScoreBar.transform.GetChild(i).gameObject);
         }
 
         float newWidth = Mathf.Abs(score) * mWidthPerScore;
@@ -321,7 +322,7 @@ public class PVPScoreBar : MonoBehaviour
         Image newSubScoreBar = Instantiate(ScoreSubBar, CurrentScoreBar.transform);
         newSubScoreBar.name = "Sub";
 
-        newSubScoreBar.rectTransform.pivot = new Vector2(1, 0.5f);
+        newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
         newSubScoreBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
         newSubScoreBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
