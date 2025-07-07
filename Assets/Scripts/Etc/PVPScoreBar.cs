@@ -242,7 +242,32 @@ public class PVPScoreBar : MonoBehaviour
         }
 
         CurrentScore += score;
-        mTouchedTime = Time.time;
+
+        if(mZoomIndex == 0 && score > 0)
+        {
+            mTouchedTime = Time.time;
+        }
+        else if(mZoomIndex == 1 && score > 10)
+        {
+            mTouchedTime = Time.time;
+        }
+        else if (mZoomIndex == 2 && score > 30)
+        {
+            mTouchedTime = Time.time;
+        }
+        else if (mZoomIndex == 3 && score > 60)
+        {
+            mTouchedTime = Time.time;
+        }
+        else if (mZoomIndex == 4 && score > 100)
+        {
+            mTouchedTime = Time.time;
+        }
+        else if (score > 150)
+        {
+            mTouchedTime = Time.time;
+        }
+
 
         float newWidth = Mathf.Abs(CurrentScore) * mWidthPerScore;
         HitPoint.rectTransform.SetAnchoredPosX(newWidth);
@@ -260,8 +285,6 @@ public class PVPScoreBar : MonoBehaviour
         float newWidth = Mathf.Abs(score) * mWidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
         CurrentScoreBar.color = score > 0 ? SocreColorPlayer : SocreColorOpponent;
-
-        mTouchedTime = Time.time;
     }
 
     void DoEffectAddScore(int score)
@@ -287,7 +310,6 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            mTouchedTime = Time.time;
             UpdateScoreBar(nextNewScore);
         });
     }
@@ -310,8 +332,6 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            mTouchedTime = Time.time;
-
             if (newSubScoreBar == null)
                 Destroy(newSubScoreBar.gameObject);
 
@@ -336,10 +356,10 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.transform.SetParent(newSubScoreBar.transform);
         CurrentScoreBar.rectTransform.SetAnchoredPosX(width);
 
+        mTouchedTime = Time.time;
         newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            mTouchedTime = Time.time;
             CurrentScoreBar.transform.SetParent(RootScoreArea);
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
             CurrentScoreBar.transform.SetAsFirstSibling();
