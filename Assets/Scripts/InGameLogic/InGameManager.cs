@@ -2758,8 +2758,8 @@ public class InGameManager : MonoBehaviour
             {
                 EventEnd?.Invoke();
                 // obj.transform.position = destTr.position;
-                obj.GetComponentInChildren<ParticleSystem>().Play();
-                Destroy(obj, 1);
+                // obj.GetComponentInChildren<ParticleSystem>().Play();
+                Destroy(obj);
                 break;
             }
 

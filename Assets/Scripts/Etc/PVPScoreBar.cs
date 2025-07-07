@@ -28,13 +28,12 @@ public class PVPScoreBar : MonoBehaviour
     { 
         get 
         { 
-            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && mIsTweening == 0;
+            return Time.time > mTouchedTime + UserSetting.IceFlushInterval;
         }
     }
 
     private Image mPrevSub = null;
     private float mTouchedTime = 0;
-    private int mIsTweening = 0;
     private int mZoomIndex = 0;
     private float mWidthPerScore = 4.0f; // 스코어 1점을 UI상 표현하는 너비
     private int mMaxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
@@ -53,13 +52,12 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
         CurrentScoreBar.rectTransform.SetAnchoredWidth(0);
 
-        HitPoint.transform.SetParent(CurrentScoreBar.transform);
-        HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-        HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        // HitPoint.transform.SetParent(CurrentScoreBar.transform);
+        // HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        // HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
         HitPoint.rectTransform.SetAnchoredPosX(0);
 
         mPrevSub = CurrentScoreBar;
-        mIsTweening = 0;
         mZoomIndex = 0;
         RootScoreArea.DOKill();
         RootScoreArea.localScale = Vector3.one;
@@ -222,34 +220,12 @@ public class PVPScoreBar : MonoBehaviour
         return 0;
     }
 
-    void UpdateCurrentScoreBar(int score)
-    {
-        float newWidth = Mathf.Abs(score) * mWidthPerScore;
-        CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-        CurrentScoreBar.color = score > 0 ? SocreColorPlayer : SocreColorOpponent;
-    }
-
     public void AddScore(int score)
     {
         int newScore = CurrentScore + score;
         if(CurrentScore != 0 && newScore * CurrentScore <= 0)
         {
-            // 점수가 반대방향으로 전환될 때 예외처리
-            HitPoint.transform.SetParent(RootScoreArea);
-            if(CurrentScoreBar.transform.childCount > 0)
-            {
-                Destroy(CurrentScoreBar.transform.GetChild(0).gameObject);
-            }
-
-            UpdateCurrentScoreBar(newScore);
-
-            HitPoint.transform.SetParent(CurrentScoreBar.transform);
-            HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-            HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
-            HitPoint.rectTransform.SetAnchoredPosX(0);
-
-            mPrevSub = CurrentScoreBar;
-            mIsTweening = 0;
+            UpdateScoreBar(newScore);
         }
         else
         {
@@ -267,126 +243,78 @@ public class PVPScoreBar : MonoBehaviour
 
         CurrentScore += score;
         mTouchedTime = Time.time;
+
+        float newWidth = Mathf.Abs(CurrentScore) * mWidthPerScore;
+        HitPoint.rectTransform.SetAnchoredPosX(newWidth);
     }
 
-    void DoEffectAddScore(float score)
+    void UpdateScoreBar(int score)
     {
+        CurrentScoreBar.DOKill();
+        CurrentScoreBar.rectTransform.DOKill();
+        if (CurrentScoreBar.transform.childCount > 0)
+        {
+            Destroy(CurrentScoreBar.transform.GetChild(0).gameObject);
+        }
+
+        float newWidth = Mathf.Abs(score) * mWidthPerScore;
+        CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
+        CurrentScoreBar.color = score > 0 ? SocreColorPlayer : SocreColorOpponent;
+
+        mTouchedTime = Time.time;
+    }
+
+    void DoEffectAddScore(int score)
+    {
+        int nextNewScore = CurrentScore + score;
+        UpdateScoreBar(CurrentScore);
+
         float width = Mathf.Abs(score) * mWidthPerScore;
-        Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
+        Image newSubScoreBar = Instantiate(ScoreSubBar, CurrentScoreBar.transform);
         newSubScoreBar.name = "Add";
-        bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
 
         newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
-        newSubScoreBar.rectTransform.anchorMin = new Vector2(isAddedPrevious ? 1 : 0, 0.5f);
-        newSubScoreBar.rectTransform.anchorMax = new Vector2(isAddedPrevious ? 1 : 0, 0.5f);
+        newSubScoreBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        newSubScoreBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
+        newSubScoreBar.color = Color.white;
 
-        HitPoint.transform.SetParent(newSubScoreBar.transform);
-        HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-        HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
-        HitPoint.rectTransform.SetAnchoredPosX(0);
+        Vector2 prevSize = CurrentScoreBar.rectTransform.sizeDelta;
+        Vector2 addedSize = newSubScoreBar.rectTransform.sizeDelta;
+        CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
 
-        mPrevSub = newSubScoreBar;
-
-        mIsTweening++;
-        float endScore = CurrentScore + score;
-        Color startColor = Color.white;
-        Color endColor = endScore > 0 ? SocreColorPlayer : SocreColorOpponent;
-        newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
+        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            if (newSubScoreBar == null)
-                return;
-
-            mIsTweening--;
             mTouchedTime = Time.time;
-            float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x + width;
-            CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-            CurrentScoreBar.color = endScore > 0 ? SocreColorPlayer : SocreColorOpponent;
-
-            if (mPrevSub == newSubScoreBar)
-            {
-                HitPoint.transform.SetParent(CurrentScoreBar.transform);
-                HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-                HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
-                HitPoint.rectTransform.SetAnchoredPosX(0);
-
-                mPrevSub = CurrentScoreBar;
-                mIsTweening = 0;
-                UpdateCurrentScoreBar(CurrentScore);
-            }
-            else
-            {
-                Transform childSubBar = newSubScoreBar.transform.GetChild(0);
-                childSubBar.SetParent(CurrentScoreBar.transform);
-                RectTransform childRect = childSubBar.GetComponent<RectTransform>();
-                childRect.SetAnchoredPosX(0);
-                childRect.anchorMin = new Vector2(1, 0.5f);
-                childRect.anchorMax = new Vector2(1, 0.5f);
-            }
-
-            Destroy(newSubScoreBar.gameObject);
+            UpdateScoreBar(nextNewScore);
         });
     }
     void DoEffectSubScore(int score)
     {
+        UpdateScoreBar(CurrentScore + score);
+
         float width = Mathf.Abs(score) * mWidthPerScore;
-        Image newSubScoreBar = Instantiate(ScoreSubBar, mPrevSub.transform);
+        Image newSubScoreBar = Instantiate(ScoreSubBar, CurrentScoreBar.transform);
         newSubScoreBar.name = "Sub";
-        bool isAddedPrevious = mPrevSub == CurrentScoreBar || mPrevSub.name.Contains("Add");
 
         newSubScoreBar.rectTransform.pivot = new Vector2(1, 0.5f);
-        newSubScoreBar.rectTransform.anchorMin = new Vector2(isAddedPrevious ? 1 : 0, 0.5f);
-        newSubScoreBar.rectTransform.anchorMax = new Vector2(isAddedPrevious ? 1 : 0, 0.5f);
+        newSubScoreBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        newSubScoreBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
+        newSubScoreBar.color = Color.white;
 
-        HitPoint.transform.SetParent(newSubScoreBar.transform);
-        HitPoint.rectTransform.anchorMin = new Vector2(0, 0.5f);
-        HitPoint.rectTransform.anchorMax = new Vector2(0, 0.5f);
-        HitPoint.rectTransform.SetAnchoredPosX(0);
-
-        mPrevSub = newSubScoreBar;
-
-        mIsTweening++;
-        float endScore = CurrentScore + score;
-        Color startColor = Color.white;
-        Color endColor = Color.white;
-        newSubScoreBar.DOColor(endColor, 2.0f).From(startColor)
+        Vector2 subSize = newSubScoreBar.rectTransform.sizeDelta;
+        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            if (newSubScoreBar == null)
-                return;
-                
-            mIsTweening--;
             mTouchedTime = Time.time;
-            float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x - width;
-            CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
-            CurrentScoreBar.color = endScore > 0 ? SocreColorPlayer : SocreColorOpponent;
 
-            if (mPrevSub == newSubScoreBar)
-            {
-                HitPoint.transform.SetParent(CurrentScoreBar.transform);
-                HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-                HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
-                HitPoint.rectTransform.SetAnchoredPosX(0);
+            if (newSubScoreBar == null)
+                Destroy(newSubScoreBar.gameObject);
 
-                mPrevSub = CurrentScoreBar;
-                mIsTweening = 0;
-                UpdateCurrentScoreBar(CurrentScore);
-            }
-            else
-            {
-                Transform childSubBar = newSubScoreBar.transform.GetChild(0);
-                childSubBar.SetParent(CurrentScoreBar.transform);
-                RectTransform childRect = childSubBar.GetComponent<RectTransform>();
-                childRect.SetAnchoredPosX(0);
-                childRect.anchorMin = new Vector2(1, 0.5f);
-                childRect.anchorMax = new Vector2(1, 0.5f);
-            }
-
-            Destroy(newSubScoreBar.gameObject);
         });
     }
     public int DoFlush(int score)
@@ -403,18 +331,14 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.SetAnchoredPosX(0);
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
 
-        float newWidth = CurrentScoreBar.rectTransform.sizeDelta.x - width;
+        CurrentScore = CurrentScore > 0 ? CurrentScore - score : CurrentScore + score;
+        UpdateScoreBar(CurrentScore);
         CurrentScoreBar.transform.SetParent(newSubScoreBar.transform);
         CurrentScoreBar.rectTransform.SetAnchoredPosX(width);
-        CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
 
-        CurrentScore = CurrentScore > 0 ? CurrentScore - score : CurrentScore + score;
-
-        mIsTweening = 1;
-        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.InQuad)
+        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
-            mIsTweening = 0;
             mTouchedTime = Time.time;
             CurrentScoreBar.transform.SetParent(RootScoreArea);
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
