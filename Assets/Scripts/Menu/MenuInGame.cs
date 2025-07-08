@@ -230,19 +230,29 @@ public class MenuInGame : MonoBehaviour
         {
             int adsIndex = int.Parse(btnTypeName.Substring(3));
             AdsType adsType = adsIndex == 0 ? AdsType.InGameItemA : (adsIndex == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
-            if (GoogleADMob.Inst.IsLoaded(adsType))
+            // if (GoogleADMob.Inst.IsLoaded(adsType))
+            // {
+            //     GoogleADMob.Inst.Show(adsType, (reward) =>
+            //     {
+            //         PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
+            //         ItemSlots[adsIndex].name = itemType.ToInt().ToString();
+            //         ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
+            //     });
+            // }
+            // else
+            // {
+            //     MenuMessageBox.PopUp("Not Ready Ads", false, null);
+            // }
+
+
+            MenuMessageBox.PopUp("Test Ads Showing..." + adsType, false, (isOK) =>
             {
-                GoogleADMob.Inst.Show(adsType, (reward) =>
+                MenuItemSelector.PopUpByAds((itemType) =>
                 {
-                    PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
                     ItemSlots[adsIndex].name = itemType.ToInt().ToString();
                     ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
                 });
-            }
-            else
-            {
-                MenuMessageBox.PopUp("Not Ready Ads", false, null);
-            }
+            });
         }
         else
         {

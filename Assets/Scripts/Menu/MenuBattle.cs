@@ -285,20 +285,41 @@ public class MenuBattle : MonoBehaviour
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         if (btn.name.StartsWith("ads"))
         {
-            Purchases.AddAdsCount();
-            
-            int adsIndex = int.Parse(btn.name.Substring(3));
-            PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
-            PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
-            PlayerItemSlots[adsIndex].SetItem(itemType);
-            PlayerItemSlots[adsIndex].SetEnable(true);
-            PlayerItemSlots[adsIndex].HideItemCount();
+            MenuMessageBox.PopUp("Reward-first ad.", true, (isOK) =>
+            {
+                if (isOK)
+                {
+                    int adsIndex = int.Parse(btn.name.Substring(3));
+                    MenuItemSelector.PopUpByAds((itemType) =>
+                    {
+                        Purchases.AddAdsCount();
+
+                        PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
+                        PlayerItemSlots[adsIndex].SetItem(itemType);
+                        PlayerItemSlots[adsIndex].SetEnable(true);
+                        PlayerItemSlots[adsIndex].HideItemCount();
+
+                        InGameManager.InstPVP_Player.Network_GetItem(itemType, adsIndex);
+                    });
+                }
+            });
         }
         else
         {
             UseItem(btn);
             btn.SetEnable(false);
         }
+    }
+
+    public void GetOpponentItem(PurchaseItemType itemType, int slotIndex)
+    {
+        if(slotIndex < 0 || slotIndex >= OpponentItemSlots.Length)
+            return;
+
+        OpponentItemSlots[slotIndex].SetItem(itemType);
+        OpponentItemSlots[slotIndex].SetEnable(true);
+        OpponentItemSlots[slotIndex].HideItemCount();
+        OpponentItemSlots[slotIndex].GetComponent<Button>().enabled = false;
     }
 
     void UseItem(ItemButton btn)

@@ -38,7 +38,7 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancerNew()
     {
-        yield return null;
+        yield return new WaitForSeconds(5);
         ParseBotLevel();
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;

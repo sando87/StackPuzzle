@@ -33,6 +33,36 @@ public class MenuItemSelector : MonoBehaviour
         }
     }
 
+    public static MenuItemSelector PopUpByAds(Action<PurchaseItemType> onSelect)
+    {
+        GameObject prefab = (GameObject)Resources.Load("Prefabs/ItemSelector", typeof(GameObject));
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
+        MenuItemSelector box = objMenu.GetComponent<MenuItemSelector>();
+        box.EventSelectItem = onSelect;
+        box.UpdateItemSelectorByAds();
+        return box;
+    }
+
+    public void UpdateItemSelectorByAds()
+    {
+        ItemButton[] slots = ItemSlotRoot.GetComponentsInChildren<ItemButton>();
+        int itemTypeCount = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
+        for (int i = 0; i < itemTypeCount; ++i)
+        {
+            PurchaseItemType type = (PurchaseItemType)i;
+            if(type == PurchaseItemType.None)
+            {
+                slots[i].gameObject.SetActive(false);
+            }
+            else
+            {
+                slots[i].SetItem(type);
+                slots[i].HideItemCount();
+                slots[i].AddEvent(OnSelectItem);
+            }
+        }
+    }
+
     public void OnSelectItem(PurchaseItemType item)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);

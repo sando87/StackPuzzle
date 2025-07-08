@@ -10,7 +10,7 @@ public enum NetCMD
 public enum PVPCommand
 {
     Undef, StartGame, Click, Swipe, Destroy, Create, FlushAttacks, EndGame, DropPause, DropResume, ChangeSkill, BreakIce, CloseProducts, UseItem, SyncTimer,
-    SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects
+    SkillBomb, SkillIce, SkillIceRes, SkillShield, SkillScoreBuff, SkillChangeProducts, SkillCloud, SkillUpsideDown, SkillRemoveBadEffects, GetItem
 }
 public enum ProductColor
 {
@@ -239,6 +239,7 @@ public class PVPInfo : ByteSerializer
     public ProductSkill skill;
     public SwipeDirection dir;
     public PurchaseItemType item;
+    public int slotIndex;
 
     public ProductInfo[] pros { get; set; }
     public int ArrayCount { get { return pros == null ? 0 : pros.Length; } }
@@ -259,6 +260,7 @@ public class PVPInfo : ByteSerializer
         rets.AddRange(BitConverter.GetBytes((int)skill));
         rets.AddRange(BitConverter.GetBytes((int)dir));
         rets.AddRange(BitConverter.GetBytes((int)item));
+        rets.AddRange(BitConverter.GetBytes(slotIndex));
         //rets.AddRange(Utils.Serialize(userInfo));
 
         if (pros != null)
@@ -287,6 +289,7 @@ public class PVPInfo : ByteSerializer
             skill = (ProductSkill)BitConverter.ToInt32(bytes, off); off += 4;
             dir = (SwipeDirection)BitConverter.ToInt32(bytes, off); off += 4;
             item = (PurchaseItemType)BitConverter.ToInt32(bytes, off); off += 4;
+            slotIndex = BitConverter.ToInt32(bytes, off); off += 4;
 
             //userInfo = Utils.Deserialize<UserInfo>(ref bytes, off); off += Utils.Sizeof<UserInfo>();
 

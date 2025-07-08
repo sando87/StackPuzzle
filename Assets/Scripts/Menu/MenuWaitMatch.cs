@@ -207,12 +207,18 @@ public class MenuWaitMatch : MonoBehaviour
         for(int i = 0; i < remainAds; ++i)
         {
             bool adsDone = false;
-            int adsIdx = i % 3;
-            AdsType adsType = adsIdx == 0 ? AdsType.InGameItemA : (adsIdx == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
-            GoogleADMob.Inst.Show(adsType, (reward) =>
+            // int adsIdx = i % 3;
+            // AdsType adsType = adsIdx == 0 ? AdsType.InGameItemA : (adsIdx == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
+            // GoogleADMob.Inst.Show(adsType, (reward) =>
+            // {
+            //     adsDone = true;
+            // });
+
+            MenuMessageBox.PopUp("Test Ads Showing..." + i, false, (isOK) =>
             {
                 adsDone = true;
             });
+
             yield return new WaitUntil(() => adsDone);
             Purchases.RemoveAdsCount();
         }

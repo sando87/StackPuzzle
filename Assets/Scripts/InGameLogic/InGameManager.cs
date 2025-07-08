@@ -4498,6 +4498,15 @@ public class InGameManager : MonoBehaviour
                     mNetMessages.RemoveFirst();
                 }
             }
+            else if (body.cmd == PVPCommand.GetItem)
+            {
+                // if (IsIdle && IsAllProductIdle())
+                {
+                    MenuBattle.Inst().GetOpponentItem(body.item, body.slotIndex);
+
+                    mNetMessages.RemoveFirst();
+                }
+            }
         }
     }
     private void CastItemEffectOnOpponent(Product[] pros, PurchaseItemType item)
@@ -4681,6 +4690,21 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.item = item;
+        //req.pros = pros;
+
+        if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
+            StartFinish(false);
+    }
+    public void Network_GetItem(PurchaseItemType item, int slotIndex)
+    {
+        if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
+            return;
+
+        PVPInfo req = new PVPInfo();
+        req.cmd = PVPCommand.GetItem;
+        req.oppUserPk = InstPVP_Opponent.UserPk;
+        req.item = item;
+        req.slotIndex = slotIndex;
         //req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
