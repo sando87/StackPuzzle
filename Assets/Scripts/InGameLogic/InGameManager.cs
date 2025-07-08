@@ -702,10 +702,17 @@ public class InGameManager : MonoBehaviour
             for (int i = 0; i < count; i++)
             {
                 // 새로 생성될 Product가 드랍 후 매칭되지 않도록 하는 색상으로 결정
-                // ProductColor color = ProductColorForUnMatching(curDropFrame, curTopProduct);
-                // Product newPro = CreateNewProduct(color);
+                Product newPro = null;
+                if (mStageInfo.ColorCount <= 4 && UnityEngine.Random.Range(0, 1000) % 100 < 40)
+                {
+                    ProductColor color = ProductColorForUnMatching(curDropFrame, curTopProduct);
+                    newPro = CreateNewProduct(color);
+                }
+                else
+                {
+                    newPro = CreateNewProduct();
+                }
 
-                Product newPro = CreateNewProduct();
                 vf.AddNewProduct(newPro);
                 newPro.EnableMasking(vf.MaskOrder);
 
@@ -743,7 +750,7 @@ public class InGameManager : MonoBehaviour
     private bool TryMatchAfterDrop(Product[] droppingPros)
     {
         //매칭 가능한 블록들이 있는지 찾는 기능 수행
-        List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount + 1);
+        List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount);
         if (matches.Count > 0)
         {
             // 매치가능한 블럭들이 있다면 매치 수행
@@ -1661,7 +1668,7 @@ public class InGameManager : MonoBehaviour
         }
 
         //다 떨어지고 나면 떨어진 Products들로 다시 Matching 시도
-        List<Product[]> matches = FindMatchedProducts(droppingProducts, UserSetting.MatchCount + 1);
+        List<Product[]> matches = FindMatchedProducts(droppingProducts, UserSetting.MatchCount);
         if (matches.Count > 0)
         {
             foreach(Product[] group in matches)
@@ -3580,7 +3587,7 @@ public class InGameManager : MonoBehaviour
         {
             return ProductSkill.Nothing;
         }
-        else if (matches.Length <= UserSetting.MatchCount + 3)
+        else if (matches.Length <= UserSetting.MatchCount + 4)
         {
             ProductSkill skill = ProductSkill.Nothing;
             int ran = mRandomSeed.Next(4);
