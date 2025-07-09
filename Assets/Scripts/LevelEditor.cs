@@ -777,7 +777,7 @@ public class LevelEditor : EditorWindow
             mStageInfo.BoardInfo.Add(row.ToArray());
         }
 
-        mStageInfo.ColorCount = countX > 7 && countY > 8 ? 5 : 4;
+        mStageInfo.ColorCount = countX > 6 && countY > 7 ? 5 : 4;
 
         RewardTypeA = 0;
         RewardCountA = 0;
