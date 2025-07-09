@@ -205,8 +205,8 @@ public class LevelEditor : EditorWindow
             GUILayout.BeginHorizontal();
             GUILayout.Label("GoalValue", EditorStyles.label);
             GUILayout.FlexibleSpace();
-            int goalCount = GetGoalCount();
-            GUILayout.Label(goalCount.ToString(), EditorStyles.label);
+            mStageInfo.GoalValue = GetGoalCount();
+            GUILayout.Label(mStageInfo.GoalValue.ToString(), EditorStyles.label);
             GUILayout.EndHorizontal();
         }
 

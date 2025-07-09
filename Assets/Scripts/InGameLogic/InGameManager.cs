@@ -207,7 +207,7 @@ public class InGameManager : MonoBehaviour
         gameObject.SetActive(true);
         mStageInfo = info;
         mUserInfo = userInfo;
-        mStartRandomSeed = info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : info.RandomSeed;
+        mStartRandomSeed = info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : (info.RandomSeed == 0 ? info.Num : info.RandomSeed);
         mRandomSeed = new System.Random(mStartRandomSeed);
         mStartPos = transform.position;
 
