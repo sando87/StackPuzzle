@@ -3588,11 +3588,11 @@ public class InGameManager : MonoBehaviour
     }
     private ProductSkill CheckSkillable(Product[] matches)
     {
-        if (matches.Length <= UserSetting.MatchCount + 2)
+        if (matches.Length <= UserSetting.MatchCount + 1)
         {
             return ProductSkill.Nothing;
         }
-        else if (matches.Length <= UserSetting.MatchCount + 4)
+        else if (matches.Length <= UserSetting.MatchCount + 3)
         {
             ProductSkill skill = ProductSkill.Nothing;
             int ran = mRandomSeed.Next(4);
