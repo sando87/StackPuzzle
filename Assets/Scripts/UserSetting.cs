@@ -33,7 +33,7 @@ public class UserSetting
     public const float InfoBoxDisplayTime = 2.0f;
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
-    public const int BattleModeUnlockStage = 7;
+    public const int BattleModeUnlockStage = 10;
     private const string UserInfoVersion = "ui1";
     #endregion
 

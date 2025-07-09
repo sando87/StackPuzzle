@@ -756,17 +756,17 @@ public class LevelEditor : EditorWindow
         int newStageNum = StageInfo.GetMaxStageNum() + 1;
         mStageInfo.Num = newStageNum;
         mStageInfo.GoalType = "Score";
-        int goalValue = (UnityEngine.Random.Range(350, 700) / 20) * 20;
+        int goalValue = (UnityEngine.Random.Range(450, 700) / 20) * 20;
         mStageInfo.GoalValue = goalValue;
         mStageInfo.GoalTypeEnum = StageGoalType.Score;
-        int moveLimit = (UnityEngine.Random.Range(30, 50) / 2) * 2;
+        int moveLimit = (UnityEngine.Random.Range(25, 45) / 2) * 2;
         mStageInfo.MoveLimit = moveLimit;
         mStageInfo.TimeLimit = 0;
         mStageInfo.StarPoint = 0;
         mStageInfo.RandomSeed = 0;
 
-        int countX = UnityEngine.Random.Range(5, 10);
-        int countY = UnityEngine.Random.Range(6, 14);
+        int countX = UnityEngine.Random.Range(5, 9);
+        int countY = UnityEngine.Random.Range(6, 12);
         for (int y = 0; y < countY; ++y)
         {
             List<StageInfoCell> row = new List<StageInfoCell>();
@@ -777,7 +777,7 @@ public class LevelEditor : EditorWindow
             mStageInfo.BoardInfo.Add(row.ToArray());
         }
 
-        mStageInfo.ColorCount = countX > 6 && countY > 7 ? 5 : 4;
+        mStageInfo.ColorCount = countX * countY < 45 ? 4 : 5;
 
         RewardTypeA = 0;
         RewardCountA = 0;

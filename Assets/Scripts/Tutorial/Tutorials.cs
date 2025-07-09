@@ -103,6 +103,14 @@ public class Tutorials : MonoBehaviour
             }
             else if (type == TutorialEventType.Click2)
             {
+                // UserSetting.TutorialNumber = curNum + 1;
+                // StartCoroutine(TutorialStarter());
+            }
+            else if (type == TutorialEventType.Right)
+            {
+                Frame frame = StageGameField.Frame(3, 0);
+                StageGameField.OnSwipe(frame.ChildProduct.gameObject, SwipeDirection.RIGHT);
+
                 UserSetting.TutorialNumber = curNum + 1;
                 StartCoroutine(TutorialStarter());
             }

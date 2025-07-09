@@ -62,7 +62,7 @@ public class TutorialEventCombo : TutorialEvent
             MessageBox.transform.parent.position += new Vector3(0, -0.5f, 0);
             MessageBox.text = "Check out your combo.";
 
-            StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
+            StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
             {
                 Anim.Play("tutorialDim", -1, 0);
 
@@ -89,9 +89,15 @@ public class TutorialEventCombo : TutorialEvent
         }
         else if (Step == 3)
         {
-            LockSystemEvent(false);
-            EventUserAction?.Invoke(TutorialEventType.Click2);
-            Destroy(ParentObject);
+            Step++;
+            ComboDisplay.SetActive(false);
+            MessageBox.transform.parent.gameObject.SetActive(false);
+            Vector3 pos = SwipeSubWindow.transform.localPosition;
+            SwipeSubWindow.transform.localPosition = new Vector3(0.82f, 0, pos.z);
+            SwipeSubWindow.gameObject.SetActive(true);
+            Vector2 pt = InGameManager.InstStage.Frame(3, 0).transform.position;
+            BasePoint.transform.SetLocalPosition2D(pt);
+            Anim.SetTrigger("right");
         }
     }
     protected override void OnSwipe(GameObject obj, SwipeDirection dir)
@@ -118,7 +124,17 @@ public class TutorialEventCombo : TutorialEvent
                     EnLightCombo();
                 }));
             }));
-            
+        }
+        else if (Step == 4 && dir == SwipeDirection.RIGHT)
+        {
+            EventUserAction?.Invoke(TutorialEventType.Right);
+            SwipeSubWindow.SetActive(false);
+            ShowBasePoint(false);
+            MessageBox.transform.parent.gameObject.SetActive(false);
+            Anim.Play("TutorialHideAll", -1, 0);
+
+            LockSystemEvent(false);
+            Destroy(ParentObject);
         }
     }
     private void EnLightCombo()
