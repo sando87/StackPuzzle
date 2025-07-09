@@ -318,7 +318,7 @@ public class StageInfo
             string[] keyValue = columns[xIdx].Split('/');
             if(keyValue.Length == 5)
             {
-                int productType = int.Parse(keyValue[0]);
+                int productType = keyValue[0] == "x" ? -1 : keyValue[0] == "o" ? 0 : int.Parse(keyValue[0]);
                 int productCapCount = int.Parse(keyValue[1]);
                 int productIceCount = int.Parse(keyValue[2]);
                 int frameBushCount = int.Parse(keyValue[3]);
