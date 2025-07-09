@@ -13,15 +13,15 @@ public class StageInfoCell
     public int CapCount;
     public int RopeCount;
     public int BushCount;
-    public bool IsDisabled;
+    public int ProductType; // 0: Normal, -1: Empty, 1~6: ProductSkill
 
-    public StageInfoCell(bool isDisabled, int iceCount, int ropeCount, int capCount, int bushCount)
+    public StageInfoCell(int productType, int iceCount, int ropeCount, int capCount, int bushCount)
     {
         IceCount = iceCount;
         RopeCount = ropeCount;
         CapCount = capCount;
         BushCount = bushCount;
-        IsDisabled = isDisabled;
+        ProductType = productType;
     }
     public StageInfoCell()
     {
@@ -29,8 +29,10 @@ public class StageInfoCell
         RopeCount = 0;
         CapCount = 0;
         BushCount = 0;
-        IsDisabled = false;
+        ProductType = 0;
     }
+
+    public bool IsDisabled { get => ProductType == -1; }
 }
 public class StageInfo
 {
@@ -316,12 +318,12 @@ public class StageInfo
             string[] keyValue = columns[xIdx].Split('/');
             if(keyValue.Length == 5)
             {
-                bool isDisabled = keyValue[0] == "x" ? true : false;
+                int productType = int.Parse(keyValue[0]);
                 int productCapCount = int.Parse(keyValue[1]);
                 int productIceCount = int.Parse(keyValue[2]);
                 int frameBushCount = int.Parse(keyValue[3]);
                 int frameRopeCount = int.Parse(keyValue[4]);
-                cells[xIdx] = new StageInfoCell(isDisabled, productIceCount, frameRopeCount, productCapCount, frameBushCount);
+                cells[xIdx] = new StageInfoCell(productType, productIceCount, frameRopeCount, productCapCount, frameBushCount);
             }
         }
         BoardInfo.Add(cells);
@@ -332,8 +334,7 @@ public class StageInfo
         for (int xIdx = 0; xIdx < XCount; ++xIdx)
         {
             StageInfoCell cell = GetCell(xIdx, rowIndex);
-            string isDis = cell.IsDisabled ? "x" : "o";
-            rowString += isDis + "/" + cell.CapCount + "/" + cell.IceCount + "/" + cell.BushCount + "/" + cell.RopeCount + " ";
+            rowString += cell.ProductType + "/" + cell.CapCount + "/" + cell.IceCount + "/" + cell.BushCount + "/" + cell.RopeCount + " ";
         }
         return "Rows," + rowString + NewLine;
     }
@@ -421,7 +422,7 @@ public class StageInfo
         string fullname = "Assets/Resources/StageInfo/Version" + Version + "/" + Num + ".txt";
         string data =
         // comments
-        "# 0/0/0/0 => cap(b)/ice(b)/bush(f)/rope(f)" + NewLine +
+        "# 0/0/0/0/0 => productType/cap(b)/ice(b)/bush(f)/rope(f)" + NewLine +
         "# GoalType : Score,ComboN, ItemOneMore, ItemKeepCombo, ItemSameColor, Cap, Ice, Bush, Rope" + NewLine +
         "# Reward,gold/100" + NewLine +
         "# Reward,dia/5" + NewLine +

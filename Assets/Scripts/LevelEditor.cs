@@ -8,12 +8,13 @@ using System;
 
 public class LevelEditor : EditorWindow
 {
-    enum SelectType { NoBlock, CapProduct, IceProduct, BushFrame, RopeFrame }
+    enum SelectType { NoBlock, CapProduct, IceProduct, BushFrame, RopeFrame, SkillProduct }
 
     public Sprite[] IceImages = null;
     public Sprite[] CapImages = null;
     public Sprite[] BushImages = null;
     public Sprite[] RopeImages = null;
+    public Sprite[] SkillImages = null;
 
     //블럭 사이즈 정의
     private GUILayoutOption[] GridButtonSize = new GUILayoutOption[2] { GUILayout.Width(15), GUILayout.Height(15) };
@@ -309,6 +310,11 @@ public class LevelEditor : EditorWindow
             {
                 CurrentSelection = SelectType.RopeFrame;
             }
+            GUI.color = CurrentSelection == SelectType.SkillProduct ? enabledColor : disabledColor;
+            if (GUILayout.Button(SkillImages[0].texture, GridButtonSize))
+            {
+                CurrentSelection = SelectType.SkillProduct;
+            }
         }
         GUILayout.EndHorizontal();
 
@@ -451,7 +457,11 @@ public class LevelEditor : EditorWindow
         if (GUILayout.Button("o", GridButtonSize)) {
             OnClickBlock(idxX, idxY);
         }
-
+        
+        if (block.ProductType > 0)
+        {
+            GUI.Box(GUILayoutUtility.GetLastRect(), SkillImages[block.ProductType - 1].texture);
+        }
         if (block.CapCount > 0)
         {
             GUI.Box(GUILayoutUtility.GetLastRect(), CapImages[block.CapCount - 1].texture);
@@ -479,7 +489,7 @@ public class LevelEditor : EditorWindow
         {
             case SelectType.NoBlock:
                 {
-                    block.IsDisabled = !block.IsDisabled;
+                    block.ProductType = block.IsDisabled ? 0 : -1;
                     block.CapCount = 0;
                     block.IceCount = 0;
                     block.BushCount = 0;
@@ -508,6 +518,12 @@ public class LevelEditor : EditorWindow
                 {
                     int nextCount = block.RopeCount + addCount;
                     block.RopeCount = nextCount < 0 ? RopeImages.Length : nextCount % (RopeImages.Length + 1);
+                    break;
+                }
+            case SelectType.SkillProduct:
+                {
+                    int nextCount = block.ProductType + addCount;
+                    block.ProductType = nextCount < 0 ? SkillImages.Length : nextCount % (SkillImages.Length + 1);
                     break;
                 }
         }
@@ -542,6 +558,14 @@ public class LevelEditor : EditorWindow
         RopeImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross2.png", typeof(Sprite));
         RopeImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross3.png", typeof(Sprite));
         RopeImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "cross4.png", typeof(Sprite));
+
+        SkillImages = new Sprite[6];
+        SkillImages[0] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "fruitsPack/specials/128x128/sf_specials_d_02.png", typeof(Sprite));
+        SkillImages[1] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "fruitsPack/specials/128x128/sf_specials_d_01.png", typeof(Sprite));
+        SkillImages[2] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "skillBomb.png", typeof(Sprite));
+        SkillImages[3] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "Items/productRainbow.png", typeof(Sprite));
+        SkillImages[4] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "fruitsPack/specials/128x128/sf_specials_f_02.png", typeof(Sprite));
+        SkillImages[5] = (Sprite)AssetDatabase.LoadAssetAtPath(imagePath + "fruitsPack/specials/128x128/sf_specials_g_01.png", typeof(Sprite));
     }
     private bool LoadFromFile(int levelNum)
     {

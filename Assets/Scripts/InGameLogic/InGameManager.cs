@@ -271,6 +271,11 @@ public class InGameManager : MonoBehaviour
                 Product pro = CreateNewProduct(mFrames[x, y]);
 
                 StageInfoCell cellInfo = GetCellInversed(x, y);
+                if(cellInfo.ProductType > 0)
+                {
+                    pro.ChangeProductImage((ProductSkill)cellInfo.ProductType);
+                }
+
                 int iceCount = cellInfo.IceCount;
                 if(iceCount > 0)
                     pro.IcedBlock.SetDepth(iceCount);
