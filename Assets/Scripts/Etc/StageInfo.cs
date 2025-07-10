@@ -47,6 +47,7 @@ public class StageInfo
     public int MoveLimit = 0;
     public int TimeLimit = 0;
     public float ColorCount = 0;
+    public int MatchingChance = 0; // -100 ~ 100 : 0이면 기본 랜덤 그대로, 100으로 갈수록 매칭 확률 증가, -100으로 갈수록 매칭 확률 감소
     public int StarPoint = 50;
     public int XCount { get { return BoardInfo[0].Length; } }
     public int YCount { get { return BoardInfo.Count; } }
@@ -132,6 +133,7 @@ public class StageInfo
                 case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
                 case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
                 case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
+                case "MatchingChance": info.MatchingChance = int.Parse(tokens[1]); break;
                 case "RandomSeed": info.RandomSeed = int.Parse(tokens[1]); break;
                 case "StarPoint": info.StarPoint = int.Parse(tokens[1]); break;
                 case "Items": info.Items = Parse(tokens[1]); break;
@@ -301,6 +303,7 @@ public class StageInfo
             + MoveLimit + ","
             + TimeLimit + ","
             + ColorCount + ","
+            + MatchingChance + ","
             + RandomSeed + ","
             + StarPoint + ","
             + XCount + ","
@@ -437,6 +440,7 @@ public class StageInfo
         "MoveLimit," + MoveLimit + NewLine +
         "TimeLimit," + TimeLimit + NewLine +
         "ColorCount," + ColorCount + NewLine +
+        "MatchingChance," + MatchingChance + NewLine +
         "StarPoint," + StarPoint + NewLine +
         "RandomSeed," + RandomSeed + NewLine +
         ItemToString(Items) +

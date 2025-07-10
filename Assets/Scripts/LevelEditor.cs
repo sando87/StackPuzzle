@@ -230,6 +230,12 @@ public class LevelEditor : EditorWindow
         mStageInfo.ColorCount = EditorGUILayout.FloatField(mStageInfo.ColorCount, new GUILayoutOption[1] { GUILayout.Width(100) });
         GUILayout.EndHorizontal();
 
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("MatchingChance", EditorStyles.label);
+        GUILayout.FlexibleSpace();
+        mStageInfo.MatchingChance = EditorGUILayout.IntField(mStageInfo.MatchingChance, new GUILayoutOption[1] { GUILayout.Width(100) });
+        GUILayout.EndHorizontal();
+
         // GUILayout.Space(10);
 
         // GUILayout.BeginHorizontal();
@@ -741,6 +747,7 @@ public class LevelEditor : EditorWindow
         mStageInfo.MoveLimit = prevStageInfo.MoveLimit;
         mStageInfo.TimeLimit = prevStageInfo.TimeLimit;
         mStageInfo.ColorCount = prevStageInfo.ColorCount;
+        mStageInfo.MatchingChance = prevStageInfo.MatchingChance;
         mStageInfo.StarPoint = prevStageInfo.StarPoint;
         mStageInfo.RandomSeed = 0;
         RewardTypeA = 0;
@@ -778,6 +785,10 @@ public class LevelEditor : EditorWindow
         }
 
         mStageInfo.ColorCount = countX * countY < 45 ? 4 : 5;
+        if(mStageInfo.ColorCount <= 4)
+        {
+            mStageInfo.MatchingChance = -40;
+        }
 
         RewardTypeA = 0;
         RewardCountA = 0;
