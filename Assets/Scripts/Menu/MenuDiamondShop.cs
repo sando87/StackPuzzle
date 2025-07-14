@@ -43,7 +43,7 @@ public class MenuDiamondShop : MonoBehaviour
         }
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        LOG.echo("[Request Purchase] " + "ProductId:" + productID);
+        LOG.trace("[Request Purchase] " + "ProductId:" + productID);
         return true; //true 반환시 구매 진행
 #else
         return false;
