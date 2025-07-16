@@ -785,18 +785,18 @@ public class LevelEditor : EditorWindow
 
         if(countX == 5 && countY == 6)
         {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 550) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(17, 25) / 2) * 2;
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
         }
         else if(countX == 6 && countY == 7)
         {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(750, 1100) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(22, 30) / 2) * 2;
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 820) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
         }
         else
         {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(550, 850) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 28) / 2) * 2;
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(220, 520) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
         }
 
         RewardTypeA = 0;
