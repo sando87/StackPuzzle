@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public enum StageGoalType { None, Score, Combo, ItemOneMore, ItemKeepCombo, ItemSameColor, Rope, Ice, Cap, Bush }
+public enum StageGoalType { None, Score, Combo3, Combo6, Combo9, Combo12, Combo15, Combo18, ItemOneMore, ItemKeepCombo, ItemSameColor, Rope, Ice, Cap, Bush }
 
 public class StageInfoCell
 {
@@ -125,21 +125,17 @@ public class StageInfo
             if (line[0] == '#' || tokens.Length < 2)
                 continue;
 
-            switch(tokens[0])
-            {
-                case "GoalType": info.GoalType = tokens[1]; break;
-                case "GoalValue": info.GoalValue = int.Parse(tokens[1]); break;
-                case "GoalTypeEnum": info.GoalTypeEnum = StringToType(tokens[1]); break;
-                case "MoveLimit": info.MoveLimit = int.Parse(tokens[1]); break;
-                case "TimeLimit": info.TimeLimit = int.Parse(tokens[1]); break;
-                case "ColorCount": info.ColorCount = float.Parse(tokens[1]); break;
-                case "MatchingChance": info.MatchingChance = int.Parse(tokens[1]); break;
-                case "RandomSeed": info.RandomSeed = int.Parse(tokens[1]); break;
-                case "StarPoint": info.StarPoint = int.Parse(tokens[1]); break;
-                case "Items": info.Items = Parse(tokens[1]); break;
-                case "Reward": info.Rewards.Add(tokens[1]); break;
-                case "Rows": info.ParseRow(tokens[1]); break;
-            }
+            if (tokens[0].Equals("GoalType")) info.GoalType = tokens[1];
+            else if (tokens[0].Equals("GoalValue")) info.GoalValue = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("MoveLimit")) info.MoveLimit = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("TimeLimit")) info.TimeLimit = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("ColorCount")) info.ColorCount = float.Parse(tokens[1]);
+            else if (tokens[0].Equals("MatchingChance")) info.MatchingChance = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("RandomSeed")) info.RandomSeed = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("StarPoint")) info.StarPoint = int.Parse(tokens[1]);
+            else if (tokens[0].Equals("Items")) info.Items = Parse(tokens[1]);
+            else if (tokens[0].Equals("Reward")) info.Rewards.Add(tokens[1]);
+            else if (tokens[0].Equals("Rows")) info.ParseRow(tokens[1]);
         }
 
         info.UpdateGoalInfo();
@@ -166,10 +162,20 @@ public class StageInfo
 
     public int ComboTypeCount()
     {
-        if (GoalTypeEnum != StageGoalType.Combo)
+        if (GoalTypeEnum == StageGoalType.Combo3)
+            return 3;
+        else if (GoalTypeEnum == StageGoalType.Combo6)
+            return 6;
+        else if (GoalTypeEnum == StageGoalType.Combo9)
+            return 9;
+        else if (GoalTypeEnum == StageGoalType.Combo12)
+            return 12;
+        else if (GoalTypeEnum == StageGoalType.Combo15)
+            return 15;
+        else if (GoalTypeEnum == StageGoalType.Combo18)
+            return 18;
+        else
             return 0;
-
-        return int.Parse(GoalType.Replace("Combo", ""));
     }
 
     private static Dictionary<int, ProductSkill> Parse(string token)
@@ -202,49 +208,31 @@ public class StageInfo
 
     public static Sprite TypeToImage(string goalType)
     {
+        StageGoalType typeEnum = StringToType(goalType);
         Sprite image = null;
-        switch(goalType)
+        switch(typeEnum)
         {
-            case "Score": image = Resources.Load<Sprite>("Images/score"); break;
-            case "Combo3": image = Resources.Load<Sprite>("Images/combo3"); break;
-            case "Combo6": image = Resources.Load<Sprite>("Images/combo6"); break;
-            case "Combo9": image = Resources.Load<Sprite>("Images/combo9"); break;
-            case "Combo12": image = Resources.Load<Sprite>("Images/combo12"); break;
-            case "Combo15": image = Resources.Load<Sprite>("Images/combo15"); break;
-            case "Combo18": image = Resources.Load<Sprite>("Images/combo18"); break;
-            case "ItemOneMore": image = Resources.Load<Sprite>("Images/itemOneMore"); break;
-            case "ItemKeepCombo": image = Resources.Load<Sprite>("Images/itemKeepCombo"); break;
-            case "ItemSameColor": image = Resources.Load<Sprite>("Images/itemSameColor"); break;
-            case "Rope": image = Resources.Load<Sprite>("Images/rope"); break;
-            case "Ice": image = Resources.Load<Sprite>("Images/ice"); break;
-            case "Cap": image = Resources.Load<Sprite>("Images/cap"); break;
-            case "Bush": image = Resources.Load<Sprite>("Images/bush"); break;
+            case StageGoalType.Score: image = Resources.Load<Sprite>("Images/score"); break;
+            case StageGoalType.Combo3: image = Resources.Load<Sprite>("Images/combo3"); break;
+            case StageGoalType.Combo6: image = Resources.Load<Sprite>("Images/combo6"); break;
+            case StageGoalType.Combo9: image = Resources.Load<Sprite>("Images/combo9"); break;
+            case StageGoalType.Combo12: image = Resources.Load<Sprite>("Images/combo12"); break;
+            case StageGoalType.Combo15: image = Resources.Load<Sprite>("Images/combo15"); break;
+            case StageGoalType.Combo18: image = Resources.Load<Sprite>("Images/combo18"); break;
+            case StageGoalType.ItemOneMore: image = Resources.Load<Sprite>("Images/itemOneMore"); break;
+            case StageGoalType.ItemKeepCombo: image = Resources.Load<Sprite>("Images/itemKeepCombo"); break;
+            case StageGoalType.ItemSameColor: image = Resources.Load<Sprite>("Images/itemSameColor"); break;
+            case StageGoalType.Rope: image = Resources.Load<Sprite>("Images/rope"); break;
+            case StageGoalType.Ice: image = Resources.Load<Sprite>("Images/ice"); break;
+            case StageGoalType.Cap: image = Resources.Load<Sprite>("Images/cap"); break;
+            case StageGoalType.Bush: image = Resources.Load<Sprite>("Images/bush"); break;
             default: break;
         }
         return image;
     }
     public static StageGoalType StringToType(string goalType)
     {
-        StageGoalType type = StageGoalType.None;
-        switch (goalType)
-        {
-            case "Score": type = StageGoalType.Score; break;
-            case "Combo3": type = StageGoalType.Combo; break;
-            case "Combo6": type = StageGoalType.Combo; break;
-            case "Combo9": type = StageGoalType.Combo; break;
-            case "Combo12": type = StageGoalType.Combo; break;
-            case "Combo15": type = StageGoalType.Combo; break;
-            case "Combo18": type = StageGoalType.Combo; break;
-            case "ItemOneMore": type = StageGoalType.ItemOneMore; break;
-            case "ItemKeepCombo": type = StageGoalType.ItemKeepCombo; break;
-            case "ItemSameColor": type = StageGoalType.ItemSameColor; break;
-            case "Rope": type = StageGoalType.Rope; break;
-            case "Ice": type = StageGoalType.Ice; break;
-            case "Cap": type = StageGoalType.Cap; break;
-            case "Bush": type = StageGoalType.Bush; break;
-            default: break;
-        }
-        return type;
+        return Enum.TryParse(goalType, out StageGoalType type) ? type : StageGoalType.None;
     }
     public static Tuple<string, Sprite, int> StringToRewardInfo(string rewardText)
     {

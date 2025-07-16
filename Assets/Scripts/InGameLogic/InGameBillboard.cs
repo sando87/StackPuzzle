@@ -72,7 +72,12 @@ public class InGameBillboard
         switch (type)
         {
             case StageGoalType.Score: return CurrentScore;
-            case StageGoalType.Combo: return CurrentCombo;
+            case StageGoalType.Combo3: return CurrentCombo;
+            case StageGoalType.Combo6: return CurrentCombo;
+            case StageGoalType.Combo9: return CurrentCombo;
+            case StageGoalType.Combo12: return CurrentCombo;
+            case StageGoalType.Combo15: return CurrentCombo;
+            case StageGoalType.Combo18: return CurrentCombo;
             case StageGoalType.ItemOneMore: return ItemOneMoreCount;
             case StageGoalType.ItemKeepCombo: return ItemKeepComboCount;
             case StageGoalType.ItemSameColor: return ItemSameColorCount;

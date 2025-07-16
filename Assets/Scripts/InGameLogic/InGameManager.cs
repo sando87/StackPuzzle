@@ -3047,7 +3047,12 @@ public class InGameManager : MonoBehaviour
                 if (Billboard.CurrentScore >= targetCount)
                     isSuccess = true;
                 break;
-            case StageGoalType.Combo:
+            case StageGoalType.Combo3:
+            case StageGoalType.Combo6:
+            case StageGoalType.Combo9:
+            case StageGoalType.Combo12:
+            case StageGoalType.Combo15:
+            case StageGoalType.Combo18:
                 if (Billboard.ComboCounter[comboTypeCount] >= targetCount)
                     isSuccess = true;
                 break;

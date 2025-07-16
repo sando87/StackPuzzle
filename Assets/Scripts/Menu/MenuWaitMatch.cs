@@ -442,33 +442,4 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
-    private ProductColor ToColor(string color)
-    {
-        string lowerColor = color.ToLower();
-        switch(lowerColor)
-        {
-            case "blue": return ProductColor.Blue;
-            case "green": return ProductColor.Green;
-            case "orange": return ProductColor.Orange;
-            case "purple": return ProductColor.Purple;
-            case "red": return ProductColor.Red;
-            case "yellow": return ProductColor.Yellow;
-        }
-        return ProductColor.None;
-    }
-    private PVPCommand ToSkill(string skill)
-    {
-        string lowerSkill = skill.ToLower();
-        switch (lowerSkill)
-        {
-            case "bomb": return PVPCommand.SkillBomb;
-            case "ice": return PVPCommand.SkillIce;
-            case "shield": return PVPCommand.SkillShield;
-            case "scorebuff": return PVPCommand.SkillScoreBuff;
-            case "cloud": return PVPCommand.SkillCloud;
-            case "upsidedown": return PVPCommand.SkillUpsideDown;
-            case "remove": return PVPCommand.SkillRemoveBadEffects;
-        }
-        return PVPCommand.Undef;
-    }
 }

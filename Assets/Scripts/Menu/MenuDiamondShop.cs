@@ -62,14 +62,16 @@ public class MenuDiamondShop : MonoBehaviour
 
     public void OnSccuessPurchaseDiamond(string productID)
     {
-        switch (productID)
-        {
-            case "test0001": Purchases.PurchaseDiamond(10); break;
-            case "test0002": Purchases.PurchaseDiamond(50); break;
-            case "test0003": Purchases.PurchaseDiamond(100); break;
-            case "test0004": Purchases.PurchaseDiamond(150); break;
-            default: LOG.warn(); break;
-        }
+        if (productID == "test0001")
+            Purchases.PurchaseDiamond(10);
+        else if (productID == "test0002")
+            Purchases.PurchaseDiamond(50);
+        else if (productID == "test0003")
+            Purchases.PurchaseDiamond(100);
+        else if (productID == "test0004")
+            Purchases.PurchaseDiamond(150);
+        else
+            LOG.warn();
 
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("Success Purchase!!");
