@@ -763,17 +763,13 @@ public class LevelEditor : EditorWindow
         int newStageNum = StageInfo.GetMaxStageNum() + 1;
         mStageInfo.Num = newStageNum;
         mStageInfo.GoalType = "Score";
-        int goalValue = (UnityEngine.Random.Range(450, 700) / 20) * 20;
-        mStageInfo.GoalValue = goalValue;
         mStageInfo.GoalTypeEnum = StageGoalType.Score;
-        int moveLimit = (UnityEngine.Random.Range(25, 45) / 2) * 2;
-        mStageInfo.MoveLimit = moveLimit;
         mStageInfo.TimeLimit = 0;
         mStageInfo.StarPoint = 0;
         mStageInfo.RandomSeed = 0;
 
-        int countX = UnityEngine.Random.Range(5, 9);
-        int countY = UnityEngine.Random.Range(6, 12);
+        int countX = UnityEngine.Random.Range(5, 7);
+        int countY = UnityEngine.Random.Range(6, 8);
         for (int y = 0; y < countY; ++y)
         {
             List<StageInfoCell> row = new List<StageInfoCell>();
@@ -784,10 +780,23 @@ public class LevelEditor : EditorWindow
             mStageInfo.BoardInfo.Add(row.ToArray());
         }
 
-        mStageInfo.ColorCount = countX * countY < 45 ? 4 : 5;
-        if(mStageInfo.ColorCount <= 4)
+        mStageInfo.ColorCount = 4;
+        mStageInfo.MatchingChance = -40;
+
+        if(countX == 5 && countY == 6)
         {
-            mStageInfo.MatchingChance = -40;
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 550) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(17, 25) / 2) * 2;
+        }
+        else if(countX == 6 && countY == 7)
+        {
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(750, 1100) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(22, 30) / 2) * 2;
+        }
+        else
+        {
+            mStageInfo.GoalValue = (UnityEngine.Random.Range(550, 850) / 20) * 20;
+            mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 28) / 2) * 2;
         }
 
         RewardTypeA = 0;
