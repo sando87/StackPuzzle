@@ -766,7 +766,7 @@ public class LevelEditor : EditorWindow
         mStageInfo.GoalTypeEnum = StageGoalType.Score;
         mStageInfo.TimeLimit = 0;
         mStageInfo.StarPoint = 0;
-        mStageInfo.RandomSeed = -1;
+        mStageInfo.RandomSeed = 0;
 
         mStageInfo.ColorCount = 5;
 
@@ -818,24 +818,24 @@ public class LevelEditor : EditorWindow
                 mStageInfo.BoardInfo.Add(row.ToArray());
             }
 
-            mStageInfo.GoalValue = 1000;
-            mStageInfo.MoveLimit = 50;
+            // mStageInfo.GoalValue = 1000;
+            // mStageInfo.MoveLimit = 50;
 
-            // if (countX == 6 && countY == 7)
-            // {
-            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
-            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
-            // }
-            // else if (countX == 8 && countY == 9)
-            // {
-            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 720) / 20) * 20;
-            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
-            // }
-            // else
-            // {
-            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 520) / 20) * 20;
-            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
-            // }
+            if (countX == 6 && countY == 7)
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(550, 950) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 30) / 2) * 2;
+            }
+            else if (countX == 8 && countY == 9)
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(750, 1400) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(22, 38) / 2) * 2;
+            }
+            else
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(650, 1100) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 34) / 2) * 2;
+            }
         }
 
         RewardTypeA = 0;
