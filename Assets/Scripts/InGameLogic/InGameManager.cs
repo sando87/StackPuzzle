@@ -69,6 +69,7 @@ public class InGameManager : MonoBehaviour
     private int mDropLockCount = 0;
     public bool IsDroppable {get { return mDropLockCount == 0; } }
     private bool mUseCombo = false;
+    private float mStartTimeToDrop = 0;
     private float mStartTime = 0;
     private float mSFXVolume = 1;
     private int mPVPIceBlockLevel = 0;
@@ -315,7 +316,7 @@ public class InGameManager : MonoBehaviour
         if (pro == null || pro.ParentFrame == null || pro.ParentFrame.IsRope)
             return;
 
-        if(pro.Skill != ProductSkill.Nothing)
+        if (pro.Skill != ProductSkill.Nothing)
         {
             Network_Click(pro);
             RemoveLimit();
@@ -611,7 +612,9 @@ public class InGameManager : MonoBehaviour
         
         yield return new WaitForSeconds(0.1f);
 
-        while(mWorkerList.Count > 0)
+        mStartTimeToDrop = Time.time;
+
+        while (mWorkerList.Count > 0)
         {
             DelayedCall[] workers = mWorkerList.ToArray();
             foreach (DelayedCall worker in workers)
@@ -683,6 +686,9 @@ public class InGameManager : MonoBehaviour
     }
     private Product[] CreateNewProducts(VerticalFrames vf)
     {
+        float refTime = 10.0f;
+        float droppingTime = Time.time - mStartTimeToDrop;
+        int matchChance = droppingTime < refTime ? mStageInfo.MatchingChance : (mStageInfo.MatchingChance + (int)((refTime - droppingTime)));
         List<Product> newPros = new List<Product>();
         int count = 0;
         Product curTopProduct = null; // 기존에 있는 Products중 가장 위에 있는 것
@@ -708,9 +714,9 @@ public class InGameManager : MonoBehaviour
             {
                 // 새로 생성될 Product가 드랍 후 매칭되지 않도록 하는 색상으로 결정
                 Product newPro = null;
-                if (mStageInfo.MatchingChance < 0)
+                if (matchChance < 0)
                 {
-                    if(UnityEngine.Random.Range(0, 1000) % 100 < Mathf.Abs(mStageInfo.MatchingChance))
+                    if(UnityEngine.Random.Range(0, 1000) % 100 < Mathf.Abs(matchChance))
                     {
                         ProductColor color = ProductColorForUnMatching(curDropFrame, curTopProduct);
                         newPro = CreateNewProduct(color);
@@ -720,9 +726,9 @@ public class InGameManager : MonoBehaviour
                         newPro = CreateNewProduct();
                     }
                 }
-                else if(mStageInfo.MatchingChance > 0)
+                else if(matchChance > 0)
                 {
-                    if(UnityEngine.Random.Range(0, 1000) % 100 < Mathf.Abs(mStageInfo.MatchingChance))
+                    if(UnityEngine.Random.Range(0, 1000) % 100 < Mathf.Abs(matchChance))
                     {
                         ProductColor color = ProductColorForMoreMatching(curDropFrame, curTopProduct);
                         newPro = CreateNewProduct(color);
@@ -3712,6 +3718,7 @@ public class InGameManager : MonoBehaviour
         mSFXVolume = 1;
         mPVPIceBlockLevel = 0;
         mUseCombo = false;
+        mStartTimeToDrop = 0;
         mIsWorkingCycle = false;
         mStartRandomSeed = -1;
         mWorkerList.Clear();
