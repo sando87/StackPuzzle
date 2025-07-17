@@ -766,37 +766,76 @@ public class LevelEditor : EditorWindow
         mStageInfo.GoalTypeEnum = StageGoalType.Score;
         mStageInfo.TimeLimit = 0;
         mStageInfo.StarPoint = 0;
-        mStageInfo.RandomSeed = 0;
+        mStageInfo.RandomSeed = -1;
 
-        int countX = UnityEngine.Random.Range(5, 7);
-        int countY = UnityEngine.Random.Range(6, 8);
-        for (int y = 0; y < countY; ++y)
+        mStageInfo.ColorCount = 5;
+
+        if(mStageInfo.ColorCount == 4)
         {
-            List<StageInfoCell> row = new List<StageInfoCell>();
-            for (int x = 0; x < countX; ++x)
+            mStageInfo.MatchingChance = -40;
+
+            int countX = UnityEngine.Random.Range(5, 7);
+            int countY = UnityEngine.Random.Range(6, 8);
+            for (int y = 0; y < countY; ++y)
             {
-                row.Add(new StageInfoCell());
+                List<StageInfoCell> row = new List<StageInfoCell>();
+                for (int x = 0; x < countX; ++x)
+                {
+                    row.Add(new StageInfoCell());
+                }
+                mStageInfo.BoardInfo.Add(row.ToArray());
             }
-            mStageInfo.BoardInfo.Add(row.ToArray());
-        }
 
-        mStageInfo.ColorCount = 4;
-        mStageInfo.MatchingChance = -40;
+            if (countX == 5 && countY == 6)
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
+            }
+            else if (countX == 6 && countY == 7)
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 720) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
+            }
+            else
+            {
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 520) / 20) * 20;
+                mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
+            }
+        }
+        else if (mStageInfo.ColorCount == 5)
+        {
+            mStageInfo.MatchingChance = 0;
 
-        if(countX == 5 && countY == 6)
-        {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
-        }
-        else if(countX == 6 && countY == 7)
-        {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 820) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
-        }
-        else
-        {
-            mStageInfo.GoalValue = (UnityEngine.Random.Range(220, 520) / 20) * 20;
-            mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
+            int countX = UnityEngine.Random.Range(6, 8);
+            int countY = UnityEngine.Random.Range(7, 9);
+            for (int y = 0; y < countY; ++y)
+            {
+                List<StageInfoCell> row = new List<StageInfoCell>();
+                for (int x = 0; x < countX; ++x)
+                {
+                    row.Add(new StageInfoCell());
+                }
+                mStageInfo.BoardInfo.Add(row.ToArray());
+            }
+
+            mStageInfo.GoalValue = 1000;
+            mStageInfo.MoveLimit = 50;
+
+            // if (countX == 6 && countY == 7)
+            // {
+            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
+            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
+            // }
+            // else if (countX == 8 && countY == 9)
+            // {
+            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 720) / 20) * 20;
+            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
+            // }
+            // else
+            // {
+            //     mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 520) / 20) * 20;
+            //     mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
+            // }
         }
 
         RewardTypeA = 0;
