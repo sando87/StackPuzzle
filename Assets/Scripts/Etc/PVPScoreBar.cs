@@ -28,7 +28,7 @@ public class PVPScoreBar : MonoBehaviour
     { 
         get 
         { 
-            return Time.time > mTouchedTime + UserSetting.IceFlushInterval;
+            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && !mIsOnWaitting && mTweenCounter == 0;
         }
     }
 
@@ -38,6 +38,9 @@ public class PVPScoreBar : MonoBehaviour
     private float mWidthPerScore = 4.0f; // 스코어 1점을 UI상 표현하는 너비
     private int mMaxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
     private int MaxZoomCount { get { return SubGroup.Length - 1; } }
+    private float mAccScoreOnWaiting = 0;
+    private bool mIsOnWaitting = false;
+    private int mTweenCounter = 0;
 
     void Awake()
     {
@@ -61,6 +64,11 @@ public class PVPScoreBar : MonoBehaviour
         mZoomIndex = 0;
         RootScoreArea.DOKill();
         RootScoreArea.localScale = Vector3.one;
+
+        mTouchedTime = 0;
+        mAccScoreOnWaiting = 0;
+        mIsOnWaitting = false;
+        mTweenCounter = 0;
 
         InitZoomUISet();
         InitFlushImageObjects();
@@ -206,14 +214,14 @@ public class PVPScoreBar : MonoBehaviour
     int CalculateCurrentZoomLevel()
     {
         float currentScore = Mathf.Abs(CurrentScore);
-        for (int zoomLevel = 0; zoomLevel < MaxZoomCount; zoomLevel++)
+        for (int zoomIdx = 0; zoomIdx < MaxZoomCount; zoomIdx++)
         {
-            float scorePerBar = 50 * Mathf.Pow(4, zoomLevel + 1);
-            float minScore = zoomLevel == 0 ? 0 :scorePerBar * 0.1f;
-            float maxScore = zoomLevel == MaxZoomCount ? scorePerBar : scorePerBar * 1.0f;
+            float scorePerBar = UserSetting.ScorePerAttack * Mathf.Pow(4, zoomIdx + 1);
+            float minScore = zoomIdx == 0 ? 0 :scorePerBar * 0.1f;
+            float maxScore = zoomIdx == MaxZoomCount ? scorePerBar : scorePerBar * 1.0f;
             if (minScore <= currentScore && currentScore <= maxScore)
             {
-                return zoomLevel;
+                return zoomIdx;
             }
         }
 
@@ -225,6 +233,7 @@ public class PVPScoreBar : MonoBehaviour
         int newScore = CurrentScore + score;
         if(CurrentScore != 0 && newScore * CurrentScore <= 0)
         {
+            mTweenCounter = 0;
             UpdateScoreBar(newScore);
         }
         else
@@ -243,32 +252,10 @@ public class PVPScoreBar : MonoBehaviour
 
         CurrentScore += score;
         int absScore = Mathf.Abs(score);
-
-        if (mZoomIndex == 0 && absScore > 0)
+        if(mIsOnWaitting)
         {
-            mTouchedTime = Time.time;
+            mAccScoreOnWaiting += absScore;
         }
-        else if (mZoomIndex == 1 && absScore > 10)
-        {
-            mTouchedTime = Time.time;
-        }
-        else if (mZoomIndex == 2 && absScore > 30)
-        {
-            mTouchedTime = Time.time;
-        }
-        else if (mZoomIndex == 3 && absScore > 60)
-        {
-            mTouchedTime = Time.time;
-        }
-        else if (mZoomIndex == 4 && absScore > 100)
-        {
-            mTouchedTime = Time.time;
-        }
-        else if (absScore > 150)
-        {
-            mTouchedTime = Time.time;
-        }
-
 
         float newWidth = Mathf.Abs(CurrentScore) * mWidthPerScore;
         HitPoint.rectTransform.SetAnchoredPosX(newWidth);
@@ -308,9 +295,11 @@ public class PVPScoreBar : MonoBehaviour
         Vector2 addedSize = newSubScoreBar.rectTransform.sizeDelta;
         CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
 
+        mTweenCounter = 1;
         newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
+            mTweenCounter = 0;
             UpdateScoreBar(nextNewScore);
         });
     }
@@ -329,10 +318,12 @@ public class PVPScoreBar : MonoBehaviour
         newSubScoreBar.rectTransform.SetAnchoredWidth(width);
         newSubScoreBar.color = Color.white;
 
+        mTweenCounter = 1;
         Vector2 subSize = newSubScoreBar.rectTransform.sizeDelta;
         newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
+            mTweenCounter = 0;
             if (newSubScoreBar == null)
                 Destroy(newSubScoreBar.gameObject);
 
@@ -358,9 +349,12 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.rectTransform.SetAnchoredPosX(width);
 
         mTouchedTime = Time.time;
+        mTweenCounter = 1;
         newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
+            mTweenCounter = 0;
+            mTouchedTime = Time.time;
             CurrentScoreBar.transform.SetParent(RootScoreArea);
             CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
             CurrentScoreBar.transform.SetAsFirstSibling();
@@ -401,5 +395,25 @@ public class PVPScoreBar : MonoBehaviour
             LockImage.enabled = true;
             yield return new WaitForSeconds(interval);
         }
+    }
+
+    public void WaitStart()
+    {
+        if(!mIsOnWaitting)
+        {
+            mAccScoreOnWaiting = 0;
+            mIsOnWaitting = true;
+        }
+    }
+    public void WaitEnd()
+    {
+        float refScoreForTouch = UserSetting.ScorePerAttack * Mathf.Pow(4, mZoomIndex);
+        if(mAccScoreOnWaiting > refScoreForTouch)
+        {
+            mTouchedTime = Time.time;
+        }
+
+        mAccScoreOnWaiting = 0;
+        mIsOnWaitting = false;
     }
 }

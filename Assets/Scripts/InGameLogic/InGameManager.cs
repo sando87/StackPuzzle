@@ -140,6 +140,7 @@ public class InGameManager : MonoBehaviour
         if (IsIdle && !mPrevIdleState && IsAllProductIdle())
         {
             EventEnterIdle?.Invoke();
+            PVPScoreBar.WaitEnd();
             if (mUseCombo && !mIsFinished)
             {
                 mUseCombo = false;
@@ -318,6 +319,7 @@ public class InGameManager : MonoBehaviour
 
         if (pro.Skill != ProductSkill.Nothing)
         {
+            PVPScoreBar.WaitStart();
             Network_Click(pro);
             RemoveLimit();
             CastSkillProduct(pro);
@@ -332,6 +334,7 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
+                PVPScoreBar.WaitStart();
                 Network_Click(pro);
                 StartCoroutine(DoMatchingCycle(matches[0]));
                 RemoveLimit();
@@ -376,6 +379,7 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
+            PVPScoreBar.WaitStart();
             mIsUserEventLock = true;
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
@@ -403,6 +407,7 @@ public class InGameManager : MonoBehaviour
         }
         else if (product.Skill != ProductSkill.Nothing || targetProduct.Skill != ProductSkill.Nothing)
         {
+            PVPScoreBar.WaitStart();
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () =>
@@ -414,6 +419,7 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
+            PVPScoreBar.WaitStart();
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () =>
@@ -607,6 +613,7 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator DoWorkerCycle()
     {
+        PVPScoreBar.WaitStart();
         mIsUserEventLock = true;
         mIsWorkingCycle = true;
         
