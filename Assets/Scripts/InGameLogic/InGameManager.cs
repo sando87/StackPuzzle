@@ -695,7 +695,8 @@ public class InGameManager : MonoBehaviour
     {
         float refTime = 10.0f;
         float droppingTime = Time.time - mStartTimeToDrop;
-        int matchChance = droppingTime < refTime ? mStageInfo.MatchingChance : (mStageInfo.MatchingChance + (int)((refTime - droppingTime)));
+        int decreChance = (int)((refTime - droppingTime) * 5f);
+        int matchChance = droppingTime < refTime ? mStageInfo.MatchingChance : (mStageInfo.MatchingChance + decreChance);
         List<Product> newPros = new List<Product>();
         int count = 0;
         Product curTopProduct = null; // 기존에 있는 Products중 가장 위에 있는 것
