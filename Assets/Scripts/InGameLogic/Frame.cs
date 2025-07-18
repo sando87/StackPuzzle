@@ -10,15 +10,19 @@ public class Frame : MonoBehaviour
 {
     private int mRopeCount;
     private int mBushIndex;
+    private int mCapIndex;
 
     public Sprite[] Ropes;
     public Sprite[] Bushes;
+    public Sprite[] Caps;
     public SpriteRenderer[] Borders;
     public SpriteRenderer RopeRenderer;
     public GameObject BreakStonesParticle;
     public GameObject BushObject;
+    public GameObject CapObject;
     public GameObject BushEffectPrefab;
     public GameObject ComboNumPrefab;
+    public GameObject CapEffectPrefab;
 
     public VerticalFrames VertFrames { get { return transform.parent.GetComponent<VerticalFrames>(); } }
     public InGameManager GameManager { get; private set; }
@@ -30,9 +34,11 @@ public class Frame : MonoBehaviour
     public Product ChildProduct { get; set; }
     public bool IsRope { get { return mRopeCount > 0; } }
     public bool IsBushed { get { return mBushIndex > 0; } }
+    public bool IsCapped { get { return mCapIndex > 0; } }
 
     public Action<Frame> EventBreakRope;
     public Action<Frame> EventBreakBush;
+    public Action<Frame> EventBreakCap;
     public Action<int> EventScoreText;
 
     // Start is called before the first frame update
@@ -46,7 +52,7 @@ public class Frame : MonoBehaviour
         
     }
 
-    public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int ropeCount, int bushIndex = 0)
+    public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int ropeCount, int bushIndex, int capIndex)
     {
         GameManager = mgr;
         IndexX = idxX;
@@ -70,6 +76,9 @@ public class Frame : MonoBehaviour
 
         mBushIndex = bushIndex;
         UpdateBush();
+
+        mCapIndex = capIndex;
+        UpdateCap();
     }
 
     public void ShowBorder(int pos)
@@ -176,10 +185,30 @@ public class Frame : MonoBehaviour
         BushObject.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite = Bushes[mBushIndex];
     }
 
+    public void BreakCap(int count = 1)
+    {
+        if (!IsCapped)
+            return;
+
+        mCapIndex = Mathf.Max(0, mCapIndex - count);
+        Instantiate(CapEffectPrefab, transform.position, Quaternion.identity, transform);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
+        
+        UpdateCap();
+
+        if(mCapIndex <= 0)
+            EventBreakCap?.Invoke(this);
+    }
+    private void UpdateCap()
+    {
+        CapObject.SetActive(IsCapped);
+        CapObject.GetComponent<SpriteRenderer>().sprite = Caps[mCapIndex];
+    }
+
     public void CreateComboTextEffect(int combo, ProductColor color)
     {
         Color textColor = Color.white;
-        switch(color)
+        switch (color)
         {
             case ProductColor.Blue: textColor = new Color(0, 0.4f, 1, 1); break;
             case ProductColor.Green: textColor = new Color(0.17f, 0.7f, 0, 1); break;
@@ -255,14 +284,18 @@ public class Frame : MonoBehaviour
     }
     public bool IsObstacled()
     {
-        if (IsBushed || IsRope)
+        if (IsBushed || IsRope || IsCapped)
             return true;
 
         return false;
     }
     public void BreakObstacle(int count = 1)
     {
-        if (IsBushed)
+        if (IsCapped)
+        {
+            BreakCap(count);
+        }
+        else if (IsBushed)
         {
             BreakBush(count);
         }

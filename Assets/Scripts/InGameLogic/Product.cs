@@ -10,7 +10,6 @@ public class Product : MonoBehaviour
     public Animation Animation;
     public SpriteRenderer Renderer;
     public Sprite[] Images;
-    public Sprite[] CapImages;
     public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
@@ -21,17 +20,12 @@ public class Product : MonoBehaviour
     public Sprite ImgCombo;
     public Sprite ImgClosed;
     public GameObject ComboNumPrefab;
-    public GameObject CapObject;
     public GameObject WaterDropParticle;
-    public GameObject CapBreakingEffectPrefab;
     public IceBlock IcedBlock;
 
     public Action EventUnWrapIce;
-    public Action EventUnWrapCap;
 
     public bool IsSkillable { get { return Skill != ProductSkill.Nothing && !SkillCasted; } }
-    public int CapIndex { get; private set; }
-    public bool IsCapped { get { return CapIndex > 0; } }
     public InGameManager Manager { get; set; }
     public Frame ParentFrame { get; private set; }
     public ProductSkill Skill { get; private set; }
@@ -185,18 +179,14 @@ public class Product : MonoBehaviour
     }
     public bool IsObstacled()
     {
-        if (IsCapped || IsIceBlock)
+        if (IsIceBlock)
             return true;
 
         return false;
     }
     public void BreakObstacle(int count = 1)
     {
-        if (IsCapped)
-        {
-            BreakCap(count);
-        }
-        else if(IsIceBlock)
+        if(IsIceBlock)
         {
             BreakIceBlock(count);
         }
@@ -611,34 +601,6 @@ public class Product : MonoBehaviour
             return true;
         }
         return false;
-    }
-
-    public void InitCap(int capIndex)
-    {
-        CancelInvoke("ChangeCapImage");
-        CapIndex = capIndex;
-        CapObject.GetComponent<Animator>().enabled = false;
-        CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
-        CapObject.SetActive(IsCapped);
-    }
-    private void BreakCap(int count = 1)
-    {
-        if (CapIndex <= 0)
-            return;
-
-        CapIndex = Mathf.Max(0, CapIndex - count);
-        ChangeCapImage();
-        
-        if (CapIndex <= 0)
-            EventUnWrapCap?.Invoke();
-    }
-    private void ChangeCapImage()
-    {
-        Instantiate(CapBreakingEffectPrefab, CapObject.transform.position, Quaternion.identity, transform);
-        CapObject.GetComponent<SpriteRenderer>().sprite = CapImages[CapIndex];
-        CapObject.transform.DOKill();
-        CapObject.transform.DOScale(new Vector3(2.5f, 2.5f, 1), 0.2f).From(new Vector3(1.6f, 1.6f, 1)).SetLoops(2, LoopType.Yoyo);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
     }
 
     #endregion

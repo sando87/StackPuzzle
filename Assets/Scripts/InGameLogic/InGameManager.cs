@@ -238,7 +238,7 @@ public class InGameManager : MonoBehaviour
                 frameObj.transform.localPosition = localBasePos + localFramePos;
                 mFrames[x, y] = frameObj.GetComponent<Frame>();
                 StageInfoCell cellInfo = GetCellInversed(x, y);
-                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount);
+                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount, cellInfo.CapCount);
                 mFrames[x, y].EventBreakRope = (frame) => {
                     Billboard.RopeCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
@@ -246,6 +246,10 @@ public class InGameManager : MonoBehaviour
                 mFrames[x, y].EventBreakBush = (frame) => {
                     Billboard.BushCount++;
                     EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
+                };
+                mFrames[x, y].EventBreakCap = (frame) => {
+                    Billboard.CapCount++;
+                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cap);
                 };
                 mFrames[x, y].EventScoreText = (score) => {
                     EventScore?.Invoke(score);
@@ -282,14 +286,10 @@ public class InGameManager : MonoBehaviour
                 if(iceCount > 0)
                     pro.IcedBlock.SetDepth(iceCount);
 
-                pro.InitCap(cellInfo.CapCount);
+                // pro.InitCap(cellInfo.CapCount);
                 pro.EventUnWrapIce = () => {
                     Billboard.IceCount++;
                     EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Ice);
-                };
-                pro.EventUnWrapCap = () => {
-                    Billboard.CapCount++;
-                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Cap);
                 };
                 initProducts.Add(pro);
             }
@@ -3767,7 +3767,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsIceBlock || pro.IsCapped)
+            if (pro == null || pro.IsIceBlock)
                 continue;
 
             if (pro.Skill != ProductSkill.Nothing)
@@ -4455,10 +4455,6 @@ public class InGameManager : MonoBehaviour
             if (frame.ChildProduct.IsIceBlock)
             {
                 frame.ChildProduct.BreakObstacle();
-            }
-            else if (frame.ChildProduct.IsCapped)
-            {
-                frame.ChildProduct.BreakObstacle(Billboard.CurrentCombo);
             }
         }
     }
