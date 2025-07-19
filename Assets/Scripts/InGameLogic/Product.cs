@@ -469,14 +469,13 @@ public class Product : MonoBehaviour
         if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
-        if(ParentFrame != null && ParentFrame.IsObstacled())
+        if(ParentFrame == null)
             return;
 
         if (products.Contains(this))
             return;
 
         products.Add(this);
-
 
         Product[] around = GetAroundProducts(ParentFrame);
         foreach (Product pro in around)

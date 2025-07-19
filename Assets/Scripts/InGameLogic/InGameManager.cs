@@ -483,9 +483,6 @@ public class InGameManager : MonoBehaviour
             }
             matchableGroups.Clear();
 
-            //터질때 주변 장해물 파괴
-            BreakObstacles(aroundProducts);
-
             //터질때 주변에 매칭가능하면 연쇄하여 파괴하며 콤보 올라감
             matchableGroups = FindMatchedProducts(aroundProducts);
             if (matchableGroups.Count > 0)
@@ -515,6 +512,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
+                destPro.ParentFrame.BreakObstacle();
                 destPro.DestroyImmediately(Billboard.CurrentCombo);
             }
         }
@@ -522,6 +520,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
+                destPro.ParentFrame.BreakObstacle();
                 destPro.MergeImImmediately(pros[0], nextSkill);
             }
         }
@@ -550,10 +549,7 @@ public class InGameManager : MonoBehaviour
     {
         foreach (Product pro in pros)
         {
-            if (IsObstacled(pro.ParentFrame))
-            {
-                BreakObstacle(pro.ParentFrame);
-            }
+            BreakObstacle(pro.ParentFrame);
         }
 
     }
@@ -853,6 +849,7 @@ public class InGameManager : MonoBehaviour
                 pro.ReadyForDestroy(Billboard.CurrentCombo);
                 AddWorker(3, 3, (tick) =>
                 {
+                    pro.ParentFrame.BreakObstacle();
                     pro.DestroyImmediately(Billboard.CurrentCombo);
                     return DelayedCallRet.Done;
                 });
@@ -860,6 +857,7 @@ public class InGameManager : MonoBehaviour
             else
             {
                 AcquireScore(Billboard.CurrentCombo, pro.transform.position);
+                pro.ParentFrame.BreakObstacle();
                 pro.DestroyImmediately(Billboard.CurrentCombo);
             }
         }
@@ -1488,6 +1486,7 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in destroyedProducts)
         {
             Frame parentFrame = pro.ParentFrame;
+            parentFrame.BreakObstacle();
             pro.DestroyImmediately(Billboard.CurrentCombo);
             Product newPro = CreateNewProduct();
             parentFrame.VertFrames.AddNewProduct(newPro);
@@ -1551,6 +1550,7 @@ public class InGameManager : MonoBehaviour
         foreach (Product pro in mergeProducts)
         {
             Frame parentFrame = pro.ParentFrame;
+            parentFrame.BreakObstacle();
             pro.MergeImImmediately(mergeProducts[0], skill);
 
             if(pro == mergeProducts[0])
@@ -3798,7 +3798,7 @@ public class InGameManager : MonoBehaviour
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if(mFrames[idxX, idxY].Empty || mFrames[idxX, idxY].IsObstacled())
+            if(mFrames[idxX, idxY].Empty)
                 continue;
 
             if (pro == null || pro.IsLocked || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
@@ -3894,7 +3894,7 @@ public class InGameManager : MonoBehaviour
         foreach (Frame frame in mFrames)
         {
             Product pro = frame.ChildProduct;
-            if (pro == null || pro.IsLocked || frame.IsObstacled() || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
+            if (pro == null || pro.IsLocked || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
                 continue;
 
             if (matchedPro.ContainsKey(pro))
@@ -3970,7 +3970,7 @@ public class InGameManager : MonoBehaviour
             int idxX = curIdx % CountX;
             int idxY = curIdx / CountX;
             Product pro = mFrames[idxX, idxY].ChildProduct;
-            if (pro != null && !pro.IsLocked && !pro.IsObstacled() && !pro.ParentFrame.IsObstacled() && pro.Skill == ProductSkill.Nothing)
+            if (pro != null && !pro.IsLocked && !pro.IsObstacled() && pro.Skill == ProductSkill.Nothing)
                 rets.Add(pro);
         }
         return rets;
@@ -4431,8 +4431,8 @@ public class InGameManager : MonoBehaviour
     }
     private bool IsObstacled(Frame frame)
     {
-        if(frame.IsObstacled())
-            return true;
+        // if(frame.IsObstacledFrame())
+        //     return true;
 
         if(frame.ChildProduct != null)
         {
