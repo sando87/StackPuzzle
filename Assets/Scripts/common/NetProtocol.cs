@@ -211,6 +211,7 @@ public class SearchOpponentInfo
     public UserInfo MyUserInfo;
     public UserInfo OppUserInfo;
     public MatchingLevel Level;
+    public int MapRandomSeed;
     public MatchingFriend WithFriend = MatchingFriend.None;
     public int RoomNumber = -1;
 }

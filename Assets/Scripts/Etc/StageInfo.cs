@@ -102,7 +102,7 @@ public class StageInfo
         return maxNum;
     }
 
-    public static StageInfo Load(MatchingLevel level)
+    public static StageInfo Load(MatchingLevel level, int mapRandomSeed)
     {
         string filename = level.ToString();
         TextAsset ta = Resources.Load<TextAsset>("StageInfo/Version" + Version + "/" + filename);
@@ -113,6 +113,7 @@ public class StageInfo
         StageInfo info = Load(lines);
         info.Num = 0;
         info.Difficulty = level;
+        info.RandomSeed = mapRandomSeed;
         return info;
     }
 

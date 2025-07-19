@@ -435,8 +435,9 @@ namespace ServerApp
                         joinUser.SetOpp(makeUser.Endpoint, makeUser.UserInfo.score);
                         joinUser.MatchLevel = makeUser.MatchLevel;
 
-                        SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, MatchingLevel.Bronze, MatchingState.Matched);
-                        SendMatchingInfoTo(joinUser.Endpoint, makeUser.UserInfo, MatchingLevel.Bronze, MatchingState.Matched);
+                        int seed = (int)DateTime.Now.Ticks;
+                        SendMatchingInfoTo(makeUser.Endpoint, joinUser.UserInfo, MatchingLevel.Bronze, MatchingState.Matched, seed);
+                        SendMatchingInfoTo(joinUser.Endpoint, makeUser.UserInfo, MatchingLevel.Bronze, MatchingState.Matched, seed);
                     }
                 }
             }
@@ -468,8 +469,10 @@ namespace ServerApp
             if (userA.UserInfo.rank < 10 && userB.UserInfo.rank < 10)
                 mapLevel = MatchingLevel.Silver;
 
-            SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, mapLevel, MatchingState.FoundOpp);
-            SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, mapLevel, MatchingState.FoundOpp);
+            int seed = (int)DateTime.Now.Ticks;
+
+            SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, mapLevel, MatchingState.FoundOpp, seed);
+            SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, mapLevel, MatchingState.FoundOpp, seed);
 
             await Task.Delay(NetProtocol.ServerMatchingInterval * 2000);
 
@@ -480,8 +483,8 @@ namespace ServerApp
                 userA.SetOpp(userB.Endpoint, userB.UserInfo.score);
                 userB.SetOpp(userA.Endpoint, userA.UserInfo.score);
 
-                SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, mapLevel, MatchingState.Matched);
-                SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, mapLevel, MatchingState.Matched);
+                SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, mapLevel, MatchingState.Matched, seed);
+                SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, mapLevel, MatchingState.Matched, seed);
             }
             else
             {
@@ -491,7 +494,7 @@ namespace ServerApp
                     userB.MatchState = MatchingState.TryMatching;
             }
         }
-        private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingLevel oppLevel, MatchingState state)
+        private void SendMatchingInfoTo(string endPoint, UserInfo opponent, MatchingLevel oppLevel, MatchingState state, int mapRandomSeed)
         {
             SessionUser destSession = GetUser(endPoint);
             if (destSession == null)
@@ -504,6 +507,7 @@ namespace ServerApp
             body.MyUserInfo = destSession.UserInfo;
             body.OppUserInfo = opponent;
             body.Level = oppLevel;
+            body.MapRandomSeed = mapRandomSeed;
             body.State = state;
 
             Header responseMsg = new Header();

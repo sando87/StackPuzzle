@@ -325,7 +325,7 @@ public class MenuWaitMatch : MonoBehaviour
         gameObject.SetActive(false);
         SoundPlayer.Inst.StopBackMusic();
         
-        MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo, pvpInfo.Level);
+        MenuPVPReady.PopUp(UserSetting.UserInfo, pvpInfo.OppUserInfo, pvpInfo.Level, pvpInfo.MapRandomSeed);
     }
     private void FailMatch()
     {
