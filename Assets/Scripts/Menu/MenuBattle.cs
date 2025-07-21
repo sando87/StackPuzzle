@@ -29,6 +29,8 @@ public class MenuBattle : MonoBehaviour
     public GameObject IceBlockUp2;
     public GameObject IceBlockUp3;
     public PVPScoreBar PVPScoreBarPrefab;
+    public GameObject PlayerPanel;
+    public GameObject OpponentPanel;
 
     private MenuMessageBox mMenu;
     private StageInfo mStageInfo;

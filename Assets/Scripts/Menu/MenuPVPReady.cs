@@ -58,6 +58,9 @@ public class MenuPVPReady : MonoBehaviour
         InGameManager.InstPVP_Opponent.transform.SetPosition2D(pos);
         InGameManager.InstPVP_Opponent.StartGameInPVPOpponent(info, mOpponent);
         
+        Rect oppFieldArea = InGameManager.InstPVP_Opponent.FieldWorldRect;
+        MenuBattle.Inst().OpponentPanel.transform.position = new Vector3(oppFieldArea.xMax, oppFieldArea.yMax, 0);
+        
         yield return new WaitForSeconds(2);
         
         pos = MenuBattle.Inst().PlayerRect.transform.position;
@@ -67,6 +70,9 @@ public class MenuPVPReady : MonoBehaviour
 
         InGameManager.InstPVP_Player.StartGameInPVPPlayer(info, mPlayer);
         InGameManager.InstPVP_Player.InitProducts();
+
+        Rect playerFieldArea = InGameManager.InstPVP_Player.FieldWorldRect;
+        MenuBattle.Inst().PlayerPanel.transform.position = new Vector3(playerFieldArea.xMax, playerFieldArea.yMax, 0);
         
         SoundPlayer.Inst.PlayBackMusic(SoundPlayer.Inst.BackMusicInGamePVP);
         gameObject.SetActive(false);
