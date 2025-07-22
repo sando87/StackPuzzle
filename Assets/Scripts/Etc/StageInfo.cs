@@ -341,7 +341,7 @@ public class StageInfo
         {
             foreach(StageInfoCell cell in row)
             {
-                if (cell.IceCount > 0)
+                if (cell.IceCount > 0 && !cell.IsDisabled)
                     count++;
             }
         }
@@ -354,7 +354,7 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.RopeCount > 0)
+                if (cell.RopeCount > 0 && !cell.IsDisabled)
                     count++;
             }
         }
@@ -367,7 +367,7 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.CapCount > 0)
+                if (cell.CapCount > 0 && !cell.IsDisabled)
                     count++;
             }
         }
@@ -380,7 +380,7 @@ public class StageInfo
         {
             foreach (StageInfoCell cell in row)
             {
-                if (cell.BushCount > 0)
+                if (cell.BushCount > 0 && !cell.IsDisabled)
                     count++;
             }
         }
