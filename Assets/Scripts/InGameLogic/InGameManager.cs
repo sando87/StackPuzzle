@@ -240,16 +240,25 @@ public class InGameManager : MonoBehaviour
                 StageInfoCell cellInfo = GetCellInversed(x, y);
                 mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount, cellInfo.CapCount);
                 mFrames[x, y].EventBreakRope = (frame) => {
-                    Billboard.RopeCount++;
-                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
+                    if(!mFrames[x, y].IsRope)
+                    {
+                        Billboard.RopeCount++;
+                        EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
+                    }
                 };
                 mFrames[x, y].EventBreakBush = (frame) => {
-                    Billboard.BushCount++;
-                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
+                    if(!mFrames[x, y].IsBushed)
+                    {
+                        Billboard.BushCount++;
+                        EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
+                    }
                 };
                 mFrames[x, y].EventBreakCap = (frame) => {
-                    Billboard.CapCount++;
-                    EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cap);
+                    if(!mFrames[x, y].IsCapped)
+                    {
+                        Billboard.CapCount++;
+                        EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cap);
+                    }
                 };
                 mFrames[x, y].EventScoreText = (score) => {
                     EventScore?.Invoke(score);
@@ -288,8 +297,11 @@ public class InGameManager : MonoBehaviour
 
                 // pro.InitCap(cellInfo.CapCount);
                 pro.EventUnWrapIce = () => {
-                    Billboard.IceCount++;
-                    EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Ice);
+                    if(!pro.IsIceBlock)
+                    {
+                        Billboard.IceCount++;
+                        EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Ice);
+                    }
                 };
                 initProducts.Add(pro);
             }
