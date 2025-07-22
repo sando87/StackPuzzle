@@ -768,7 +768,7 @@ public class LevelEditor : EditorWindow
         mStageInfo.StarPoint = 0;
         mStageInfo.RandomSeed = 0;
 
-        mStageInfo.ColorCount = 5;
+        mStageInfo.ColorCount = UnityEngine.Random.Range(0, 2) == 0 ? 4 : 5;
 
         if(mStageInfo.ColorCount == 4)
         {
@@ -788,17 +788,17 @@ public class LevelEditor : EditorWindow
 
             if (countX == 5 && countY == 6)
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(140, 300) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(100, 200) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(12, 20) / 2) * 2;
             }
             else if (countX == 6 && countY == 7)
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(480, 720) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(280, 520) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(16, 24) / 2) * 2;
             }
             else
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 520) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(150, 320) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(14, 22) / 2) * 2;
             }
         }
@@ -823,17 +823,17 @@ public class LevelEditor : EditorWindow
 
             if (countX == 6 && countY == 7)
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(550, 950) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(350, 800) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 30) / 2) * 2;
             }
             else if (countX == 8 && countY == 9)
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(750, 1400) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(550, 1250) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(22, 38) / 2) * 2;
             }
             else
             {
-                mStageInfo.GoalValue = (UnityEngine.Random.Range(650, 1100) / 20) * 20;
+                mStageInfo.GoalValue = (UnityEngine.Random.Range(420, 950) / 20) * 20;
                 mStageInfo.MoveLimit = (UnityEngine.Random.Range(20, 34) / 2) * 2;
             }
         }
