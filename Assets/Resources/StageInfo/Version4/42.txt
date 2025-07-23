@@ -9,9 +9,9 @@
 GoalType,Score
 GoalValue,460
 MoveLimit,0
-TimeLimit,40
-ColorCount,5
-MatchingChance,0
+TimeLimit,70
+ColorCount,4
+MatchingChance,-40
 StarPoint,0
 RandomSeed,0
 Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
