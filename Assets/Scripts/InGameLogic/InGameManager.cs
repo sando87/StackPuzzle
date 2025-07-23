@@ -236,31 +236,32 @@ public class InGameManager : MonoBehaviour
                 localFramePos.y = gridSize * y;
                 //frameObj.GetComponent<SpriteRenderer>().sortingLayerName = FieldType == GameFieldType.pvpOpponent ? "ProductOpp" : "Default";
                 frameObj.transform.localPosition = localBasePos + localFramePos;
-                mFrames[x, y] = frameObj.GetComponent<Frame>();
+                Frame frame = frameObj.GetComponent<Frame>();
+                mFrames[x, y] = frame;
                 StageInfoCell cellInfo = GetCellInversed(x, y);
-                mFrames[x, y].Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount, cellInfo.CapCount);
-                mFrames[x, y].EventBreakRope = (frame) => {
-                    if(!mFrames[x, y].IsRope)
+                frame.Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount, cellInfo.CapCount);
+                frame.EventBreakRope = (frame) => {
+                    if(!frame.IsRope)
                     {
                         Billboard.RopeCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
                     }
                 };
-                mFrames[x, y].EventBreakBush = (frame) => {
-                    if(!mFrames[x, y].IsBushed)
+                frame.EventBreakBush = (frame) => {
+                    if(!frame.IsBushed)
                     {
                         Billboard.BushCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
                     }
                 };
-                mFrames[x, y].EventBreakCap = (frame) => {
-                    if(!mFrames[x, y].IsCapped)
+                frame.EventBreakCap = (frame) => {
+                    if(!frame.IsCapped)
                     {
                         Billboard.CapCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cap);
                     }
                 };
-                mFrames[x, y].EventScoreText = (score) => {
+                frame.EventScoreText = (score) => {
                     EventScore?.Invoke(score);
                 };
             }
