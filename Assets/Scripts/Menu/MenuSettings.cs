@@ -59,22 +59,33 @@ public class MenuSettings : MonoBehaviour
     IEnumerator DetectFiveTouch()
     {
         mTouchCount++;
-        if(mTouchCount >= 5)
+        if (mTouchCount >= 5)
         {
-            int botAILevel = 3;
-            string currentDeviceName = botAILevel + "_" + DateTime.Now.Ticks.ToString();
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuEditBox.PopUp("DeviceName\n(off:disable)", currentDeviceName,(isOK, inputText) =>
+            MapStage nextStage = MenuStages.Inst.FindStage(UserSetting.GetHighestStageNumber() + 1);
+            if (nextStage != null)
             {
-                if(isOK)
-                {
-                    if (inputText.Length <= 0 || inputText == "off")
-                        UserSetting.SwitchBotPlayer(false, "");
-                    else
-                        UserSetting.SwitchBotPlayer(true, inputText);
-                }
-            });
+                nextStage.UnLock();
+            }
+
+            MenuMessageBox.PopUp("Stage Unlocked", false, (isOK) => {});
         }
+
+        // if (mTouchCount >= 5)
+        // {
+        //     int botAILevel = 3;
+        //     string currentDeviceName = botAILevel + "_" + DateTime.Now.Ticks.ToString();
+        //     SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        //     MenuEditBox.PopUp("DeviceName\n(off:disable)", currentDeviceName,(isOK, inputText) =>
+        //     {
+        //         if(isOK)
+        //         {
+        //             if (inputText.Length <= 0 || inputText == "off")
+        //                 UserSetting.SwitchBotPlayer(false, "");
+        //             else
+        //                 UserSetting.SwitchBotPlayer(true, inputText);
+        //         }
+        //     });
+        // }
         yield return new WaitForSeconds(1);
         mTouchCount = 0;
     }
