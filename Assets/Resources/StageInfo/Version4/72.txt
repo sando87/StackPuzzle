@@ -1,0 +1,23 @@
+# 0/0/0/0/0 => productType/cap(b)/ice(b)/bush(f)/rope(f)
+# GoalType : Score,ComboN, ItemOneMore, ItemKeepCombo, ItemSameColor, Cap, Ice, Bush, Rope
+# Reward,gold/100
+# Reward,dia/5
+# Reward,life/1
+# Reward,1/1 2/1 3/1
+# Reward,PurchaseItemType/Count
+# PurchaseItemType : None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
+GoalType,Score
+GoalValue,340
+MoveLimit,14
+TimeLimit,0
+ColorCount,4
+MatchingChance,-40
+StarPoint,0
+RandomSeed,0
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 -1/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
+Rows,0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 0/0/0/0/0 
