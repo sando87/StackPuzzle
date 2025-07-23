@@ -1197,8 +1197,8 @@ public class InGameManager : MonoBehaviour
 
             Frame startFrame = productStripe.ParentFrame;
             startFrame.VertFrames.HoldCount++;
-            if (startFrame.IndexX > 0) startFrame.Left().VertFrames.HoldCount++;
-            if (startFrame.IndexX < CountX - 1) startFrame.Right().VertFrames.HoldCount++;
+            if (startFrame.Left() != null && startFrame.Left().VertFrames != null) startFrame.Left().VertFrames.HoldCount++;
+            if (startFrame.Right() != null && startFrame.Right().VertFrames != null) startFrame.Right().VertFrames.HoldCount++;
 
             Vector3 startPosition = startFrame.transform.position;
             Vector3 topEndPosition = startFrame.MostUp().transform.position;
@@ -1248,8 +1248,8 @@ public class InGameManager : MonoBehaviour
                 if (startFrame.IndexY - offIdx < 0 && startFrame.IndexY + offIdx >= CountY)
                 {
                     startFrame.VertFrames.HoldCount--;
-                    if (startFrame.IndexX > 0) startFrame.Left().VertFrames.HoldCount--;
-                    if (startFrame.IndexX < CountX - 1) startFrame.Right().VertFrames.HoldCount--;
+                    if (startFrame.Left() != null && startFrame.Left().VertFrames != null) startFrame.Left().VertFrames.HoldCount--;
+                    if (startFrame.Right() != null && startFrame.Right().VertFrames != null) startFrame.Right().VertFrames.HoldCount--;
                     return DelayedCallRet.Done;
                 }
 
