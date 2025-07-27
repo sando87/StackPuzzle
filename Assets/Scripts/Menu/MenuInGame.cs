@@ -319,7 +319,7 @@ public class MenuInGame : MonoBehaviour
     {
         float remainRate = 0;
         if (mStageInfo.TimeLimit > 0)
-            remainRate = (float)MenuBattle.StringToSec(Limit.text) / mStageInfo.TimeLimit;
+            remainRate = (float)(mStageInfo.TimeLimit - InGameManager.InstStage.GetBillboard().PlayTime) / mStageInfo.TimeLimit;
         else
             remainRate = (float)(mStageInfo.MoveLimit - InGameManager.InstStage.GetBillboard().MoveCount) / mStageInfo.MoveLimit;
 

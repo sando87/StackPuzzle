@@ -70,7 +70,6 @@ public class InGameManager : MonoBehaviour
     public bool IsDroppable {get { return mDropLockCount == 0; } }
     private bool mUseCombo = false;
     private int mDropCounter = 0;
-    private float mStartTime = 0;
     private float mSFXVolume = 1;
     private int mPVPIceBlockLevel = 0;
     private Vector3 mStartPos = Vector3.zero;
@@ -105,8 +104,7 @@ public class InGameManager : MonoBehaviour
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
     public int UserScore { get { return mUserInfo.score; } }
-    public float PlayTime { get { return mStartTime == 0 ? 0 : Time.realtimeSinceStartup - mStartTime; } }
-    public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit ; } }
+    public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? Billboard.PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit ; } }
     public UserInfo UserInfo { get { return mUserInfo; } }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
@@ -166,7 +164,6 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
-            mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(RefreshTimer());
@@ -185,7 +182,6 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = true;
         StartCoroutine(UnityUtils.CallAfterSeconds(UserSetting.InfoBoxDisplayTime, () =>
         {
-            mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
             StartCoroutine(CheckFlush());
@@ -2557,8 +2553,8 @@ public class InGameManager : MonoBehaviour
             {
                 if (mStageInfo.TimeLimit > 0)
                 {
-                    mStartTime += 10; //10초 연장
-                    float remainTime = mStageInfo.TimeLimit - PlayTime;
+                    Billboard.PlayTime -= 10; //10초 연장
+                    float remainTime = mStageInfo.TimeLimit - Billboard.PlayTime;
                     EventRemainTime?.Invoke((int)remainTime);
                 }
                 else
@@ -3039,11 +3035,13 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator RefreshTimer()
     {
+        Billboard.PlayTime = 0;
         while (mStageInfo.TimeLimit > 0 && !mIsFinished)
         {
-            float remainTime = mStageInfo.TimeLimit - PlayTime;
+            float remainTime = mStageInfo.TimeLimit - Billboard.PlayTime;
             EventRemainTime?.Invoke((int)remainTime);
             yield return new WaitForSeconds(1);
+            Billboard.PlayTime += 1;
         }
     }
     private void CheckIsFinishedInStageMode()
@@ -3056,7 +3054,7 @@ public class InGameManager : MonoBehaviour
 
         if (mStageInfo.TimeLimit > 0)
         {
-            float remainTime = mStageInfo.TimeLimit - PlayTime;
+            float remainTime = mStageInfo.TimeLimit - Billboard.PlayTime;
             if (remainTime <= 0 && IsIdle)
                 StartFinish(false);
         }
@@ -3123,7 +3121,7 @@ public class InGameManager : MonoBehaviour
     {
         if (mStageInfo.TimeLimit > 0)
         {
-            float rate = PlayTime / mStageInfo.TimeLimit;
+            float rate = Billboard.PlayTime / mStageInfo.TimeLimit;
             rate = 1 - Mathf.Clamp(rate, 0, 1);
             int remains = (int)(rate * mFrames.Length);
             return remains;
@@ -3199,9 +3197,10 @@ public class InGameManager : MonoBehaviour
     {
         mPVPIceBlockLevel = 1;
         float currentTimelimit = mStageInfo.TimeLimit;
+        float playedTime = 0;
         while (true)
         {
-            float remain = currentTimelimit - PlayTime;
+            float remain = currentTimelimit - playedTime;
             if (remain <= 0 && mPVPIceBlockLevel < 4)
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
@@ -3216,12 +3215,13 @@ public class InGameManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
                 StartFinish(false);
             }
-            if(Opponent.mIsFinished) //상대방이 죽거나 종료된 상태이면 승리
+            if (Opponent.mIsFinished) //상대방이 죽거나 종료된 상태이면 승리
             {
                 yield return new WaitForSeconds(1);
                 StartFinish(true);
             }
             yield return new WaitForSeconds(1);
+            playedTime += 1;
         }
     }
     IEnumerator CloseProducts(Product[] nextPros)
@@ -3739,7 +3739,6 @@ public class InGameManager : MonoBehaviour
         mPrevIdleState = true;
         mDropLockCount = 0;
         mRandomSeed = null;
-        mStartTime = 0;
         mSFXVolume = 1;
         mPVPIceBlockLevel = 0;
         mUseCombo = false;
