@@ -105,7 +105,7 @@ public class InGameManager : MonoBehaviour
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
     public int UserScore { get { return mUserInfo.score; } }
-    public float PlayTime { get { return Time.realtimeSinceStartup - mStartTime; } }
+    public float PlayTime { get { return mStartTime == 0 ? 0 : Time.realtimeSinceStartup - mStartTime; } }
     public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit ; } }
     public UserInfo UserInfo { get { return mUserInfo; } }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
@@ -148,6 +148,11 @@ public class InGameManager : MonoBehaviour
             }
         }
 
+        if (!mIsFinished)
+        {
+            CheckIsFinishedInStageMode();
+        }
+
         mPrevIdleState = IsIdle;
         //DropNextProducts();
     }
@@ -164,7 +169,6 @@ public class InGameManager : MonoBehaviour
             mStartTime = Time.realtimeSinceStartup;
             GetComponent<SwipeDetector>().EventSwipe = OnSwipe;
             GetComponent<SwipeDetector>().EventClick = OnClick;
-            EventEnterIdle = CheckIsFinishedInStageMode;
             StartCoroutine(RefreshTimer());
 
             mIsUserEventLock = false;
@@ -3053,12 +3057,12 @@ public class InGameManager : MonoBehaviour
         if (mStageInfo.TimeLimit > 0)
         {
             float remainTime = mStageInfo.TimeLimit - PlayTime;
-            if (remainTime <= 0)
+            if (remainTime <= 0 && IsIdle)
                 StartFinish(false);
         }
         else if (mStageInfo.MoveLimit > 0)
         {
-            if (Billboard.MoveCount >= mStageInfo.MoveLimit)
+            if (Billboard.MoveCount >= mStageInfo.MoveLimit && IsIdle)
                 StartFinish(false);
         }
     }
