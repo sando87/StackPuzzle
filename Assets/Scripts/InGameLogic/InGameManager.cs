@@ -1198,7 +1198,7 @@ public class InGameManager : MonoBehaviour
                 Frame leftFrame = startFrame.Left(offIdx);
                 if (leftFrame != null)
                 {
-                    Product[] arPros = ScanAroundProducts(leftFrame, 1);
+                    Product[] arPros = ScanVertProducts(leftFrame, 1);
                     foreach (Product arPro in arPros)
                     {
                         TryDestroy(arPro, false);
@@ -1208,7 +1208,7 @@ public class InGameManager : MonoBehaviour
                 Frame rightFrame = startFrame.Right(offIdx);
                 if (rightFrame != null)
                 {
-                    Product[] arPros = ScanAroundProducts(rightFrame, 1);
+                    Product[] arPros = ScanVertProducts(rightFrame, 1);
                     foreach (Product arPro in arPros)
                     {
                         TryDestroy(arPro, false);
@@ -1261,7 +1261,7 @@ public class InGameManager : MonoBehaviour
                 Frame upFrame = startFrame.Up(offIdx);
                 if (upFrame != null)
                 {
-                    Product[] arPros = ScanAroundProducts(upFrame, 1);
+                    Product[] arPros = ScanHoriProducts(upFrame, 1);
                     foreach (Product arPro in arPros)
                     {
                         TryDestroy(arPro, false);
@@ -1271,7 +1271,7 @@ public class InGameManager : MonoBehaviour
                 Frame downFrame = startFrame.Down(offIdx);
                 if (downFrame != null)
                 {
-                    Product[] arPros = ScanAroundProducts(downFrame, 1);
+                    Product[] arPros = ScanHoriProducts(downFrame, 1);
                     foreach (Product arPro in arPros)
                     {
                         TryDestroy(arPro, false);
@@ -3613,6 +3613,46 @@ public class InGameManager : MonoBehaviour
         }
         return rets.ToArray();
     }
+    private Product[] ScanVertProducts(Frame frame, int round)
+    {
+        List<Product> rets = new List<Product>();
+        Frame frameOf = frame;
+        int idxX = frameOf.IndexX;
+        int idxY = frameOf.IndexY;
+        for (int y = idxY - round; y < idxY + round + 1; ++y)
+        {
+            if (!IsValidIndex(idxX, y))
+                continue;
+
+            if (mFrames[idxX, y].Empty)
+                continue;
+
+            Product pro = mFrames[idxX, y].ChildProduct;
+            if (pro != null && !pro.IsLocked)
+                rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
+    private Product[] ScanHoriProducts(Frame frame, int round)
+    {
+        List<Product> rets = new List<Product>();
+        Frame frameOf = frame;
+        int idxX = frameOf.IndexX;
+        int idxY = frameOf.IndexY;
+        for (int x = idxX - round; x < idxX + round + 1; ++x)
+        {
+            if (!IsValidIndex(x, idxY))
+                continue;
+
+            if (mFrames[x, idxY].Empty)
+                continue;
+
+            Product pro = mFrames[x, idxY].ChildProduct;
+            if (pro != null && !pro.IsLocked)
+                rets.Add(pro);
+        }
+        return rets.ToArray();
+    }
 
     private Product[] ToProducts(Frame[] frames)
     {
@@ -4486,8 +4526,8 @@ public class InGameManager : MonoBehaviour
     }
     private bool IsObstacled(Frame frame)
     {
-        // if(frame.IsObstacledFrame())
-        //     return true;
+        if(frame.IsObstacled())
+            return true;
 
         if(frame.ChildProduct != null)
         {
