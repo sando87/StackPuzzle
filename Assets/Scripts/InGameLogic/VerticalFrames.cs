@@ -10,14 +10,16 @@ public class VerticalFrames : MonoBehaviour
     public int MaskOrder { get; private set; } = 0;
     public int HoldCount { get; set; } = 0;
     public bool IsHolded { get { return HoldCount > 0; } }
+    public VerticalFrames UpperVF { get; set; } = null;
+    public VerticalFrames LowerVF { get; set; } = null;
 
-    public void init(int maskOrder, float scale)
+    public void Init(int maskOrder, float scale)
     {
         List<Frame> list = new List<Frame>();
         foreach (Transform child in transform)
         {
             Frame frame = child.GetComponent<Frame>();
-            if(frame != null)
+            if (frame != null)
                 list.Add(frame);
         }
 

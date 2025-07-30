@@ -976,7 +976,7 @@ public class InGameManager : MonoBehaviour
             TryDestroy(pro, false);
         }
 
-        startFrame.VertFrames.HoldCount++;
+        HoldAllVerticalFrames(startFrame.VertFrames);
 
         Vector3 startPosition = startFrame.transform.position;
         Vector3 topEndPosition = startFrame.MostUp().transform.position;
@@ -1016,17 +1016,49 @@ public class InGameManager : MonoBehaviour
 
             if (startFrame.IndexY - offIdx < 0 && startFrame.IndexY + offIdx >= CountY)
             {
-                startFrame.VertFrames.HoldCount--;
+                UnHoldAllVerticalFrames(startFrame.VertFrames);
                 return DelayedCallRet.Done;
             }
 
             return DelayedCallRet.Keep;
         });
     }
+    void HoldAllVerticalFrames(VerticalFrames vf)
+    {
+        VerticalFrames curVF = vf;
+        while (curVF != null)
+        {
+            curVF.HoldCount++;
+            curVF = curVF.UpperVF;
+        }
+
+        curVF = vf.LowerVF;
+        while (curVF != null)
+        {
+            curVF.HoldCount++;
+            curVF = curVF.UpperVF;
+        }
+    }
+    void UnHoldAllVerticalFrames(VerticalFrames vf)
+    {
+        VerticalFrames curVF = vf;
+        while (curVF != null)
+        {
+            curVF.HoldCount--;
+            curVF = curVF.UpperVF;
+        }
+
+        curVF = vf.LowerVF;
+        while (curVF != null)
+        {
+            curVF.HoldCount--;
+            curVF = curVF.UpperVF;
+        }
+    }
     private void CastBombProduct(Frame frame)
     {
         Product pro = frame.ChildProduct;
-        if(pro != null && !pro.IsLocked)
+        if (pro != null && !pro.IsLocked)
         {
             pro.SkillCasted = true;
             pro.Animation.Play("destroy");
@@ -3382,14 +3414,17 @@ public class InGameManager : MonoBehaviour
         float oneBlockScale = FieldType == GameFieldType.pvpOpponent ? UserSetting.BattleOppResize : 1.0f;
         List<VerticalFrames> vf = new List<VerticalFrames>();
         VerticalFrames vg = null;
+        VerticalFrames prevVG = null;
         for (int x = 0; x < CountX; ++x)
         {
             vg = null;
+            prevVG = null;
             for (int y = 0; y < CountY; ++y)
             {
                 Frame curFrame = mFrames[x, y];
                 if (curFrame.Empty)
                 {
+                    prevVG = vg;
                     vg = null;
                     continue;
                 }
@@ -3400,6 +3435,11 @@ public class InGameManager : MonoBehaviour
                         vg = new GameObject().AddComponent<VerticalFrames>();
                         vg.name = vgName;
                         vg.transform.SetParent(transform);
+                        if (prevVG != null)
+                        {
+                            vg.LowerVF = prevVG;
+                            prevVG.UpperVF = vg;
+                        }
                         vf.Add(vg);
 
                         GameObject ground = Instantiate(GroundPrefab, vg.transform);
@@ -3416,7 +3456,7 @@ public class InGameManager : MonoBehaviour
 
         foreach (VerticalFrames group in vf)
         {
-            group.init(0, oneBlockScale);
+            group.Init(0, oneBlockScale);
         }
 
         mVerticalFrames = vf.ToArray();
