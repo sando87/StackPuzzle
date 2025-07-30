@@ -1132,7 +1132,8 @@ public class InGameManager : MonoBehaviour
             if(cnt == 0)
             {
                 // 망치가 날아갈 목적지 찾고
-                nextTarget = FindHammerTarget();
+                nextTarget = FindHammerTarget(pro.ParentFrame);
+                
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 0.9f);
 
@@ -1307,7 +1308,7 @@ public class InGameManager : MonoBehaviour
             if (cnt == 0)
             {
                 // 망치가 날아갈 목적지 찾고
-                nextTarget = FindHammerTarget();
+                nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 0.9f);
 
@@ -1334,7 +1335,7 @@ public class InGameManager : MonoBehaviour
             if (cnt == 0)
             {
                 // 망치가 날아갈 목적지 찾고
-                nextTarget = FindHammerTarget();
+                nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 0.9f);
 
@@ -1361,7 +1362,7 @@ public class InGameManager : MonoBehaviour
             if (cnt == 0)
             {
                 // 망치가 날아갈 목적지 찾고
-                nextTarget = FindHammerTarget();
+                nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 0.9f);
 
@@ -1392,7 +1393,7 @@ public class InGameManager : MonoBehaviour
                 for (int i = 0; i < 3; ++i)
                 {
                     // 도착블럭 찾고
-                    Frame target = FindHammerTarget();
+                    Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
                     CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
@@ -1400,7 +1401,7 @@ public class InGameManager : MonoBehaviour
                 for (int i = 0; i < 3; ++i)
                 {
                     // 도착블럭 찾고
-                    Frame target = FindHammerTarget();
+                    Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
                     CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
@@ -1953,7 +1954,7 @@ public class InGameManager : MonoBehaviour
         hammerObj.transform.position = pro.transform.position;
 
         float duration = 0.8f;
-        Frame nextTarget = FindHammerTarget();
+        Frame nextTarget = FindHammerTarget(pro.ParentFrame);
         float topPosY = hammerObj.transform.position.y + 3;
         hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
         hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
@@ -2257,7 +2258,7 @@ public class InGameManager : MonoBehaviour
         DestroyProducts(new Product[] { productHammer, productBomb }, 0, true);
 
         float duration = 0.8f;
-        Frame nextTarget = FindHammerTarget();
+        Frame nextTarget = FindHammerTarget(productHammer.ParentFrame);
         yield return StartCoroutine(ThrowOver(bombObj.transform, nextTarget.transform.position.y, duration));
         Destroy(bombObj);
 
@@ -2276,7 +2277,7 @@ public class InGameManager : MonoBehaviour
         DestroyProducts(new Product[] { productHammer, productHori }, 0, true);
 
         float duration = 0.8f;
-        Frame nextTarget = FindHammerTarget();
+        Frame nextTarget = FindHammerTarget(productHammer.ParentFrame);
         yield return StartCoroutine(ThrowOver(horiObj.transform, nextTarget.transform.position.y, duration));
         Destroy(horiObj);
 
@@ -2295,7 +2296,7 @@ public class InGameManager : MonoBehaviour
         DestroyProducts(new Product[] { productHammer, productVert }, 0, true);
 
         float duration = 0.8f;
-        Frame nextTarget = FindHammerTarget();
+        Frame nextTarget = FindHammerTarget(productHammer.ParentFrame);
         yield return StartCoroutine(ThrowOver(horiObj.transform, nextTarget.transform.position.y, duration));
         Destroy(horiObj);
 
@@ -2321,7 +2322,7 @@ public class InGameManager : MonoBehaviour
         DestroyProducts(new Product[] { productHammerA, productHammerB }, 0, true);
 
         float duration = 0.8f;
-        Frame nextTarget = FindHammerTarget();
+        Frame nextTarget = FindHammerTarget(productHammerA.ParentFrame);
 
         StartCoroutine(ThrowOver(horiObjA.transform, nextTarget.transform.position.y, duration));
         yield return new WaitForSeconds(0.3f);
@@ -4459,31 +4460,29 @@ public class InGameManager : MonoBehaviour
 
         eventEnd?.Invoke();
     }
-    private Frame FindHammerTarget()
+    private Frame FindHammerTarget(Frame startFrame)
     {
-        Frame scenaryFrame = null;
-        int randomStartIndex = mRandomSeed.Next(mFrames.Length);
+        List<Frame> frames = new List<Frame>();
         for (int i = 0; i < mFrames.Length; ++i)
         {
-            int ranIdx = (i + randomStartIndex) % mFrames.Length;
+            int ranIdx = i % mFrames.Length;
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Frame frame = Frame(idxX, idxY);
-            if(frame.ChildProduct != null && frame.ChildProduct.IsObstacled())
+            if (frame.IsBushed || frame.IsCapped || frame.IsRope)
             {
-                return frame;
+                frames.Add(frame);
             }
-
-            if(scenaryFrame == null)
+            else if (frame.ChildProduct != null && frame.ChildProduct.IsIceBlock)
             {
-                if(frame.ChildProduct != null)
-                {
-                    scenaryFrame = frame;
-                }
+                frames.Add(frame);
             }
         }
 
-        return scenaryFrame;
+        if(frames.Count > 0)
+            return frames[mRandomSeed.Next(frames.Count)];
+
+        return startFrame;
     }
     private bool IsObstacled(Frame frame)
     {
