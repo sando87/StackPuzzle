@@ -7,8 +7,8 @@
 # Reward,PurchaseItemType/Count
 # PurchaseItemType : None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
 GoalType,Score
-GoalValue,280
-MoveLimit,18
+GoalValue,480
+MoveLimit,24
 TimeLimit,0
 ColorCount,4
 MatchingChance,-40

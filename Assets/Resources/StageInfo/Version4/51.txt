@@ -8,7 +8,7 @@
 # PurchaseItemType : None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
 GoalType,Cap
 GoalValue,18
-MoveLimit,22
+MoveLimit,28
 TimeLimit,0
 ColorCount,5
 MatchingChance,0
