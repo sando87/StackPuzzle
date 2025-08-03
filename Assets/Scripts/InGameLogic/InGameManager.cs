@@ -875,6 +875,12 @@ public class InGameManager : MonoBehaviour
             }
         }
     }
+    private void DestroySelfOnly(Product pro)
+    {
+        BreakObstacle(pro.ParentFrame);
+        AcquireScore(Billboard.CurrentCombo, pro.transform.position);
+        pro.DestroyImmediately(Billboard.CurrentCombo);
+    }
     private void CastSkillProduct(Product target)
     {
         if (target.SkillCasted)
@@ -917,7 +923,7 @@ public class InGameManager : MonoBehaviour
         if(pro != null && !pro.IsLocked)
         {
             pro.SkillCasted = true;
-            TryDestroy(pro, false);
+            DestroySelfOnly(pro);
         }
 
         Vector3 startPosition = startFrame.transform.position;
@@ -932,9 +938,6 @@ public class InGameManager : MonoBehaviour
 
         CreateRocketEffect(startPosition, rightEndPosition, duration);
         CreateRocketEffect(startPosition, leftEndPosition, duration);
-
-        if(pro != null && !pro.IsLocked)
-            TryDestroy(pro, false);
 
         AddWorker(1, 1, (cnt) =>
         {
@@ -973,7 +976,7 @@ public class InGameManager : MonoBehaviour
         if (pro != null && !pro.IsLocked)
         {
             pro.SkillCasted = true;
-            TryDestroy(pro, false);
+            DestroySelfOnly(pro);
         }
 
         HoldAllVerticalFrames(startFrame.VertFrames);
@@ -1065,8 +1068,8 @@ public class InGameManager : MonoBehaviour
             AddWorker(3, 3, (cnt) =>
             {
                 CreateExplosionEffect(pro.transform.position);
+                DestroySelfOnly(pro);
                 Product[] arPros = ScanAroundProducts(pro, 1);
-                TryDestroy(pro, false);
                 foreach (Product arPro in arPros)
                 {
                     TryDestroy(arPro, true);
@@ -1097,7 +1100,7 @@ public class InGameManager : MonoBehaviour
                 ShakeField(0.05f);
                 SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill2, mSFXVolume);
                 samePros = FindNormalSameColor(pro.Color);
-                TryDestroy(pro, false);
+                DestroySelfOnly(pro);
                 if(samePros == null)
                 {
                     return DelayedCallRet.Done;
@@ -1137,7 +1140,7 @@ public class InGameManager : MonoBehaviour
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 0.9f);
 
-                TryDestroy(pro, false);
+                DestroySelfOnly(pro);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1190,8 +1193,8 @@ public class InGameManager : MonoBehaviour
             {
                 if(cnt == 0)
                 {
-                    TryDestroy(productbomb, false);
-                    TryDestroy(productStripe, false);
+                    DestroySelfOnly(productbomb);
+                    DestroySelfOnly(productStripe);
                 }
 
                 int offIdx = cnt;
@@ -1253,8 +1256,8 @@ public class InGameManager : MonoBehaviour
             {
                 if (cnt == 0)
                 {
-                    TryDestroy(productbomb, false);
-                    TryDestroy(productStripe, false);
+                    DestroySelfOnly(productbomb);
+                    DestroySelfOnly(productStripe);
                 }
 
                 int offIdx = cnt;
@@ -1312,8 +1315,8 @@ public class InGameManager : MonoBehaviour
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 0.9f);
 
-                TryDestroy(productHammer, false);
-                TryDestroy(productBomb, false);
+                DestroySelfOnly(productHammer);
+                DestroySelfOnly(productBomb);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1339,8 +1342,8 @@ public class InGameManager : MonoBehaviour
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 0.9f);
 
-                TryDestroy(productHammer, false);
-                TryDestroy(productHori, false);
+                DestroySelfOnly(productHammer);
+                DestroySelfOnly(productHori);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1366,8 +1369,8 @@ public class InGameManager : MonoBehaviour
                 // 날아가는 연출
                 CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 0.9f);
 
-                TryDestroy(productHammer, false);
-                TryDestroy(productVert, false);
+                DestroySelfOnly(productHammer);
+                DestroySelfOnly(productVert);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1407,8 +1410,8 @@ public class InGameManager : MonoBehaviour
                     nextTargets.Add(target);
                 }
 
-                TryDestroy(productHammerA, false);
-                TryDestroy(productHammerB, false);
+                DestroySelfOnly(productHammerA);
+                DestroySelfOnly(productHammerB);
                 return DelayedCallRet.Keep;
             }
             else
@@ -1462,7 +1465,7 @@ public class InGameManager : MonoBehaviour
                     TryDestroy(pro, true);
                 }
 
-                TryDestroy(target, true);
+                DestroySelfOnly(target);
                 return DelayedCallRet.Keep;
             }
             else
@@ -2239,8 +2242,8 @@ public class InGameManager : MonoBehaviour
             }));
 
         yield return new WaitUntil(() => { return targetsA.Count == 0 && targetsB.Count == 0; });
-        TryDestroy(productbombA, false);
-        TryDestroy(productbombB, false);
+        DestroySelfOnly(productbombA);
+        DestroySelfOnly(productbombB);
 
         mIsUserEventLock = false;
         StartToDrop();
