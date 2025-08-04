@@ -417,4 +417,13 @@ public static class MyExtensions
             default: return "";
         }
     }
+    public static Coroutine ExDelayedCoroutine(this MonoBehaviour mono, float delay, Action func)
+    {
+        return mono.StartCoroutine(CoExDelayedCoroutine(delay, func));
+    }
+    public static IEnumerator CoExDelayedCoroutine(float delay, Action func)
+    {
+        yield return new WaitForSeconds(delay);
+        func.Invoke();
+    }
 }
