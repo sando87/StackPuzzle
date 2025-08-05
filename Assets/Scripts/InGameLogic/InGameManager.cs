@@ -525,7 +525,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
-                destPro.ParentFrame.BreakObstacle();
+                // destPro.ParentFrame.BreakObstacle();
                 destPro.DestroyImmediately(Billboard.CurrentCombo);
             }
         }
@@ -533,7 +533,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
-                destPro.ParentFrame.BreakObstacle();
+                // destPro.ParentFrame.BreakObstacle();
                 destPro.MergeImImmediately(pros[0], nextSkill);
             }
         }
@@ -545,6 +545,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
+                destPro.ParentFrame.BreakObstacle();
                 destPro.ReadyForDestroy(Billboard.CurrentCombo);
             }
         }
@@ -552,6 +553,7 @@ public class InGameManager : MonoBehaviour
         {
             foreach (Product destPro in pros)
             {
+                destPro.ParentFrame.BreakObstacle();
                 destPro.ReadyForMerge(Billboard.CurrentCombo);
             }
         }

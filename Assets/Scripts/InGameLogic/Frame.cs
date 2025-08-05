@@ -190,19 +190,38 @@ public class Frame : MonoBehaviour
         if (!IsCapped)
             return;
 
-        mCapIndex = Mathf.Max(0, mCapIndex - count);
-        Instantiate(CapEffectPrefab, transform.position, Quaternion.identity, transform);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
-        
-        UpdateCap();
+        StartCoroutine(AnimateFlash(CapObject.GetComponent<SpriteRenderer>(), 0.24f, () =>
+        {
+            if (!IsCapped)
+                return;
 
-        if(mCapIndex <= 0)
-            EventBreakCap?.Invoke(this);
+            mCapIndex = Mathf.Max(0, mCapIndex - count);
+            Instantiate(CapEffectPrefab, transform.position, Quaternion.identity, transform);
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
+
+            UpdateCap();
+
+            if (!IsCapped)
+                EventBreakCap?.Invoke(this);
+        }));
     }
     private void UpdateCap()
     {
         CapObject.SetActive(IsCapped);
+        CapObject.GetComponent<SpriteRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 0));
         CapObject.GetComponent<SpriteRenderer>().sprite = Caps[mCapIndex];
+    }
+    IEnumerator AnimateFlash(Renderer renderer, float duration, Action onComplete = null)
+    {
+        float t = 0;
+        while (t < duration)
+        {
+            renderer.material.SetColor("_Color", new Color(1, 1, 1, 0));
+            yield return null;
+            t += Time.deltaTime;
+        }
+        renderer.material.SetColor("_Color", new Color(0, 0, 0, 0));
+        onComplete?.Invoke();
     }
 
     public void CreateComboTextEffect(int combo, ProductColor color)

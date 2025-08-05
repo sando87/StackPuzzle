@@ -45,6 +45,14 @@ public class Product : MonoBehaviour
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
     public SwipChain Chain { get; set; } = null;
 
+    void Awake()
+    {
+        IcedBlock.EventBreakIce += () =>
+        {
+            EventUnWrapIce?.Invoke();
+        };
+    }
+
     public void AttachTo(Frame parentFrame)
     {
         parentFrame.ChildProduct = this;
@@ -589,17 +597,12 @@ public class Product : MonoBehaviour
     }
 
 
-    private bool BreakIceBlock(int count = 1)
+    private void BreakIceBlock(int count = 1)
     {
-        if (!IcedBlock.IsIced)
-            return false;
-
-        if(IcedBlock.BreakBlock(count))
+        if (IcedBlock.IsIced)
         {
-            EventUnWrapIce?.Invoke();
-            return true;
+            IcedBlock.BreakIce(count);
         }
-        return false;
     }
 
     #endregion

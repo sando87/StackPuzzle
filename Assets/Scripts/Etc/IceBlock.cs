@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -14,37 +15,51 @@ public class IceBlock : MonoBehaviour
     public bool IsIced { get { return BreakDepth > 0; } }
     public int BreakDepth { get; set; } = 0;
     public Frame ParentFrame { get { return transform.GetComponentInParent<Frame>(); } }
+    private Vector3 mOriginalLocalPos = Vector3.zero;
 
-    public bool BreakBlock(int count)
+    public Action EventBreakIce = null;
+
+    void Awake()
+    {
+        mOriginalLocalPos = transform.localPosition;
+    }
+
+    public bool BreakIce(int count)
     {
         if (!IsIced)
-        {
             return false;
-        }
 
-        StartCoroutine(AnimateFlash(GetComponent<SpriteRenderer>(), 0.3f));
-        gameObject.transform.DOShakePosition(0.3f, 0.3f, 100, 90, false, true);
-
-        this.ExDelayedCoroutine(0.3f, () =>
+        transform.DOShakePosition(0.3f, 0.3f, 100, 90, false, true);
+        StartCoroutine(AnimateFlash(GetComponent<SpriteRenderer>(), 0.24f, () =>
         {
             BreakAction(count);
-        });
+        }));
 
         return true;
     }
     private void BreakAction(int count)
     {
-        Instantiate(IceBreakEffectPrefab, transform.position, Quaternion.identity);
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
+        if (!IsIced)
+            return;
 
-        // IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
-        // obj.SetDepth(BreakDepth);
-        // obj.GetComponent<SpriteRenderer>().sortingLayerName = "UIParticle";
-        // obj.GetComponent<SpriteRenderer>().sortingOrder = 1;
-        // obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        // ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
+        // Instantiate(IceBreakEffectPrefab, transform.position, Quaternion.identity);
+        // SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
+
+        IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
+        obj.SetDepth(BreakDepth);
+        obj.GetComponent<SpriteRenderer>().sortingLayerName = "UIParticle";
+        obj.GetComponent<SpriteRenderer>().sortingOrder = 1;
+        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
+
+        transform.DOKill();
+        transform.localPosition = mOriginalLocalPos;
+        // GetComponent<SpriteRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 0));
 
         SetDepth(Mathf.Max(0, BreakDepth - count));
+
+        if (!IsIced)
+            EventBreakIce?.Invoke();
     }
     public void SetDepth(int depth)
     {
@@ -56,7 +71,7 @@ public class IceBlock : MonoBehaviour
         transform.localScale = Vector3.one;
         transform.localPosition = new Vector3(0, 0, -0.5f);
     }
-    IEnumerator AnimateFlash(Renderer renderer, float duration)
+    IEnumerator AnimateFlash(Renderer renderer, float duration, Action onComplete = null)
     {
         float t = 0;
         while (t < duration)
@@ -66,7 +81,7 @@ public class IceBlock : MonoBehaviour
             t += Time.deltaTime;
         }
         renderer.material.SetColor("_Color", new Color(0, 0, 0, 0));
-        // renderer.material.color = new Color(0, 0, 0, 0);
+        onComplete?.Invoke();
     }
 
     private IEnumerator AnimatePickedUp(GameObject obj)
