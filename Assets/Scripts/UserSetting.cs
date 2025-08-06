@@ -144,6 +144,23 @@ public class UserSetting
     }
     public static UserInfo LoadUserInfo()
     {
+#if UNITY_STANDALONE_WIN
+        string path = "./VirtualSaveData/UserInfo.txt";
+        if (File.Exists(path))
+        {
+            string jsonUserInfo = File.ReadAllText(path);
+            UserInfo info = JsonUtility.FromJson<UserInfo>(jsonUserInfo);
+            return info;
+        }
+        else
+        {
+            UserInfo info = new UserInfo();
+            info.deviceName = DateTime.Now.Ticks.ToString();
+            info.userName = info.deviceName;
+            SaveUserInfo(info);
+            return info;
+        }
+#else
         if(PlayerPrefs.HasKey(UserInfoVersion))
         {
             UserInfo info = UnityUtils.LoadFromRegedit<UserInfo>(UserInfoVersion);
@@ -152,18 +169,21 @@ public class UserSetting
         else
         {
             UserInfo info = new UserInfo();
-
-#if UNITY_EDITOR
-            info.deviceName = "Editor" + SystemInfo.deviceUniqueIdentifier;
-#else
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
-#endif
-            
+            SaveUserInfo(info);
             return info;
         }
+#endif
+
     }
     private static UserInfo SaveUserInfo(UserInfo info)
     {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/UserInfo.txt";
+        string jsonUserInfo = JsonUtility.ToJson(info, true);
+        File.WriteAllText(fullname, jsonUserInfo);
+        return info;
+#else
         if (mIsBotPlayer)
         {
             string jsonUserInfo = JsonUtility.ToJson(info, true);
@@ -175,6 +195,8 @@ public class UserSetting
             UnityUtils.SaveToRegedit(UserInfoVersion, info);
         }
         return info;
+#endif
+
     }
     public static void SwitchBotPlayer(bool enable, string deviceName)
     {
@@ -336,11 +358,39 @@ class UserSettingInfo
 
     public static UserSettingInfo Load()
     {
+#if UNITY_STANDALONE_WIN
+        string path = "./VirtualSaveData/UserSettingInfo.txt";
+        if (File.Exists(path))
+        {
+            string jsonUserSettingInfo = File.ReadAllText(path);
+            UserSettingInfo info = JsonUtility.FromJson<UserSettingInfo>(jsonUserSettingInfo);
+            return info;
+        }
+        else
+        {
+            UserSettingInfo info = new UserSettingInfo();
+            Save(info);
+            return info;
+        }
+#else
         return UnityUtils.LoadFromRegedit<UserSettingInfo>(KeyVersion);
+#endif
     }
+
     private void Save()
     {
-        UnityUtils.SaveToRegedit(KeyVersion, this);
+        Save(this);
+    }
+    
+    private static void Save(UserSettingInfo info)
+    {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/UserSettingInfo.txt";
+        string jsonUserSettingInfo = JsonUtility.ToJson(info, true);
+        File.WriteAllText(fullname, jsonUserSettingInfo);
+#else
+        UnityUtils.SaveToRegedit(KeyVersion, info);
+#endif
     }
 
     public static void Delete()

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Android;
 using System;
+using System.IO;
 
 public class MenuTitle : MonoBehaviour
 {
@@ -47,6 +48,12 @@ public class MenuTitle : MonoBehaviour
         LoadingText.text = "5%";
         yield return new WaitForSeconds(1.2f);
         LoadingText.text = "10%";
+
+#if UNITY_STANDALONE_WIN
+        DirectoryInfo di = new DirectoryInfo("./VirtualSaveData/");
+        if (di.Exists == false)
+            di.Create();
+#endif
 
         // 로컬 파일 IO
         UserSetting.Initialize();
@@ -192,7 +199,13 @@ public class MenuTitle : MonoBehaviour
             info.data = data;
             return NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
         };
+
+#if UNITY_STANDALONE_WIN
+        LOG.Initialize(".");
+#else
         LOG.Initialize(Application.persistentDataPath);
+#endif
+
         _LogWriter.gameObject.SetActive(true);
     }
 

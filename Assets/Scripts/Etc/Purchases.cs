@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -330,11 +331,21 @@ public class Purchases
 
     private static PurchaseInfo LoadPurchaseInfo()
     {
-        if (PlayerPrefs.HasKey(prefsKeyName5))
+#if UNITY_STANDALONE_WIN
+        string path = "./VirtualSaveData/PurchaseInfo.txt";
+        if (File.Exists(path))
         {
-            PlayerPrefs.DeleteKey(prefsKeyName5);
+            string jsonPurchaseInfo = File.ReadAllText(path);
+            PurchaseInfo info = JsonUtility.FromJson<PurchaseInfo>(jsonPurchaseInfo);
+            return info;
         }
-        
+        else
+        {
+            PurchaseInfo info = new PurchaseInfo();
+            UpdatePurchaseInfo(info);
+            return info;
+        }
+#else
         if (PlayerPrefs.HasKey(prefsKeyName6))
         {
             string hexStr = PlayerPrefs.GetString(prefsKeyName6);
@@ -350,14 +361,21 @@ public class Purchases
             UpdatePurchaseInfo(info);
             return info;
         }
+#endif
     }
     private static void UpdatePurchaseInfo(PurchaseInfo info)
     {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/PurchaseInfo.txt";
+        string jsonPurchaseInfo = JsonUtility.ToJson(info, true);
+        File.WriteAllText(fullname, jsonPurchaseInfo);
+#else
         info.random = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         byte[] bInfo = info.Serialize();
         byte[] encryptInfo = Utils.Encrypt(bInfo);
         string hexStr = BitConverter.ToString(encryptInfo).Replace("-", string.Empty);
         PlayerPrefs.SetString(prefsKeyName6, hexStr);
+#endif
     }
     public static void DeletePurchaseInfo()
     {
