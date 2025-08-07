@@ -21,25 +21,27 @@ public class AutoBalancerInfo
 
 public class AutoBalancer : MonoBehaviour
 {
-    private int BotLevel = 0;
+    InGameManager mCurrentManager = null;
 
-    public static bool AutoBalance
+    void Awake()
     {
-        set
-        {
-            if (value)
-                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StartCoroutine("DoAutoBalancerNew");
-            else
-                GameObject.Find("AutoBalancer").GetComponent<AutoBalancer>().StopCoroutine("DoAutoBalancerNew");
-        }
+        StartCoroutine(CoInvokerBot());
     }
 
-    InGameManager mCurrentManager = null;
+    IEnumerator CoInvokerBot()
+    {
+        while (true)
+        {
+            yield return new WaitUntil(() => UserSetting.UserInfo.IsBot);
+            StartCoroutine(nameof(DoAutoBalancerNew));
+            yield return new WaitUntil(() => !UserSetting.UserInfo.IsBot);
+            StopCoroutine(nameof(DoAutoBalancerNew));
+        }
+    }
 
     IEnumerator DoAutoBalancerNew()
     {
         yield return new WaitForSeconds(5);
-        ParseBotLevel();
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
@@ -156,7 +158,6 @@ public class AutoBalancer : MonoBehaviour
     IEnumerator DoAutoBalancer()
     {
         yield return null;
-        ParseBotLevel();
         InGameManager mgr = null;
         int counter = 0;
         int counterLimit = NextSwipeCount();
@@ -478,17 +479,9 @@ public class AutoBalancer : MonoBehaviour
     }
 
 
-    private void ParseBotLevel()
-    {
-        string[] strs = UserSetting.UserInfo.deviceName.Split('_');
-        if (strs.Length <= 1)
-            BotLevel = 0;
-        else
-            BotLevel = int.Parse(strs[0]);
-    }
     private float NextDelaySec()
     {
-        switch (BotLevel)
+        switch (UserSetting.UserInfo.botLevel)
         {
             case 0: return UnityEngine.Random.Range(3, 8);
             case 1: return UnityEngine.Random.Range(2, 8);
@@ -502,7 +495,7 @@ public class AutoBalancer : MonoBehaviour
     }
     private int NextSwipeCount()
     {
-        switch (BotLevel)
+        switch (UserSetting.UserInfo.botLevel)
         {
             case 0: return UnityEngine.Random.Range(0, 1);
             case 1: return UnityEngine.Random.Range(0, 4);

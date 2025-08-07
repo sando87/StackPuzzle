@@ -67,10 +67,9 @@ public class UserSetting
 
 
     #region UserInfo Network
-    private static bool mIsBotPlayer = false;
     private static UserInfo mUserInfo = null;
 
-    public static bool IsBotPlayer { get { return mIsBotPlayer; } }
+    public static bool IsBotPlayer { get { return mUserInfo.IsBot; } }
     public static UserInfo UserInfo { get { return mUserInfo; } }
     public static int Latency { set { mUserInfo.NetworkLatency = value; } }
     public static int UserPK { get { return mUserInfo == null ? -1 : mUserInfo.userPk; } }
@@ -82,22 +81,6 @@ public class UserSetting
     {
         mUserInfo = LoadUserInfo();
         mUserSettingInfo = UserSettingInfo.Load();
-    }
-    public static void ConfigAutoBot()
-    {
-#if UNITY_STANDALONE_WIN
-        string path = "./autobot.txt";
-        if (File.Exists(path))
-        {
-            string[] tmpLines = File.ReadAllLines(path);
-            if (tmpLines != null && tmpLines.Length > 0)
-            {
-                string devicename = tmpLines[0];
-                UserSetting.SwitchBotPlayer(true, devicename);
-                return;
-            }
-        }
-#endif
     }
     public static void AddNewUserInfoToServer()
     {
@@ -198,60 +181,10 @@ public class UserSetting
 #endif
 
     }
-    public static void SwitchBotPlayer(bool enable, string deviceName)
+    public static void SwitchBotPlayer(int botLevel)
     {
-        if (enable)
-        {
-            string fullname = Application.persistentDataPath + "/" + deviceName + ".json";
-            if(!File.Exists(fullname))
-            {
-                MenuMessageBox.PopUp("No File. Do you want to create?", true, (isOK) => {
-                    if(isOK)
-                    {
-                        UserInfo virtualUser = new UserInfo();
-                        virtualUser.userName = deviceName;
-                        virtualUser.deviceName = deviceName;
-                        string jsonUserInfo = JsonUtility.ToJson(virtualUser, true);
-                        File.WriteAllText(fullname, jsonUserInfo);
-                        SwitchBotPlayer(true, deviceName);
-                    }
-                });
-                return;
-            }
-            
-            string fileText = File.ReadAllText(fullname);
-            if (fileText == null || fileText.Length == 0)
-                return;
-
-
-            mIsBotPlayer = true;
-            UserInfo info = JsonUtility.FromJson<UserInfo>(fileText);
-            UpdateUserInfoToLocal(info);
-            AutoBalancer.AutoBalance = true;
-
-            if (!NetClientApp.GetInstance().IsDisconnected())
-            {
-                if (UserSetting.UserPK < 0)
-                    UserSetting.AddNewUserInfoToServer();
-                else
-                    UserSetting.LoadUserInfoFromServer();
-            }
-        }
-        else
-        {
-            mIsBotPlayer = false;
-            mUserInfo = LoadUserInfo();
-            AutoBalancer.AutoBalance = false;
-
-            if (!NetClientApp.GetInstance().IsDisconnected())
-            {
-                if (UserSetting.UserPK < 0)
-                    UserSetting.AddNewUserInfoToServer();
-                else
-                    UserSetting.LoadUserInfoFromServer();
-            }
-
-        }
+        mUserInfo.botLevel = botLevel;
+        SaveUserInfo(mUserInfo);
     }
     #endregion
 

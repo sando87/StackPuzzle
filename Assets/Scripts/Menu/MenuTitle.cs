@@ -99,9 +99,8 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "70%";
 
-        // 자동봇시스템
+        // 자동봇 시스템 초기화
         _AutoBotSystem.SetActive(true);
-        UserSetting.ConfigAutoBot();
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "80%";
 

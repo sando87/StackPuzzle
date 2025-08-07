@@ -61,31 +61,34 @@ public class MenuSettings : MonoBehaviour
         mTouchCount++;
         if (mTouchCount >= 5)
         {
-            MapStage nextStage = MenuStages.Inst.FindStage(UserSetting.GetHighestStageNumber() + 1);
-            if (nextStage != null)
+            MenuMessageBox.PopUp("Do Unlock All Stages", false, (isOK) => 
             {
-                nextStage.UnLock();
-            }
-
-            MenuMessageBox.PopUp("Stage Unlocked", false, (isOK) => {});
+                if(isOK)
+                {
+                    MapStage nextStage = MenuStages.Inst.FindStage(UserSetting.GetHighestStageNumber() + 1);
+                    if (nextStage != null)
+                    {
+                        nextStage.UnLock();
+                    }
+                }
+            });
         }
 
-        // if (mTouchCount >= 5)
-        // {
-        //     int botAILevel = 3;
-        //     string currentDeviceName = botAILevel + "_" + DateTime.Now.Ticks.ToString();
-        //     SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        //     MenuEditBox.PopUp("DeviceName\n(off:disable)", currentDeviceName,(isOK, inputText) =>
-        //     {
-        //         if(isOK)
-        //         {
-        //             if (inputText.Length <= 0 || inputText == "off")
-        //                 UserSetting.SwitchBotPlayer(false, "");
-        //             else
-        //                 UserSetting.SwitchBotPlayer(true, inputText);
-        //         }
-        //     });
-        // }
+        if (mTouchCount >= 5)
+        {
+            string currentBotLevel = UserSetting.UserInfo.botLevel.ToString();
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+            MenuEditBox.PopUp("SwitchingToBot(Write bot level:0~5)", currentBotLevel,(isOK, inputText) =>
+            {
+                if(isOK)
+                {
+                    if(int.TryParse(inputText, out int botLevel))
+                    {
+                        UserSetting.SwitchBotPlayer(botLevel);
+                    }
+                }
+            });
+        }
         yield return new WaitForSeconds(1);
         mTouchCount = 0;
     }
