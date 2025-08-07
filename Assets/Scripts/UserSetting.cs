@@ -167,16 +167,7 @@ public class UserSetting
         File.WriteAllText(fullname, jsonUserInfo);
         return info;
 #else
-        if (mIsBotPlayer)
-        {
-            string jsonUserInfo = JsonUtility.ToJson(info, true);
-            string fullname = Application.persistentDataPath + "/" + info.deviceName + ".json";
-            File.WriteAllText(fullname, jsonUserInfo);
-        }
-        else
-        {
-            UnityUtils.SaveToRegedit(UserInfoVersion, info);
-        }
+        UnityUtils.SaveToRegedit(UserInfoVersion, info);
         return info;
 #endif
 
