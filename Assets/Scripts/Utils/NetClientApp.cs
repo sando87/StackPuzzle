@@ -20,6 +20,7 @@ public class NetClientApp : MonoBehaviour
     NetworkStream mStream = null;
     private Int64 mRequestID = 0;
     private bool mIsTryingConnect = false;
+    private bool mTryConnectImmediate = false; // 바로 연결 시도
     private List<byte> mRecvBuffer = new List<byte>();
     Dictionary<Int64, Action<byte[]>> mHandlerTable = new Dictionary<Int64, Action<byte[]>>();
 
@@ -169,6 +170,8 @@ public class NetClientApp : MonoBehaviour
         mRecvBuffer.Clear();
         mHandlerTable.Clear();
         mRequestID = 0;
+        mIsTryingConnect = false;
+        mTryConnectImmediate = false;
     }
 
     private void ReadRecvData()
@@ -273,7 +276,10 @@ public class NetClientApp : MonoBehaviour
                 }
             }
             
-            yield return new WaitForSeconds(1);
+            float startTime = Time.time;
+            mIsTryingConnect = false;
+            yield return new WaitUntil(() => mTryConnectImmediate || Time.time - startTime > 5 * 60);
+            mTryConnectImmediate = false;
         }
     }
 
@@ -288,6 +294,14 @@ public class NetClientApp : MonoBehaviour
         catch (SocketException ex) { LOG.warn(ex.Message); }
         catch (Exception ex) { LOG.warn(ex.Message); }
         return false;
+    }
+
+    public void TryConnectImmediate()
+    {
+        if(mIsTryingConnect)
+            return;
+
+        mTryConnectImmediate = true;
     }
 
 }
