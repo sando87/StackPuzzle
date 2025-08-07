@@ -116,13 +116,13 @@ class LOG
 
     public static byte[] LogStringToByte(string[] logs)
     {
-        string log = String.Join<string>("\r\n", logs) + "\r\n";
+        string log = String.Join<string>(Environment.NewLine, logs) + Environment.NewLine;
         return Encoding.UTF8.GetBytes(log);
     }
     public static string[] LogFileToString(byte[] bytes)
     {
         string log = Encoding.UTF8.GetString(bytes);
-        return log.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+        return log.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
     }
 
     static public void trace(string val = "",
@@ -177,7 +177,7 @@ class LOG
         log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = val == null ? "" : val.Trim();
+        log.message = val == null ? "" : val.TrimEnd('\0');
         log.stackTrace = "";
 
         var st = new StackTrace();
@@ -205,7 +205,7 @@ class LOG
         log.fileName = file.Split('\\').Last();
         log.funcName = caller;
         log.lineNumber = lineNumber.ToString();
-        log.message = val == null ? "" : val.Trim();
+        log.message = val == null ? "" : val.TrimEnd('\0');
         log.stackTrace = "";
 
         var st = new StackTrace();

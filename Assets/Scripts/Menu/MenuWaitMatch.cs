@@ -390,9 +390,9 @@ public class MenuWaitMatch : MonoBehaviour
         
         UpdateExpBar(info.score);
         //string text =
-        //    "ID : #" + info.userPk + "\n" +
-        //    "Name : " + info.userName + "\n" +
-        //    "Score : " + info.score + "\n" +
+        //    "ID : #" + info.userPk + Environment.NewLine +
+        //    "Name : " + info.userName + Environment.NewLine +
+        //    "Score : " + info.score + Environment.NewLine +
         //    "Win/Lose : " + info.win + "/" + info.lose;
         //
         //if (UserSetting.UserPK == info.userPk)
