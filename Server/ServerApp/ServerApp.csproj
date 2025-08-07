@@ -89,6 +89,9 @@
     <Compile Include="..\..\Assets\Scripts\common\Utils.cs">
       <Link>Utils.cs</Link>
     </Compile>
+    <Compile Include="..\..\Assets\Scripts\common\PerformanceMonitor.cs">
+      <Link>PerformanceMonitor.cs</Link>
+    </Compile>
     <Compile Include="DBManager.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

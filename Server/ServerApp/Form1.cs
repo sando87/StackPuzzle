@@ -16,6 +16,7 @@ namespace ServerApp
     {
         ServerModule mServer = new ServerModule();
         ServerMonitoringInfo mMonitoringInfo = new ServerMonitoringInfo();
+        PerformanceMonitor mPerformanceMon = new PerformanceMonitor();
         ConcurrentQueue<KeyValuePair<string, byte[]>> mMessages = new ConcurrentQueue<KeyValuePair<string, byte[]>>();
         ConcurrentDictionary<string, SessionUser> mUsers = new ConcurrentDictionary<string, SessionUser>();
         SessionUser mCurrentSession = null;
@@ -48,6 +49,8 @@ namespace ServerApp
 
             Utils.InitNextRan(1132, 9978);
 
+            mPerformanceMon.Init();
+
             mTimer.Interval = 1;
             mTimer.Tick += MTimer_Tick;
             mTimer.Start();
@@ -76,6 +79,7 @@ namespace ServerApp
         private void MTimerForLog_Tick(object sender, EventArgs e)
         {
             ServerMonitoring();
+            ServerHardwareMonitoring();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -610,6 +614,12 @@ namespace ServerApp
             }
 
             string msg = mMonitoringInfo.ToMessage();
+            LOG.trace(msg);
+            mMonitoringInfo.Reset();
+        }
+        private void ServerHardwareMonitoring()
+        {
+            string msg = mPerformanceMon.GetInfo();
             LOG.trace(msg);
             mMonitoringInfo.Reset();
         }
