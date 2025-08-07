@@ -25,6 +25,7 @@ public class MenuTitle : MonoBehaviour
     [SerializeField] GameObject _AutoBotSystem;
     [SerializeField] GameObject _GoogleAd;
     [SerializeField] GameObject _Tutorial;
+    [SerializeField] PerformanceMonitering _Monitoring;
 
     private void Awake()
     {
@@ -117,6 +118,12 @@ public class MenuTitle : MonoBehaviour
         // 기타 시스템 설정 초기화
         Application.targetFrameRate = 30; //FPS 30프레임 고정
         Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "98%";
+
+        // 모니터링 시스템 작동
+        _Monitoring.OnMonitering = (log) => LOG.trace(log);
+        _Monitoring.gameObject.SetActive(true);
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "100%";
 
