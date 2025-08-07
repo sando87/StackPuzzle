@@ -164,6 +164,10 @@ public class MenuStages : MonoBehaviour
                     MenuWaitMatch.PopUp();
                     Hide();
                 }
+                else
+                {
+                    MenuInformBox.PopUp("Connection Failed");
+                }
             });
         }
         else

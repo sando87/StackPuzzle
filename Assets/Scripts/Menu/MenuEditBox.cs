@@ -25,11 +25,6 @@ public class MenuEditBox : MonoBehaviour
 
     public void OnOK()
     {
-        if(InputField.text.Length < UserSetting.NameLengthMin)
-        {
-            MenuInformBox.PopUp("Write at least 3 characters.");
-            return;
-        }
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         EventClick?.Invoke(true, InputField.text);
         Destroy(gameObject);
