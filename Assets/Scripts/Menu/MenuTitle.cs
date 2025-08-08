@@ -118,13 +118,13 @@ public class MenuTitle : MonoBehaviour
         Application.targetFrameRate = 30; //FPS 30프레임 고정
         Screen.sleepTimeout = SleepTimeout.NeverSleep; //화면꺼짐 방지
         yield return new WaitForSeconds(0.1f);
-        LoadingText.text = "98%";
+        LoadingText.text = "100%";
 
         // 모니터링 시스템 작동
-        _Monitoring.OnMonitering = (log) => LOG.trace(log);
-        _Monitoring.gameObject.SetActive(true);
-        yield return new WaitForSeconds(0.1f);
-        LoadingText.text = "100%";
+        // _Monitoring.OnMonitering = (log) => LOG.trace(log);
+        // _Monitoring.gameObject.SetActive(true);
+        // yield return new WaitForSeconds(0.1f);
+        // LoadingText.text = "100%";
 
         mIsTouched = false;
         ReadyAndWaitForTouch();

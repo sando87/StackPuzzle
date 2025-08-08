@@ -433,8 +433,6 @@ namespace ServerApp
 
                     if(joinUser.RoomNumber == makeUser.RoomNumber)
                     {
-                        mMonitoringInfo.pvpMatchingCount++;
-
                         makeUser.SetOpp(joinUser.Endpoint, joinUser.UserInfo.score);
                         joinUser.SetOpp(makeUser.Endpoint, makeUser.UserInfo.score);
                         joinUser.MatchLevel = makeUser.MatchLevel;
@@ -482,8 +480,6 @@ namespace ServerApp
 
             if (userA.MatchState == MatchingState.FoundOppAck && userB.MatchState == MatchingState.FoundOppAck)
             {
-                mMonitoringInfo.pvpMatchingCount++;
-
                 userA.SetOpp(userB.Endpoint, userB.UserInfo.score);
                 userB.SetOpp(userA.Endpoint, userA.UserInfo.score);
 
@@ -600,8 +596,12 @@ namespace ServerApp
         private void ServerMonitoring()
         {
             mMonitoringInfo.userCount = mUsers.Count;
-            foreach(var user in mUsers)
+            mMonitoringInfo.pvpMatchingCount = 0;
+            foreach (var user in mUsers)
             {
+                if (user.Value.MatchState == MatchingState.Matched)
+                    mMonitoringInfo.pvpMatchingCount++;
+
                 int avg = 0;
                 if (user.Value.Pings.Count > 0)
                 {
