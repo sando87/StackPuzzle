@@ -29,11 +29,13 @@ public class IceBlock : MonoBehaviour
         if (!IsIced)
             return false;
 
-        transform.DOShakePosition(0.3f, 0.3f, 100, 90, false, true);
-        StartCoroutine(AnimateFlash(GetComponent<SpriteRenderer>(), 0.24f, () =>
-        {
-            BreakAction(count);
-        }));
+        // transform.DOShakePosition(0.3f, 0.3f, 100, 90, false, true);
+        // StartCoroutine(AnimateFlash(GetComponent<SpriteRenderer>(), 0.24f, () =>
+        // {
+        //     BreakAction(count);
+        // }));
+
+        BreakAction(count);
 
         return true;
     }
@@ -52,8 +54,8 @@ public class IceBlock : MonoBehaviour
         obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
 
-        transform.DOKill();
-        transform.localPosition = mOriginalLocalPos;
+        // transform.DOKill();
+        // transform.localPosition = mOriginalLocalPos;
         // GetComponent<SpriteRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 0));
 
         SetDepth(Mathf.Max(0, BreakDepth - count));
