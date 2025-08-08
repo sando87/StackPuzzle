@@ -21,7 +21,7 @@ public class MenuPause : MonoBehaviour
     public void OnQuit()
     {
         gameObject.SetActive(false);
-        MenuInGame.Inst().FinishGame(false);
+        MenuInGame.Inst().FinisStagehGame(false);
     }
     public void OnResume()
     {

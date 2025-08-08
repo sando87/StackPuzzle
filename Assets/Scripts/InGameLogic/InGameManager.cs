@@ -3027,49 +3027,42 @@ public class InGameManager : MonoBehaviour
     }
     IEnumerator _StartFinishing(bool isSuccess)
     {
-        while (true)
+        if (FieldType == GameFieldType.Stage)
         {
-            if (IsIdle)
+            yield return new WaitUntil(() => IsIdle);
+
+            if (isSuccess)
             {
-                if (FieldType == GameFieldType.Stage)
-                {
-                    if (isSuccess)
-                    {
-                        EventFinishPre?.Invoke(isSuccess);
-                        yield return new WaitForSeconds(1);
+                EventFinishPre?.Invoke(isSuccess);
+                yield return new WaitForSeconds(1);
 
-                        yield return StartCoroutine(LoopRewardProducts());
+                yield return StartCoroutine(LoopRewardProducts());
 
-                        while (!IsIdle)
-                            yield return null; //마지막 보상 스킬들 루틴 끝날때까지 기달...
+                while (!IsIdle)
+                    yield return null; //마지막 보상 스킬들 루틴 끝날때까지 기달...
 
-                        yield return new WaitForSeconds(0.5f);
-                        MenuInformBox.PopUp("MISSION COMPLETE!!");
-                    }
-                    else if (mStageInfo.MoveLimit > 0)
-                        MenuInformBox.PopUp("MOVE LIMITTED");
-                    else if (mStageInfo.TimeLimit > 0)
-                        MenuInformBox.PopUp("TIMEOUT");
-                    else
-                        MenuInformBox.PopUp("GAME OVER");
-                }
-                else
-                {
-                    if (isSuccess)
-                        MenuInformBox.PopUp("YOU WIN");
-                    else
-                        MenuInformBox.PopUp("YOU LOSE");
-                }
-
-                yield return new WaitForSeconds(UserSetting.InfoBoxDisplayTime);
-
-                EventFinish?.Invoke(isSuccess);
-                CleanUpGame();
-                break;
+                yield return new WaitForSeconds(0.5f);
+                MenuInformBox.PopUp("MISSION COMPLETE!!");
             }
-
-            yield return null;
+            else if (mStageInfo.MoveLimit > 0)
+                MenuInformBox.PopUp("MOVE LIMITTED");
+            else if (mStageInfo.TimeLimit > 0)
+                MenuInformBox.PopUp("TIMEOUT");
+            else
+                MenuInformBox.PopUp("GAME OVER");
         }
+        else
+        {
+            if (isSuccess)
+                MenuInformBox.PopUp("YOU WIN");
+            else
+                MenuInformBox.PopUp("YOU LOSE");
+        }
+
+        yield return new WaitForSeconds(UserSetting.InfoBoxDisplayTime);
+
+        EventFinish?.Invoke(isSuccess);
+        CleanUpGame();
     }
     IEnumerator RefreshTimer()
     {
@@ -3238,6 +3231,19 @@ public class InGameManager : MonoBehaviour
         float playedTime = 0;
         while (true)
         {
+            if (IsNoMoreMatchableProducts()) //더이상 움직일 수 있는 블럭이 없을 경우 실패
+            {
+                yield return new WaitForSeconds(1);
+                StartFinish(false);
+                yield break;
+            }
+            if (Opponent.mIsFinished) //상대방이 죽거나 종료된 상태이면 승리
+            {
+                yield return new WaitForSeconds(1);
+                StartFinish(true);
+                yield break;
+            }
+
             float remain = currentTimelimit - playedTime;
             if (remain <= 0 && mPVPIceBlockLevel < 4)
             {
@@ -3246,17 +3252,6 @@ public class InGameManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
                 mPVPIceBlockLevel++;
                 currentTimelimit += mStageInfo.TimeLimit;
-            }
-
-            if (IsNoMoreMatchableProducts()) //더이상 움직일 수 있는 블럭이 없을 경우 실패
-            {
-                yield return new WaitForSeconds(1);
-                StartFinish(false);
-            }
-            if (Opponent.mIsFinished) //상대방이 죽거나 종료된 상태이면 승리
-            {
-                yield return new WaitForSeconds(1);
-                StartFinish(true);
             }
             yield return new WaitForSeconds(1);
             playedTime += 1;

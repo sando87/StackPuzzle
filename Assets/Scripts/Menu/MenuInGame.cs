@@ -143,7 +143,7 @@ public class MenuInGame : MonoBehaviour
         };
         InGameManager.InstStage.EventFinish = (success) =>
         {
-            FinishGame(success);
+            FinisStagehGame(success);
         };
         InGameManager.InstStage.EventFinishFirst = (success) =>
         {
@@ -334,7 +334,7 @@ public class MenuInGame : MonoBehaviour
         StarC.SetActive(starCount >= 3);
     }
 
-    public void FinishGame(bool success)
+    public void FinisStagehGame(bool success)
     {
         if (success)
         {
@@ -457,7 +457,7 @@ public class MenuInGame : MonoBehaviour
             {
                 if (isOK)
                 {
-                    FinishGame(false);
+                    FinisStagehGame(false);
                 }
             });
         }
@@ -465,7 +465,7 @@ public class MenuInGame : MonoBehaviour
 
     public void OnSkip()
     {
-        FinishGame(true);
+        FinisStagehGame(true);
     }
 
     private void ShowFinishMessage(bool isComplete)

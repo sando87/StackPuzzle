@@ -68,17 +68,17 @@ public class MenuBattle : MonoBehaviour
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
     private void OnApplicationPause(bool pause)
     {
-        //FinishGame(false);
+        //FinishPVPGame(false);
     }
 
     private void OnApplicationFocus(bool focus)
     {
-        //FinishGame(false);
+        //FinishPVPGame(false);
     }
 
     private void OnApplicationQuit()
     {
-        //FinishGame(false);
+        //FinishPVPGame(false);
     }
 #endif
 
@@ -141,7 +141,7 @@ public class MenuBattle : MonoBehaviour
 
         InGameManager.InstPVP_Player.EventFinish = (success) =>
         {
-            FinishGame(success);
+            FinishPVPGame(success);
         };
         InGameManager.InstPVP_Player.EventCombo = (combo) =>
         {
@@ -152,7 +152,7 @@ public class MenuBattle : MonoBehaviour
         };
         InGameManager.InstPVP_Opponent.EventFinish = (success) =>
         {
-            FinishGame(!success);
+            FinishPVPGame(!success);
         };
         InGameManager.InstPVP_Opponent.EventCombo = (combo) =>
         {
@@ -193,7 +193,7 @@ public class MenuBattle : MonoBehaviour
         return min * 60 + sec;
     }
 
-    private void FinishGame(bool success)
+    private void FinishPVPGame(bool success)
     {
         int prevScore = UserSetting.UserScore;
 
@@ -253,7 +253,7 @@ public class MenuBattle : MonoBehaviour
             mMenu = MenuMessageBox.PopUp("Finish Game?", true, (bool isOK) =>
             {
                 if (isOK)
-                    FinishGame(false);
+                    FinishPVPGame(false);
             });
 
         }
