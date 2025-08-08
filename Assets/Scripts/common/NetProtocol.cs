@@ -41,7 +41,7 @@ public class NetProtocol
     public const int HeartCheckInterval = 30;
     public const int DeadSessionMaxTime = HeartCheckInterval * 5;
     public const int ServerMatchingInterval = 1;
-    public const int ServerMonitoringInterval = 300;
+    public const int ServerMonitoringInterval = 60;
 
     public const UInt32 MAGIC = 0x12345678;
     public const int recvBufSize = 1024 * 64;
@@ -146,7 +146,7 @@ public class UserInfo
     public int total = 0;
     public float rankingRate = 1;
     public int rank = 0;
-    public int botLevel = 0;
+    public int botLevel = 5;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
     public bool IsBot { get { return botLevel > 0; } }
