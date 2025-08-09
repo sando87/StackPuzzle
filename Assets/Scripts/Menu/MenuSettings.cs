@@ -65,10 +65,9 @@ public class MenuSettings : MonoBehaviour
             {
                 if(isOK)
                 {
-                    MapStage nextStage = MenuStages.Inst.FindStage(UserSetting.GetHighestStageNumber() + 1);
-                    if (nextStage != null)
+                    for (int i = 0; i < UserSetting.StageTotalCount; ++i)
                     {
-                        nextStage.UnLock();
+                        UserSetting.SetStageStarCount(i + 1, 0);
                     }
                 }
             });

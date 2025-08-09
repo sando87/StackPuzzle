@@ -379,8 +379,13 @@ public class Purchases
     }
     public static void DeletePurchaseInfo()
     {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/PurchaseInfo.txt";
+        File.Delete(fullname);
+#else
         PlayerPrefs.DeleteKey(prefsKeyName5);
         PlayerPrefs.DeleteKey(prefsKeyName6);
+#endif
     }
     public static void AddAdsCount()
     {

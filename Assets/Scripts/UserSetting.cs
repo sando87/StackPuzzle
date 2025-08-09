@@ -123,7 +123,12 @@ public class UserSetting
 
     public static void DeleteUserInfo()
     {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/UserInfo.txt";
+        File.Delete(fullname);
+#else
         PlayerPrefs.DeleteKey(UserInfoVersion);
+#endif
     }
     public static UserInfo LoadUserInfo()
     {
@@ -319,6 +324,11 @@ class UserSettingInfo
 
     public static void Delete()
     {
+#if UNITY_STANDALONE_WIN
+        string fullname = "./VirtualSaveData/UserSettingInfo.txt";
+        File.Delete(fullname);
+#else
         PlayerPrefs.DeleteKey(KeyVersion);
+#endif
     }
 }
