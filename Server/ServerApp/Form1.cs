@@ -468,8 +468,8 @@ namespace ServerApp
 
             // 상위 티어의 두명이 만나면 더 어려운 맵으로 대전
             MatchingLevel mapLevel = MatchingLevel.Bronze;
-            if (userA.UserInfo.rank < 10 && userB.UserInfo.rank < 10)
-                mapLevel = MatchingLevel.Silver;
+            /*if (userA.UserInfo.rank < 10 && userB.UserInfo.rank < 10)
+                mapLevel = MatchingLevel.Silver;*/
 
             int seed = (int)DateTime.Now.Ticks;
 
