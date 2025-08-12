@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,10 +25,10 @@ public class PVPScoreBar : MonoBehaviour
     public int CurrentScore { get; private set; } = 0;
     public Vector3 RootPosition { get { return RootScoreArea.position; } }
     public Vector3 HitPointPosition { get { return HitPoint.transform.position; } }
-    public bool IsIdle 
-    { 
-        get 
-        { 
+    public bool IsIdle
+    {
+        get
+        {
             return Time.time > mTouchedTime + UserSetting.IceFlushInterval && !mIsOnWaitting && mTweenCounter == 0;
         }
     }
@@ -76,7 +77,7 @@ public class PVPScoreBar : MonoBehaviour
 
     void InitFlushImageObjects()
     {
-        if(SubGroup[0].childCount > 0)
+        if (SubGroup[0].childCount > 0)
             return;
 
         float stepWidth = UserSetting.ScorePerAttack * mWidthPerScore;
@@ -87,7 +88,7 @@ public class PVPScoreBar : MonoBehaviour
 
         for (int i = step; i <= mMaxAttackCount; i += step)
         {
-            if(i % 4 == 0) continue;
+            if (i % 4 == 0) continue;
 
             float offsetPosX = i * stepWidth;
             Image image = Instantiate(FlushImagePrafab, SubGroup[0]);
@@ -178,7 +179,7 @@ public class PVPScoreBar : MonoBehaviour
             }
             else if (mZoomIndex > nextZoomLevel)
             {
-                if(IsIdle && Mathf.Abs(CurrentScore) < UserSetting.ScorePerAttack)
+                if (IsIdle && Mathf.Abs(CurrentScore) < UserSetting.ScorePerAttack)
                 {
                     SetZoomLevel(0, 0.5f);
                     mZoomIndex = 0;
@@ -203,10 +204,10 @@ public class PVPScoreBar : MonoBehaviour
     }
     void BlocksZoomingEffect(int targetZoomLevel, float zoomScale, float duration)
     {
-        if(targetZoomLevel < 0 || targetZoomLevel >= SubGroup.Length)
+        if (targetZoomLevel < 0 || targetZoomLevel >= SubGroup.Length)
             return;
 
-        foreach(Transform block in SubGroup[targetZoomLevel])
+        foreach (Transform block in SubGroup[targetZoomLevel])
         {
             block.DOScale(zoomScale, duration);
         }
@@ -217,8 +218,8 @@ public class PVPScoreBar : MonoBehaviour
         for (int zoomIdx = 0; zoomIdx < MaxZoomCount; zoomIdx++)
         {
             float scorePerBar = UserSetting.ScorePerAttack * Mathf.Pow(4, zoomIdx + 1);
-            float minScore = zoomIdx == 0 ? 0 :scorePerBar * 0.1f;
-            float maxScore = zoomIdx == MaxZoomCount ? scorePerBar : scorePerBar * 1.0f;
+            float minScore = zoomIdx == 0 ? 0 : scorePerBar * 0.1f;
+            float maxScore = zoomIdx == MaxZoomCount ? scorePerBar : scorePerBar * 0.75f;
             if (minScore <= currentScore && currentScore <= maxScore)
             {
                 return zoomIdx;
@@ -231,7 +232,7 @@ public class PVPScoreBar : MonoBehaviour
     public void AddScore(int score)
     {
         int newScore = CurrentScore + score;
-        if(CurrentScore != 0 && newScore * CurrentScore <= 0)
+        if (CurrentScore != 0 && newScore * CurrentScore <= 0)
         {
             mTweenCounter = 0;
             UpdateScoreBar(newScore);
@@ -252,7 +253,7 @@ public class PVPScoreBar : MonoBehaviour
 
         CurrentScore += score;
         int absScore = Mathf.Abs(score);
-        if(mIsOnWaitting)
+        if (mIsOnWaitting)
         {
             mAccScoreOnWaiting += absScore;
         }
@@ -265,7 +266,7 @@ public class PVPScoreBar : MonoBehaviour
     {
         CurrentScoreBar.DOKill();
         CurrentScoreBar.rectTransform.DOKill();
-        for(int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
+        for (int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
         {
             Destroy(CurrentScoreBar.transform.GetChild(i).gameObject);
         }
@@ -331,9 +332,9 @@ public class PVPScoreBar : MonoBehaviour
     }
     public int DoFlush(int score)
     {
-        if(Mathf.Abs(score) > Mathf.Abs(CurrentScore))
+        if (Mathf.Abs(score) > Mathf.Abs(CurrentScore))
             return 0;
-        
+
         float width = Mathf.Abs(score) * mWidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
@@ -388,7 +389,7 @@ public class PVPScoreBar : MonoBehaviour
     }
     IEnumerator CoFlickLockImage(float interval)
     {
-        while(true)
+        while (true)
         {
             LockImage.enabled = false;
             yield return new WaitForSeconds(interval);
@@ -399,7 +400,7 @@ public class PVPScoreBar : MonoBehaviour
 
     public void WaitStart()
     {
-        if(!mIsOnWaitting)
+        if (!mIsOnWaitting)
         {
             mAccScoreOnWaiting = 0;
             mIsOnWaitting = true;
@@ -408,12 +409,26 @@ public class PVPScoreBar : MonoBehaviour
     public void WaitEnd()
     {
         float refScoreForTouch = UserSetting.ScorePerAttack * Mathf.Pow(4, mZoomIndex);
-        if(mAccScoreOnWaiting > refScoreForTouch)
+        if (mAccScoreOnWaiting > refScoreForTouch)
         {
             mTouchedTime = Time.time;
         }
 
         mAccScoreOnWaiting = 0;
         mIsOnWaitting = false;
+    }
+    public void SetIceBlockLevel(int level)
+    {
+        foreach (Transform subGroup in flushImageRoot.transform)
+        {
+            int count = 0;
+            foreach (Transform child in subGroup)
+            {
+                child.GetComponentInChildren<TextMeshProUGUI>().text = level == 1 ? " " : "x" + level;
+                count++;
+                if (count >= 4)
+                    break;
+            }
+        }
     }
 }

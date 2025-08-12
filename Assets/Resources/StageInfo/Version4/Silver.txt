@@ -1,9 +1,10 @@
 GoalType,Score
 GoalValue,99999
 MoveLimit,0
-TimeLimit,50
+TimeLimit,60
 ColorCount,5
-StarPoint,30
+MatchingChance,0
+StarPoint,0
 RandomSeed,-1
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 
 Rows,o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 o/0/0/0/0 

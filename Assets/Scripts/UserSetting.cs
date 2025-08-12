@@ -22,8 +22,9 @@ public class UserSetting
     public const float SkillDestroyInterval = 0.2f; //1단계 스킬블럭들 터지는 시간
     public const float IceFlushInterval = 3.0f;
     public const int MatchCount = 3;
-    public const int ScorePerAttack = 50;
-    public const int FlushMaxCount = 20;
+    public const int ScorePerAttack = 80;
+    public const int MaxPoint = 1;
+    public const int IceBlockPerAttackPoint = 6;
     public const int scorePerProduct = 1;
     public const float GridSize = 0.82f;
     public const int ScorePerBar = 140;

@@ -438,6 +438,8 @@ public class MenuBattle : MonoBehaviour
         IceBlockUp2.SetActive(iceBlockLevel == 3);
         IceBlockUp3.SetActive(iceBlockLevel == 4);
 
+        PVPScoreBar.SetIceBlockLevel(iceBlockLevel);
+
         StartCoroutine(AnimTimeout());
     }
     IEnumerator AnimTimeout()

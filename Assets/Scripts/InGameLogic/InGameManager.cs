@@ -2947,18 +2947,23 @@ public class InGameManager : MonoBehaviour
             if (IsIdle && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack && !PVPScoreBar.IsLocked)
             {
                 int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
-                point = Mathf.Min(point, UserSetting.FlushMaxCount);
+                int maxPoint = UserSetting.MaxPoint * mPVPIceBlockLevel;
+                point = Mathf.Min(point, maxPoint);
 
                 PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
 
-                List<Product> products = GetNextFlushTargets(point);
-                Product[] rets = products.ToArray();
-                Network_FlushAttacks(Serialize(rets), mPVPIceBlockLevel);
-                StartCoroutine(FlushObstacles(rets, mPVPIceBlockLevel));
-                if (products.Count < point)
+                int fluchIceBlockCount = point * UserSetting.IceBlockPerAttackPoint * mPVPIceBlockLevel;
+                List<Product> products = GetNextFlushTargets(fluchIceBlockCount);
+                if (products.Count < fluchIceBlockCount)
                 {
                     StartFinish(false);
                     break;
+                }
+                else
+                {
+                    Product[] rets = products.ToArray();
+                    Network_FlushAttacks(Serialize(rets), mPVPIceBlockLevel);
+                    StartCoroutine(FlushObstacles(rets));
                 }
 
                 yield return new WaitForSeconds(UserSetting.IceFlushInterval);
@@ -2966,7 +2971,7 @@ public class InGameManager : MonoBehaviour
             yield return null;
         }
     }
-    IEnumerator FlushObstacles(Product[] targets, int blockLevel, Action eventEnd = null)
+    IEnumerator FlushObstacles(Product[] targets, Action eventEnd = null)
     {
         while (!IsIdle)
             yield return null;
@@ -2982,7 +2987,7 @@ public class InGameManager : MonoBehaviour
             obj.transform.DOMoveY(target.transform.position.y, duration).SetEase(Ease.InQuad)
             .OnComplete(() =>
             {
-                target.IcedBlock.SetDepth(blockLevel);
+                target.IcedBlock.SetDepth(1);
                 Destroy(obj);
             });
         }
@@ -4640,10 +4645,11 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle() && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
                 {
-                    int point = body.ArrayCount;
+                    int flushedIceBlockCount = body.ArrayCount;
                     int iceBlockLevel = body.combo;
+                    int point = flushedIceBlockCount / (UserSetting.IceBlockPerAttackPoint * iceBlockLevel);
                     PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
-                    List<Product> products = GetNextFlushTargets(point);
+                    List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
                     Product[] rets = products.ToArray();
                     if(body.ArrayCount != rets.Length)
                     {
@@ -4651,7 +4657,7 @@ public class InGameManager : MonoBehaviour
                         LOG.warn("point,ret: " + point + "," + rets.Length);
                     }
                         
-                    StartCoroutine(FlushObstacles(rets, iceBlockLevel));
+                    StartCoroutine(FlushObstacles(rets));
 
                     mNetMessages.RemoveFirst();
                 }
