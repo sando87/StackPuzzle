@@ -29,7 +29,7 @@ public class PVPScoreBar : MonoBehaviour
     {
         get
         {
-            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && !mIsOnWaitting && mTweenCounter == 0;
+            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && mTweenCounter == 0;
         }
     }
 
@@ -39,8 +39,8 @@ public class PVPScoreBar : MonoBehaviour
     private float mWidthPerScore = 4.0f; // 스코어 1점을 UI상 표현하는 너비
     private int mMaxAttackCount = 256; // UI창에서 표현할 수 있는 최대 얼음 조각 개수
     private int MaxZoomCount { get { return SubGroup.Length - 1; } }
-    private float mAccScoreOnWaiting = 0;
-    private bool mIsOnWaitting = false;
+    // private float mAccScoreOnWaiting = 0;
+    // private bool mIsOnWaitting = false;
     private int mTweenCounter = 0;
 
     void Awake()
@@ -67,8 +67,8 @@ public class PVPScoreBar : MonoBehaviour
         RootScoreArea.localScale = Vector3.one;
 
         mTouchedTime = 0;
-        mAccScoreOnWaiting = 0;
-        mIsOnWaitting = false;
+        // mAccScoreOnWaiting = 0;
+        // mIsOnWaitting = false;
         mTweenCounter = 0;
 
         InitZoomUISet();
@@ -229,7 +229,7 @@ public class PVPScoreBar : MonoBehaviour
         return 0;
     }
 
-    public void AddScore(int score)
+    public void AddScore(int score, int currentCombo)
     {
         int newScore = CurrentScore + score;
         if (CurrentScore != 0 && newScore * CurrentScore <= 0)
@@ -252,10 +252,15 @@ public class PVPScoreBar : MonoBehaviour
         }
 
         CurrentScore += score;
-        int absScore = Mathf.Abs(score);
-        if (mIsOnWaitting)
+
+        if (mZoomIndex == 0
+            || (mZoomIndex == 1 && currentCombo > 2)
+            || (mZoomIndex == 2 && currentCombo > 4)
+            || (mZoomIndex == 3 && currentCombo > 6)
+            || (mZoomIndex == 4 && currentCombo > 8)
+            || currentCombo > 10)
         {
-            mAccScoreOnWaiting += absScore;
+            mTouchedTime = Time.time;
         }
 
         float newWidth = Mathf.Abs(CurrentScore) * mWidthPerScore;
@@ -297,7 +302,7 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
 
         mTweenCounter = 1;
-        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
+        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
             mTweenCounter = 0;
@@ -321,7 +326,7 @@ public class PVPScoreBar : MonoBehaviour
 
         mTweenCounter = 1;
         Vector2 subSize = newSubScoreBar.rectTransform.sizeDelta;
-        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
+        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
             mTweenCounter = 0;
@@ -351,7 +356,7 @@ public class PVPScoreBar : MonoBehaviour
 
         mTouchedTime = Time.time;
         mTweenCounter = 1;
-        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
+        newSubScoreBar.rectTransform.DOAnchorPosX(-width, 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
             mTweenCounter = 0;
@@ -398,25 +403,6 @@ public class PVPScoreBar : MonoBehaviour
         }
     }
 
-    public void WaitStart()
-    {
-        if (!mIsOnWaitting)
-        {
-            mAccScoreOnWaiting = 0;
-            mIsOnWaitting = true;
-        }
-    }
-    public void WaitEnd()
-    {
-        float refScoreForTouch = UserSetting.ScorePerAttack * Mathf.Pow(4, mZoomIndex);
-        if (mAccScoreOnWaiting > refScoreForTouch)
-        {
-            mTouchedTime = Time.time;
-        }
-
-        mAccScoreOnWaiting = 0;
-        mIsOnWaitting = false;
-    }
     public void SetIceBlockLevel(int level)
     {
         // foreach (Transform subGroup in flushImageRoot.transform)

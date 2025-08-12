@@ -138,7 +138,6 @@ public class InGameManager : MonoBehaviour
         if (IsIdle && !mPrevIdleState && IsAllProductIdle())
         {
             EventEnterIdle?.Invoke();
-            WaitEndPVPScoreBar();
             if (mUseCombo && !mIsFinished)
             {
                 mUseCombo = false;
@@ -332,7 +331,6 @@ public class InGameManager : MonoBehaviour
 
         if (pro.Skill != ProductSkill.Nothing)
         {
-            WaitPVPScoreBar();
             Network_Click(pro);
             RemoveLimit();
             CastSkillProduct(pro);
@@ -347,7 +345,6 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                WaitPVPScoreBar();
                 Network_Click(pro);
                 StartCoroutine(DoMatchingCycle(matches[0]));
                 RemoveLimit();
@@ -392,7 +389,6 @@ public class InGameManager : MonoBehaviour
 
         if (product.Skill != ProductSkill.Nothing && targetProduct.Skill != ProductSkill.Nothing)
         {
-            WaitPVPScoreBar();
             mIsUserEventLock = true;
             bool isSameColor = product.Skill == ProductSkill.SameColor || targetProduct.Skill == ProductSkill.SameColor;
             Network_Swipe(product, dir);
@@ -420,7 +416,6 @@ public class InGameManager : MonoBehaviour
         }
         else if (product.Skill != ProductSkill.Nothing || targetProduct.Skill != ProductSkill.Nothing)
         {
-            WaitPVPScoreBar();
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () =>
@@ -432,7 +427,6 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            WaitPVPScoreBar();
             mIsUserEventLock = true;
             Network_Swipe(product, dir);
             product.Swipe(targetProduct, () =>
@@ -624,7 +618,6 @@ public class InGameManager : MonoBehaviour
 
     IEnumerator DoWorkerCycle()
     {
-        WaitPVPScoreBar();
         mIsUserEventLock = true;
         mIsWorkingCycle = true;
         
@@ -2758,7 +2751,7 @@ public class InGameManager : MonoBehaviour
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
-                PVPScoreBar.AddScore(score);
+                PVPScoreBar.AddScore(score, Billboard.CurrentCombo);
             }));
         }
         else if (FieldType == GameFieldType.pvpOpponent)
@@ -2772,7 +2765,7 @@ public class InGameManager : MonoBehaviour
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
-                PVPScoreBar.AddScore(-score);
+                PVPScoreBar.AddScore(-score, Billboard.CurrentCombo);
             }));
         }
     }
@@ -4558,21 +4551,6 @@ public class InGameManager : MonoBehaviour
             }
         }
     }
-    private void WaitPVPScoreBar()
-    {
-        if(FieldType == GameFieldType.Stage)
-            return;
-
-        PVPScoreBar.WaitStart();
-    }
-    private void WaitEndPVPScoreBar()
-    {
-        if (FieldType == GameFieldType.Stage)
-            return;
-
-        PVPScoreBar.WaitEnd();
-    }
-
     #endregion
 
     #region Network
