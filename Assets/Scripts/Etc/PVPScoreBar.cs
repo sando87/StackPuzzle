@@ -419,12 +419,13 @@ public class PVPScoreBar : MonoBehaviour
     }
     public void SetIceBlockLevel(int level)
     {
-        foreach (Transform subGroup in flushImageRoot.transform)
+        // foreach (Transform subGroup in flushImageRoot.transform)
         {
             int count = 0;
-            foreach (Transform child in subGroup)
+            foreach (Transform child in SubGroup[0])
             {
-                child.GetComponentInChildren<TextMeshProUGUI>().text = level == 1 ? " " : "x" + level;
+                int addedCount = (level - 1) * 2;
+                child.GetComponentInChildren<TextMeshProUGUI>().text = level == 1 ? " " : "+" + addedCount;
                 count++;
                 if (count >= 4)
                     break;

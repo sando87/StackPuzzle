@@ -2947,12 +2947,12 @@ public class InGameManager : MonoBehaviour
             if (IsIdle && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack && !PVPScoreBar.IsLocked)
             {
                 int point = -PVPScoreBar.CurrentScore / UserSetting.ScorePerAttack;
-                int maxPoint = UserSetting.MaxPoint * mPVPIceBlockLevel;
+                int maxPoint = UserSetting.MaxPoint; // * mPVPIceBlockLevel;
                 point = Mathf.Min(point, maxPoint);
 
                 PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
 
-                int fluchIceBlockCount = point * UserSetting.IceBlockPerAttackPoint * mPVPIceBlockLevel;
+                int fluchIceBlockCount = point * (UserSetting.IceBlockPerAttackPoint + (2 * (mPVPIceBlockLevel - 1)));
                 List<Product> products = GetNextFlushTargets(fluchIceBlockCount);
                 if (products.Count < fluchIceBlockCount)
                 {
@@ -2962,7 +2962,7 @@ public class InGameManager : MonoBehaviour
                 else
                 {
                     Product[] rets = products.ToArray();
-                    Network_FlushAttacks(Serialize(rets), mPVPIceBlockLevel);
+                    Network_FlushAttacks(Serialize(rets), point);
                     StartCoroutine(FlushObstacles(rets));
                 }
 
@@ -4643,23 +4643,25 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && PVPScoreBar.IsIdle && PVPScoreBar.CurrentScore >= body.ArrayCount * UserSetting.ScorePerAttack)
+                if (IsIdle && IsAllProductIdle() && PVPScoreBar.IsIdle)
                 {
                     int flushedIceBlockCount = body.ArrayCount;
-                    int iceBlockLevel = body.combo;
-                    int point = flushedIceBlockCount / (UserSetting.IceBlockPerAttackPoint * iceBlockLevel);
-                    PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
-                    List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
-                    Product[] rets = products.ToArray();
-                    if(body.ArrayCount != rets.Length)
+                    int point = body.combo;
+                    if (PVPScoreBar.CurrentScore >= point * UserSetting.ScorePerAttack)
                     {
-                        LOG.warn("body: " + body.ArrayCount);
-                        LOG.warn("point,ret: " + point + "," + rets.Length);
-                    }
-                        
-                    StartCoroutine(FlushObstacles(rets));
+                        PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
+                        List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
+                        Product[] rets = products.ToArray();
+                        if (body.ArrayCount != rets.Length)
+                        {
+                            LOG.warn("body: " + body.ArrayCount);
+                            LOG.warn("point,ret: " + point + "," + rets.Length);
+                        }
 
-                    mNetMessages.RemoveFirst();
+                        StartCoroutine(FlushObstacles(rets));
+
+                        mNetMessages.RemoveFirst();
+                    }
                 }
             }
             // else if (body.cmd == PVPCommand.SyncTimer)
@@ -4907,7 +4909,7 @@ public class InGameManager : MonoBehaviour
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
     }
-    private void Network_FlushAttacks(ProductInfo[] pros, int level)
+    private void Network_FlushAttacks(ProductInfo[] pros, int point)
     {
         if (FieldType != GameFieldType.pvpPlayer || mIsFinished)
             return;
@@ -4915,7 +4917,7 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.FlushAttacks;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = level;
+        req.combo = point;
         req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
