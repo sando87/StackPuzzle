@@ -277,6 +277,7 @@ public class MenuBattle : MonoBehaviour
             if (itemButton.GetItem() == itemType && itemButton.IsEnabled())
             {
                 UseItem(itemButton);
+                itemButton.SetEnable(false);
                 return;
             }
         }

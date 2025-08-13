@@ -216,6 +216,8 @@ public class MenuInGame : MonoBehaviour
                     if (btn.enabled)
                     {
                         UseItem(btn);
+                        btn.GetComponentInChildren<Image>().color = Color.gray;
+                        btn.enabled = false;
                     }
                 }
             }
