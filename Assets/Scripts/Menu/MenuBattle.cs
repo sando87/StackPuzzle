@@ -287,7 +287,7 @@ public class MenuBattle : MonoBehaviour
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         if (btn.name.StartsWith("ads"))
         {
-            MenuMessageBox.PopUp("Reward-first ad.", true, (isOK) =>
+            MenuMessageBox.PopUp("Reward-first-Advertisement.", true, (isOK) =>
             {
                 if (isOK)
                 {

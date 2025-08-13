@@ -336,18 +336,24 @@ public class MenuWaitMatch : MonoBehaviour
     {
         yield return new WaitForSeconds(1);
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        for (int i = 0; i < 3; ++i)
+        {
+            int offset = i * 2 + 1;
+            PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + offset);
+            if (itemType.GetCount() > 0)
+            {
+                btns[i].SetItem(itemType);
+                UserSetting.UserInfo.PvpItems[i] = itemType;
+            }
+            else
+            {
+                btns[i].SetItem(PurchaseItemType.None);
+                UserSetting.UserInfo.PvpItems[i] = PurchaseItemType.None;
+                
+                Purchases.ChargeItemUseGold(itemType, 100, 0);
+            }
 
-        PurchaseItemType item1 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 1);
-        btns[0].SetItem(item1);
-        UserSetting.UserInfo.PvpItems[0] = item1;
-        
-        PurchaseItemType item2 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 3);
-        btns[1].SetItem(item2);
-        UserSetting.UserInfo.PvpItems[1] = item2;
-        
-        PurchaseItemType item3 = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 5);
-        btns[2].SetItem(item3);
-        UserSetting.UserInfo.PvpItems[2] = item3;
+        }
         
         OnMatch();
     }
