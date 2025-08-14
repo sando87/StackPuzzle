@@ -505,6 +505,7 @@ public class InGameManager : MonoBehaviour
                 for (int i = 0; i < matchedCount; ++i)
                 {
                     matchableGroups.Add(list[i].ToArray());
+                    PushProductList(list[i]);
                 }
             }
             else
@@ -665,6 +666,7 @@ public class InGameManager : MonoBehaviour
                 if (desPros.totalCount >= desPros.delayTick)
                 {
                     DoMatchProducts(desPros.pros.ToArray());
+                    PushProductList(desPros.pros);
 
                     PushDestroyPros(desPros);
                     mDestroyPros.Remove(node);
