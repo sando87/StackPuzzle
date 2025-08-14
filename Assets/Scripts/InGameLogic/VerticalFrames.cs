@@ -158,41 +158,45 @@ public class VerticalFrames : MonoBehaviour
         eventEnd?.Invoke();
     }
 
-    public Product[] StartToDrop()
+    public void StartToDrop(List<Product> rets)
     {
         if (NewProducts.Count <= 0 || IsHolded)
-            return null;
+            return;
 
         Frame firstFrame = FindFirstEmptyFrame();
         if (firstFrame == null)
-            return null;
+            return;
 
         bool isLocked = IsLockedProduct(firstFrame);
         if (isLocked)
-            return null;
+            return;
 
-        List<Product> targets = new List<Product>();
-        Product[] pros = GetComponentsInChildren<Product>();
+        List<Product> pros = InGameManager.InstCurrent.PopProductList();
+        GetComponentsInChildren<Product>(pros);
         foreach(Product pro in pros)
         {
             if (pro.transform.position.y > firstFrame.transform.position.y)
-                targets.Add(pro);
+                rets.Add(pro);
         }
-        targets.Sort((lsh, rsh) => { return lsh.transform.position.y < rsh.transform.position.y ? -1 : 1; });
-        Vector3 topPosition = targets.Count > 0 ? targets[targets.Count - 1].transform.position : TopFrame.transform.position;
-        Product[] newPros = RepositionNewProducts(topPosition);
-        targets.AddRange(newPros);
+        InGameManager.InstCurrent.PushProductList(pros);
+
+        rets.Sort((lsh, rsh) => { return lsh.transform.position.y < rsh.transform.position.y ? -1 : 1; });
+
+        List<Product> newPros = InGameManager.InstCurrent.PopProductList();
+        Vector3 topPosition = rets.Count > 0 ? rets[rets.Count - 1].transform.position : TopFrame.transform.position;
+        RepositionNewProducts(topPosition, newPros);
+        rets.AddRange(newPros);
+        InGameManager.InstCurrent.PushProductList(newPros);
 
 
         Frame curFrame = firstFrame;
-        foreach(Product target in targets)
+        foreach(Product target in rets)
         {
             target.StartToDrop(curFrame, 0.3f);
             curFrame = curFrame.Up();
         }
 
         NewProducts.Clear();
-        return targets.ToArray();
     }
     private Frame FindFirstEmptyFrame()
     {
@@ -216,11 +220,10 @@ public class VerticalFrames : MonoBehaviour
         }
         return false;
     }
-    private Product[] RepositionNewProducts(Vector3 topPosition)
+    private void RepositionNewProducts(Vector3 topPosition, List<Product> rets)
     {
-        List<Product> rets = new List<Product>();
         if (NewProducts.Count <= 0)
-            return rets.ToArray();
+            return;
 
         InGameManager mgr = transform.parent.GetComponent<InGameManager>();
         Vector3 startPos = topPosition;
@@ -234,7 +237,6 @@ public class VerticalFrames : MonoBehaviour
             pro.transform.position = startPos;
             rets.Add(pro);
         }
-        return rets.ToArray();
     }
 
     private Vector3 FindTopPosition()

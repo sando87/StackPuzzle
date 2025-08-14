@@ -45,6 +45,8 @@ public class Product : MonoBehaviour
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
     public SwipChain Chain { get; set; } = null;
 
+    private List<SpriteRenderer> mSpriteRenderers = new List<SpriteRenderer>();
+
     void Awake()
     {
         IcedBlock.EventBreakIce += () =>
@@ -566,8 +568,9 @@ public class Product : MonoBehaviour
     }
     public void EnableMasking(int order)
     {
-        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
-        foreach (SpriteRenderer render in renders)
+        mSpriteRenderers.Clear();
+        GetComponentsInChildren<SpriteRenderer>(mSpriteRenderers);
+        foreach (SpriteRenderer render in mSpriteRenderers)
         {
             render.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
             render.sortingOrder = order;
@@ -575,8 +578,9 @@ public class Product : MonoBehaviour
     }
     public void DisableMasking()
     {
-        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
-        foreach (SpriteRenderer render in renders)
+        mSpriteRenderers.Clear();
+        GetComponentsInChildren<SpriteRenderer>(mSpriteRenderers);
+        foreach (SpriteRenderer render in mSpriteRenderers)
         {
             render.maskInteraction = SpriteMaskInteraction.None;
         }

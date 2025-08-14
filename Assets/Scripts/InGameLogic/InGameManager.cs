@@ -674,8 +674,9 @@ public class InGameManager : MonoBehaviour
             }
 
             // 드랍 프로세스 시작
-            Product[] droppingPros = DoDropProcess();
-            if(droppingPros.Length > 0)
+            List<Product> droppingPros = PopProductList();
+            DoDropProcess(droppingPros);
+            if (droppingPros.Count > 0)
             {
                 // 떨어지는 동안의 delay 후
                 AddWorker(3, 3, (tick) =>
@@ -686,8 +687,13 @@ public class InGameManager : MonoBehaviour
 
                     // 매치가능한 블럭들이 있으면 재매칭 수행
                     TryMatchAfterDrop(droppingPros);
+                    PushProductList(droppingPros);
                     return DelayedCallRet.Done;
                 });
+            }
+            else
+            {
+                PushProductList(droppingPros);
             }
 
             yield return new WaitForSeconds(0.1f);
@@ -697,9 +703,8 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = false;
     }
 
-    private Product[] DoDropProcess()
+    private void DoDropProcess(List<Product> rets)
     {
-        List<Product> pros = new List<Product>();
         foreach (VerticalFrames vf in mVerticalFrames)
         {
             if (vf.IsDroppable())
@@ -708,15 +713,17 @@ public class InGameManager : MonoBehaviour
                 CreateNewProducts(vf);
 
                 // 떨어지기 시작
-                Product[] droppingPros = vf.StartToDrop();
+                List<Product> droppingPros = PopProductList();
+                vf.StartToDrop(droppingPros);
 
-                if (droppingPros != null && droppingPros.Length > 0)
+                if (droppingPros != null && droppingPros.Count > 0)
                 {
-                    pros.AddRange(droppingPros);
+                    rets.AddRange(droppingPros);
+                }
+
+                PushProductList(droppingPros);
             }
         }
-        }
-        return pros.ToArray();
     }
     private Product[] CreateNewProducts(VerticalFrames vf)
     {
