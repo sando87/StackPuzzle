@@ -479,7 +479,7 @@ public class Product : MonoBehaviour
         if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
-        if(ParentFrame == null)
+        if (ParentFrame == null)
             return;
 
         if (products.Contains(this))
@@ -487,9 +487,12 @@ public class Product : MonoBehaviour
 
         products.Add(this);
 
-        Product[] around = GetAroundProducts(ParentFrame);
+        List<Product> around = InGameManager.InstCurrent.PopProductList();
+        GetAroundProducts(ParentFrame, around);
         foreach (Product pro in around)
             pro.SearchMatchedProducts(products, color);
+
+        InGameManager.InstCurrent.PushProductList(around);
     }
     public Product Left()
     {
@@ -539,17 +542,14 @@ public class Product : MonoBehaviour
 
         return pro;
     }
-    public Product[] GetAroundProducts(Frame frame)
+    public void GetAroundProducts(Frame frame, List<Product> rets)
     {
-        Frame[] frames = frame.GetAroundFrames();
-        List<Product> products = new List<Product>();
-        foreach(Frame iter in frames)
+        foreach(Frame iter in frame.AroundFrames)
         {
             Product child = iter.ChildProduct;
             if (child != null)
-                products.Add(child);
+                rets.Add(child);
         }
-        return products.ToArray();
     }
     public void ChangeProductImage(ProductSkill skill)
     {

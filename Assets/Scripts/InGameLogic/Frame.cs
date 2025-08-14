@@ -41,6 +41,8 @@ public class Frame : MonoBehaviour
     public Action<Frame> EventBreakCap;
     public Action<int> EventScoreText;
 
+    public List<Frame> AroundFrames { get; private set; } = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -137,15 +139,25 @@ public class Frame : MonoBehaviour
     {
         return GameManager.Frame(IndexX, GameManager.CountY - 1);
     }
-    public Frame[] GetAroundFrames()
+    public void InitAroundFrames()
     {
-        Frame frame = null;
-        List<Frame> frames = new List<Frame>();
-        frame = Left(); if (frame != null && !frame.Empty) frames.Add(frame);
-        frame = Right(); if (frame != null && !frame.Empty) frames.Add(frame);
-        frame = Up(); if (frame != null && !frame.Empty) frames.Add(frame);
-        frame = Down(); if (frame != null && !frame.Empty) frames.Add(frame);
-        return frames.ToArray();
+        AroundFrames = new List<Frame>();
+
+        Frame frame = Left();
+        if (frame != null && !frame.Empty)
+            AroundFrames.Add(frame);
+
+        frame = Right();
+        if (frame != null && !frame.Empty)
+            AroundFrames.Add(frame);
+
+        frame = Up();
+        if (frame != null && !frame.Empty)
+            AroundFrames.Add(frame);
+
+        frame = Down();
+        if (frame != null && !frame.Empty)
+            AroundFrames.Add(frame);
     }
     private void CreateBreakStoneEffect()
     {
