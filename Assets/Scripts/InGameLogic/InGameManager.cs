@@ -900,6 +900,7 @@ public class InGameManager : MonoBehaviour
         ProsForDestroy ret = mDestroyProsPool.Dequeue();
         ret.delayTick = delayTick;
         ret.pros = pros;
+        ret.totalCount = 0;
         return ret;
     }
     void PushDestroyPros(ProsForDestroy pros)
