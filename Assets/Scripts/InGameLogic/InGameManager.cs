@@ -337,6 +337,24 @@ public class InGameManager : MonoBehaviour
     }
     public void CleanUpGame()
     {
+        if (mStageInfo != null)
+        {
+            for (int y = 0; y < CountY; y++)
+            {
+                for (int x = 0; x < CountX; x++)
+                {
+                    if (mFrames[x, y].Empty)
+                        continue;
+
+                    Product pro = mFrames[x, y].ChildProduct;
+                    if (pro != null)
+                    {
+                        pro.ReturnToPool();
+                    }
+                }
+            }
+        }
+
         ResetGame();
         gameObject.SetActive(false);
         transform.parent.gameObject.SetActive(false);
