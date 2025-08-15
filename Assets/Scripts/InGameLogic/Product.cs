@@ -9,7 +9,7 @@ public class Product : MonoBehaviour
     public ProductColor Color;
     public Animation Animation;
     public SpriteRenderer Renderer;
-    public Sprite[] Images;
+    public Sprite[] ColorImages;
     public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
@@ -47,8 +47,41 @@ public class Product : MonoBehaviour
 
     private List<SpriteRenderer> mSpriteRenderers = new List<SpriteRenderer>();
 
+    public void ResetProductColor(ProductColor color, Transform parent = null)
+    {
+        if (parent != null)
+            transform.SetParent(parent);
+
+        IsMerging = false;
+        IsDestroying = false;
+        IsMoving = false;
+        IsDropping = false;
+        Color = color;
+        Renderer.sprite = ColorImages[ColorToIndex(color)];
+        Renderer.material.SetColor("_Color", new Color(0, 0, 0, 0));
+        transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        transform.localPosition = new Vector3(0, 0, -1);
+        Skill = ProductSkill.Nothing;
+        DropSpeed = 0;
+        Combo = 0;
+        mSkillCasted = false;
+        IcedBlock.SetDepth(0);
+        WaterDropParticle.SetActive(false);
+        gameObject.SetActive(true);
+    }
+    public int ColorToIndex(ProductColor color)
+    {
+        return (int)color - 1;
+    }
+    public void ReturnToPool()
+    {
+        gameObject.SetActive(false);
+        Detach(Manager.ProductsPoolParent);
+    }
+
     void Awake()
     {
+        Manager = InGameManager.InstCurrent;
         IcedBlock.EventBreakIce += () =>
         {
             EventUnWrapIce?.Invoke();
@@ -63,11 +96,12 @@ public class Product : MonoBehaviour
     }
     public Frame Detach(Transform toTransform)
     {
-        if (ParentFrame == null)
-            return null;
+        if (ParentFrame != null)
+        {
+            ParentFrame.ChildProduct = null;
+        }
 
         Frame frame = ParentFrame;
-        frame.ChildProduct = null;
         transform.SetParent(toTransform);
         ParentFrame = null;
         return frame;
@@ -181,9 +215,9 @@ public class Product : MonoBehaviour
             Frame parent = Detach(Manager.transform);
             if (Chain != null)
                 Chain.DestroyChain();
-            Manager.ProductIDs.Remove(InstanceID);
+
             StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
-                Destroy(gameObject);
+                ReturnToPool();
             }));
         }
     }
@@ -215,10 +249,10 @@ public class Product : MonoBehaviour
         StartCoroutine(AnimateFlash(1.3f));
         return true;
     }
-    public Frame DestroyImmediately(int combo)
+    public void DestroyImmediately(int combo)
     {
         if (ParentFrame == null)
-            return null;
+            return;
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
 
@@ -227,15 +261,15 @@ public class Product : MonoBehaviour
         Animation.Stop();
         transform.localPosition = new Vector3(0, 0, -1);
         transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        ParentFrame.CreateComboTextEffect(Combo, Color);
-        Frame parent = Detach(Manager.transform);
-        if (Chain != null)
-            Chain.DestroyChain();
-        WaterDropParticle.SetActive(true);
-        Manager.ProductIDs.Remove(InstanceID);
-        StartCoroutine(AnimateDestroy());
 
-        return parent;
+        ParentFrame.CreateComboTextEffect(Combo, Color);
+
+        WaterDropParticle.SetActive(true);
+        ParticleSystem ps = WaterDropParticle.GetComponent<ParticleSystem>();
+        var tsa = ps.textureSheetAnimation;
+        tsa.startFrame = ColorToIndex(Color);
+
+        ReturnToPool();
     }
     public void DetachFromField()
     {
@@ -424,21 +458,6 @@ public class Product : MonoBehaviour
         transform.position = dest;
         IsMoving = false;
         EventMoveEnd?.Invoke();
-    }
-    IEnumerator AnimateDestroy()
-    {
-        int idx = 0;
-        while(true)
-        {
-            int imgIndex = idx / 2;
-            if (imgIndex >= Images.Length)
-                break;
-
-            Renderer.sprite = Images[imgIndex];
-            idx++;
-            yield return null;
-        }
-        Destroy(gameObject);
     }
     IEnumerator AnimateFlash(float intensity)
     {

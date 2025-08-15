@@ -30,6 +30,7 @@ public class InGameManager : MonoBehaviour
     public Sprite[] PvpIceBlocks;
     public SpriteRenderer BackgroundSprite;
     public GameObject[] ProductPrefabs;
+    public Product ProductPrefab;
     public GameObject FramePrefab1;
     public GameObject FramePrefab2;
     public GameObject ObstaclePrefab;
@@ -44,6 +45,8 @@ public class InGameManager : MonoBehaviour
     public GameObject HammerHitPrefab;
     public SwipChain SwipChainPrefab;
     public KeepComboNum KeepComboPrefab;
+
+    public Transform ProductsPoolParent;
 
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
@@ -284,7 +287,10 @@ public class InGameManager : MonoBehaviour
                 if (mFrames[x, y].Empty)
                     continue;
 
-                Product pro = CreateNewProduct(mFrames[x, y]);
+                Product pro = AssignNewProduct(transform);
+                ProductColor color = (ProductColor)(RandomNextColor() + 1);
+                pro.AttachTo(mFrames[x, y]);
+                pro.ResetProductColor(color);
 
                 StageInfoCell cellInfo = GetCellInversed(x, y);
                 if (cellInfo.ProductType > 0)
@@ -309,6 +315,21 @@ public class InGameManager : MonoBehaviour
         }
 
         Network_StartGame(Serialize(initProducts.ToArray()));
+    }
+    Product AssignNewProduct(Transform parent)
+    {
+        if (ProductsPoolParent.childCount <= 0)
+        {
+            for (int i = 0; i < 10; ++i)
+            {
+                Product pro = Instantiate(ProductPrefab, ProductsPoolParent);
+                pro.gameObject.SetActive(false);
+            }
+        }
+
+        Product ret = ProductsPoolParent.GetChild(0).GetComponent<Product>();
+        ret.transform.SetParent(parent);
+        return ret;
     }
     private StageInfoCell GetCellInversed(int xIdx, int yIdx)
     {
@@ -3399,23 +3420,16 @@ public class InGameManager : MonoBehaviour
     private Product CreateNewProduct(Frame parent, ProductColor color = ProductColor.None, int instanceID = 0)
     {
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
-        GameObject obj = GameObject.Instantiate(ProductPrefabs[typeIdx], parent.transform, false);
-        Product product = obj.GetComponent<Product>();
-        product.Manager = this;
-        product.transform.localPosition = new Vector3(0, 0, -1);
+        Product product = AssignNewProduct(transform);
         product.AttachTo(parent);
-        product.InstanceID = instanceID == 0 ? product.GetInstanceID() : instanceID;
-        ProductIDs[product.InstanceID] = product;
+        product.ResetProductColor((ProductColor)(typeIdx + 1));
         return product;
     }
     private Product CreateNewProduct(ProductColor color = ProductColor.None, int instanceID = 0)
     {
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
-        GameObject obj = Instantiate(ProductPrefabs[typeIdx], transform);
-        Product product = obj.GetComponent<Product>();
-        product.Manager = this;
-        product.InstanceID = instanceID == 0 ? product.GetInstanceID() : instanceID;
-        ProductIDs[product.InstanceID] = product;
+        Product product = AssignNewProduct(transform);
+        product.ResetProductColor((ProductColor)(typeIdx + 1), transform);
         return product;
     }
 
