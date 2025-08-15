@@ -10,6 +10,7 @@ public class Product : MonoBehaviour
     public Animation Animation;
     public SpriteRenderer Renderer;
     public Sprite[] ColorImages;
+    public GameObject[] WaterDropPrefabs;
     public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
@@ -20,7 +21,6 @@ public class Product : MonoBehaviour
     public Sprite ImgCombo;
     public Sprite ImgClosed;
     public GameObject ComboNumPrefab;
-    public GameObject WaterDropParticle;
     public IceBlock IcedBlock;
 
     public Action EventUnWrapIce;
@@ -66,7 +66,6 @@ public class Product : MonoBehaviour
         Combo = 0;
         mSkillCasted = false;
         IcedBlock.SetDepth(0);
-        WaterDropParticle.SetActive(false);
         gameObject.SetActive(true);
     }
     public int ColorToIndex(ProductColor color)
@@ -264,10 +263,9 @@ public class Product : MonoBehaviour
 
         ParentFrame.CreateComboTextEffect(Combo, Color);
 
-        WaterDropParticle.SetActive(true);
-        ParticleSystem ps = WaterDropParticle.GetComponent<ParticleSystem>();
-        var tsa = ps.textureSheetAnimation;
-        tsa.startFrame = ColorToIndex(Color);
+        int index = ColorToIndex(Color);
+        GameObject vfx = ObjectPooling.Instance.Instantiate(WaterDropPrefabs[index], transform.position, Quaternion.identity);
+        vfx.ReturnAfter(2);
 
         ReturnToPool();
     }

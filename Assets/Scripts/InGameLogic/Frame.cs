@@ -254,7 +254,7 @@ public class Frame : MonoBehaviour
     {
         //Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -2.0f);
         Vector3 startPos = transform.position + new Vector3(0, 0, -2.0f);
-        GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, transform);
+        GameObject obj = ObjectPooling.Instance.Instantiate(ComboNumPrefab, startPos, Quaternion.identity);
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;
         numComp.NumberColor = textColor;
@@ -279,7 +279,7 @@ public class Frame : MonoBehaviour
             StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () =>
             {
                 EventScoreText?.Invoke(combo);
-                Destroy(obj);
+                obj.ReturnAfter();
             }));
         }
         else
@@ -289,7 +289,7 @@ public class Frame : MonoBehaviour
             .OnComplete(() =>
             {
                 EventScoreText?.Invoke(combo);
-                Destroy(numComp.gameObject);
+                obj.ReturnAfter();
             });
         }
 
