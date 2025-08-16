@@ -45,8 +45,6 @@ public class Product : MonoBehaviour
     public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
     public SwipChain Chain { get; set; } = null;
 
-    private List<SpriteRenderer> mSpriteRenderers = new List<SpriteRenderer>();
-
     public void ResetProductColor(ProductColor color, Transform parent = null)
     {
         if (parent != null)
@@ -496,7 +494,7 @@ public class Product : MonoBehaviour
         if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
-        if (ParentFrame == null)
+        if(ParentFrame == null)
             return;
 
         if (products.Contains(this))
@@ -504,12 +502,9 @@ public class Product : MonoBehaviour
 
         products.Add(this);
 
-        List<Product> around = InGameManager.InstCurrent.PopProductList();
-        GetAroundProducts(ParentFrame, around);
+        Product[] around = GetAroundProducts(ParentFrame);
         foreach (Product pro in around)
             pro.SearchMatchedProducts(products, color);
-
-        InGameManager.InstCurrent.PushProductList(around);
     }
     public Product Left()
     {
@@ -559,14 +554,17 @@ public class Product : MonoBehaviour
 
         return pro;
     }
-    public void GetAroundProducts(Frame frame, List<Product> rets)
+    public Product[] GetAroundProducts(Frame frame)
     {
-        foreach(Frame iter in frame.AroundFrames)
+        Frame[] frames = frame.GetAroundFrames();
+        List<Product> products = new List<Product>();
+        foreach(Frame iter in frames)
         {
             Product child = iter.ChildProduct;
             if (child != null)
-                rets.Add(child);
+                products.Add(child);
         }
+        return products.ToArray();
     }
     public void ChangeProductImage(ProductSkill skill)
     {
@@ -585,9 +583,8 @@ public class Product : MonoBehaviour
     }
     public void EnableMasking(int order)
     {
-        mSpriteRenderers.Clear();
-        GetComponentsInChildren<SpriteRenderer>(mSpriteRenderers);
-        foreach (SpriteRenderer render in mSpriteRenderers)
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer render in renders)
         {
             render.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
             render.sortingOrder = order;
@@ -595,9 +592,8 @@ public class Product : MonoBehaviour
     }
     public void DisableMasking()
     {
-        mSpriteRenderers.Clear();
-        GetComponentsInChildren<SpriteRenderer>(mSpriteRenderers);
-        foreach (SpriteRenderer render in mSpriteRenderers)
+        SpriteRenderer[] renders = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer render in renders)
         {
             render.maskInteraction = SpriteMaskInteraction.None;
         }

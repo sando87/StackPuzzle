@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using System.Linq;
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
@@ -71,7 +70,7 @@ public class InGameManager : MonoBehaviour
     private bool mIsFlushing = false;
     private bool mPrevIdleState = false;
     private int mDropLockCount = 0;
-    public bool IsDroppable { get { return mDropLockCount == 0; } }
+    public bool IsDroppable {get { return mDropLockCount == 0; } }
     private bool mUseCombo = false;
     private int mDropCounter = 0;
     private float mSFXVolume = 1;
@@ -108,13 +107,13 @@ public class InGameManager : MonoBehaviour
     public float ColorCount { get { return mStageInfo.ColorCount; } }
     public int UserPk { get { return mUserInfo.userPk; } }
     public int UserScore { get { return mUserInfo.score; } }
-    public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? Billboard.PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit; } }
+    public float LimitRate { get { return mStageInfo.TimeLimit > 0 ? Billboard.PlayTime / mStageInfo.TimeLimit : Billboard.MoveCount / (float)mStageInfo.MoveLimit ; } }
     public UserInfo UserInfo { get { return mUserInfo; } }
     public InGameManager Opponent { get { return FieldType == GameFieldType.pvpPlayer ? InstPVP_Opponent : InstPVP_Player; } }
     public InGameBillboard GetBillboard() { return Billboard; }
     public float GridSize { get { return UserSetting.GridSize * transform.localScale.x; } }
     public MatchingLevel Difficulty { get { return mStageInfo.Difficulty; } }
-    public Rect FieldWorldRect {
+    public Rect FieldWorldRect    {
         get {
             Rect rect = new Rect(Vector2.zero, new Vector2(GridSize * CountX, GridSize * CountY));
             rect.center = transform.position;
@@ -244,21 +243,21 @@ public class InGameManager : MonoBehaviour
                 StageInfoCell cellInfo = GetCellInversed(x, y);
                 frame.Initialize(this, x, y, cellInfo.IsDisabled, cellInfo.RopeCount, cellInfo.BushCount, cellInfo.CapCount);
                 frame.EventBreakRope = (frame) => {
-                    if (!frame.IsRope)
+                    if(!frame.IsRope)
                     {
                         Billboard.RopeCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Rope);
                     }
                 };
                 frame.EventBreakBush = (frame) => {
-                    if (!frame.IsBushed)
+                    if(!frame.IsBushed)
                     {
                         Billboard.BushCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Bush);
                     }
                 };
                 frame.EventBreakCap = (frame) => {
-                    if (!frame.IsCapped)
+                    if(!frame.IsCapped)
                     {
                         Billboard.CapCount++;
                         EventBreakTarget?.Invoke(frame.transform.position, StageGoalType.Cap);
@@ -270,7 +269,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        InitFrameSecondary();
+        InitFrameBorders();
         InitDropGroupFrames();
 
         // AttackPointFrame.ResetPoints();
@@ -293,18 +292,18 @@ public class InGameManager : MonoBehaviour
                 pro.ResetProductColor(color);
 
                 StageInfoCell cellInfo = GetCellInversed(x, y);
-                if (cellInfo.ProductType > 0)
+                if(cellInfo.ProductType > 0)
                 {
                     pro.ChangeProductImage((ProductSkill)cellInfo.ProductType);
                 }
 
                 int iceCount = cellInfo.IceCount;
-                if (iceCount > 0)
+                if(iceCount > 0)
                     pro.IcedBlock.SetDepth(iceCount);
 
                 // pro.InitCap(cellInfo.CapCount);
                 pro.EventUnWrapIce = () => {
-                    if (!pro.IsIceBlock)
+                    if(!pro.IsIceBlock)
                     {
                         Billboard.IceCount++;
                         EventBreakTarget?.Invoke(pro.transform.position, StageGoalType.Ice);
@@ -378,15 +377,15 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            int matchedCount = FindMatchedProducts(new List<Product> { pro });
-            if (matchedCount <= 0)
+            List<Product[]> matches = FindMatchedProducts(new Product[1] { pro });
+            if (matches.Count <= 0)
             {
                 pro.Animation.Play("swap");
             }
             else
             {
                 Network_Click(pro);
-                StartCoroutine(DoMatchingCycle(list[0]));
+                StartCoroutine(DoMatchingCycle(matches[0]));
                 RemoveLimit();
             }
         }
@@ -483,7 +482,7 @@ public class InGameManager : MonoBehaviour
     void ToggleSwipChain(Product product, Product targetProduct)
     {
         return;
-
+        
         if (product.Chain != null && product.Chain == targetProduct.Chain)
         {
             product.Chain.DestroyChain();
@@ -498,17 +497,17 @@ public class InGameManager : MonoBehaviour
     }
 
     #region MatchingLogic
-    IEnumerator DoMatchingCycle(List<Product> firstMatches, int startCombo = 1)
+    IEnumerator DoMatchingCycle(Product[] firstMatches, int startCombo = 1)
     {
         mDropLockCount++;
         ComboReset(startCombo);
 
-        List<List<Product>> matchableGroups = new List<List<Product>>();
+        List<Product[]> matchableGroups = new List<Product[]>();
         matchableGroups.Add(firstMatches);
 
-        while (true)
+        while(true)
         {
-            foreach (List<Product> pros in matchableGroups)
+            foreach(Product[] pros in matchableGroups)
             {
                 LockToMatch(pros);
             }
@@ -516,24 +515,23 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.3f);
 
             // 주변 블럭 리스트 얻어옴
-            List<Product> aroundPros = PopProductList();
-            foreach (List<Product> pros in matchableGroups)
+            List<Product> aroundPros = new List<Product>();
+            foreach (Product[] pros in matchableGroups)
             {
                 FindAroundProducts(pros, aroundPros);
             }
+            Product[] aroundProducts = aroundPros.ToArray();
 
             //주변 블럭 정보 가져왔으면 실제로 터트리는 기능 수행
-            foreach (List<Product> pros in matchableGroups)
+            foreach (Product[] pros in matchableGroups)
             {
                 DoMatchProducts(pros);
-                PushProductList(pros);
             }
             matchableGroups.Clear();
 
             //터질때 주변에 매칭가능하면 연쇄하여 파괴하며 콤보 올라감
-            int matchedCount = FindMatchedProducts(aroundPros);
-            PushProductList(aroundPros);
-            if (matchedCount > 0)
+            matchableGroups = FindMatchedProducts(aroundProducts);
+            if (matchableGroups.Count > 0)
             {
                 // 콤보 올리고 기타 정보도 수정
                 ComboUp();
@@ -541,11 +539,6 @@ public class InGameManager : MonoBehaviour
                 Billboard.ComboCounter[Billboard.CurrentCombo]++;
 
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectMatched, mSFXVolume);
-
-                for (int i = 0; i < matchedCount; ++i)
-                {
-                    matchableGroups.Add(list[i]);
-                }
             }
             else
             {
@@ -558,7 +551,7 @@ public class InGameManager : MonoBehaviour
         mDropLockCount--;
     }
 
-    private void DoMatchProducts(List<Product> pros)
+    private void DoMatchProducts(Product[] pros)
     {
         ProductSkill nextSkill = CheckSkillable(pros);
         if (nextSkill == ProductSkill.Nothing)
@@ -578,7 +571,7 @@ public class InGameManager : MonoBehaviour
             }
         }
     }
-    private void LockToMatch(List<Product> pros)
+    private void LockToMatch(Product[] pros)
     {
         ProductSkill nextSkill = CheckSkillable(pros);
         if (nextSkill == ProductSkill.Nothing)
@@ -598,7 +591,7 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        AcquireScore(Billboard.CurrentCombo * pros.Count, pros[0].transform.position);
+        AcquireScore(Billboard.CurrentCombo * pros.Length, pros[0].transform.position);
     }
     private void BreakObstacles(Product[] pros)
     {
@@ -650,7 +643,7 @@ public class InGameManager : MonoBehaviour
     private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
         mWorkerList.Add(new DelayedCall(delayTick, stepTick, callback));
-        if (!mIsWorkingCycle)
+        if(!mIsWorkingCycle)
         {
             StartCoroutine(DoWorkerCycle());
         }
@@ -660,18 +653,18 @@ public class InGameManager : MonoBehaviour
     {
         AddWorker(0, 1, (tick) => { return DelayedCallRet.Done; });
     }
-
+    
 
     IEnumerator DoWorkerCycle()
     {
         mIsUserEventLock = true;
         mIsWorkingCycle = true;
-
+        
         yield return new WaitForSeconds(0.1f);
 
         mDropCounter = 0;
 
-        while (mWorkerList.Count > 0 || mDestroyPros.Count > 0)
+        while (mWorkerList.Count > 0)
         {
             DelayedCall[] workers = mWorkerList.ToArray();
             foreach (DelayedCall worker in workers)
@@ -679,10 +672,10 @@ public class InGameManager : MonoBehaviour
                 worker.tickTotalCount++;
 
                 // 초기 딜레이 시간보다 클때까지 기다림
-                if (worker.tickTotalCount >= worker.tickDelayRef)
+                if(worker.tickTotalCount >= worker.tickDelayRef)
                 {
                     // 함수 호출 간격마다 callback 호출
-                    if (worker.tickCurrentCount == 0)
+                    if(worker.tickCurrentCount == 0)
                     {
                         DelayedCallRet ret = worker.callback(worker.callCount);
                         worker.callCount++;
@@ -693,31 +686,12 @@ public class InGameManager : MonoBehaviour
                     }
                     worker.tickCurrentCount = (worker.tickCurrentCount + 1) % worker.tickStepRef;
                 }
-            }
-
-            var node = mDestroyPros.First;
-            while (node != null)
-            {
-                var nextNode = node.Next;
-
-                ProsForDestroy desPros = node.Value;
-                desPros.totalCount++;
-                if (desPros.totalCount >= desPros.delayTick)
-                {
-                    DoMatchProducts(desPros.pros);
-                    PushProductList(desPros.pros);
-
-                    PushDestroyPros(desPros);
-                    mDestroyPros.Remove(node);
-                }
-
-                node = nextNode;
+                
             }
 
             // 드랍 프로세스 시작
-            List<Product> droppingPros = PopProductList();
-            DoDropProcess(droppingPros);
-            if (droppingPros.Count > 0)
+            Product[] droppingPros = DoDropProcess();
+            if(droppingPros.Length > 0)
             {
                 // 떨어지는 동안의 delay 후
                 AddWorker(3, 3, (tick) =>
@@ -728,13 +702,8 @@ public class InGameManager : MonoBehaviour
 
                     // 매치가능한 블럭들이 있으면 재매칭 수행
                     TryMatchAfterDrop(droppingPros);
-                    PushProductList(droppingPros);
                     return DelayedCallRet.Done;
                 });
-            }
-            else
-            {
-                PushProductList(droppingPros);
             }
 
             yield return new WaitForSeconds(0.1f);
@@ -744,8 +713,9 @@ public class InGameManager : MonoBehaviour
         mIsUserEventLock = false;
     }
 
-    private void DoDropProcess(List<Product> rets)
+    private Product[] DoDropProcess()
     {
+        List<Product> pros = new List<Product>();
         foreach (VerticalFrames vf in mVerticalFrames)
         {
             if (vf.IsDroppable())
@@ -754,17 +724,15 @@ public class InGameManager : MonoBehaviour
                 CreateNewProducts(vf);
 
                 // 떨어지기 시작
-                List<Product> droppingPros = PopProductList();
-                vf.StartToDrop(droppingPros);
+                Product[] droppingPros = vf.StartToDrop();
 
-                if (droppingPros != null && droppingPros.Count > 0)
+                if (droppingPros != null && droppingPros.Length > 0)
                 {
-                    rets.AddRange(droppingPros);
+                    pros.AddRange(droppingPros);
                 }
-
-                PushProductList(droppingPros);
             }
         }
+        return pros.ToArray();
     }
     private Product[] CreateNewProducts(VerticalFrames vf)
     {
@@ -782,14 +750,14 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                if (curTopProduct == null || curTopProduct.transform.position.y < frame.ChildProduct.transform.position.y)
+                if(curTopProduct == null || curTopProduct.transform.position.y < frame.ChildProduct.transform.position.y)
                 {
                     curTopProduct = frame.ChildProduct;
                 }
             }
         }
 
-        if (count > 0)
+        if(count > 0)
         {
             Frame curDropFrame = vf.Frames[vf.FrameCount - count]; // 새로 생성될 Product가 떨어질 첫번째 프레임
             for (int i = 0; i < count; i++)
@@ -799,7 +767,7 @@ public class InGameManager : MonoBehaviour
                 Product newPro = null;
                 if (matchChance < 0)
                 {
-                    if (mRandomSeed.Next(1000) % 100 < Mathf.Abs(matchChance))
+                    if(mRandomSeed.Next(1000) % 100 < Mathf.Abs(matchChance))
                     {
                         ProductColor color = ProductColorForUnMatching(curDropFrame, curTopProduct);
                         newPro = CreateNewProduct(color);
@@ -809,9 +777,9 @@ public class InGameManager : MonoBehaviour
                         newPro = CreateNewProduct();
                     }
                 }
-                else if (matchChance > 0)
+                else if(matchChance > 0)
                 {
-                    if (mRandomSeed.Next(1000) % 100 < Mathf.Abs(matchChance))
+                    if(mRandomSeed.Next(1000) % 100 < Mathf.Abs(matchChance))
                     {
                         ProductColor color = ProductColorForMoreMatching(curDropFrame, curTopProduct);
                         newPro = CreateNewProduct(color);
@@ -851,7 +819,7 @@ public class InGameManager : MonoBehaviour
         {
             int idx = (startRandomIdx + i) % colorCount;
             ProductColor color = (ProductColor)(idx + 1);
-            if (color == leftColor || color == rightColor || color == downColor)
+            if(color == leftColor || color == rightColor || color == downColor)
                 continue;
 
             retColor = color;
@@ -881,78 +849,30 @@ public class InGameManager : MonoBehaviour
 
         return ProductColor.None;
     }
-
-    Queue<List<Product>> mPoolProductList = new Queue<List<Product>>();
-    public List<Product> PopProductList()
-    {
-        if (mPoolProductList.Count == 0)
-        {
-            for (int i = 0; i < 10; i++)
-                mPoolProductList.Enqueue(new List<Product>());
-        }
-
-        return mPoolProductList.Dequeue();
-    }
-    public void PushProductList(List<Product> list)
-    {
-        list.Clear();
-        mPoolProductList.Enqueue(list);
-    }
-
-    public class ProsForDestroy
-    {
-        public int delayTick = 0;
-        public int totalCount = 0;
-        public List<Product> pros = null;
-    }
-    
-    Queue<ProsForDestroy> mDestroyProsPool = new Queue<ProsForDestroy>();
-    ProsForDestroy PopDestroyPros(int delayTick, List<Product> pros)
-    {
-        if (mDestroyProsPool.Count == 0)
-        {
-            for (int i = 0; i < 10; ++i)
-                mDestroyProsPool.Enqueue(new ProsForDestroy());
-        }
-
-        ProsForDestroy ret = mDestroyProsPool.Dequeue();
-        ret.delayTick = delayTick;
-        ret.pros = pros;
-        ret.totalCount = 0;
-        return ret;
-    }
-    void PushDestroyPros(ProsForDestroy pros)
-    {
-        mDestroyProsPool.Enqueue(pros);
-    }
-
-    LinkedList<ProsForDestroy> mDestroyPros = new LinkedList<ProsForDestroy>();
-
-    private bool TryMatchAfterDrop(List<Product> droppingPros)
+    private bool TryMatchAfterDrop(Product[] droppingPros)
     {
         //매칭 가능한 블록들이 있는지 찾는 기능 수행
-        int matchCount = FindMatchedProducts(droppingPros, UserSetting.MatchCount);
-        if (matchCount > 0)
+        List<Product[]> matches = FindMatchedProducts(droppingPros, UserSetting.MatchCount);
+        if (matches.Count > 0)
         {
             // 매치가능한 블럭들이 있다면 매치 수행
 
             // 깜빡이는 연출 효과
-            for (int i = 0; i < matchCount; ++i)
+            foreach (Product[] pros in matches)
             {
-                LockToMatch(list[i]);
-                mDestroyPros.AddLast(PopDestroyPros(3, list[i]));
+                LockToMatch(pros);
             }
 
             //0.3초뒤에 재매칭
-            // AddWorker(3, 3, (int cnt) =>
-            // {
-            //     // 실제 블럭이 파괴되는 로직 수행
-            //     foreach (Product[] pros in matches)
-            //     {
-            //         DoMatchProducts(pros);
-            //     }
-            //     return DelayedCallRet.Done;
-            // });
+            AddWorker(3, 3, (int cnt) =>
+            {
+                // 실제 블럭이 파괴되는 로직 수행
+                foreach (Product[] pros in matches)
+                {
+                    DoMatchProducts(pros);
+                }
+                return DelayedCallRet.Done;
+            });
             return true;
         }
         return false;
@@ -1274,9 +1194,7 @@ public class InGameManager : MonoBehaviour
         pro.Animation.Play("destroy");
 
         Network_Click(pro);
-        List<Product> pros = PopProductList();
-        pros.Add(pro);
-        StartCoroutine(DoMatchingCycle(pros, Billboard.CurrentCombo));
+        StartCoroutine(DoMatchingCycle(new Product[] { pro }, Billboard.CurrentCombo));
         RemoveLimit();
     }
 
@@ -1776,6 +1694,154 @@ public class InGameManager : MonoBehaviour
 
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
         return validProducts;
+    }
+
+
+    IEnumerator DetachProduct(Product product)
+    {
+
+        //SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
+        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit, mSFXVolume);
+        Frame parentFrame = product.ParentFrame;
+        product.DetachFromField();
+        Product newPro = CreateNewProduct();
+        parentFrame.VertFrames.AddNewProduct(newPro);
+        newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
+
+        yield return new WaitForSeconds(0);
+    }
+
+    private void DropNextProducts()
+    {
+        if(IsDroppable)
+        {
+            StartToDropProducts();
+        }
+
+        mIsDropping = CountDroppingProducts() > 0;
+    }
+    // IEnumerator DestroyProductsDropping()
+    // {
+    //     int continuousMatchedCount = 0;
+    //     mIsAutoMatching = true;
+    //     while (true)
+    //     {
+    //         bool isAllIdle = true;
+    //         Product[] matchableProducts = null;
+    //         foreach (Frame frame in mFrames)
+    //         {
+    //             if (frame.Empty)
+    //                 continue;
+
+    //             if (frame.ChildProduct == null || frame.ChildProduct.IsLocked)
+    //             {
+    //                 isAllIdle = false;
+    //                 continue;
+    //             }
+
+    //             List<Product[]> matches = FindMatchedProducts(new Product[1] { frame.ChildProduct }, UserSetting.MatchCount + 1);
+    //             if (matches.Count <= 0)
+    //                 continue;
+
+    //             isAllIdle = false;
+    //             matchableProducts = matches[0];
+    //             break;
+    //         }
+
+
+    //         if (isAllIdle)
+    //         {
+    //             break;
+    //         }
+    //         else if (matchableProducts != null)
+    //         {
+    //             continuousMatchedCount++;
+    //             ProductSkill nextSkill = CheckSkillable(matchableProducts);
+    //             if (nextSkill == ProductSkill.Nothing)
+    //                 DestroyProducts(matchableProducts);
+    //             else
+    //             {
+    //                 //밸런스 조정을 위한 장치
+    //                 if(continuousMatchedCount > 40)
+    //                     DestroyProducts(matchableProducts);
+    //                 else if (continuousMatchedCount > 25 && nextSkill == ProductSkill.SameColor)
+    //                     DestroyProducts(matchableProducts);
+    //                 else
+    //                     MergeProducts(matchableProducts, nextSkill);
+    //             }
+                    
+    //         }
+
+    //         yield return new WaitForSeconds(UserSetting.AutoMatchInterval);
+    //     }
+    //     mIsAutoMatching = false;
+    // }
+    private int StartToDropProducts()
+    {
+        foreach(VerticalFrames group in mVerticalFrames)
+        {
+            Product[] droppingPros = group.StartToDrop();
+            if(droppingPros != null && droppingPros.Length > 0)
+            {
+                StartCoroutine(MatchProductsAfterDrop(droppingPros));
+            }
+        }
+
+        return 0;
+    }
+    private IEnumerator MatchProductsAfterDrop(Product[] droppingProducts)
+    {
+        //모든 Product가 다 떨어질때까지 기다림..
+        while (true)
+        {
+            int droppedProCount = 0;
+            foreach (Product pro in droppingProducts)
+            {
+                if (pro.IsDropping)
+                    break;
+                else
+                    droppedProCount++;
+            }
+
+            if (droppingProducts.Length == droppedProCount)
+                break;
+            else
+                yield return null;
+        }
+
+        //다 떨어지고 나면 떨어진 Products들로 다시 Matching 시도
+        List<Product[]> matches = FindMatchedProducts(droppingProducts, UserSetting.MatchCount);
+        if (matches.Count > 0)
+        {
+            foreach(Product[] group in matches)
+            {
+                ProductSkill nextSkill = CheckSkillable(group);
+                if (nextSkill == ProductSkill.Nothing)
+                    DestroyProducts(group);
+                else
+                {
+                    MergeProducts(group, nextSkill);
+                }
+
+                List<Product> aroundProducts = new List<Product>();
+                FindAroundProducts(group, aroundProducts);
+                foreach (Product aroundPro in aroundProducts)
+                {
+                    if (IsObstacled(aroundPro.ParentFrame))
+                    {
+                        BreakObstacle(aroundPro.ParentFrame);
+                    }
+                }
+            }
+        }
+    }
+    private int CountDroppingProducts()
+    {
+        int count = 0;
+        foreach (VerticalFrames group in mVerticalFrames)
+            count += group.Droppingcount;
+
+        return count;
     }
 
     private IEnumerator BreakHorizontalProduct(Frame frame, float delay = UserSetting.MatchReadyInterval)
@@ -3364,7 +3430,7 @@ public class InGameManager : MonoBehaviour
 
 
     #region Utility
-    private void InitFrameSecondary()
+    private void InitFrameBorders()
     {
         for (int x = 0; x < CountX; ++x)
         {
@@ -3378,8 +3444,6 @@ public class InGameManager : MonoBehaviour
                 if (curFrame.Right() == null || curFrame.Right().Empty) curFrame.ShowBorder(1);
                 if (curFrame.Up() == null || curFrame.Up().Empty) curFrame.ShowBorder(2);
                 if (curFrame.Down() == null || curFrame.Down().Empty) curFrame.ShowBorder(3);
-
-                curFrame.InitAroundFrames();
             }
         }
     }
@@ -3688,9 +3752,8 @@ public class InGameManager : MonoBehaviour
         if (subPro == null || subPro.Color == mainPro.Color || subPro.IsIceBlock || subPro.Skill != ProductSkill.Nothing)
             return 0;
 
-        List<Product> matchesMain = PopProductList();
-        List<Product> pros = PopProductList();
-        subPro.GetAroundProducts(subPro.ParentFrame, pros);
+        List<Product> matchesMain = new List<Product>();
+        Product[] pros = subPro.GetAroundProducts(subPro.ParentFrame);
         foreach (Product each in pros)
         {
             if (each == mainPro)
@@ -3699,9 +3762,8 @@ public class InGameManager : MonoBehaviour
             each.SearchMatchedProducts(matchesMain, mainPro.Color);
         }
 
-        List<Product> matchesSub = PopProductList();
-        List<Product> subs = PopProductList();
-        mainPro.GetAroundProducts(mainPro.ParentFrame, subs);
+        List<Product> matchesSub = new List<Product>();
+        Product[] subs = mainPro.GetAroundProducts(mainPro.ParentFrame);
         foreach (Product each in subs)
         {
             if (each == subPro)
@@ -3709,21 +3771,15 @@ public class InGameManager : MonoBehaviour
 
             each.SearchMatchedProducts(matchesSub, subPro.Color);
         }
-
-        int ret = Mathf.Max(matchesMain.Count + 1, matchesSub.Count + 1);
-        PushProductList(matchesMain);
-        PushProductList(pros);
-        PushProductList(matchesSub);
-        PushProductList(subs);
-        return ret;
+        return Mathf.Max(matchesMain.Count + 1, matchesSub.Count + 1);
     }
-    private ProductSkill CheckSkillable(List<Product> matches)
+    private ProductSkill CheckSkillable(Product[] matches)
     {
-        if (matches.Count <= UserSetting.MatchCount + 1)
+        if (matches.Length <= UserSetting.MatchCount + 1)
         {
             return ProductSkill.Nothing;
         }
-        else if (matches.Count <= UserSetting.MatchCount + 3)
+        else if (matches.Length <= UserSetting.MatchCount + 3)
         {
             ProductSkill skill = ProductSkill.Nothing;
             int ran = mRandomSeed.Next(4);
@@ -3898,60 +3954,54 @@ public class InGameManager : MonoBehaviour
 
         return pros.ToArray();
     }
-
-    Dictionary<Product, int> matchedPro = new Dictionary<Product, int>();
-    List<List<Product>> list = new List<List<Product>>();
-    private int FindMatchedProducts(List<Product> targetProducts, int matchCount = UserSetting.MatchCount)
+    private List<Product[]> FindMatchedProducts(Product[] targetProducts, int matchCount = UserSetting.MatchCount)
     {
-        list.Clear();
-        matchedPro.Clear();
+        Dictionary<Product, int> matchedPro = new Dictionary<Product, int>();
+        List<Product[]> list = new List<Product[]>();
         foreach (Product pro in targetProducts)
         {
             if (matchedPro.ContainsKey(pro))
                 continue;
 
-            List<Product> matches = PopProductList();
+            List<Product> matches = new List<Product>();
             pro.SearchMatchedProducts(matches, pro.Color);
             if (matches.Count >= matchCount)
             {
-                list.Add(matches);
+                list.Add(matches.ToArray());
                 foreach (Product sub in matches)
                     matchedPro[sub] = 1;
             }
-            else
-            {
-                PushProductList(matches);
-            }
         }
-        return list.Count;
+        return list;
     }
     public List<Product[]> FindAllLinkedProductGroups(List<Product> firstMatches, Dictionary<Product, int> donePros)
     {
         List<Product[]> rets = new List<Product[]>();
 
-        List<List<Product>> matchableGroups = new List<List<Product>>();
+        List<Product[]> matchableGroups = new List<Product[]>();
         rets.Add(firstMatches.ToArray());
         foreach(Product pro in firstMatches)
             donePros[pro] = 1;
 
-        matchableGroups.Add(firstMatches);
+        matchableGroups.Add(firstMatches.ToArray());
         while (true)
         {
             // 주변 블럭 리스트 얻어옴
             List<Product> aroundPros = new List<Product>();
-            foreach (List<Product> pros in matchableGroups)
+            foreach (Product[] pros in matchableGroups)
             {
                 FindAroundProducts(pros, aroundPros, donePros);
             }
 
+            Product[] aroundProducts = aroundPros.ToArray();
             //터질때 주변에 매칭가능하면 연쇄하여 파괴하며 콤보 올라감
             matchableGroups.Clear();
-            int matchedCount = FindMatchedProducts(aroundPros);
-            if (matchedCount > 0)
+            matchableGroups = FindMatchedProducts(aroundProducts);
+            if (matchableGroups.Count > 0)
             {
-                foreach (List<Product> pros in list)
+                rets.AddRange(matchableGroups);
+                foreach (Product[] pros in matchableGroups)
                 {
-                    rets.Add(pros.ToArray());
                     foreach (Product pro in pros)
                         donePros[pro] = 1;
                 }
@@ -3988,11 +4038,12 @@ public class InGameManager : MonoBehaviour
         }
         return list;
     }
-    private void FindAroundProducts(List<Product> targets, List<Product> rets, Dictionary<Product, int> donePros = null)
+    private void FindAroundProducts(Product[] targets, List<Product> rets, Dictionary<Product, int> donePros = null)
     {
         foreach (Product target in targets)
         {
-            foreach (Frame sub in target.ParentFrame.AroundFrames)
+            Frame[] aroundFrames = target.ParentFrame.GetAroundFrames();
+            foreach (Frame sub in aroundFrames)
             {
                 Product arPro = sub.ChildProduct;
                 if (arPro != null && !arPro.IsLocked)
@@ -4011,10 +4062,11 @@ public class InGameManager : MonoBehaviour
     public bool IsPossibleKeepCombo(Product keepCombo)
     {
         List<Product> aroundPros = new List<Product>();
-        FindAroundProducts(new List<Product> { keepCombo }, aroundPros);
+        FindAroundProducts(new Product[1] { keepCombo }, aroundPros);
 
-        int matchedCount = FindMatchedProducts(aroundPros);
-        if (matchedCount > 0)
+        Product[] aroundProducts = aroundPros.ToArray();
+        List<Product[]> matchableGroups = FindMatchedProducts(aroundProducts);
+        if (matchableGroups.Count > 0)
         {
             return true;
         }
