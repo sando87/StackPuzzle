@@ -3918,6 +3918,10 @@ public class InGameManager : MonoBehaviour
                 foreach (Product sub in matches)
                     matchedPro[sub] = 1;
             }
+            else
+            {
+                PushProductList(matches);
+            }
         }
         return list.Count;
     }
