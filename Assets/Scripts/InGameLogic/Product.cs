@@ -11,16 +11,12 @@ public class Product : MonoBehaviour
     public SpriteRenderer Renderer;
     public Sprite[] ColorImages;
     public GameObject[] WaterDropPrefabs;
-    public Sprite[] IceBreakSprites;
     public Sprite ImgHorizontal;
     public Sprite ImgVertical;
     public Sprite ImgBomb;
     public Sprite ImgSameColor;
     public Sprite ImgHammer;
     public Sprite ImgKeepCombo;
-    public Sprite ImgCombo;
-    public Sprite ImgClosed;
-    public GameObject ComboNumPrefab;
     public IceBlock IcedBlock;
 
     public Action EventUnWrapIce;
@@ -30,7 +26,6 @@ public class Product : MonoBehaviour
     public Frame ParentFrame { get; private set; }
     public ProductSkill Skill { get; private set; }
     public float DropSpeed { get; set; } = 0;
-    public float Weight { get; set; }
     public int Combo { get; set; }
     public int InstanceID { get; set; }
     public bool IsMerging { get; private set; }
@@ -42,8 +37,9 @@ public class Product : MonoBehaviour
     public bool IsLocked { get { return IsDestroying || IsMerging || IsMoving || IsDropping || SkillCasted; } }
     public bool IsIceBlock { get { return IcedBlock.IsIced; } }
     public bool IsClosed { get { return false; } }
-    public VerticalFrames VertFrames { get { return ParentFrame != null ? ParentFrame.VertFrames : transform.parent.GetComponent<VerticalFrames>(); } }
     public SwipChain Chain { get; set; } = null;
+
+    private BoxCollider2D mCollider = null;
 
     public void ResetProductColor(ProductColor color, Transform parent = null)
     {
@@ -65,6 +61,9 @@ public class Product : MonoBehaviour
         mSkillCasted = false;
         IcedBlock.SetDepth(0);
         gameObject.SetActive(true);
+        if (mCollider == null)
+            mCollider = GetComponent<BoxCollider2D>();
+        mCollider.enabled = true;
     }
     public int ColorToIndex(ProductColor color)
     {
@@ -78,6 +77,7 @@ public class Product : MonoBehaviour
 
     void Awake()
     {
+        mCollider = GetComponent<BoxCollider2D>();
         Manager = InGameManager.InstCurrent;
         IcedBlock.EventBreakIce += () =>
         {
@@ -103,67 +103,6 @@ public class Product : MonoBehaviour
         ParentFrame = null;
         return frame;
     }
-    public void SkillMerge(Product targetProduct, Action EventMergeEnd)
-    {
-        StartCoroutine(SkillMergeEffect(targetProduct, EventMergeEnd));
-    }
-    private IEnumerator SkillMergeEffect(Product target, Action EventEnd)
-    {
-        IsMoving = true;
-        target.IsMoving = true;
-        float duration = 0.2f;
-        Vector3 start = transform.position;
-        Vector3 dest = new Vector3(target.transform.position.x, target.transform.position.y, start.z);
-        Vector3 vel = (dest - start) / duration;
-        Vector3 offset = Vector3.zero;
-        float time = 0;
-        while (time < duration)
-        {
-            transform.position = start + (vel * time);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        transform.position = dest;
-
-        Product sizingProduct = PickMainProduct(this, target);
-        if(sizingProduct != null)
-        {
-            Vector3 refPos = sizingProduct.transform.position;
-            refPos.z -= 0.1f;
-            Vector3 randomOff = Vector3.zero;
-            Vector3 sizeStep = new Vector3(0.1f, 0.1f, 0);
-            time = 0;
-            while (time < 0.4f)
-            {
-                randomOff.x = UnityEngine.Random.Range(-0.05f, 0.05f);
-                randomOff.y = UnityEngine.Random.Range(-0.05f, 0.05f);
-                sizingProduct.transform.localScale += sizeStep;
-                sizingProduct.transform.position = refPos + randomOff;
-                time += Time.deltaTime;
-                yield return null;
-            }
-            yield return new WaitForSeconds(0.2f);
-        }
-
-        IsMoving = false;
-        target.IsMoving = false;
-        EventEnd?.Invoke();
-    }
-    Product PickMainProduct(Product main, Product sub)
-    {
-        if (main.Skill == ProductSkill.SameColor)
-            return main;
-        else if (sub.Skill == ProductSkill.SameColor)
-            return sub;
-        else
-        {
-            if (main.Skill == ProductSkill.Bomb)
-                return sub;
-            else if (sub.Skill == ProductSkill.Bomb)
-                return main;
-        }
-        return null;
-    }
     public void Swipe(Product targetProduct, Action EventSwipeEnd)
     {
         Frame myFrame = Detach(Manager.transform);
@@ -182,6 +121,7 @@ public class Product : MonoBehaviour
     }
     public bool ReadyForMerge(int combo)
     {
+        mCollider.enabled = false;
         IsMerging = true;
         Combo = combo;
         ParentFrame.TouchBush();
@@ -197,6 +137,7 @@ public class Product : MonoBehaviour
     {
         if (destProduct == this)
         {
+            mCollider.enabled = true;
             ChangeProductImage(skill);
             IsMerging = false;
 
@@ -209,6 +150,7 @@ public class Product : MonoBehaviour
         }
         else
         {
+            mCollider.enabled = false;
             Frame parent = Detach(Manager.transform);
             if (Chain != null)
                 Chain.DestroyChain();
@@ -239,6 +181,7 @@ public class Product : MonoBehaviour
             return false;
         }
 
+        mCollider.enabled = false;
         IsDestroying = true;
         Combo = combo;
         ParentFrame.TouchBush();
@@ -251,6 +194,7 @@ public class Product : MonoBehaviour
         if (ParentFrame == null)
             return;
 
+        mCollider.enabled = false;
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
 
         Combo = combo;
@@ -266,18 +210,6 @@ public class Product : MonoBehaviour
         vfx.ReturnAfter(2);
 
         ReturnToPool();
-    }
-    public void DetachFromField()
-    {
-        IsDestroying = true;
-        Animation.Stop();
-        transform.localPosition = new Vector3(0, 0, -1);
-        transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        Detach(Manager.transform);
-        if (Chain != null)
-            Chain.DestroyChain();
-        Manager.ProductIDs.Remove(InstanceID);
-        Destroy(gameObject);
     }
     public Product Dir(SwipeDirection dir)
     {
@@ -306,44 +238,6 @@ public class Product : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void FixedUpdate()
-    {
-        //if(IsDropping)
-        //{
-        //    Vector3 pos = transform.position;
-        //    DropSpeed += UserSetting.ProductDropGravity * Time.deltaTime;
-        //    pos.y += DropSpeed * Time.deltaTime;
-        //    transform.position = pos;
-        //}
-    }
-    public void Drop()
-    {
-        if (IsDropping)
-            return;
-
-        if(ParentFrame != null)
-            Detach(ParentFrame.VertFrames.transform);
-            
-        if (Chain != null)
-            Chain.DestroyChain();
-
-        DropSpeed = 0;
-        IsDropping = true;
-        GetComponent<BoxCollider2D>().isTrigger = true;
-        //StartCoroutine("UpdateDropping");
-    }
-    private IEnumerator UpdateDropping()
-    {
-        float dropGravity = -50;
-        Vector3 pos = transform.position;
-        while(true)
-        {
-            DropSpeed += dropGravity * Time.deltaTime;
-            pos.y += DropSpeed * Time.deltaTime;
-            transform.position = pos;
-            yield return new WaitForFixedUpdate();
-        }
-    }
     public void StartToDrop(Frame frame, float duration)
     {
         if (ParentFrame != null)
@@ -353,6 +247,7 @@ public class Product : MonoBehaviour
             Chain.DestroyChain();
 
         IsDropping = true;
+        mCollider.enabled = false;
         AttachTo(frame);
         transform.DOKill();
         transform.DOLocalMoveY(0, duration).SetEase(Ease.InQuad).OnComplete(() =>
@@ -360,61 +255,12 @@ public class Product : MonoBehaviour
             Animation.Play("drop");
         });
     }
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        if (!IsDropping)
-            return;
-
-
-        if (collision.name == "ground" && collision.transform.parent == transform.parent)
-        {
-            EndDrop(VertFrames.BottomFrame);
-            return;
-        }
-
-        Product target = collision.GetComponent<Product>();
-        if (target == null || target.transform.position.y > transform.position.y || target.VertFrames != VertFrames)
-            return;
-
-        if (target.ParentFrame == null)
-        {
-            DropSpeed = 0;
-            transform.position = target.transform.position + new Vector3(0, Manager.GridSize, 0);
-        }
-        else
-        {
-            Frame targetFrame = target.ParentFrame;
-            if (targetFrame == VertFrames.TopFrame)
-            {
-                DropSpeed = 0;
-                transform.position = target.transform.position + new Vector3(0, Manager.GridSize, 0);
-            }
-            else
-            {
-                EndDrop(targetFrame.Up());
-            }
-        }
-
-    }
-    private void EndDrop(Frame parentFrame)
-    {
-        Frame curFrame = parentFrame;
-        while (curFrame.ChildProduct != null)
-            curFrame = curFrame.Up();
-
-        DropSpeed = 0;
-        IsDropping = false;
-        AttachTo(curFrame);
-        StopCoroutine("UpdateDropping");
-        GetComponent<BoxCollider2D>().isTrigger = false;
-        transform.localPosition = new Vector3(0, 0, -1);
-        DisableMasking();
-    }
     public void DropEnd()
     {
         IsDropping = false;
         DropSpeed = 0;
         transform.localPosition = new Vector3(0, 0, -1);
+        mCollider.enabled = true;
         DisableMasking();
     }
 
@@ -475,20 +321,6 @@ public class Product : MonoBehaviour
 
     #region Support Functions
 
-    public void CreateComboTextEffect()
-    {
-        if (Combo <= 0)
-            return;
-
-        Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -1);
-        GameObject obj = GameObject.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, ParentFrame.gameObject.transform);
-        obj.GetComponent<Numbers>().Number = Combo;
-
-        Vector3 destPos = startPos + new Vector3(0, UserSetting.GridSize * 0.5f, 0);
-        ParentFrame.StartCoroutine(UnityUtils.AnimateConvex(obj, destPos, 0.7f, () => {
-            Destroy(obj);
-        }));
-    }
     public void SearchMatchedProducts(List<Product> products, ProductColor color)
     {
         if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
@@ -597,20 +429,6 @@ public class Product : MonoBehaviour
         {
             render.maskInteraction = SpriteMaskInteraction.None;
         }
-    }
-    public Sprite ToSkillImage(ProductSkill skill)
-    {
-        switch (skill)
-        {
-            case ProductSkill.Horizontal: return ImgHorizontal;
-            case ProductSkill.Vertical: return ImgVertical;
-            case ProductSkill.Bomb: return ImgBomb;
-            case ProductSkill.SameColor: return ImgSameColor;
-            case ProductSkill.Hammer: return ImgHammer;
-            case ProductSkill.KeepCombo: return ImgKeepCombo;
-            default: break;
-        }
-        return null;
     }
 
 

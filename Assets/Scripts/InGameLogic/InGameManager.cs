@@ -1697,19 +1697,6 @@ public class InGameManager : MonoBehaviour
     }
 
 
-    IEnumerator DetachProduct(Product product)
-    {
-
-        //SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, mSFXVolume);
-        //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakFruit, mSFXVolume);
-        Frame parentFrame = product.ParentFrame;
-        product.DetachFromField();
-        Product newPro = CreateNewProduct();
-        parentFrame.VertFrames.AddNewProduct(newPro);
-        newPro.EnableMasking(parentFrame.VertFrames.MaskOrder);
-
-        yield return new WaitForSeconds(0);
-    }
 
     private void DropNextProducts()
     {

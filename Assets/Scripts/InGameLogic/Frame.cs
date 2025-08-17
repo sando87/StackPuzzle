@@ -243,6 +243,7 @@ public class Frame : MonoBehaviour
         //Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -2.0f);
         Vector3 startPos = transform.position + new Vector3(0, 0, -2.0f);
         GameObject obj = ObjectPooling.Instance.Instantiate(ComboNumPrefab, startPos, Quaternion.identity);
+        obj.ReturnAfter(1);
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;
         numComp.NumberColor = textColor;
