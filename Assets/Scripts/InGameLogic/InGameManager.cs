@@ -1974,21 +1974,13 @@ public class InGameManager : MonoBehaviour
             mIsUserEventLock = false;
         }
 
-        GameObject hammerObj = Instantiate(HammerPrefab, transform);
-        hammerObj.transform.position = pro.transform.position;
-
-        float duration = 0.8f;
+        float duration = 0.9f;
         Frame nextTarget = FindHammerTarget(pro.ParentFrame);
-        float topPosY = hammerObj.transform.position.y + 3;
-        hammerObj.transform.DOMoveX(nextTarget.transform.position.x, duration).SetEase(Ease.Linear);
-        hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
+        CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, duration);
 
-        hammerObj.transform.DOMoveY(topPosY, duration * 0.5f).SetEase(Ease.OutQuad);
-        yield return new WaitForSeconds(duration * 0.5f);
-        hammerObj.transform.DOMoveY(nextTarget.transform.position.y, duration * 0.5f).SetEase(Ease.InQuad);
-        yield return new WaitForSeconds(duration * 0.5f);
-        Destroy(hammerObj);
-        if(nextTarget.ChildProduct != null)
+        yield return new WaitForSeconds(duration);
+        
+        if (nextTarget.ChildProduct != null)
         {
             DestroyProducts(new Product[1] { nextTarget.ChildProduct });
         }
@@ -2465,7 +2457,8 @@ public class InGameManager : MonoBehaviour
         {
             startPro.Animation.Play("flinch");
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectEndGameReward, mSFXVolume);
-            GameObject effect = Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
+            GameObject effect = ObjectPooling.Instance.Instantiate(SimpleSpritePrefab, startWorldPos, Quaternion.identity, transform);
+            effect.ReturnAfter(2);
             effect.transform.localScale = new Vector3(0.75f, 0.75f, 1);
 
             ProductSkill skillIndex = ProductSkill.Nothing;
@@ -2478,7 +2471,7 @@ public class InGameManager : MonoBehaviour
             StartCoroutine(UnityUtils.MoveLinear(effect, pro.transform.position, 0.3f, 50.0f, () =>
             {
                 count++;
-                Destroy(effect);
+                effect.ReturnAfter();
                 pro.ChangeProductImage(skillIndex);
                 eventEach?.Invoke(pro);
             }));
@@ -4195,7 +4188,8 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill3, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
-        GameObject laserObj = GameObject.Instantiate(LaserParticle, start, Quaternion.identity, transform);
+        GameObject laserObj = ObjectPooling.Instance.Instantiate(LaserParticle, start, Quaternion.identity);
+        laserObj.ReturnAfter(1);
         laserObj.GetComponent<EffectLaser>().SetDestination(dest);
     }
     private void CreateStripeEffect(Vector2 startPos, bool isVertical)
@@ -4209,8 +4203,8 @@ public class InGameManager : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb1, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        GameObject obj = GameObject.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
-        Destroy(obj, 1.0f);
+        GameObject obj = ObjectPooling.Instance.Instantiate(ExplosionParticle, start, Quaternion.identity);
+        obj.ReturnAfter(1);
     }
     private void CreateSmokeEffect(Vector2 startPos)
     {
@@ -4221,19 +4215,17 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateHammerEffect(ProductSkill skillType, Vector2 startPos, Vector2 endPos, float duration)
     {
-        GameObject hammerObj = Instantiate(SimpleSpritePrefab, transform);
-        hammerObj.transform.position = startPos;
-        hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        hammerObj.GetComponent<SpriteRenderer>().sprite = skillType.GetSprite();
+        GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity);
+        hammerObj.ReturnAfter(duration);
 
         StartCoroutine(ThrowOver(hammerObj.transform, endPos.y, duration));
         hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear)
-        .OnComplete(() =>
-        {
-            CreateHammerHit(endPos);
-            Destroy(hammerObj);
-        });
+        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear);
+        // .OnComplete(() =>
+        // {
+        //     CreateHammerHit(endPos);
+        //     Destroy(hammerObj);
+        // });
     }
     private IEnumerator ThrowOver(Transform target, float endY, float duration)
     {
@@ -4276,14 +4268,17 @@ public class InGameManager : MonoBehaviour
         Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
         lookDir.Normalize();
 
-        GameObject projectail = Instantiate(MissilePrefab, startPos, Quaternion.identity, transform);
+        GameObject projectail = ObjectPooling.Instance.Instantiate(MissilePrefab, startPos, Quaternion.identity);
+        projectail.ReturnAfter(3);
         projectail.transform.right = lookDir;
+        projectail.GetComponent<SpriteRenderer>().enabled = true;
+        projectail.transform.GetChild(1).gameObject.SetActive(false);
         projectail.transform.DOMove(new Vector2(destPos.x, destPos.y), duration).SetEase(Ease.Linear).SetDelay(delay)
         .OnComplete(() =>
         {
             projectail.GetComponent<SpriteRenderer>().enabled = false;
             projectail.transform.GetChild(1).gameObject.SetActive(true);
-            Destroy(projectail, 1.0f);
+            // Destroy(projectail, 1.0f);
         });
 
         return projectail;
