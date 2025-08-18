@@ -299,7 +299,7 @@ public class PVPScoreBar : MonoBehaviour
 
         Vector2 prevSize = CurrentScoreBar.rectTransform.sizeDelta;
         Vector2 addedSize = newSubScoreBar.rectTransform.sizeDelta;
-        CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 2.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
+        CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
 
         mTweenCounter = 1;
         newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
