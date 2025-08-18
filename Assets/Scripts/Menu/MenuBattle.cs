@@ -357,7 +357,7 @@ public class MenuBattle : MonoBehaviour
                 InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
             case PurchaseItemType.Meteor:
-                InGameManager.InstPVP_Player.UseItemMeteor(5);
+                InGameManager.InstPVP_Player.UseItemMeteor(10);
                 break;
             default: break;
         }
@@ -412,7 +412,7 @@ public class MenuBattle : MonoBehaviour
                 InGameManager.InstPVP_Opponent.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
             case PurchaseItemType.Meteor:
-                InGameManager.InstPVP_Opponent.UseItemMeteor(5);
+                InGameManager.InstPVP_Opponent.UseItemMeteor(10);
                 break;
             default: break;
         }

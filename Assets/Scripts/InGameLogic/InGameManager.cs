@@ -2721,7 +2721,7 @@ public class InGameManager : MonoBehaviour
     public void UseItemMeteor(int count)
     {
         mIsItemEffect = true;
-        Frame[] idleFrames = GetRandomIdleFrames(count);
+        Frame[] idleFrames = GetRandomIdleFrames(count, true);
 
         Network_UseItem(PurchaseItemType.Meteor);
 
@@ -3890,7 +3890,7 @@ public class InGameManager : MonoBehaviour
         }
         return true;
     }
-    private Frame[] GetRandomIdleFrames(int count)
+    private Frame[] GetRandomIdleFrames(int count, bool includeAllPros = false)
     {
         Dictionary<int, Frame> rets = new Dictionary<int, Frame>();
         int totalCount = CountX * CountY;
@@ -3908,8 +3908,11 @@ public class InGameManager : MonoBehaviour
             if(mFrames[idxX, idxY].Empty)
                 continue;
 
-            if (pro == null || pro.IsLocked || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
-                continue;
+            if (!includeAllPros)
+            {
+                if (pro == null || pro.IsLocked || pro.IsObstacled() || pro.Skill != ProductSkill.Nothing)
+                    continue;
+            }
 
             rets[ranIdx] = pro.ParentFrame;
         }

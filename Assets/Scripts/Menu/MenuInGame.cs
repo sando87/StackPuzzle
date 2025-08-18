@@ -296,7 +296,7 @@ public class MenuInGame : MonoBehaviour
                 InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
                 break;
             case PurchaseItemType.Meteor:
-                InGameManager.InstStage.UseItemMeteor(5);
+                InGameManager.InstStage.UseItemMeteor(10);
                 break;
             default: break;
         }
