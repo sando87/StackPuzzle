@@ -20,7 +20,7 @@ public class InGameManager : MonoBehaviour
     public static InGameManager InstPVP_Opponent
     { get { if (mInstPVP_Opponent == null) mInstPVP_Opponent = GameObject.Find("WorldSpace").transform.Find("BattleScreen/GameFieldOpp").GetComponent<InGameManager>(); return mInstPVP_Opponent; } }
     public static InGameManager InstCurrent
-    { get { if (mInstStage != null && mInstStage.gameObject.activeSelf) return mInstStage; else return mInstPVP_Player; } }
+    { get { if (mInstStage != null && mInstStage.gameObject.activeInHierarchy) return mInstStage; else return mInstPVP_Player; } }
 
     private const string vgName = "VerticalGroup";
     public const string vgGround = "ground";

@@ -64,6 +64,7 @@ public class Product : MonoBehaviour
         if (mCollider == null)
             mCollider = GetComponent<BoxCollider2D>();
         mCollider.enabled = true;
+        Manager = InGameManager.InstCurrent;
     }
     public int ColorToIndex(ProductColor color)
     {
@@ -78,7 +79,6 @@ public class Product : MonoBehaviour
     void Awake()
     {
         mCollider = GetComponent<BoxCollider2D>();
-        Manager = InGameManager.InstCurrent;
         IcedBlock.EventBreakIce += () =>
         {
             EventUnWrapIce?.Invoke();
