@@ -20,7 +20,7 @@ public class Numbers : MonoBehaviour
     public float gap = 0.3f;
     public string layerName = "Default";
 
-    private void Start()
+    public void UpdateNumber()
     {
         float imgWorldWidth = 0.64f * gap;
         if (Number >= 1000)

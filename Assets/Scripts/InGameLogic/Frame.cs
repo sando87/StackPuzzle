@@ -248,6 +248,7 @@ public class Frame : MonoBehaviour
         numComp.Number = combo;
         numComp.NumberColor = textColor;
         numComp.layerName = "UI";
+        numComp.UpdateNumber();
 
         float time = 0;
         float duration = 0.3f;
