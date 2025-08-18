@@ -2603,7 +2603,7 @@ public class InGameManager : MonoBehaviour
             {
                 if (mStageInfo.TimeLimit > 0)
                 {
-                    Billboard.PlayTime -= 10; //10초 연장
+                    Billboard.PlayTime -= 15; //15초 연장
                     float remainTime = mStageInfo.TimeLimit - Billboard.PlayTime;
                     EventRemainTime?.Invoke((int)remainTime);
                 }

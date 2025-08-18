@@ -338,6 +338,9 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
+            if (!IsUseItem())
+                continue;
+                
             int offset = i * 2 + 1;
             PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + offset);
             if (itemType.GetCount() > 0)
@@ -356,6 +359,21 @@ public class MenuWaitMatch : MonoBehaviour
         }
         
         OnMatch();
+    }
+    private bool IsUseItem()
+    {
+        int percent = UnityEngine.Random.Range(0, 1000) % 100;
+        switch (UserSetting.UserInfo.botLevel)
+        {
+            case 0: return percent < 0;
+            case 1: return percent < 0;
+            case 2: return percent < 50;
+            case 3: return percent < 50;
+            case 4: return percent < 100;
+            case 5: return percent < 100;
+            default: break;
+        }
+        return false;
     }
     private void ResetMatchUI()
     {

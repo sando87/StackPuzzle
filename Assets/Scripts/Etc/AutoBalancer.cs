@@ -46,6 +46,8 @@ public class AutoBalancer : MonoBehaviour
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
         int mode = MODE_SWIPE;
+        int swipCount = 0;
+        int maxSwipCount = NextSwipeCount();
         List<Product> swipedProducts = new List<Product>();
         while (true)
         {
@@ -59,35 +61,45 @@ public class AutoBalancer : MonoBehaviour
                 yield return null;
             }
 
-            yield return new WaitForSeconds(1);
             yield return new WaitUntil(() => mCurrentManager.IsIdle && mCurrentManager.IsAllProductIdle());
+            yield return new WaitForSeconds(NextDelaySec());
+            yield return new WaitUntil(() => mCurrentManager.IsIdle && mCurrentManager.IsAllProductIdle());
+            bool isItemUse = IsUseItem();
 
-            if (IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable())
+            if (isItemUse && IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable())
             {
                 UseItem(PurchaseItemType.ExtendLimit);
+                continue;
+            }
+
+            if (isItemUse && IsItemPossible(PurchaseItemType.RemoveIce) && CountIceBlocks() > 10)
+            {
+                UseItem(PurchaseItemType.RemoveIce);
                 continue;
             }
 
             int skipCount = 0;
             if (mode == MODE_SWIPE)
             {
-                if (AutoSwipeNextProduct(mCurrentManager, swipedProducts))
+                if (swipCount > maxSwipCount)
                 {
+                    swipedProducts.Clear();
+                    swipCount = 0;
+                    maxSwipCount = NextSwipeCount();
+                    mode = MODE_COMBOUP;
+                }
+                else if (AutoSwipeNextProduct(mCurrentManager, swipedProducts))
+                {
+                    swipCount++;
                     continue;
                 }
                 else
                 {
-                    if (IsItemPossible(PurchaseItemType.RemoveIce) && CountIceBlocks() > 10)
-                    {
-                        UseItem(PurchaseItemType.RemoveIce);
-                        continue;
-                    }
-                    else
-                    {
-                        swipedProducts.Clear();
-                        mode = MODE_COMBOUP;
-                        skipCount++;
-                    }
+                    swipedProducts.Clear();
+                    swipCount = 0;
+                    maxSwipCount = NextSwipeCount();
+                    mode = MODE_COMBOUP;
+                    skipCount++;
                 }
             }
 
@@ -112,32 +124,36 @@ public class AutoBalancer : MonoBehaviour
 
             if (mode == MODE_ATTACK)
             {
+                if (isItemUse)
+                {
+                    if (IsItemPossible(PurchaseItemType.KeepCombo))
+                    {
+                        UseItem(PurchaseItemType.KeepCombo);
+                        mode = MODE_SWIPE;
+                        continue;
+                    }
+                    else if (IsItemPossible(PurchaseItemType.MakeSkill1))
+                    {
+                        UseItem(PurchaseItemType.MakeSkill1);
+                        mode = MODE_ATTACK;
+                        continue;
+                    }
+                    else if (IsItemPossible(PurchaseItemType.MakeSkill2))
+                    {
+                        UseItem(PurchaseItemType.MakeSkill2);
+                        mode = MODE_ATTACK;
+                        continue;
+                    }
+                    else if (IsItemPossible(PurchaseItemType.Meteor))
+                    {
+                        UseItem(PurchaseItemType.Meteor);
+                        mode = MODE_SWIPE;
+                        continue;
+                    }
+                }
+                
                 if (AutoAttackSkill(mCurrentManager))
                 {
-                    mode = MODE_SWIPE;
-                    continue;
-                }
-                else if (IsItemPossible(PurchaseItemType.KeepCombo))
-                {
-                    UseItem(PurchaseItemType.KeepCombo);
-                    mode = MODE_SWIPE;
-                    continue;
-                }
-                else if (IsItemPossible(PurchaseItemType.MakeSkill1))
-                {
-                    UseItem(PurchaseItemType.MakeSkill1);
-                    mode = MODE_ATTACK;
-                    continue;
-                }
-                else if (IsItemPossible(PurchaseItemType.MakeSkill2))
-                {
-                    UseItem(PurchaseItemType.MakeSkill2);
-                    mode = MODE_ATTACK;
-                    continue;
-                }
-                else if (IsItemPossible(PurchaseItemType.Meteor))
-                {
-                    UseItem(PurchaseItemType.Meteor);
                     mode = MODE_SWIPE;
                     continue;
                 }
@@ -483,12 +499,11 @@ public class AutoBalancer : MonoBehaviour
     {
         switch (UserSetting.UserInfo.botLevel)
         {
-            case 0: return UnityEngine.Random.Range(3, 8);
-            case 1: return UnityEngine.Random.Range(2, 8);
-            case 2: return UnityEngine.Random.Range(2, 6);
-            case 3: return UnityEngine.Random.Range(1, 6);
-            case 4: return UnityEngine.Random.Range(1, 3);
-            case 5: return UnityEngine.Random.Range(0.5f, 2);
+            case 1: return UnityEngine.Random.Range(1, 6);
+            case 2: return UnityEngine.Random.Range(1, 5);
+            case 3: return UnityEngine.Random.Range(0.5f, 4);
+            case 4: return UnityEngine.Random.Range(0.5f, 2);
+            case 5: return UnityEngine.Random.Range(0.1f, 1);
             default: break;
         }
         return UnityEngine.Random.Range(2, 7);
@@ -497,15 +512,28 @@ public class AutoBalancer : MonoBehaviour
     {
         switch (UserSetting.UserInfo.botLevel)
         {
-            case 0: return UnityEngine.Random.Range(0, 1);
-            case 1: return UnityEngine.Random.Range(0, 4);
-            case 2: return UnityEngine.Random.Range(3, 5);
-            case 3: return UnityEngine.Random.Range(3, 9);
-            case 4: return UnityEngine.Random.Range(5, 7);
-            case 5: return UnityEngine.Random.Range(5, 10);
+            case 1: return UnityEngine.Random.Range(0, 2);
+            case 2: return UnityEngine.Random.Range(4, 7);
+            case 3: return UnityEngine.Random.Range(5, 8);
+            case 4: return UnityEngine.Random.Range(8, 10);
+            case 5: return UnityEngine.Random.Range(10, 15);
             default: break;
         }
         return UnityEngine.Random.Range(3, 7);
+    }
+    private bool IsUseItem()
+    {
+        int percent = UnityEngine.Random.Range(0, 1000) % 100;
+        switch (UserSetting.UserInfo.botLevel)
+        {
+            case 1: return percent < 0;
+            case 2: return percent < 50;
+            case 3: return percent < 50;
+            case 4: return percent < 100;
+            case 5: return percent < 100;
+            default: break;
+        }
+        return false;
     }
     private bool IsValid(Frame frame)
     {
