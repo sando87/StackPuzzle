@@ -3811,7 +3811,16 @@ public class InGameManager : MonoBehaviour
     {
         int cnt = transform.childCount;
         for (int i = 0; i < cnt; ++i)
-            Destroy(transform.GetChild(i).gameObject);
+        {
+            if (transform.GetChild(i).GetComponent<ObjectPoolable>() != null)
+            {
+                transform.GetChild(i).gameObject.ReturnAfter();
+            }
+            else
+            {
+                Destroy(transform.GetChild(i).gameObject);
+            }
+        }
 
         EventBreakTarget = null;
         EventScore = null;
