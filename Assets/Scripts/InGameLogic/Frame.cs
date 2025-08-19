@@ -46,12 +46,6 @@ public class Frame : MonoBehaviour
     {
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void Initialize(InGameManager mgr, int idxX, int idxY, bool isDisabled, int ropeCount, int bushIndex, int capIndex)
     {
         GameManager = mgr;
@@ -242,7 +236,8 @@ public class Frame : MonoBehaviour
     {
         //Vector3 startPos = transform.position + new Vector3(0, UserSetting.GridSize * 0.2f, -2.0f);
         Vector3 startPos = transform.position + new Vector3(0, 0, -2.0f);
-        GameObject obj = ObjectPooling.Instance.Instantiate(ComboNumPrefab, startPos, Quaternion.identity);
+        GameObject obj = ObjectPooling.Instance.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, GameManager.transform);
+        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         obj.ReturnAfter(1);
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;

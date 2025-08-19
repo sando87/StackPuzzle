@@ -289,7 +289,7 @@ public class InGameManager : MonoBehaviour
                 Product pro = AssignNewProduct(transform);
                 ProductColor color = (ProductColor)(RandomNextColor() + 1);
                 pro.AttachTo(mFrames[x, y]);
-                pro.ResetProductColor(color);
+                pro.ResetProductColor(color, this);
 
                 StageInfoCell cellInfo = GetCellInversed(x, y);
                 if(cellInfo.ProductType > 0)
@@ -3485,14 +3485,14 @@ public class InGameManager : MonoBehaviour
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         Product product = AssignNewProduct(transform);
         product.AttachTo(parent);
-        product.ResetProductColor((ProductColor)(typeIdx + 1));
+        product.ResetProductColor((ProductColor)(typeIdx + 1), this);
         return product;
     }
     private Product CreateNewProduct(ProductColor color = ProductColor.None, int instanceID = 0)
     {
         int typeIdx = color == ProductColor.None ? RandomNextColor() : (int)color - 1;
         Product product = AssignNewProduct(transform);
-        product.ResetProductColor((ProductColor)(typeIdx + 1), transform);
+        product.ResetProductColor((ProductColor)(typeIdx + 1), this, transform);
         return product;
     }
 
@@ -4191,7 +4191,8 @@ public class InGameManager : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Skill3, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
         Vector3 dest = new Vector3(destPos.x, destPos.y, -4.0f);
-        GameObject laserObj = ObjectPooling.Instance.Instantiate(LaserParticle, start, Quaternion.identity);
+        GameObject laserObj = ObjectPooling.Instance.Instantiate(LaserParticle, start, Quaternion.identity, transform);
+        laserObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         laserObj.ReturnAfter(1);
         laserObj.GetComponent<EffectLaser>().SetDestination(dest);
     }
@@ -4206,7 +4207,7 @@ public class InGameManager : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakBomb1, mSFXVolume);
         Vector3 start = new Vector3(startPos.x, startPos.y, -4.0f);
-        GameObject obj = ObjectPooling.Instance.Instantiate(ExplosionParticle, start, Quaternion.identity);
+        GameObject obj = ObjectPooling.Instance.Instantiate(ExplosionParticle, start, Quaternion.identity, transform);
         obj.ReturnAfter(1);
     }
     private void CreateSmokeEffect(Vector2 startPos)
@@ -4218,7 +4219,7 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateHammerEffect(ProductSkill skillType, Vector2 startPos, Vector2 endPos, float duration)
     {
-        GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity);
+        GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity, transform);
         hammerObj.ReturnAfter(duration);
 
         StartCoroutine(ThrowOver(hammerObj.transform, endPos.y, duration));
@@ -4271,7 +4272,7 @@ public class InGameManager : MonoBehaviour
         Vector3 lookDir = new Vector3(destPos.x - startPos.x, destPos.y - startPos.y, 0);
         lookDir.Normalize();
 
-        GameObject projectail = ObjectPooling.Instance.Instantiate(MissilePrefab, startPos, Quaternion.identity);
+        GameObject projectail = ObjectPooling.Instance.Instantiate(MissilePrefab, startPos, Quaternion.identity, transform);
         projectail.ReturnAfter(3);
         projectail.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         projectail.transform.right = lookDir;

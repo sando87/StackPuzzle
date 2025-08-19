@@ -41,7 +41,7 @@ public class Product : MonoBehaviour
 
     private BoxCollider2D mCollider = null;
 
-    public void ResetProductColor(ProductColor color, Transform parent = null)
+    public void ResetProductColor(ProductColor color, InGameManager manager, Transform parent = null)
     {
         if (parent != null)
             transform.SetParent(parent);
@@ -64,7 +64,7 @@ public class Product : MonoBehaviour
         if (mCollider == null)
             mCollider = GetComponent<BoxCollider2D>();
         mCollider.enabled = true;
-        Manager = InGameManager.InstCurrent;
+        Manager = manager;
     }
     public int ColorToIndex(ProductColor color)
     {
@@ -206,7 +206,8 @@ public class Product : MonoBehaviour
         ParentFrame.CreateComboTextEffect(Combo, Color);
 
         int index = ColorToIndex(Color);
-        GameObject vfx = ObjectPooling.Instance.Instantiate(WaterDropPrefabs[index], transform.position, Quaternion.identity);
+        GameObject vfx = ObjectPooling.Instance.Instantiate(WaterDropPrefabs[index], transform.position, Quaternion.identity, Manager.transform);
+        vfx.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         vfx.ReturnAfter(2);
 
         ReturnToPool();

@@ -34,6 +34,7 @@ public class Numbers : MonoBehaviour
             First.color = NumberColor;
             First.sortingLayerName = layerName;
             FirstOutline.sprite = NumberOutlineImages[Number];
+            FirstOutline.color = Color.white;
             FirstOutline.sortingLayerName = layerName;
             First.transform.position = transform.position;
 
@@ -54,8 +55,10 @@ public class Numbers : MonoBehaviour
             Second.sortingLayerName = layerName;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
+            FirstOutline.color = Color.white;
             FirstOutline.sortingLayerName = layerName;
             SecondOutline.sprite = NumberOutlineImages[Number / 10];
+            SecondOutline.color = Color.white;
             SecondOutline.sortingLayerName = layerName;
 
             Vector3 center = transform.position;
@@ -84,10 +87,13 @@ public class Numbers : MonoBehaviour
             Third.sortingLayerName = layerName;
 
             FirstOutline.sprite = NumberOutlineImages[Number % 10];
+            FirstOutline.color = Color.white;
             FirstOutline.sortingLayerName = layerName;
             SecondOutline.sprite = NumberOutlineImages[(Number / 10) % 10];
+            SecondOutline.color = Color.white;
             SecondOutline.sortingLayerName = layerName;
             ThirdOutline.sprite = NumberOutlineImages[Number / 100];
+            ThirdOutline.color = Color.white;
             ThirdOutline.sortingLayerName = layerName;
 
             Vector3 center = transform.position;
