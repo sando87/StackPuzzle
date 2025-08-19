@@ -4273,6 +4273,7 @@ public class InGameManager : MonoBehaviour
 
         GameObject projectail = ObjectPooling.Instance.Instantiate(MissilePrefab, startPos, Quaternion.identity);
         projectail.ReturnAfter(3);
+        projectail.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         projectail.transform.right = lookDir;
         projectail.GetComponent<SpriteRenderer>().enabled = true;
         projectail.transform.GetChild(1).gameObject.SetActive(false);
