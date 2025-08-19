@@ -2763,13 +2763,15 @@ public class InGameManager : MonoBehaviour
         {
             fromPos.z -= 1;
 
-            GameObject projectileEffect = Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            GameObject projectileEffect = ObjectPooling.Instance.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            projectileEffect.ReturnAfter(3);
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
+                projectileEffect.ReturnAfter();
                 PVPScoreBar.AddScore(score, Billboard.CurrentCombo);
             }));
         }
@@ -2777,13 +2779,15 @@ public class InGameManager : MonoBehaviour
         {
             fromPos.z -= 1;
 
-            GameObject projectileEffect = Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
+            GameObject projectileEffect = ObjectPooling.Instance.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            projectileEffect.ReturnAfter(3);
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
+                projectileEffect.ReturnAfter();
                 PVPScoreBar.AddScore(-score, Billboard.CurrentCombo);
             }));
         }
@@ -2888,7 +2892,7 @@ public class InGameManager : MonoBehaviour
                 EventEnd?.Invoke();
                 // obj.transform.position = destTr.position;
                 // obj.GetComponentInChildren<ParticleSystem>().Play();
-                Destroy(obj);
+                // Destroy(obj);
                 break;
             }
 
