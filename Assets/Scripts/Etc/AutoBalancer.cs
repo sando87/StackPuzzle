@@ -47,7 +47,7 @@ public class AutoBalancer : MonoBehaviour
         const int MODE_ATTACK = 3;
         int mode = MODE_SWIPE;
         int swipCount = 0;
-        int maxSwipCount = NextSwipeCount();
+        int maxSwipCount = 0;
         List<Product> swipedProducts = new List<Product>();
         while (true)
         {
