@@ -18,6 +18,7 @@ public class PVPScoreBar : MonoBehaviour
     [SerializeField] private Sprite[] FlushImages = null;
     [SerializeField] private Image FlushImagePrafab = null;
     [SerializeField] private Image LockImage = null;
+    [SerializeField] private Image ScoreAddSubEffectBar = null;
 
     private Color SocreColorPlayer = new Color(30f / 255f, 199f / 255f, 26f / 255f, 1);
     private Color SocreColorOpponent = new Color(199f / 255f, 47f / 255f, 26f / 255f, 1);
@@ -271,10 +272,11 @@ public class PVPScoreBar : MonoBehaviour
     {
         CurrentScoreBar.DOKill();
         CurrentScoreBar.rectTransform.DOKill();
-        for (int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
-        {
-            Destroy(CurrentScoreBar.transform.GetChild(i).gameObject);
-        }
+        ScoreAddSubEffectBar.gameObject.SetActive(false);
+        // for (int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
+        // {
+        //     Destroy(CurrentScoreBar.transform.GetChild(i).gameObject);
+        // }
 
         float newWidth = Mathf.Abs(score) * mWidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
@@ -287,25 +289,27 @@ public class PVPScoreBar : MonoBehaviour
         UpdateScoreBar(CurrentScore);
 
         float width = Mathf.Abs(score) * mWidthPerScore;
-        Image newSubScoreBar = Instantiate(ScoreSubBar, CurrentScoreBar.transform);
-        newSubScoreBar.name = "Add";
+        ScoreAddSubEffectBar.gameObject.SetActive(true);
+        ScoreAddSubEffectBar.name = "Add";
 
-        newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
-        newSubScoreBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
-        newSubScoreBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
-        newSubScoreBar.rectTransform.SetAnchoredPosX(0);
-        newSubScoreBar.rectTransform.SetAnchoredWidth(width);
-        newSubScoreBar.color = Color.white;
+        ScoreAddSubEffectBar.rectTransform.pivot = new Vector2(0, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.SetAnchoredPosX(0);
+        ScoreAddSubEffectBar.rectTransform.SetAnchoredWidth(width);
+        ScoreAddSubEffectBar.color = Color.white;
 
         Vector2 prevSize = CurrentScoreBar.rectTransform.sizeDelta;
-        Vector2 addedSize = newSubScoreBar.rectTransform.sizeDelta;
+        Vector2 addedSize = ScoreAddSubEffectBar.rectTransform.sizeDelta;
         CurrentScoreBar.rectTransform.DOSizeDelta(new Vector2(prevSize.x + addedSize.x, prevSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f);
 
         mTweenCounter = 1;
-        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
+        ScoreAddSubEffectBar.transform.DOKill();
+        ScoreAddSubEffectBar.rectTransform.DOSizeDelta(new Vector2(0, addedSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
             mTweenCounter = 0;
+            ScoreAddSubEffectBar.gameObject.SetActive(false);
             UpdateScoreBar(nextNewScore);
         });
     }
@@ -314,25 +318,24 @@ public class PVPScoreBar : MonoBehaviour
         UpdateScoreBar(CurrentScore + score);
 
         float width = Mathf.Abs(score) * mWidthPerScore;
-        Image newSubScoreBar = Instantiate(ScoreSubBar, CurrentScoreBar.transform);
-        newSubScoreBar.name = "Sub";
+        ScoreAddSubEffectBar.gameObject.SetActive(false);
+        ScoreAddSubEffectBar.name = "Sub";
 
-        newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);
-        newSubScoreBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
-        newSubScoreBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
-        newSubScoreBar.rectTransform.SetAnchoredPosX(0);
-        newSubScoreBar.rectTransform.SetAnchoredWidth(width);
-        newSubScoreBar.color = Color.white;
+        ScoreAddSubEffectBar.rectTransform.pivot = new Vector2(0, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        ScoreAddSubEffectBar.rectTransform.SetAnchoredPosX(0);
+        ScoreAddSubEffectBar.rectTransform.SetAnchoredWidth(width);
+        ScoreAddSubEffectBar.color = Color.white;
 
         mTweenCounter = 1;
-        Vector2 subSize = newSubScoreBar.rectTransform.sizeDelta;
-        newSubScoreBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
+        Vector2 subSize = ScoreAddSubEffectBar.rectTransform.sizeDelta;
+        ScoreAddSubEffectBar.transform.DOKill();
+        ScoreAddSubEffectBar.rectTransform.DOSizeDelta(new Vector2(0, subSize.y), 1.0f).SetEase(Ease.OutQuad).SetDelay(0.5f)
         .OnComplete(() =>
         {
             mTweenCounter = 0;
-            if (newSubScoreBar == null)
-                Destroy(newSubScoreBar.gameObject);
-
+            ScoreAddSubEffectBar.gameObject.SetActive(false);
         });
     }
     public int DoFlush(int score)
