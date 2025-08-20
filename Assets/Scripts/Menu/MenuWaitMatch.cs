@@ -335,45 +335,24 @@ public class MenuWaitMatch : MonoBehaviour
     private IEnumerator AutoMatch()
     {
         yield return new WaitForSeconds(1);
+        List<int> itemTypes = new List<int>() { 1, 2, 3, 4, 5, 6 };
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
-            if (!IsUseItem())
+            if (!AutoBalancer.IsUseItem())
                 continue;
-                
-            int offset = i * 2 + 1;
-            PurchaseItemType itemType = (PurchaseItemType)(UnityEngine.Random.Range(0, 2) + offset);
-            if (itemType.GetCount() > 0)
-            {
-                btns[i].SetItem(itemType);
-                UserSetting.UserInfo.PvpItems[i] = itemType;
-            }
-            else
-            {
-                btns[i].SetItem(PurchaseItemType.None);
-                UserSetting.UserInfo.PvpItems[i] = PurchaseItemType.None;
-                
-                Purchases.ChargeItemUseGold(itemType, 100, 0);
-            }
 
+            int index = UnityEngine.Random.Range(0, itemTypes.Count);
+            PurchaseItemType itemType = (PurchaseItemType)itemTypes[index];
+            itemTypes.RemoveAt(index);
+            if (itemType.GetCount() <= 0)
+                Purchases.ChargeItemUseGold(itemType, 100, 0);
+
+            btns[i].SetItem(itemType);
+            UserSetting.UserInfo.PvpItems[i] = itemType;
         }
         
         OnMatch();
-    }
-    private bool IsUseItem()
-    {
-        int percent = UnityEngine.Random.Range(0, 1000) % 100;
-        switch (UserSetting.UserInfo.botLevel)
-        {
-            case 0: return percent < 0;
-            case 1: return percent < 0;
-            case 2: return percent < 50;
-            case 3: return percent < 50;
-            case 4: return percent < 100;
-            case 5: return percent < 100;
-            default: break;
-        }
-        return false;
     }
     private void ResetMatchUI()
     {

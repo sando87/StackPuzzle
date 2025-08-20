@@ -497,40 +497,40 @@ public class AutoBalancer : MonoBehaviour
 
     private float NextDelaySec()
     {
-        switch (UserSetting.UserInfo.botLevel)
+        // 첫번째 자리수 숫자
+        int level = UserSetting.UserInfo.botLevel / 100;
+        switch (level)
         {
             case 1: return UnityEngine.Random.Range(1, 6);
-            case 2: return UnityEngine.Random.Range(1, 5);
-            case 3: return UnityEngine.Random.Range(0.5f, 4);
-            case 4: return UnityEngine.Random.Range(0.5f, 2);
-            case 5: return UnityEngine.Random.Range(0.1f, 1);
+            case 2: return UnityEngine.Random.Range(0.5f, 4);
+            case 3: return UnityEngine.Random.Range(0.1f, 1.5f);
             default: break;
         }
-        return UnityEngine.Random.Range(2, 7);
+        return UnityEngine.Random.Range(0.5f, 4);
     }
     private int NextSwipeCount()
     {
-        switch (UserSetting.UserInfo.botLevel)
+        // 두번째 자리수 숫자
+        int level = (UserSetting.UserInfo.botLevel / 10) % 10;
+        switch (level)
         {
-            case 1: return UnityEngine.Random.Range(0, 2);
-            case 2: return UnityEngine.Random.Range(4, 7);
-            case 3: return UnityEngine.Random.Range(5, 8);
-            case 4: return UnityEngine.Random.Range(8, 10);
-            case 5: return UnityEngine.Random.Range(10, 15);
+            case 1: return UnityEngine.Random.Range(0, 1);
+            case 2: return UnityEngine.Random.Range(5, 10);
+            case 3: return UnityEngine.Random.Range(15, 20);
             default: break;
         }
-        return UnityEngine.Random.Range(3, 7);
+        return 10;
     }
-    private bool IsUseItem()
+    public static bool IsUseItem()
     {
+        // 세번째 자리수 숫자
+        int level = UserSetting.UserInfo.botLevel % 10;
         int percent = UnityEngine.Random.Range(0, 1000) % 100;
-        switch (UserSetting.UserInfo.botLevel)
+        switch (level)
         {
             case 1: return percent < 0;
             case 2: return percent < 50;
-            case 3: return percent < 50;
-            case 4: return percent < 100;
-            case 5: return percent < 100;
+            case 3: return percent < 100;
             default: break;
         }
         return false;
