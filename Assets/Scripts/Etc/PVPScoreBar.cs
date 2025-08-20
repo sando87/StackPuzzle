@@ -318,7 +318,7 @@ public class PVPScoreBar : MonoBehaviour
         UpdateScoreBar(CurrentScore + score);
 
         float width = Mathf.Abs(score) * mWidthPerScore;
-        ScoreAddSubEffectBar.gameObject.SetActive(false);
+        ScoreAddSubEffectBar.gameObject.SetActive(true);
         ScoreAddSubEffectBar.name = "Sub";
 
         ScoreAddSubEffectBar.rectTransform.pivot = new Vector2(0, 0.5f);

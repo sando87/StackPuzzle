@@ -3818,7 +3818,7 @@ public class InGameManager : MonoBehaviour
     private void ResetGame()
     {
         int cnt = transform.childCount;
-        for (int i = cnt - 1; i >= 0; ++i)
+        for (int i = cnt - 1; i >= 0; --i)
         {
             if (transform.GetChild(i).GetComponent<ObjectPoolable>() != null)
             {
