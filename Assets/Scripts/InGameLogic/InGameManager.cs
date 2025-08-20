@@ -2976,6 +2976,12 @@ public class InGameManager : MonoBehaviour
                 List<Product> products = GetNextFlushTargets(fluchIceBlockCount);
                 if (products.Count < fluchIceBlockCount)
                 {
+                    Product[] rets = products.ToArray();
+                    Network_FlushAttacks(Serialize(rets), point);
+                    StartCoroutine(FlushObstacles(rets));
+
+                    yield return new WaitForSeconds(1);
+
                     StartFinish(false);
                     break;
                 }
