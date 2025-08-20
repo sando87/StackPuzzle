@@ -145,7 +145,7 @@ public class UserSetting
         {
             UserInfo info = new UserInfo();
             info.deviceName = DateTime.Now.Ticks.ToString();
-            info.userName = info.deviceName;
+            info.userName = "#" + UnityEngine.Random.Range(0, 10000).ToString("0000");
             SaveUserInfo(info);
             return info;
         }
@@ -159,6 +159,7 @@ public class UserSetting
         {
             UserInfo info = new UserInfo();
             info.deviceName = SystemInfo.deviceUniqueIdentifier;
+            info.userName = "#" + UnityEngine.Random.Range(0, 10000).ToString("0000");
             SaveUserInfo(info);
             return info;
         }
