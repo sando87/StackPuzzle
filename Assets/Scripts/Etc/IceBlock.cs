@@ -133,4 +133,8 @@ public class IceBlock : MonoBehaviour
         }
         ren.material.color = new Color(0, 0, 0, 0);
     }
+    public void ShakeIce()
+    {
+        StartCoroutine(AnimShake());
+    }
 }

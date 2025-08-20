@@ -368,7 +368,11 @@ public class InGameManager : MonoBehaviour
         if (pro == null || pro.ParentFrame == null || pro.ParentFrame.IsRope)
             return;
 
-        if (pro.Skill != ProductSkill.Nothing)
+        if (pro.IsIceBlock)
+        {
+            pro.ShakeIceBlock();
+        }
+        else if (pro.Skill != ProductSkill.Nothing)
         {
             Network_Click(pro);
             RemoveLimit();
@@ -3814,7 +3818,7 @@ public class InGameManager : MonoBehaviour
     private void ResetGame()
     {
         int cnt = transform.childCount;
-        for (int i = 0; i < cnt; ++i)
+        for (int i = cnt - 1; i >= 0; ++i)
         {
             if (transform.GetChild(i).GetComponent<ObjectPoolable>() != null)
             {

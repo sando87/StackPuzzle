@@ -155,7 +155,8 @@ public class Product : MonoBehaviour
             if (Chain != null)
                 Chain.DestroyChain();
 
-            StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () => {
+            StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () =>
+            {
                 ReturnToPool();
             }));
         }
@@ -169,14 +170,14 @@ public class Product : MonoBehaviour
     }
     public void BreakObstacle(int count = 1)
     {
-        if(IsIceBlock)
+        if (IsIceBlock)
         {
             BreakIceBlock(count);
         }
     }
     public bool ReadyForDestroy(int combo)
     {
-        if(IsObstacled() || IsLocked)
+        if (IsObstacled() || IsLocked)
         {
             return false;
         }
@@ -318,7 +319,7 @@ public class Product : MonoBehaviour
         }
         Renderer.material.color = new Color(0, 0, 0, 0);
     }
-    
+
 
     #region Support Functions
 
@@ -327,7 +328,7 @@ public class Product : MonoBehaviour
         if (Color != color || IsObstacled() || Skill != ProductSkill.Nothing || IsLocked)
             return;
 
-        if(ParentFrame == null)
+        if (ParentFrame == null)
             return;
 
         if (products.Contains(this))
@@ -391,7 +392,7 @@ public class Product : MonoBehaviour
     {
         Frame[] frames = frame.GetAroundFrames();
         List<Product> products = new List<Product>();
-        foreach(Frame iter in frames)
+        foreach (Frame iter in frames)
         {
             Product child = iter.ChildProduct;
             if (child != null)
@@ -405,12 +406,12 @@ public class Product : MonoBehaviour
         Skill = skill;
         switch (skill)
         {
-            case ProductSkill.Horizontal:   Renderer.sprite = ImgHorizontal; break;
-            case ProductSkill.Vertical:     Renderer.sprite = ImgVertical; break;
-            case ProductSkill.Bomb:         Renderer.sprite = ImgBomb; break;
-            case ProductSkill.SameColor:    Renderer.sprite = ImgSameColor; break;
-            case ProductSkill.Hammer:       Renderer.sprite = ImgHammer; break;
-            case ProductSkill.KeepCombo:    Renderer.sprite = ImgKeepCombo; break;
+            case ProductSkill.Horizontal: Renderer.sprite = ImgHorizontal; break;
+            case ProductSkill.Vertical: Renderer.sprite = ImgVertical; break;
+            case ProductSkill.Bomb: Renderer.sprite = ImgBomb; break;
+            case ProductSkill.SameColor: Renderer.sprite = ImgSameColor; break;
+            case ProductSkill.Hammer: Renderer.sprite = ImgHammer; break;
+            case ProductSkill.KeepCombo: Renderer.sprite = ImgKeepCombo; break;
             default: break;
         }
     }
@@ -438,6 +439,14 @@ public class Product : MonoBehaviour
         if (IcedBlock.IsIced)
         {
             IcedBlock.BreakIce(count);
+        }
+    }
+
+    public void ShakeIceBlock()
+    {
+        if (IcedBlock.IsIced)
+        {
+            IcedBlock.ShakeIce();
         }
     }
 
