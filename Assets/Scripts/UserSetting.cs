@@ -20,7 +20,7 @@ public class UserSetting
     public const float ProductDropGravity = -50.0f; //떨어지는 속도
     public const float AutoMatchInterval = 0.1f; //매칭후 자동 매칭간 시간
     public const float SkillDestroyInterval = 0.2f; //1단계 스킬블럭들 터지는 시간
-    public const float IceFlushInterval = 3.0f;
+    public const float IceFlushInterval = 5.0f;
     public const int MatchCount = 3;
     public const int ScorePerAttack = 80;
     public const int MaxPoint = 2;

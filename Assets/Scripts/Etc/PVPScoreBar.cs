@@ -29,7 +29,7 @@ public class PVPScoreBar : MonoBehaviour
     {
         get
         {
-            return Time.time > mTouchedTime + UserSetting.IceFlushInterval && mTweenCounter == 0;
+            return Time.time > mTouchedTime + UserSetting.IceFlushInterval;
         }
     }
 
