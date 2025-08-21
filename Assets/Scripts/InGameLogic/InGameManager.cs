@@ -85,6 +85,7 @@ public class InGameManager : MonoBehaviour
     private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
     public float SFXVolume { get { return mSFXVolume; } }
+    public bool IsFInished { get { return mIsFinished; } }
     public Dictionary<int, Product> ProductIDs = new Dictionary<int, Product>();
     public InGameBillboard Billboard = new InGameBillboard();
     public GameFieldType FieldType { get {
@@ -174,6 +175,9 @@ public class InGameManager : MonoBehaviour
             Animator anim = GetComponent<Animator>();
             if (anim != null)
                 anim.enabled = false;
+
+            if (UserSetting.UserInfo.IsBot)
+                AutoBalancer.Instance.StartAI(this);
         }));
     }
     public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)
@@ -192,6 +196,9 @@ public class InGameManager : MonoBehaviour
             Animator anim = GetComponent<Animator>();
             if (anim != null)
                 anim.enabled = false;
+
+            if (UserSetting.UserInfo.IsBot)
+                AutoBalancer.Instance.StartAI(this);
         }));
     }
     public void StartGameInPVPOpponent(StageInfo info, UserInfo userInfo)
@@ -3051,6 +3058,9 @@ public class InGameManager : MonoBehaviour
     {
         if(!mIsFinished)
         {
+            if (UserSetting.UserInfo.IsBot)
+                AutoBalancer.Instance.StopAI();
+                
             mIsFinished = true;
             EventFinishFirst?.Invoke(isSuccess);
             StartCoroutine("_StartFinishing", isSuccess);

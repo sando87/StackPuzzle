@@ -21,27 +21,35 @@ public class AutoBalancerInfo
 
 public class AutoBalancer : MonoBehaviour
 {
-    InGameManager mCurrentManager = null;
-
-    void Awake()
+    private static AutoBalancer _Instance = null;
+    public static AutoBalancer Instance
     {
-        StartCoroutine(CoInvokerBot());
+        get
+        {
+            if (_Instance == null)
+                _Instance = FindObjectOfType<AutoBalancer>();
+            return _Instance;
+        }
     }
 
-    IEnumerator CoInvokerBot()
+    InGameManager mCurrentManager = null;
+
+    public void StartAI(InGameManager manager)
     {
-        while (true)
-        {
-            yield return new WaitUntil(() => UserSetting.UserInfo.IsBot);
-            StartCoroutine(nameof(DoAutoBalancerNew));
-            yield return new WaitUntil(() => !UserSetting.UserInfo.IsBot);
-            StopCoroutine(nameof(DoAutoBalancerNew));
-        }
+        StopCoroutine(nameof(DoAutoBalancerNew));
+
+        mCurrentManager = manager;
+        StartCoroutine(nameof(DoAutoBalancerNew));
+    }
+    public void StopAI()
+    {
+        StopCoroutine(nameof(DoAutoBalancerNew));
+        mCurrentManager = null;
     }
 
     IEnumerator DoAutoBalancerNew()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 3));
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
@@ -51,21 +59,14 @@ public class AutoBalancer : MonoBehaviour
         List<Product> swipedProducts = new List<Product>();
         while (true)
         {
-            while (mCurrentManager == null)
-            {
-                if (InGameManager.InstStage.gameObject.activeInHierarchy)
-                    mCurrentManager = InGameManager.InstStage;
-                else if (InGameManager.InstPVP_Player.gameObject.activeInHierarchy)
-                    mCurrentManager = InGameManager.InstPVP_Player;
-
-                yield return null;
-            }
-
             yield return new WaitUntil(() => mCurrentManager.IsIdle && mCurrentManager.IsAllProductIdle());
             yield return new WaitForSeconds(NextDelaySec());
             yield return new WaitUntil(() => mCurrentManager.IsIdle && mCurrentManager.IsAllProductIdle());
-            bool isItemUse = IsUseItem();
 
+            if (mCurrentManager.IsFInished || !mCurrentManager.gameObject.activeInHierarchy)
+                break;
+
+            bool isItemUse = IsUseItem();
             if (isItemUse && IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable())
             {
                 UseItem(PurchaseItemType.ExtendLimit);
