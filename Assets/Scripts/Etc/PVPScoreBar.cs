@@ -25,7 +25,6 @@ public class PVPScoreBar : MonoBehaviour
 
     public int CurrentScore { get; private set; } = 0;
     public Vector3 RootPosition { get { return RootScoreArea.position; } }
-    public Vector3 HitPointPosition { get { return HitPoint.transform.position; } }
     public bool IsIdle
     {
         get
@@ -57,9 +56,8 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScoreBar.rectTransform.SetAnchoredPosX(0);
         CurrentScoreBar.rectTransform.SetAnchoredWidth(0);
 
-        // HitPoint.transform.SetParent(CurrentScoreBar.transform);
-        // HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
-        // HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.anchorMin = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(0, 0.5f);
         HitPoint.rectTransform.SetAnchoredPosX(0);
 
         mPrevSub = CurrentScoreBar;
@@ -263,9 +261,6 @@ public class PVPScoreBar : MonoBehaviour
         {
             mTouchedTime = Time.time;
         }
-
-        float newWidth = Mathf.Abs(CurrentScore) * mWidthPerScore;
-        HitPoint.rectTransform.SetAnchoredPosX(newWidth);
     }
 
     void UpdateScoreBar(int score)
@@ -281,6 +276,10 @@ public class PVPScoreBar : MonoBehaviour
         float newWidth = Mathf.Abs(score) * mWidthPerScore;
         CurrentScoreBar.rectTransform.SetAnchoredWidth(newWidth);
         CurrentScoreBar.color = score > 0 ? SocreColorPlayer : SocreColorOpponent;
+
+        HitPoint.rectTransform.anchorMin = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
     }
 
     void DoEffectAddScore(int score)
@@ -298,6 +297,10 @@ public class PVPScoreBar : MonoBehaviour
         ScoreAddSubEffectBar.rectTransform.SetAnchoredPosX(0);
         ScoreAddSubEffectBar.rectTransform.SetAnchoredWidth(width);
         ScoreAddSubEffectBar.color = Color.white;
+
+        HitPoint.rectTransform.anchorMin = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
 
         Vector2 prevSize = CurrentScoreBar.rectTransform.sizeDelta;
         Vector2 addedSize = ScoreAddSubEffectBar.rectTransform.sizeDelta;
@@ -327,6 +330,10 @@ public class PVPScoreBar : MonoBehaviour
         ScoreAddSubEffectBar.rectTransform.SetAnchoredPosX(0);
         ScoreAddSubEffectBar.rectTransform.SetAnchoredWidth(width);
         ScoreAddSubEffectBar.color = Color.white;
+
+        HitPoint.rectTransform.anchorMin = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        HitPoint.rectTransform.SetAnchoredPosX(0);
 
         mTweenCounter = 1;
         Vector2 subSize = ScoreAddSubEffectBar.rectTransform.sizeDelta;
