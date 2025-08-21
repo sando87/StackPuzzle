@@ -515,8 +515,8 @@ public class AutoBalancer : MonoBehaviour
         switch (level)
         {
             case 1: return UnityEngine.Random.Range(0, 1);
-            case 2: return UnityEngine.Random.Range(5, 10);
-            case 3: return UnityEngine.Random.Range(15, 20);
+            case 2: return UnityEngine.Random.Range(4, 8);
+            case 3: return UnityEngine.Random.Range(10, 15);
             default: break;
         }
         return 10;
