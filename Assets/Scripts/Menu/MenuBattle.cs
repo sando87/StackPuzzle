@@ -26,6 +26,8 @@ public class MenuBattle : MonoBehaviour
     public ItemButton[] OpponentItemSlots;
     public GameObject TimeoutEffectAnim;
     public GameObject IceBlockUp1;
+    public TextMeshProUGUI IceCountFrom;
+    public TextMeshProUGUI IceCountTo;
     public GameObject IceBlockUp2;
     public GameObject IceBlockUp3;
     public PVPScoreBar PVPScoreBarPrefab;
@@ -432,14 +434,17 @@ public class MenuBattle : MonoBehaviour
     }
     public void AnimTimeoutEffect(int iceBlockLevel)
     {
-        if (iceBlockLevel <= 1 || 5 <= iceBlockLevel)
+        if (iceBlockLevel <= 1)
             return;
 
-        IceBlockUp1.SetActive(iceBlockLevel == 2);
-        IceBlockUp2.SetActive(iceBlockLevel == 3);
-        IceBlockUp3.SetActive(iceBlockLevel == 4);
+        IceBlockUp1.SetActive(true);
 
-        PVPScoreBar.SetIceBlockLevel(iceBlockLevel);
+        int addedIceBlockFrom = UserSetting.AddedIceBlockPerLevel * (iceBlockLevel - 2);
+        int addedIceBlockTo = UserSetting.AddedIceBlockPerLevel * (iceBlockLevel - 1);
+        IceCountFrom.text = "+" + addedIceBlockFrom;
+        IceCountTo.text = "+" + addedIceBlockTo;
+
+        PVPScoreBar.SetAddedIceBlockCount(addedIceBlockTo);
 
         StartCoroutine(AnimTimeout());
     }

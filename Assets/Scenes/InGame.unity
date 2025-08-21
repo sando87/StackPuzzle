@@ -74735,6 +74735,8 @@ MonoBehaviour:
   - {fileID: 691443199}
   TimeoutEffectAnim: {fileID: 2037563077}
   IceBlockUp1: {fileID: 1767381970}
+  IceCountFrom: {fileID: 1532027160}
+  IceCountTo: {fileID: 896134488}
   IceBlockUp2: {fileID: 762801059}
   IceBlockUp3: {fileID: 643886048}
   PVPScoreBarPrefab: {fileID: 2961191921116423079, guid: 0fe641d0f7d7e174aa8b26df3fa050ef,

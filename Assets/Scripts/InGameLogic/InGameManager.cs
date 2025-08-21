@@ -2979,7 +2979,8 @@ public class InGameManager : MonoBehaviour
 
                 PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
 
-                int fluchIceBlockCount = point * (UserSetting.IceBlockPerAttackPoint + (2 * (mPVPIceBlockLevel - 1)));
+                int addedIceBlockCount = UserSetting.AddedIceBlockPerLevel * (mPVPIceBlockLevel - 1);
+                int fluchIceBlockCount = point * (UserSetting.IceBlockPerAttackPoint + addedIceBlockCount);
                 List<Product> products = GetNextFlushTargets(fluchIceBlockCount);
                 if (products.Count < fluchIceBlockCount)
                 {
@@ -3286,7 +3287,7 @@ public class InGameManager : MonoBehaviour
             }
 
             float remain = currentTimelimit - playedTime;
-            if (remain <= 0 && mPVPIceBlockLevel < 4)
+            if (remain <= 0)
             {
                 SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCooltime);
                 MenuBattle.Inst().AnimTimeoutEffect(mPVPIceBlockLevel + 1);
