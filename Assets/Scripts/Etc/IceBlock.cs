@@ -108,17 +108,16 @@ public class IceBlock : MonoBehaviour
     IEnumerator AnimShake()
     {
         float dist = 0.1f;
-        Vector3 startPos = transform.localPosition;
         Vector3 dir = new Vector3(0, -1, 0);
         dir.Normalize();
         while (dist > 0.01f)
         {
-            transform.localPosition = startPos + (dist * dir);
+            transform.localPosition = mOriginalLocalPos + (dist * dir);
             dist *= 0.7f;
             dir *= -1;
             yield return new WaitForSeconds(0.1f);
         }
-        transform.localPosition = startPos;
+        transform.localPosition = mOriginalLocalPos;
     }
     IEnumerator AnimateTwinkle()
     {
