@@ -159,7 +159,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.SoftBake.JoyPop
-    Standalone: unity.DefaultCompany.JellyGarden
+    Standalone: com.SoftBake.JoyPop
     Tizen: com.best2dgamesstudio.jellygarden
     iPhone: com.best2dgamesstudio.jellygarden
     tvOS: com.best2dgamesstudio.jellygarden
@@ -814,6 +814,7 @@ PlayerSettings:
     ErrorHub: 0
     Hub: 0
     UNet: 1
+    Unity Ads: 1
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
