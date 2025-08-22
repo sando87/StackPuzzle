@@ -3,225 +3,242 @@ using System.Collections.Generic;
 using UnityEngine;
 // using GoogleMobileAds.Api;
 using System;
+using UnityEngine.Advertisements;
+using UnityEngine.UI;
 
 public enum AdsType
 {
     None, ChargeLifeA, ChargeLifeB, RewardItem, MissionFailed, InGameItemA, InGameItemB, InGameItemC
 }
 
-public class GoogleADMob : MonoBehaviour
+public class GoogleADMob : MonoBehaviour, IUnityAdsInitializationListener
 {
     private static GoogleADMob mInst = null;
     public static GoogleADMob Inst { get { if (mInst == null) mInst = FindObjectOfType<GoogleADMob>(); return mInst; } }
 
-//     private Dictionary<AdsType, AdsUnit> AdsUnits = new Dictionary<AdsType, AdsUnit>();
-//     private AdsType CurAdsType = AdsType.None;
-//     private Action<bool> EventReward = null;
-//     private bool Paused = false;
+    [SerializeField] private string _androidGameId = "YOUR_ANDROID_GAME_ID";
+    [SerializeField] private string _iOSGameId = "YOUR_IOS_GAME_ID";
+    [SerializeField] private bool _testMode = true;
+    [SerializeField] List<AdsUnit> AdsList = new List<AdsUnit>();
+    private Dictionary<AdsType, AdsUnit> AdsUnits = new Dictionary<AdsType, AdsUnit>();
 
-//     // Start is called before the first frame update
-//     void Start()
-//     {
-//         //ca-app-pub-3940256099942544~3347511713 test android
-//         //ca-app-pub-3940256099942544~1458002511 test iOS
-//         //ca-app-pub-1906763424823821~4446405417 prod Android
+    public bool IsDoneInit { get; private set; } = false;
+    public bool IsSuceessInit { get; private set; } = false;
+    public string GameId { get { return (Application.platform == RuntimePlatform.IPhonePlayer) ? _iOSGameId : _androidGameId; } }
 
-//         // Initialize the Google Mobile Ads SDK.
-//         MobileAds.Initialize(initStatus => {
-//             InitAdsUnits();
-//         });
-//     }
+    void Awake()
+    {
+        foreach (AdsUnit ads in AdsList)
+        {
+            if (ads.AdsType != AdsType.None)
+                AdsUnits[ads.AdsType] = ads;
+        }
 
-//     private void InitAdsUnits()
-//     {
-// #if UNITY_ANDROID
-//         //string adUnitId = "ca-app-pub-3940256099942544/5224354917";  //for rewardAds test ID
-//         AdsUnits[AdsType.ChargeLifeA] = new AdsUnit("ca-app-pub-1906763424823821/9540811810", AdsType.ChargeLifeA, new TimeSpan(0, 15, 0));
-//         AdsUnits[AdsType.ChargeLifeB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.ChargeLifeB, new TimeSpan(0, 60, 0));
-//         AdsUnits[AdsType.RewardItem] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.RewardItem, new TimeSpan(0, 0, 0));
-//         AdsUnits[AdsType.MissionFailed] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.MissionFailed, new TimeSpan(0, 10, 0));
-//         AdsUnits[AdsType.InGameItemA] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemA, new TimeSpan(0, 30, 0));
-//         AdsUnits[AdsType.InGameItemB] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemB, new TimeSpan(0, 30, 0));
-//         AdsUnits[AdsType.InGameItemC] = new AdsUnit("ca-app-pub-3940256099942544/5224354917", AdsType.InGameItemC, new TimeSpan(0, 60, 0));
-// #elif UNITY_IPHONE
-// #endif
+        StartCoroutine(StartInit());
+    }
 
-// #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-//         StartCoroutine(CheckAdsUnitLoading());
-// #endif
-//     }
+    IEnumerator StartInit()
+    {
+        while (true)
+        {
+            if (!Advertisement.isInitialized && NetClientApp.GetInstance().IsNetworkAlive)
+            {
+                IsDoneInit = false;
+                IsSuceessInit = false;
+                Advertisement.Initialize(GameId, _testMode, this);
+                yield return new WaitUntil(() => IsDoneInit);
+
+                if (IsSuceessInit)
+                {
+                    foreach (var ads in AdsUnits)
+                    {
+                        ads.Value.Load();
+                    }
+
+                    StopCoroutine(nameof(CheckAdsUnitLoading));
+                    StartCoroutine(nameof(CheckAdsUnitLoading));
+                }
+            }
+
+            yield return new WaitForSeconds(5);
+        }
+    }
+    public void OnInitializationComplete()
+    {
+        IsDoneInit = true;
+        IsSuceessInit = true;
+    }
+    public void OnInitializationFailed(UnityAdsInitializationError error, string message)
+    {
+        IsDoneInit = true;
+        IsSuceessInit = false;
+    }
+
+
 
     public int RemainSec(AdsType type)
     {
-        return 0;
-        // if (!AdsUnits.ContainsKey(type))
-        //     return int.MaxValue;
+        if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
+            return -1;
 
-        // return (int)AdsUnits[type].RemainSec;
+        return (int)AdsUnits[type].RemainSec;
     }
     public bool IsLoaded(AdsType type)
     {
-        return false;
-        // if (!AdsUnits.ContainsKey(type))
-        //     return false;
+        if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
+            return false;
 
-        // return AdsUnits[type].IsLoaded;
+        return AdsUnits[type].IsLoaded;
     }
     public void Show(AdsType type, Action<bool> eventReward)
     {
-        // if (!AdsUnits.ContainsKey(type))
-        //     return;
+        if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
+            return;
 
-        // if (!AdsUnits[type].IsLoaded)
-        //     return;
+        if (!AdsUnits[type].IsLoaded)
+        {
+            eventReward.Invoke(false);
+            return;
+        }
 
-        // Paused = true;
-        // CurAdsType = type;
-        // EventReward = eventReward;
-        // AdsUnits[type].Excute();
-        // StopCoroutine("CheckRewardResponse");
-        // StartCoroutine("CheckRewardResponse");
+        AdsUnits[type].Show(eventReward);
     }
-//     private IEnumerator CheckRewardResponse()
-//     {
-//         while(Paused)
-//             yield return null;
 
-//         EventReward?.Invoke(AdsUnits[CurAdsType].RewardSuccess);
-//         EventReward = null;
-//         CurAdsType = AdsType.None;
-//     }
+    private IEnumerator CheckAdsUnitLoading()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(3);
 
-//     private void OnApplicationPause(bool pause)
-//     {
-//         Paused = pause;
-//     }
+            if (!NetClientApp.GetInstance().IsNetworkAlive)
+                continue;
 
-//     private IEnumerator CheckAdsUnitLoading()
-//     {
-//         while(true)
-//         {
-//             yield return new WaitForSeconds(3);
+            if (IsSuceessInit)
+            {
+                foreach (var unit in AdsUnits)
+                {
+                    if (unit.Value.State == AdsUnitState.UnLoaded)
+                        unit.Value.Load();
+                }
+            }
+        }
+    }
 
-//             if (!NetClientApp.GetInstance().IsNetworkAlive)
-//                 continue;
-
-//             foreach (var unit in AdsUnits)
-//             {
-//                 if (unit.Value.State == AdsUnitState.UnLoaded)
-//                     unit.Value.Load();
-//             }
-//         }
-//     }
+    // private void OnApplicationPause(bool pause)
+    // {
+    //     Paused = pause;
+    // }
 }
 
 public enum AdsUnitState
 {
     None, UnLoaded, Loading, Loaded, Showing
 }
-public class AdsUnit
+
+[Serializable]
+public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
 {
-//     private AdsType Type;
-//     private string AdsID;
-//     private TimeSpan CoolTime;
-//     private RewardedAd Unit;
-//     private DateTime LastTime;
-//     public bool RewardSuccess { get; private set; }
-//     public AdsUnitState State { get; private set; }
-//     public AdsUnit(string id, AdsType type, TimeSpan coolTime)
-//     {
-//         Type = type;
-//         AdsID = id;
-//         CoolTime = coolTime;
-//         Unit = null;
-//         State = AdsUnitState.UnLoaded;
-//         LastTime = UserSetting.GetLastExcuteTime(type);
-//         RewardSuccess = false;
-//     }
+    public AdsType AdsType = AdsType.None;
+    public string AdsID_Adroid = "";
+    public string AdsID_IOS = "";
+    public double Cooltime = 0;
 
-//     public double RemainSec
-//     {
-//         get
-//         {
-//             TimeSpan term = DateTime.Now - LastTime;
-//             return term > CoolTime ? 0 : CoolTime.TotalSeconds - term.TotalSeconds;
-//         }
-//     }
-//     public bool IsLoaded { get { return Unit != null && State == AdsUnitState.Loaded && Unit.IsLoaded(); } }
-//     public void Excute()
-//     {
-// #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
-//         if (Unit.IsLoaded())
-//         {
-//             RewardSuccess = false;
-//             Unit.Show();
-//         }
-// #endif
-//     }
-//     public void Load()
-//     {
-//         Unit = new RewardedAd(AdsID);
+    public string AdsUnitID { get { return Application.platform == RuntimePlatform.IPhonePlayer ? AdsID_IOS : AdsID_Adroid; } }
+    private DateTime LastTime = new DateTime();
+    public AdsUnitState State { get; private set; } = AdsUnitState.UnLoaded;
 
-//         Unit.OnAdLoaded += HandleRewardedAdLoaded;
-//         Unit.OnAdFailedToLoad += HandleRewardedAdFailedToLoad;
-//         Unit.OnAdOpening += HandleRewardedAdOpening;
-//         Unit.OnAdFailedToShow += HandleRewardedAdFailedToShow;
-//         Unit.OnUserEarnedReward += HandleUserEarnedReward;
-//         Unit.OnAdClosed += HandleRewardedAdClosed;
+    private Action<bool> mEventOnReward = null; // 인자로는 보상 성공 여부를 전달
 
-//         // Create an empty ad request.
-//         AdRequest request = new AdRequest
-//             .Builder()
-//             .AddTestDevice("ABE6080B6424CDCCDE0810199E2229A4")   //sjlee's test mobile device ID
-//             .Build();
+    public double RemainSec
+    {
+        get
+        {
+            double seconds = (DateTime.Now - LastTime).TotalSeconds;
+            return seconds > Cooltime ? 0 : Cooltime - seconds;
+        }
+    }
 
-//         // Load the rewarded ad with the request.
-//         Unit.LoadAd(request);
-//         State = AdsUnitState.Loading;
-//     }
+    public bool IsLoaded { get { return State == AdsUnitState.Loaded; } }
+
+    public void Load()
+    {
+        if (IsLoaded)
+            return;
+
+        LOG.trace(AdsUnitID);
+        State = AdsUnitState.Loading;
+        Advertisement.Load(AdsUnitID, this);
+    }
+
+    public void Show(Action<bool> onReward)
+    {
+        if (!IsLoaded)
+            return;
+            
+        LOG.trace(AdsUnitID);
+        State = AdsUnitState.Showing;
+        mEventOnReward = onReward;
+        Advertisement.Show(AdsUnitID, this);
+    }
 
 
-//     private void HandleRewardedAdLoaded(object sender, EventArgs args)
-//     {
-//         LOG.trace("[" + Type + "] HandleRewardedAdLoaded event received");
-//         State = AdsUnitState.Loaded;
-//     }
+    public void OnUnityAdsAdLoaded(string placementId)
+    {
+        LOG.trace(placementId);
+        if (AdsUnitID.Equals(placementId))
+        {
+            State = AdsUnitState.Loaded;
+            mEventOnReward = null;
+        }
+    }
 
-//     private void HandleRewardedAdFailedToLoad(object sender, AdErrorEventArgs args)
-//     {
-//         LOG.trace("[" + Type + "] HandleRewardedAdFailedToLoad event received with message: "
-//                 + args.Message);
-//         State = AdsUnitState.UnLoaded;
-//     }
+    public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message)
+    {
+        LOG.trace(placementId + ":" + message);
+        if (AdsUnitID.Equals(placementId))
+        {
+            State = AdsUnitState.UnLoaded;
+            mEventOnReward = null;
+        }
+    }
 
-//     private void HandleRewardedAdOpening(object sender, EventArgs args)
-//     {
-//         LOG.trace("[" + Type + "] HandleRewardedAdOpening event received");
-//         State = AdsUnitState.Showing;
-//     }
+    public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
+    {
+        LOG.trace(placementId + ":" + message);
+        if (AdsUnitID.Equals(placementId))
+        {
+            State = AdsUnitState.UnLoaded;
+            mEventOnReward?.Invoke(false);
+            mEventOnReward = null;
+        }
+    }
 
-//     private void HandleRewardedAdFailedToShow(object sender, AdErrorEventArgs args)
-//     {
-//         LOG.trace("[" + Type + "] HandleRewardedAdFailedToShow event received with message: "
-//                  + args.Message);
-//         State = AdsUnitState.UnLoaded;
-//     }
+    public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
+    {
+        LOG.trace(placementId + ":" + showCompletionState);
+        if (AdsUnitID.Equals(placementId) && showCompletionState == UnityAdsShowCompletionState.COMPLETED)
+        {
+            State = AdsUnitState.UnLoaded;
+            LastTime = DateTime.Now;
+            mEventOnReward?.Invoke(true);
+            mEventOnReward = null;
+        }
+        else
+        {
+            State = AdsUnitState.UnLoaded;
+            mEventOnReward?.Invoke(false);
+            mEventOnReward = null;
+        }
+    }
 
-//     private void HandleRewardedAdClosed(object sender, EventArgs args)
-//     {
-//         LOG.trace("[" + Type + "] HandleRewardedAdClosed event received");
-//         State = AdsUnitState.UnLoaded;
-//     }
+    public void OnUnityAdsShowStart(string placementId)
+    {
+        LOG.trace(placementId);
+    }
 
-//     private void HandleUserEarnedReward(object sender, Reward args)
-//     {
-//         string type = args.Type;
-//         double amount = args.Amount;
-//         LOG.trace("[" + Type + "] HandleRewardedAdRewarded event received for "
-//                  + amount.ToString() + " " + type);
+    public void OnUnityAdsShowClick(string placementId)
+    {
+        LOG.trace(placementId);
+    }
 
-//         LastTime = DateTime.Now;
-//         UserSetting.SetLastExcuteTime(Type, LastTime);
-//         RewardSuccess = true;
-//     }
 }

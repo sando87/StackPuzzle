@@ -114931,6 +114931,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfd969ed3c015f74b937b2fe386d8cf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _androidGameId: YOUR_ANDROID_GAME_ID
+  _iOSGameId: YOUR_IOS_GAME_ID
+  _testMode: 1
+  _showAdButton: {fileID: 0}
+  _androidAdUnitId: Rewarded_Android
+  _iOSAdUnitId: Rewarded_iOS
+  AdsList: []
 --- !u!4 &1578242402
 Transform:
   m_ObjectHideFlags: 0
@@ -209929,24 +209936,24 @@ MonoBehaviour:
   productId: test001
   buttonType: 0
   consumePurchase: 1
+  onProductFetched:
+    m_PersistentCalls:
+      m_Calls: []
+  onProductFetchFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPurchaseFetched:
+    m_PersistentCalls:
+      m_Calls: []
   onTransactionsRestored:
     m_PersistentCalls:
       m_Calls: []
-  onPurchaseComplete:
+  onOrderPending:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseOK
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
+  onOrderConfirmed:
+    m_PersistentCalls:
+      m_Calls: []
   onPurchaseFailed:
     m_PersistentCalls:
       m_Calls:
@@ -209962,6 +209969,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onOrderDeferred:
+    m_PersistentCalls:
+      m_Calls: []
   titleText: {fileID: 0}
   descriptionText: {fileID: 0}
   priceText: {fileID: 0}
@@ -230243,24 +230253,24 @@ MonoBehaviour:
   productId: test001
   buttonType: 0
   consumePurchase: 1
+  onProductFetched:
+    m_PersistentCalls:
+      m_Calls: []
+  onProductFetchFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPurchaseFetched:
+    m_PersistentCalls:
+      m_Calls: []
   onTransactionsRestored:
     m_PersistentCalls:
       m_Calls: []
-  onPurchaseComplete:
+  onOrderPending:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseOK
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
+  onOrderConfirmed:
+    m_PersistentCalls:
+      m_Calls: []
   onPurchaseFailed:
     m_PersistentCalls:
       m_Calls:
@@ -230276,6 +230286,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onOrderDeferred:
+    m_PersistentCalls:
+      m_Calls: []
   titleText: {fileID: 0}
   descriptionText: {fileID: 0}
   priceText: {fileID: 0}
@@ -236512,24 +236525,24 @@ MonoBehaviour:
   productId: test001
   buttonType: 0
   consumePurchase: 1
+  onProductFetched:
+    m_PersistentCalls:
+      m_Calls: []
+  onProductFetchFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPurchaseFetched:
+    m_PersistentCalls:
+      m_Calls: []
   onTransactionsRestored:
     m_PersistentCalls:
       m_Calls: []
-  onPurchaseComplete:
+  onOrderPending:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseOK
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
+  onOrderConfirmed:
+    m_PersistentCalls:
+      m_Calls: []
   onPurchaseFailed:
     m_PersistentCalls:
       m_Calls:
@@ -236545,6 +236558,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onOrderDeferred:
+    m_PersistentCalls:
+      m_Calls: []
   titleText: {fileID: 0}
   descriptionText: {fileID: 0}
   priceText: {fileID: 0}
@@ -236779,24 +236795,24 @@ MonoBehaviour:
   productId: test001
   buttonType: 0
   consumePurchase: 1
+  onProductFetched:
+    m_PersistentCalls:
+      m_Calls: []
+  onProductFetchFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPurchaseFetched:
+    m_PersistentCalls:
+      m_Calls: []
   onTransactionsRestored:
     m_PersistentCalls:
       m_Calls: []
-  onPurchaseComplete:
+  onOrderPending:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseOK
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
+  onOrderConfirmed:
+    m_PersistentCalls:
+      m_Calls: []
   onPurchaseFailed:
     m_PersistentCalls:
       m_Calls:
@@ -236812,6 +236828,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onOrderDeferred:
+    m_PersistentCalls:
+      m_Calls: []
   titleText: {fileID: 0}
   descriptionText: {fileID: 0}
   priceText: {fileID: 0}
