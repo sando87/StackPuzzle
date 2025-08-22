@@ -4254,6 +4254,7 @@ public class InGameManager : MonoBehaviour
     private void CreateHammerEffect(ProductSkill skillType, Vector2 startPos, Vector2 endPos, float duration)
     {
         GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity, transform);
+        hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         hammerObj.ReturnAfter(duration);
 
         StartCoroutine(ThrowOver(hammerObj.transform, endPos.y, duration));
@@ -4553,13 +4554,23 @@ public class InGameManager : MonoBehaviour
     }
     private Frame FindHammerTarget(Frame startFrame)
     {
+        Frame defaultRet = null;
         List<Frame> frames = new List<Frame>();
+        int ranOffSet = mRandomSeed.Next(frames.Count);
         for (int i = 0; i < mFrames.Length; ++i)
         {
-            int ranIdx = i % mFrames.Length;
+            int ranIdx = (i + ranOffSet) % mFrames.Length;
             int idxX = ranIdx % CountX;
             int idxY = ranIdx / CountX;
             Frame frame = Frame(idxX, idxY);
+            if (frame.Empty)
+                continue;
+
+            if (defaultRet == null)
+            {
+                defaultRet = frame;
+            }
+                
             if (frame.IsBushed || frame.IsCapped || frame.IsRope)
             {
                 frames.Add(frame);
@@ -4573,7 +4584,7 @@ public class InGameManager : MonoBehaviour
         if(frames.Count > 0)
             return frames[mRandomSeed.Next(frames.Count)];
 
-        return startFrame;
+        return defaultRet == null ? startFrame : defaultRet;
     }
     private bool IsObstacled(Frame frame)
     {
