@@ -49,7 +49,7 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancerNew()
     {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(0.5f, 3));
+        yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 2));
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
@@ -517,7 +517,7 @@ public class AutoBalancer : MonoBehaviour
         {
             case 1: return UnityEngine.Random.Range(0, 1);
             case 2: return UnityEngine.Random.Range(4, 8);
-            case 3: return UnityEngine.Random.Range(10, 15);
+            case 3: return UnityEngine.Random.Range(8, 13);
             default: break;
         }
         return 10;
