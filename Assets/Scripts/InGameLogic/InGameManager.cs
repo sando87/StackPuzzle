@@ -343,6 +343,9 @@ public class InGameManager : MonoBehaviour
     }
     public void CleanUpGame()
     {
+        if (UserSetting.UserInfo.IsBot)
+            AutoBalancer.Instance.StopAI();
+
         if (mStageInfo != null)
         {
             for (int y = 0; y < CountY; y++)
@@ -3059,9 +3062,6 @@ public class InGameManager : MonoBehaviour
     {
         if(!mIsFinished)
         {
-            if (UserSetting.UserInfo.IsBot)
-                AutoBalancer.Instance.StopAI();
-                
             mIsFinished = true;
             EventFinishFirst?.Invoke(isSuccess);
             StartCoroutine("_StartFinishing", isSuccess);
