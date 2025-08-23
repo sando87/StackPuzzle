@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using JoyPop;
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
