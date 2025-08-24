@@ -114934,9 +114934,6 @@ MonoBehaviour:
   _androidGameId: YOUR_ANDROID_GAME_ID
   _iOSGameId: YOUR_IOS_GAME_ID
   _testMode: 1
-  _showAdButton: {fileID: 0}
-  _androidAdUnitId: Rewarded_Android
-  _iOSAdUnitId: Rewarded_iOS
   AdsList: []
 --- !u!4 &1578242402
 Transform:
@@ -209869,7 +209866,6 @@ GameObject:
   - component: {fileID: 3864235641030401715}
   - component: {fileID: 3864235641030401712}
   - component: {fileID: 3864235641030401719}
-  - component: {fileID: 3864235641030401720}
   m_Layer: 5
   m_Name: Item_Gem
   m_TagString: Untagged
@@ -209921,60 +209917,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3864235641030401720
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3864235641030401718}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36a5f511b0d8142cba0aeb92d0b264c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  productId: test001
-  buttonType: 0
-  consumePurchase: 1
-  onProductFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onProductFetchFailed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onTransactionsRestored:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderPending:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderConfirmed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFailed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseError
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onOrderDeferred:
-    m_PersistentCalls:
-      m_Calls: []
-  titleText: {fileID: 0}
-  descriptionText: {fileID: 0}
-  priceText: {fileID: 0}
 --- !u!114 &3864235641032629488
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230131,7 +230073,6 @@ GameObject:
   - component: {fileID: 3864235642044722545}
   - component: {fileID: 3864235642044722550}
   - component: {fileID: 3864235642044722549}
-  - component: {fileID: 3864235642044722552}
   m_Layer: 5
   m_Name: Item_Gem
   m_TagString: Untagged
@@ -230238,60 +230179,6 @@ RectTransform:
   m_AnchoredPosition: {x: 580, y: -275}
   m_SizeDelta: {x: 340, y: 450}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3864235642044722552
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3864235642044722548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36a5f511b0d8142cba0aeb92d0b264c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  productId: test001
-  buttonType: 0
-  consumePurchase: 1
-  onProductFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onProductFetchFailed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onTransactionsRestored:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderPending:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderConfirmed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFailed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseError
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onOrderDeferred:
-    m_PersistentCalls:
-      m_Calls: []
-  titleText: {fileID: 0}
-  descriptionText: {fileID: 0}
-  priceText: {fileID: 0}
 --- !u!222 &3864235642101419928
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -236403,7 +236290,6 @@ GameObject:
   - component: {fileID: 3864235642945510161}
   - component: {fileID: 3864235642945510166}
   - component: {fileID: 3864235642945510165}
-  - component: {fileID: 3864235642945510168}
   m_Layer: 5
   m_Name: Item_Gem
   m_TagString: Untagged
@@ -236510,60 +236396,6 @@ RectTransform:
   m_AnchoredPosition: {x: 580, y: -745}
   m_SizeDelta: {x: 340, y: 450}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3864235642945510168
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3864235642945510164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36a5f511b0d8142cba0aeb92d0b264c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  productId: test001
-  buttonType: 0
-  consumePurchase: 1
-  onProductFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onProductFetchFailed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onTransactionsRestored:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderPending:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderConfirmed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFailed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseError
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onOrderDeferred:
-    m_PersistentCalls:
-      m_Calls: []
-  titleText: {fileID: 0}
-  descriptionText: {fileID: 0}
-  priceText: {fileID: 0}
 --- !u!1 &3864235642960971136
 GameObject:
   m_ObjectHideFlags: 0
@@ -236728,7 +236560,6 @@ GameObject:
   - component: {fileID: 3864235642969202591}
   - component: {fileID: 3864235642969202588}
   - component: {fileID: 3864235642969202579}
-  - component: {fileID: 3864235642969202580}
   m_Layer: 5
   m_Name: Item_Gem
   m_TagString: Untagged
@@ -236780,60 +236611,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3864235642969202580
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3864235642969202578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36a5f511b0d8142cba0aeb92d0b264c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  productId: test001
-  buttonType: 0
-  consumePurchase: 1
-  onProductFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onProductFetchFailed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFetched:
-    m_PersistentCalls:
-      m_Calls: []
-  onTransactionsRestored:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderPending:
-    m_PersistentCalls:
-      m_Calls: []
-  onOrderConfirmed:
-    m_PersistentCalls:
-      m_Calls: []
-  onPurchaseFailed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: HandleOnPurchaseError
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onOrderDeferred:
-    m_PersistentCalls:
-      m_Calls: []
-  titleText: {fileID: 0}
-  descriptionText: {fileID: 0}
-  priceText: {fileID: 0}
 --- !u!114 &3864235642969202588
 MonoBehaviour:
   m_ObjectHideFlags: 0
