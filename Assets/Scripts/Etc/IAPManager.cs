@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
+[Serializable]
 public enum IAPProductType
 {
     // enum 이름이 스토어에 등록된 인앱결제 아이템 id와 동일해야 함
@@ -23,39 +24,62 @@ public class IAPProduct
 
 public class IAPManager : MonoBehaviour
 {
+    private static IAPManager mInst = null;
+    public static IAPManager Inst { get { if (mInst == null) mInst = FindObjectOfType<IAPManager>(); return mInst; } }
+
     [SerializeField] IAPProduct[] RegistorProducts = null;
 
     StoreController m_StoreController; // The Unity Purchasing system.
     Dictionary<string, IAPProduct> mProducts = new Dictionary<string, IAPProduct>();
 
-    public bool IsInitDone { get; private set; } = false;
-    public bool IsInitSuccessed { get; private set; } = false;
+    public bool IsConnected { get; private set; } = false;
 
     void Awake()
     {
-        InitializeIAP();
-    }
-
-    async void InitializeIAP()
-    {
-        IsInitDone = false;
-        IsInitSuccessed = false;
+        IsConnected = false;
         m_StoreController = UnityIAPServices.StoreController();
 
         m_StoreController.OnPurchasePending += OnPurchasePending;
         m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
         m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
-
         m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
-        Debug.Log("Connecting to store.");
-        await m_StoreController.Connect();
-
         m_StoreController.OnProductsFetchFailed += OnProductsFetchedFailed;
         m_StoreController.OnProductsFetched += OnProductsFetched;
-        InitProducts();
-        
-        IsInitDone = true;
-        IsInitSuccessed = true;
+
+        TryConnectIAP();
+
+        StartCoroutine(CoTryReconnect());
+    }
+
+    async void TryConnectIAP()
+    {
+        try
+        {
+            Debug.Log("Connecting to store.");
+            await m_StoreController.Connect();
+            InitProducts();
+
+            IsConnected = true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"IAP Connect failed: {e.Message}");
+            IsConnected = false;
+        }
+    }
+
+    IEnumerator CoTryReconnect()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(5);
+
+            if (!IsConnected && Application.internetReachability != NetworkReachability.NotReachable)
+            {
+                TryConnectIAP();
+            }
+        }
+
     }
 
     void InitProducts()
@@ -171,6 +195,7 @@ public class IAPManager : MonoBehaviour
     void OnStoreDisconnected(StoreConnectionFailureDescription description)
     {
         Debug.Log($"Store disconnected details: {description.message}");
+        IsConnected = false;
     }
 
     // Calling StoreController.Connect without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.

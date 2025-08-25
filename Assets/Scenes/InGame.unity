@@ -2008,6 +2008,7 @@ MonoBehaviour:
   _ObjectPooling: {fileID: 104829900}
   _AutoBotSystem: {fileID: 1673058114}
   _GoogleAd: {fileID: 1578242400}
+  _IAPManager: {fileID: 1939636859}
   _Tutorial: {fileID: 788085777}
   _Monitoring: {fileID: 349686766}
 --- !u!1 &54586738
@@ -29016,7 +29017,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 11
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &354109039
 GameObject:
@@ -62312,7 +62313,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &794585643
 GameObject:
@@ -143480,6 +143481,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1934343430}
   m_CullTransparentMesh: 0
+--- !u!1 &1939636859
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1939636861}
+  - component: {fileID: 1939636860}
+  m_Layer: 0
+  m_Name: IAPManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1939636860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939636859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ffdb11f230c32d4e81c898bdc63ff02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RegistorProducts:
+  - ID: 0
+  - ID: 1
+  - ID: 2
+  - ID: 3
+--- !u!4 &1939636861
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939636859}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1940094084
 GameObject:
   m_ObjectHideFlags: 0
@@ -209916,7 +209966,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235641030401712}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2090241242}
+        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
+        m_MethodName: OnButtonBuyProductC
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3864235641032629488
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230123,7 +230185,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642044722550}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2090241242}
+        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
+        m_MethodName: OnButtonBuyProductB
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3864235642044722550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236340,7 +236414,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642945510166}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2090241242}
+        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
+        m_MethodName: OnButtonBuyProductD
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3864235642945510166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236610,7 +236696,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642969202588}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2090241242}
+        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
+        m_MethodName: OnButtonBuyProductA
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &3864235642969202588
 MonoBehaviour:
   m_ObjectHideFlags: 0

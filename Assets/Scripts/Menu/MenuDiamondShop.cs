@@ -33,7 +33,12 @@ public class MenuDiamondShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
-    public bool OnClickPurchase(string productID)
+    public void OnButtonBuyProductA() { TryBuyProduct(IAPProductType.ProductID_A); }
+    public void OnButtonBuyProductB() { TryBuyProduct(IAPProductType.ProductID_B); }
+    public void OnButtonBuyProductC() { TryBuyProduct(IAPProductType.ProductID_C); }
+    public void OnButtonBuyProductD() { TryBuyProduct(IAPProductType.ProductID_D); }
+
+    void TryBuyProduct(IAPProductType productID)
     {
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         if (!NetClientApp.GetInstance().IsNetworkAlive)
@@ -44,31 +49,40 @@ public class MenuDiamondShop : MonoBehaviour
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         LOG.trace("[Request Purchase] " + "ProductId:" + productID);
-        return true; //true 반환시 구매 진행
+        IAPManager.Inst.BuyProduct(productID, (isSuccess) =>
+        {
+            OnResultPurchase(productID, isSuccess);
+        });
 #else
-        return false;
+        MenuMessageBox.PopUp("구매진행(개발자용) : " + productID, true, (isOK) =>
+        {
+            if(isOK)
+                OnResultPurchase(productID, true);
+        });
 #endif
     }
-    public void HandleOnPurchaseOK(UnityEngine.Purchasing.Product pro)
+    void OnResultPurchase(IAPProductType productID, bool isSuccess)
     {
-        LOG.trace(pro.definition.id);
-        OnSccuessPurchaseDiamond(pro.definition.id);
-    }
-    public void HandleOnPurchaseError(UnityEngine.Purchasing.Product pro, UnityEngine.Purchasing.PurchaseFailureReason reason)
-    {
-        LOG.trace(reason.ToString());
-        MenuMessageBox.PopUp(reason.ToString(), false, null);
+        LOG.trace(productID.ToString() + "," + isSuccess);
+        if (isSuccess)
+        {
+            DoSccuessPurchaseDiamond(productID);
+        }
+        else
+        {
+            MenuMessageBox.PopUp(productID.ToString(), false, null);
+        }
     }
 
-    public void OnSccuessPurchaseDiamond(string productID)
+    void DoSccuessPurchaseDiamond(IAPProductType productID)
     {
-        if (productID == "test0001")
+        if (productID == IAPProductType.ProductID_A)
             Purchases.PurchaseDiamond(10);
-        else if (productID == "test0002")
+        else if (productID == IAPProductType.ProductID_B)
             Purchases.PurchaseDiamond(50);
-        else if (productID == "test0003")
+        else if (productID == IAPProductType.ProductID_C)
             Purchases.PurchaseDiamond(100);
-        else if (productID == "test0004")
+        else if (productID == IAPProductType.ProductID_D)
             Purchases.PurchaseDiamond(150);
         else
             LOG.warn();
