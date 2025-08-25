@@ -135,6 +135,7 @@ public class MenuTitle : MonoBehaviour
         mIsTouched = false;
         ReadyAndWaitForTouch();
         yield return new WaitUntil(() => mIsTouched);
+        UserSetting.CountingGameStart();
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         gameObject.SetActive(false);
         MenuStages.PopUp();

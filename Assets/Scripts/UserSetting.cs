@@ -52,6 +52,7 @@ public class UserSetting
         }
     }
     public static bool IsTermsAgreement { get { return UserSettingInfo.IsTermsAgreement; } set { UserSettingInfo.IsTermsAgreement = value; } }
+    public static bool IsReviewed { get { return UserSettingInfo.IsRequestedReview; } set { UserSettingInfo.IsRequestedReview = value; } }
     public static DateTime FirstLaunchDate { get { return UserSettingInfo.FirstLaunchDate; } }
     public static MatchingLevel MatchLevel { get { return UserSettingInfo.MatchLevel; } set { UserSettingInfo.MatchLevel = value; } }
     public static bool Mute { get { return UserSettingInfo.Mute; } set { UserSettingInfo.Mute = value; } }
@@ -185,6 +186,11 @@ public class UserSetting
         mUserInfo.botLevel = botLevel;
         SaveUserInfo(mUserInfo);
     }
+    public static void CountingGameStart()
+    {
+        mUserInfo.StartCount++;
+        SaveUserInfo(mUserInfo);
+    }
     #endregion
 
 }
@@ -196,6 +202,7 @@ class UserSettingInfo
     [SerializeField] private int mVersion = UserSetting.GameVersion;
     [SerializeField] private bool mIsTermsAgreement = false;
     [SerializeField] private Int64 mFirstLaunchDate = 0;
+    [SerializeField] private bool mIsRequestedReview = false;
     [SerializeField] private MatchingLevel mMatchLevel = MatchingLevel.Bronze;
     [SerializeField] private bool mMute = false;
     [SerializeField] private float mVolumeSFX = 1;
@@ -209,6 +216,7 @@ class UserSettingInfo
         mVersion = UserSetting.GameVersion;
         mIsTermsAgreement = false;
         mFirstLaunchDate = DateTime.Now.Ticks;
+        mIsRequestedReview = false;
         mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
         mStageStarCount = new byte[UserSetting.StageTotalCount];
 
@@ -221,6 +229,11 @@ class UserSettingInfo
     {
         get { return mIsTermsAgreement; }
         set { mIsTermsAgreement = value; Save(); }
+    }
+    public bool IsRequestedReview
+    {
+        get { return mIsRequestedReview; }
+        set { mIsRequestedReview = value; Save(); }
     }
     public DateTime FirstLaunchDate
     {

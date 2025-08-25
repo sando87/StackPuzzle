@@ -44,7 +44,7 @@ public class MenuComplete : MonoBehaviour
     private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
         foreach (var effect in Effects)
-            if(effect != null)
+            if (effect != null)
                 Destroy(effect);
         Effects.Clear();
 
@@ -95,7 +95,7 @@ public class MenuComplete : MonoBehaviour
 
     IEnumerator AnimateFireworkParticles()
     {
-        for(int i = 0; i < 6; ++i)
+        for (int i = 0; i < 6; ++i)
         {
             float xOff = Random.Range(-300.0f, 300.0f);
             float yOff = Random.Range(-300.0f, 300.0f);
@@ -115,15 +115,15 @@ public class MenuComplete : MonoBehaviour
         Star3.gameObject.SetActive(false);
         yield return new WaitForSeconds(0.5f);
         Star1.gameObject.SetActive(starCount >= 1);
-        if(starCount >= 1)
+        if (starCount >= 1)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
         yield return new WaitForSeconds(1);
         Star2.gameObject.SetActive(starCount >= 2);
-        if(starCount >= 2)
+        if (starCount >= 2)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
         yield return new WaitForSeconds(1);
         Star3.gameObject.SetActive(starCount >= 3);
-        if(starCount >= 3)
+        if (starCount >= 3)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
     }
     IEnumerator AnimateReward(int score)
@@ -138,7 +138,7 @@ public class MenuComplete : MonoBehaviour
             curScore -= step;
             ScoreDisplay.SetScore((int)curScore);
             int curCoinCount = (int)(curScore / ScorePerCoin);
-            if(prvCoinCount != curCoinCount)
+            if (prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;
                 GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.EndPosition, Quaternion.identity, RewardCoin.transform);
@@ -159,7 +159,7 @@ public class MenuComplete : MonoBehaviour
         {
             yield return null;
             bool isAllDone = true;
-            foreach(Image coin in coins)
+            foreach (Image coin in coins)
             {
                 if (coin == null || coin.gameObject == RewardCoin.gameObject)
                     continue;
@@ -168,7 +168,7 @@ public class MenuComplete : MonoBehaviour
                 Vector3 dir = coin.transform.localPosition;
                 dir.Normalize();
                 coin.transform.localPosition -= speed * dir * Time.deltaTime;
-                if(Vector3.Dot(dir, coin.transform.localPosition) < 0)
+                if (Vector3.Dot(dir, coin.transform.localPosition) < 0)
                 {
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
                     RewardCoin.Play("push", -1, 0);
@@ -186,6 +186,8 @@ public class MenuComplete : MonoBehaviour
 
     public void OnNext()
     {
+        TryRequestReview();
+
         foreach (var effect in Effects)
             if (effect != null)
                 Destroy(effect);
@@ -267,7 +269,7 @@ public class MenuComplete : MonoBehaviour
             return;
         }
 
-        if(!NetClientApp.GetInstance().IsNetworkAlive)
+        if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
             MenuMessageBox.PopUp("Network NotReachable.", false, null);
             return;
@@ -281,7 +283,7 @@ public class MenuComplete : MonoBehaviour
 
         GoogleADMob.Inst.Show(AdsType.RewardItem, (rewarded) =>
         {
-            if(rewarded)
+            if (rewarded)
             {
                 foreach (string subReward in subRewards)
                     StageInfo.DoReward(subReward);
@@ -291,5 +293,16 @@ public class MenuComplete : MonoBehaviour
                 btn.enabled = false;
             }
         });
+    }
+
+    private void TryRequestReview()
+    {
+        if (UserSetting.IsReviewed) return;
+        if (UserSetting.IsBotPlayer) return;
+        if (UserSetting.UserInfo.StartCount < 3) return;
+        if (UserSetting.GetHighestStageNumber() < 50) return;
+
+        UserSetting.IsReviewed = true;
+        StoreReviewManager.Inst.RequestReview();
     }
 }

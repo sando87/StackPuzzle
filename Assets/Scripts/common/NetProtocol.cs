@@ -147,6 +147,7 @@ public class UserInfo
     public float rankingRate = 1;
     public int rank = 0;
     public int botLevel = 5;
+    public int StartCount = 0;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
     public bool IsBot { get { return botLevel > 0; } }

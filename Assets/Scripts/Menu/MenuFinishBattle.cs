@@ -84,6 +84,8 @@ public class MenuFinishBattle : MonoBehaviour
     {
         if (IsWin)
         {
+            TryRequestReview();
+
             //이겼을때 광고 스킵
             GoNext();
         }
@@ -111,6 +113,20 @@ public class MenuFinishBattle : MonoBehaviour
         StopCoroutine("AutoNext");
         gameObject.SetActive(false);
         MenuWaitMatch.PopUp();
+    }
+
+    private void TryRequestReview()
+    {
+        if (UserSetting.IsReviewed) return;
+        if (UserSetting.IsBotPlayer) return;
+        if (UserSetting.UserInfo.StartCount < 3) return;
+
+        // 재미있게 역전승으로 이겼을때..
+        if (true)
+        {
+            UserSetting.IsReviewed = true;
+            StoreReviewManager.Inst.RequestReview();
+        }
     }
 
     private IEnumerator AutoNext()
