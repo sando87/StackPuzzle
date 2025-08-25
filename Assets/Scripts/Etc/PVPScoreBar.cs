@@ -253,11 +253,11 @@ public class PVPScoreBar : MonoBehaviour
         CurrentScore += score;
 
         if (mZoomIndex == 0
-            || (mZoomIndex == 1 && currentCombo > 2)
-            || (mZoomIndex == 2 && currentCombo > 4)
-            || (mZoomIndex == 3 && currentCombo > 6)
-            || (mZoomIndex == 4 && currentCombo > 8)
-            || currentCombo > 10)
+            || (mZoomIndex == 1 && currentCombo > 3)
+            || (mZoomIndex == 2 && currentCombo > 6)
+            || (mZoomIndex == 3 && currentCombo > 9)
+            || (mZoomIndex == 4 && currentCombo > 12)
+            || currentCombo > 15)
         {
             mTouchedTime = Time.time;
         }
