@@ -9,8 +9,8 @@ using UnityEngine.Purchasing;
 public enum IAPProductType
 {
     // enum 이름이 스토어에 등록된 인앱결제 아이템 id와 동일해야 함
-    ProductID_A,
-    ProductID_B,
+    joypop_product_dia1,
+    joypop_product_dia2,
     ProductID_C,
     ProductID_D,
 }

@@ -33,8 +33,8 @@ public class MenuDiamondShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
-    public void OnButtonBuyProductA() { TryBuyProduct(IAPProductType.ProductID_A); }
-    public void OnButtonBuyProductB() { TryBuyProduct(IAPProductType.ProductID_B); }
+    public void OnButtonBuyProductA() { TryBuyProduct(IAPProductType.joypop_product_dia1); }
+    public void OnButtonBuyProductB() { TryBuyProduct(IAPProductType.joypop_product_dia2); }
     public void OnButtonBuyProductC() { TryBuyProduct(IAPProductType.ProductID_C); }
     public void OnButtonBuyProductD() { TryBuyProduct(IAPProductType.ProductID_D); }
 
@@ -76,14 +76,14 @@ public class MenuDiamondShop : MonoBehaviour
 
     void DoSccuessPurchaseDiamond(IAPProductType productID)
     {
-        if (productID == IAPProductType.ProductID_A)
-            Purchases.PurchaseDiamond(10);
-        else if (productID == IAPProductType.ProductID_B)
-            Purchases.PurchaseDiamond(50);
-        else if (productID == IAPProductType.ProductID_C)
+        if (productID == IAPProductType.joypop_product_dia1)
+            Purchases.PurchaseDiamond(40);
+        else if (productID == IAPProductType.joypop_product_dia2)
             Purchases.PurchaseDiamond(100);
+        else if (productID == IAPProductType.ProductID_C)
+            Purchases.PurchaseDiamond(250);
         else if (productID == IAPProductType.ProductID_D)
-            Purchases.PurchaseDiamond(150);
+            Purchases.PurchaseDiamond(500);
         else
             LOG.warn();
 
