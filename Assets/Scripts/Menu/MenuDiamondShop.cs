@@ -44,7 +44,7 @@ public class MenuDiamondShop : MonoBehaviour
         if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
             MenuMessageBox.PopUp("Network NotReachable.", false, null);
-            return false;
+            return;
         }
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
