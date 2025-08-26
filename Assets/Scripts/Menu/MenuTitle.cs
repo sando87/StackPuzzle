@@ -25,6 +25,7 @@ public class MenuTitle : MonoBehaviour
     [SerializeField] GameObject _AutoBotSystem;
     [SerializeField] GameObject _GoogleAd;
     [SerializeField] GameObject _IAPManager;
+    [SerializeField] GameObject _ReviewManager;
     [SerializeField] GameObject _Tutorial;
     [SerializeField] PerformanceMonitering _Monitoring;
 
@@ -114,6 +115,11 @@ public class MenuTitle : MonoBehaviour
         // _IAPManager.SetActive(true);
         // yield return new WaitForSeconds(0.1f);
         // LoadingText.text = "92%";
+
+        // 리뷰 매니저
+        // _ReviewManager.SetActive(true);
+        // yield return new WaitForSeconds(0.1f);
+        // LoadingText.text = "94%";
 
         // 튜토리얼
         _Tutorial.SetActive(true);
