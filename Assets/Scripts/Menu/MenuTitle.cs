@@ -117,9 +117,9 @@ public class MenuTitle : MonoBehaviour
         // LoadingText.text = "92%";
 
         // 리뷰 매니저
-        // _ReviewManager.SetActive(true);
-        // yield return new WaitForSeconds(0.1f);
-        // LoadingText.text = "94%";
+        _ReviewManager.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "94%";
 
         // 튜토리얼
         _Tutorial.SetActive(true);
