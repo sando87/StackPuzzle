@@ -80,6 +80,7 @@ public class InGameManager : MonoBehaviour
     private System.Random mRandomSeed = null;
     private int mStartRandomSeed = -1;
     private VerticalFrames[] mVerticalFrames = null;
+    public bool ItWasToughBattle { get; private set; } = false;
 
     private bool mIsWorkingCycle = false;
     private List<DelayedCall> mWorkerList = new List<DelayedCall>();
@@ -3004,6 +3005,9 @@ public class InGameManager : MonoBehaviour
                     StartCoroutine(FlushObstacles(rets));
                 }
 
+                if (products.Count >= UserSetting.IceBlockPerAttackPoint * 3)
+                    ItWasToughBattle = true;
+
                 yield return new WaitForSeconds(UserSetting.IceFlushInterval);
             }
             yield return null;
@@ -3296,6 +3300,10 @@ public class InGameManager : MonoBehaviour
                 mPVPIceBlockLevel++;
                 currentTimelimit += mStageInfo.TimeLimit;
             }
+
+            if (PVPScoreBar.CurrentScore < -500)
+                ItWasToughBattle = true;
+
             yield return new WaitForSeconds(1);
             playedTime += 1;
         }
@@ -3872,6 +3880,7 @@ public class InGameManager : MonoBehaviour
         mIsWorkingCycle = false;
         mStartRandomSeed = -1;
         mWorkerList.Clear();
+        ItWasToughBattle = false;
 
         ProductIDs.Clear();
         Billboard.Reset(this);

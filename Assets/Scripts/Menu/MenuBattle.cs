@@ -224,7 +224,7 @@ public class MenuBattle : MonoBehaviour
         {
             SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuFinishBattle.PopUp(success, prevScore);
+            MenuFinishBattle.PopUp(success, prevScore, InGameManager.InstPVP_Player.ItWasToughBattle);
 
             InGameManager.InstPVP_Player.CleanUpGame();
             InGameManager.InstPVP_Opponent.CleanUpGame();
@@ -235,7 +235,7 @@ public class MenuBattle : MonoBehaviour
             SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
-            MenuFinishBattle.PopUp(success, prevScore);
+            MenuFinishBattle.PopUp(success, prevScore, InGameManager.InstPVP_Player.ItWasToughBattle);
             InGameManager.InstPVP_Player.CleanUpGame();
             InGameManager.InstPVP_Opponent.CleanUpGame();
             Hide();

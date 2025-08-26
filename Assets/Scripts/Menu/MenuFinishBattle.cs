@@ -13,20 +13,23 @@ public class MenuFinishBattle : MonoBehaviour
     public Slider ExpBar;
     public TextMeshProUGUI Level;
     public TextMeshProUGUI Exp;
-    private bool IsWin = false;
 
-    public static void PopUp(bool win, int prevScore)
+    private bool mIsWin = false;
+    private bool mWasTough = false;
+
+    public static void PopUp(bool win, int prevScore, bool wasTough)
     {
         GameObject objMenu = GameObject.Find(UIObjName).gameObject;
         objMenu.SetActive(true);
 
         MenuFinishBattle menu = objMenu.GetComponent<MenuFinishBattle>();
-        menu.Init(win, prevScore);
+        menu.Init(win, prevScore, wasTough);
     }
 
-    private void Init(bool win, int prevScore)
+    private void Init(bool win, int prevScore, bool wasTough)
     {
-        IsWin = win;
+        mIsWin = win;
+        mWasTough = wasTough;
         WinEffect.SetActive(win);
         LoseEffect.SetActive(!win);
         StartCoroutine("AnimateExp", prevScore);
@@ -82,7 +85,7 @@ public class MenuFinishBattle : MonoBehaviour
 
     private void NextMenu()
     {
-        if (IsWin)
+        if (mIsWin)
         {
             TryRequestReview();
 
@@ -122,7 +125,7 @@ public class MenuFinishBattle : MonoBehaviour
         if (UserSetting.UserInfo.StartCount < 3) return;
 
         // 재미있게 역전승으로 이겼을때..
-        if (true)
+        if (mWasTough)
         {
             UserSetting.IsReviewed = true;
             StoreReviewManager.Inst.RequestReview();
