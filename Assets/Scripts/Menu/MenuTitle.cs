@@ -107,9 +107,9 @@ public class MenuTitle : MonoBehaviour
         LoadingText.text = "80%";
 
         // 구글광고
-        // _GoogleAd.SetActive(true);
-        // yield return new WaitForSeconds(0.1f);
-        // LoadingText.text = "90%";
+        _GoogleAd.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "90%";
 
         // 인앱결제모듈
         // _IAPManager.SetActive(true);
