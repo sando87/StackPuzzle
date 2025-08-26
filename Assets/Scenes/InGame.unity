@@ -114977,10 +114977,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfd969ed3c015f74b937b2fe386d8cf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _androidGameId: YOUR_ANDROID_GAME_ID
-  _iOSGameId: YOUR_IOS_GAME_ID
+  _androidGameId: 5929726
+  _iOSGameId: 5929727
   _testMode: 1
-  AdsList: []
+  AdsList:
+  - AdsType: 5
+    AdsID_Adroid: Rewarded_Android
+    AdsID_IOS: Rewarded_iOS
+    Cooltime: 60
+  - AdsType: 6
+    AdsID_Adroid: Rewarded_Android
+    AdsID_IOS: Rewarded_iOS
+    Cooltime: 60
+  - AdsType: 7
+    AdsID_Adroid: Rewarded_Android
+    AdsID_IOS: Rewarded_iOS
+    Cooltime: 60
 --- !u!4 &1578242402
 Transform:
   m_ObjectHideFlags: 0
