@@ -45,9 +45,6 @@ public class LevelEditor : EditorWindow
 
     private void Initialze()
     {
-        LOG.LogWriterConsole += (msg) => {
-            Debug.Log(msg);
-        };
         LoadResources();
         LoadFromFile(1);
 

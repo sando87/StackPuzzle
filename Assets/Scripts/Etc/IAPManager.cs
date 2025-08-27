@@ -55,7 +55,6 @@ public class IAPManager : MonoBehaviour
     {
         try
         {
-            Debug.Log("Connecting to store.");
             await m_StoreController.Connect();
             InitProducts();
 
@@ -63,7 +62,6 @@ public class IAPManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"IAP Connect failed: {e.Message}");
             IsConnected = false;
         }
     }
@@ -97,6 +95,8 @@ public class IAPManager : MonoBehaviour
 
     public void BuyProduct(IAPProductType productType, Action<bool> eventResult)
     {
+        LOG.trace($"Purchase request - Product: {productType.ToString()}");
+
         string proID = productType.ToString();
         mProducts[proID].EventResult = eventResult;
         m_StoreController.PurchaseProduct(proID);
@@ -107,21 +107,20 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            Debug.Log("Could not find product in failed order.");
-        }
-        else
-        {
-            string proID = product.definition.id;
-            if (mProducts.ContainsKey(proID))
-            {
-                mProducts[proID].EventResult?.Invoke(false);
-                mProducts[proID].EventResult = null;
-            }
+            LOG.trace("Could not find product in failed order.");
+            return;
         }
 
-        Debug.Log($"Purchase failed - Product: '{product?.definition.id}'," +
+        LOG.trace($"Purchase failed - Product: '{product?.definition.id}'," +
                     $"PurchaseFailureReason: {order.FailureReason.ToString()},"
                     + $"Purchase Failure Details: {order.Details}");
+        
+        string proID = product.definition.id;
+        if (mProducts.ContainsKey(proID))
+        {
+            mProducts[proID].EventResult?.Invoke(false);
+            mProducts[proID].EventResult = null;
+        }
     }
 
     void OnPurchasePending(PendingOrder order)
@@ -129,9 +128,13 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product is null)
         {
-            Debug.Log("Could not find product in order.");
+            LOG.trace("Could not find product in order.");
             return;
         }
+        
+        LOG.trace($"Purchase complete - Product: {product.definition.id}");
+        
+        m_StoreController.ConfirmPurchase(order);
 
         //Add the purchased product to the players inventory
         string proID = product.definition.id;
@@ -140,10 +143,6 @@ public class IAPManager : MonoBehaviour
             mProducts[proID].EventResult?.Invoke(true);
             mProducts[proID].EventResult = null;
         }
-
-        Debug.Log($"Purchase complete - Product: {product.definition.id}");
-
-        m_StoreController.ConfirmPurchase(order);
     }
 
     void OnPurchaseConfirmed(Order order)
@@ -157,7 +156,7 @@ public class IAPManager : MonoBehaviour
                 OnPurchaseConfirmationFailed(failedOrder);
                 break;
             default:
-                Debug.Log("Unknown OnPurchaseConfirmed result.");
+                LOG.trace("Unknown OnPurchaseConfirmed result.");
                 break;
         }
     }
@@ -167,10 +166,12 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            Debug.Log("Could not find product in purchase confirmation.");
+            LOG.trace("Could not find product in purchase confirmation.");
         }
-
-        Debug.Log($"Purchase confirmed- Product: {product?.definition.id}");
+        else
+        {
+            LOG.trace($"Purchase confirmed- Product: {product?.definition.id}");
+        }
     }
 
     void OnPurchaseConfirmationFailed(FailedOrder order)
@@ -178,12 +179,14 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            Debug.Log("Could not find product in failed confirmation.");
+            LOG.trace("Could not find product in failed confirmation.");
         }
-
-        Debug.Log($"Confirmation failed - Product: '{product?.definition.id}'," +
-                    $"PurchaseFailureReason: {order.FailureReason.ToString()},"
-                    + $"Confirmation Failure Details: {order.Details}");
+        else
+        {
+            LOG.trace($"Confirmation failed - Product: '{product?.definition.id}'," +
+                        $"PurchaseFailureReason: {order.FailureReason.ToString()},"
+                        + $"Confirmation Failure Details: {order.Details}");
+        }
     }
 
     Product GetFirstProductInOrder(Order order)
@@ -194,18 +197,18 @@ public class IAPManager : MonoBehaviour
     // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
     void OnStoreDisconnected(StoreConnectionFailureDescription description)
     {
-        Debug.Log($"Store disconnected details: {description.message}");
+        // Debug.Log($"Store disconnected details: {description.message}");
         IsConnected = false;
     }
 
     // Calling StoreController.Connect without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.
     void OnProductsFetched(List<Product> products)
     {
-        Debug.Log($"Products fetched successfully for {products.Count} products.");
+        // Debug.Log($"Products fetched successfully for {products.Count} products.");
     }
 
     void OnProductsFetchedFailed(ProductFetchFailed failure)
     {
-        Debug.Log($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
+        // Debug.Log($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
     }
 }

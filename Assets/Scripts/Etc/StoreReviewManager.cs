@@ -17,6 +17,7 @@ public class StoreReviewManager : MonoBehaviour
 
     public void RequestReview()
     {
+        LOG.trace("리뷰 요청");
 #if UNITY_ANDROID
         RequestReviewGoogleStore();
 #elif UNITY_IPHONE

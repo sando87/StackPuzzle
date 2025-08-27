@@ -165,7 +165,6 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
         if (IsLoaded)
             return;
 
-        LOG.trace(AdsUnitID);
         State = AdsUnitState.Loading;
         Advertisement.Load(AdsUnitID, this);
     }
@@ -184,7 +183,6 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
 
     public void OnUnityAdsAdLoaded(string placementId)
     {
-        LOG.trace(placementId);
         if (AdsUnitID.Equals(placementId))
         {
             State = AdsUnitState.Loaded;
@@ -194,7 +192,6 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
 
     public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message)
     {
-        LOG.trace(placementId + ":" + message);
         if (AdsUnitID.Equals(placementId))
         {
             State = AdsUnitState.UnLoaded;
@@ -204,7 +201,6 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
 
     public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
     {
-        LOG.trace(placementId + ":" + message);
         if (AdsUnitID.Equals(placementId))
         {
             State = AdsUnitState.UnLoaded;
@@ -233,12 +229,10 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
 
     public void OnUnityAdsShowStart(string placementId)
     {
-        LOG.trace(placementId);
     }
 
     public void OnUnityAdsShowClick(string placementId)
     {
-        LOG.trace(placementId);
     }
 
 }

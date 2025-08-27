@@ -217,7 +217,7 @@ public class MenuBattle : MonoBehaviour
         if(!ret)
             MenuInformBox.PopUp("Network Disconnected");
 
-        string log = "[PVP] " + (success?"win":"lose") + ", oppPK:" + InGameManager.InstPVP_Opponent.UserPk;
+        string log = "PVPEnd," + (success?"win":"lose") + "," + InGameManager.InstPVP_Opponent.UserPk;
         LOG.trace(log);
 
         if (success)
@@ -366,8 +366,7 @@ public class MenuBattle : MonoBehaviour
 
         Purchases.UseItem(itemType);
 
-        string oppName = InGameManager.InstPVP_Opponent.UserInfo.userName;
-        string log = "[UseItem] " + "PVP:" + oppName + ", Item:" + itemType + ", Count:" + itemType.GetCount();
+        string log = "UseItem," + itemType + "," + itemType.GetCount();
         LOG.trace(log);
     }
 

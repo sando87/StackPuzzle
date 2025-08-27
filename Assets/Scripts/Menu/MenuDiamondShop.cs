@@ -48,7 +48,6 @@ public class MenuDiamondShop : MonoBehaviour
         }
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-        LOG.trace("[Request Purchase] " + "ProductId:" + productID);
         IAPManager.Inst.BuyProduct(productID, (isSuccess) =>
         {
             OnResultPurchase(productID, isSuccess);
@@ -63,7 +62,6 @@ public class MenuDiamondShop : MonoBehaviour
     }
     void OnResultPurchase(IAPProductType productID, bool isSuccess)
     {
-        LOG.trace(productID.ToString() + "," + isSuccess);
         if (isSuccess)
         {
             DoSccuessPurchaseDiamond(productID);
@@ -90,7 +88,7 @@ public class MenuDiamondShop : MonoBehaviour
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("Success Purchase!!");
 
-        string log = "[Response Purchase] " + "ProductID:" + productID + ", CurrentTotalDia:" + Purchases.CountDiamond();
+        string log = "PurchaseDia," + productID + "," + Purchases.CountDiamond();
         LOG.trace(log);
     }
 

@@ -151,7 +151,6 @@ public class ObjectPooling : MonoBehaviour
 
         if(prefab.GetComponent<ObjectPoolable>() == null)
         {
-            LOG.trace(resourcesPath + "," + prefab.name);
             return false;
         }
 

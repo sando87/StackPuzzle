@@ -303,7 +303,7 @@ public class MenuInGame : MonoBehaviour
 
         Purchases.UseItem(itemType);
 
-        string log = "[UseItem] " + "Stage:" + mStageInfo.Num + ", Item:" + itemType + ", Count:" + itemType.GetCount();
+        string log = "UseItem," + mStageInfo.Num + "," + itemType + "," + itemType.GetCount();
         LOG.trace(log);
     }
 
@@ -355,7 +355,7 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
-            string log = "[STAGE] " + "success," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
+            string log = "StageEnd,win," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
             LOG.trace(log);
 
             SoundPlayer.Inst.StopBackMusic();
@@ -366,7 +366,7 @@ public class MenuInGame : MonoBehaviour
         }
         else
         {
-            string log = "[STAGE] " + "failed," + mStageInfo.Num;
+            string log = "StageEnd,lose," + mStageInfo.Num;
             LOG.trace(log);
 
             SoundPlayer.Inst.StopBackMusic();

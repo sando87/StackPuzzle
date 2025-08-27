@@ -92,7 +92,7 @@ public class MenuPlay : MonoBehaviour
         {
             Purchases.UseHeart();
 
-            string log = "[STAGE Start] " + "Stage:" + mStageInfo.Num + ", HeartCount:" + Purchases.CountHeart();
+            string log = "StageStart," + mStageInfo.Num + "," + Purchases.CountHeart();
             LOG.trace(log);
         }
     }

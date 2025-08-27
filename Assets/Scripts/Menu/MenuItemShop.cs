@@ -84,13 +84,6 @@ public class MenuItemShop : MonoBehaviour
                 if(Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost))
                 {
                     MenuInformBox.PopUp("Success.", 0.8f);
-
-                    string log = "[Purchase Item] "
-                    + "ItemType:" + type
-                    + ", Count:" + cnt
-                    + ", Cost:" + cost
-                    + ", Current:" + type.ToItemType().GetCount();
-                    LOG.trace(log);
                 }
                 else
                     MenuInformBox.PopUp("Not enough Diamonds.");
