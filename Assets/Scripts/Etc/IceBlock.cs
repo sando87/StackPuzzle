@@ -24,7 +24,7 @@ public class IceBlock : MonoBehaviour
         mOriginalLocalPos = transform.localPosition;
     }
 
-    public bool BreakIce(int count)
+    public bool BreakIce(int count, InGameManager inGameManager)
     {
         if (!IsIced)
             return false;
@@ -35,11 +35,11 @@ public class IceBlock : MonoBehaviour
         //     BreakAction(count);
         // }));
 
-        BreakAction(count);
+        BreakAction(count, inGameManager);
 
         return true;
     }
-    private void BreakAction(int count)
+    private void BreakAction(int count, InGameManager inGameManager)
     {
         if (!IsIced)
             return;
@@ -47,12 +47,16 @@ public class IceBlock : MonoBehaviour
         // Instantiate(IceBreakEffectPrefab, transform.position, Quaternion.identity);
         // SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
 
-        IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
-        obj.SetDepth(BreakDepth);
-        obj.GetComponent<SpriteRenderer>().sortingLayerName = "UIParticle";
-        obj.GetComponent<SpriteRenderer>().sortingOrder = 1;
-        obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
+        GameObject vfx = ObjectPooling.Instance.Instantiate(IceBreakEffectPrefab, transform.position, Quaternion.identity, inGameManager.transform);
+        // vfx.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        vfx.ReturnAfter(2);
+
+        // IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);
+        // obj.SetDepth(BreakDepth);
+        // obj.GetComponent<SpriteRenderer>().sortingLayerName = "UIParticle";
+        // obj.GetComponent<SpriteRenderer>().sortingOrder = 1;
+        // obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        // ParentFrame.StartCoroutine(AnimatePickedUp(obj.gameObject));
 
         // transform.DOKill();
         // transform.localPosition = mOriginalLocalPos;

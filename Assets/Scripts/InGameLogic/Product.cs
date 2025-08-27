@@ -440,7 +440,7 @@ namespace JoyPop
         {
             if (IcedBlock.IsIced)
             {
-                IcedBlock.BreakIce(count);
+                IcedBlock.BreakIce(count, Manager);
             }
         }
 
