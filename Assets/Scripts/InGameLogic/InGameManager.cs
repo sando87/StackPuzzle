@@ -1209,9 +1209,7 @@ public class InGameManager : MonoBehaviour
         pro.SkillCasted = true;
         pro.Animation.Play("destroy");
 
-        Network_Click(pro);
         StartCoroutine(DoMatchingCycle(new Product[] { pro }, Billboard.CurrentCombo));
-        RemoveLimit();
     }
 
     private void CastSkillBomb_Stripe(Product productbomb, Product productStripe)
