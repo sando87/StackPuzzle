@@ -146,6 +146,8 @@ public class MenuTitle : MonoBehaviour
         + "," + Purchases.CountItem(PurchaseItemType.KeepCombo);
         LOG.trace(log);
 
+        LogToGoogleForms.Instance.LogGameStart(sessionID);
+
         // 모니터링 시스템 작동
         // _Monitoring.OnMonitering = (log) => LOG.trace(log);
         // _Monitoring.gameObject.SetActive(true);

@@ -94,6 +94,8 @@ public class MenuPlay : MonoBehaviour
 
             string log = "StageStart," + UserSetting.SessionID + "," + mStageInfo.Num + "," + Purchases.CountHeart();
             LOG.trace(log);
+
+            LogToGoogleForms.Instance.LogStageStart(UserSetting.SessionID, mStageInfo.Num);
         }
     }
 

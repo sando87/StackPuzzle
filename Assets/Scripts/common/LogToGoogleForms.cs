@@ -91,19 +91,20 @@ public class LogToGoogleForms : MonoBehaviour
         data.eventName = GoogleFormsEventName.TermsAgree.ToString();
         SendLogToGoogleForm(data);
     }
-    public void LogGameStart(int sessionID) 
+    public void LogGameStart(string sessionID) 
     {
         GoogleFormsData data = new GoogleFormsData();
         InitFormsCommonData(data);
         data.eventName = GoogleFormsEventName.GameStart.ToString();
-        data.sessionID = sessionID.ToString();
+        data.sessionID = sessionID;
         SendLogToGoogleForm(data);
     }
-    public void LogStageStart(int stageNumber) 
+    public void LogStageStart(string sessionID, int stageNumber) 
     {
         GoogleFormsData data = new GoogleFormsData();
         InitFormsCommonData(data);
         data.eventName = GoogleFormsEventName.StageStart.ToString();
+        data.sessionID = sessionID;
         data.stageNumber = stageNumber.ToString();
         SendLogToGoogleForm(data);
     }

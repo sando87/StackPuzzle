@@ -82,8 +82,6 @@ public class MenuDiamondShop : MonoBehaviour
             Purchases.PurchaseDiamond(250);
         else if (productID == IAPProductType.ProductID_D)
             Purchases.PurchaseDiamond(500);
-        else
-            LOG.warn();
 
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("Success Purchase!!");

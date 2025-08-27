@@ -4706,8 +4706,8 @@ public class InGameManager : MonoBehaviour
                         Product[] rets = products.ToArray();
                         if (body.ArrayCount != rets.Length)
                         {
-                            LOG.warn("body: " + body.ArrayCount);
-                            LOG.warn("point,ret: " + point + "," + rets.Length);
+                            // LOG.warn("body: " + body.ArrayCount);
+                            // LOG.warn("point,ret: " + point + "," + rets.Length);
                         }
 
                         StartCoroutine(FlushObstacles(rets));

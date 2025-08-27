@@ -144,7 +144,6 @@ public class ObjectPooling : MonoBehaviour
             prefab = Resources.Load<GameObject>(resourcesPath);
             if (prefab == null)
             {
-                LOG.warn();
                 return false;
             }
         }
@@ -181,7 +180,6 @@ public class ObjectPooling : MonoBehaviour
         if (poolingObj == null)
         {
             //풀링 대상이 아니므로 그냥 삭제
-            LOG.warn(obj.name);
             Destroy(obj);
             return;
         }
