@@ -132,8 +132,8 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "100%";
 
-        int tickSecond = (int)(DateTime.Now.Ticks / TimeSpan.TicksPerSecond);
-        string sessionID = UserSetting.UserInfo.userPk + "_" + tickSecond.ToString();
+        uint tickSecond = (uint)(DateTime.Now.Ticks / TimeSpan.TicksPerSecond);
+        string sessionID = tickSecond.ToString() + "." + UserSetting.UserInfo.userPk;
         UserSetting.SessionID = sessionID;
         string log = "GameStart," + UserSetting.SessionID
         + "," + Purchases.CountGold()
