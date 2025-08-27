@@ -79,6 +79,7 @@ public class UserSetting
     public static int UserScore { get { return mUserInfo == null ? 0 : mUserInfo.score; } }
     public static float RankingRate { get { return mUserInfo == null ? 1 : mUserInfo.rankingRate; } }
     public static string UserName { get { return mUserInfo == null ? "" : mUserInfo.userName; } }
+    public static string SessionID { get; set; } = "";
 
     public static void Initialize()
     {

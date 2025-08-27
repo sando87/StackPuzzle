@@ -308,7 +308,7 @@ public class MenuWaitMatch : MonoBehaviour
         {
             Purchases.UseHeart();
 
-            string log = "PVPStart," + pvpInfo.OppUserInfo.userPk + "," + Purchases.CountHeart();
+            string log = "PVPStart," + UserSetting.SessionID + "," + pvpInfo.OppUserInfo.userPk + "," + Purchases.CountHeart();
             LOG.trace(log);
         }
 

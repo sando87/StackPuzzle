@@ -132,6 +132,20 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "100%";
 
+        int tickSecond = (int)(DateTime.Now.Ticks / TimeSpan.TicksPerSecond);
+        string sessionID = UserSetting.UserInfo.userPk + "_" + tickSecond.ToString();
+        UserSetting.SessionID = sessionID;
+        string log = "GameStart," + UserSetting.SessionID
+        + "," + Purchases.CountGold()
+        + "," + Purchases.CountDiamond()
+        + "," + Purchases.CountItem(PurchaseItemType.ExtendLimit)
+        + "," + Purchases.CountItem(PurchaseItemType.RemoveIce)
+        + "," + Purchases.CountItem(PurchaseItemType.MakeSkill1)
+        + "," + Purchases.CountItem(PurchaseItemType.MakeSkill2)
+        + "," + Purchases.CountItem(PurchaseItemType.Meteor)
+        + "," + Purchases.CountItem(PurchaseItemType.KeepCombo);
+        LOG.trace(log);
+
         // 모니터링 시스템 작동
         // _Monitoring.OnMonitering = (log) => LOG.trace(log);
         // _Monitoring.gameObject.SetActive(true);

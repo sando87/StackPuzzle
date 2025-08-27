@@ -355,7 +355,7 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
-            string log = "StageEnd,win," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
+            string log = "StageEnd," + UserSetting.SessionID + ",win," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
             LOG.trace(log);
 
             SoundPlayer.Inst.StopBackMusic();
@@ -366,7 +366,7 @@ public class MenuInGame : MonoBehaviour
         }
         else
         {
-            string log = "StageEnd,lose," + mStageInfo.Num;
+            string log = "StageEnd," + UserSetting.SessionID + ",lose," + mStageInfo.Num;
             LOG.trace(log);
 
             SoundPlayer.Inst.StopBackMusic();

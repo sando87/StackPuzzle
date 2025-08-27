@@ -217,7 +217,7 @@ public class MenuBattle : MonoBehaviour
         if(!ret)
             MenuInformBox.PopUp("Network Disconnected");
 
-        string log = "PVPEnd," + (success?"win":"lose") + "," + InGameManager.InstPVP_Opponent.UserPk;
+        string log = "PVPEnd," + UserSetting.SessionID + "," + (success?"win":"lose") + "," + InGameManager.InstPVP_Opponent.UserPk;
         LOG.trace(log);
 
         if (success)
