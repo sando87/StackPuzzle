@@ -7,7 +7,7 @@ public class PerformanceMonitering : MonoBehaviour
 {
     public Action<string> OnMonitering = null;
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
     private PerformanceMonitor mPerformanceMonitor = null;
 
     void Awake()

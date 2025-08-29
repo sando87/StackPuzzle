@@ -52,7 +52,7 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(1.2f);
         LoadingText.text = "10%";
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         DirectoryInfo di = new DirectoryInfo("./VirtualSaveData/");
         if (di.Exists == false)
             di.Create();
@@ -241,7 +241,7 @@ public class MenuTitle : MonoBehaviour
             return NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
         };
 
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         LOG.Initialize(".");
 #else
         LOG.Initialize(Application.persistentDataPath);

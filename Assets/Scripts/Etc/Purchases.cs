@@ -331,7 +331,7 @@ public class Purchases
 
     private static PurchaseInfo LoadPurchaseInfo()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string path = "./VirtualSaveData/PurchaseInfo.txt";
         if (File.Exists(path))
         {
@@ -365,7 +365,7 @@ public class Purchases
     }
     private static void UpdatePurchaseInfo(PurchaseInfo info)
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/PurchaseInfo.txt";
         string jsonPurchaseInfo = JsonUtility.ToJson(info, true);
         File.WriteAllText(fullname, jsonPurchaseInfo);
@@ -379,7 +379,7 @@ public class Purchases
     }
     public static void DeletePurchaseInfo()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/PurchaseInfo.txt";
         File.Delete(fullname);
 #else

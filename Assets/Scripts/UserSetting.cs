@@ -128,7 +128,7 @@ public class UserSetting
 
     public static void DeleteUserInfo()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/UserInfo.txt";
         File.Delete(fullname);
 #else
@@ -137,7 +137,7 @@ public class UserSetting
     }
     public static UserInfo LoadUserInfo()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string path = "./VirtualSaveData/UserInfo.txt";
         if (File.Exists(path))
         {
@@ -172,7 +172,7 @@ public class UserSetting
     }
     private static UserInfo SaveUserInfo(UserInfo info)
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/UserInfo.txt";
         string jsonUserInfo = JsonUtility.ToJson(info, true);
         File.WriteAllText(fullname, jsonUserInfo);
@@ -313,7 +313,7 @@ class UserSettingInfo
 
     public static UserSettingInfo Load()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string path = "./VirtualSaveData/UserSettingInfo.txt";
         if (File.Exists(path))
         {
@@ -339,7 +339,7 @@ class UserSettingInfo
     
     private static void Save(UserSettingInfo info)
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/UserSettingInfo.txt";
         string jsonUserSettingInfo = JsonUtility.ToJson(info, true);
         File.WriteAllText(fullname, jsonUserSettingInfo);
@@ -350,7 +350,7 @@ class UserSettingInfo
 
     public static void Delete()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string fullname = "./VirtualSaveData/UserSettingInfo.txt";
         File.Delete(fullname);
 #else

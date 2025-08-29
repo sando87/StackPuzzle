@@ -60,7 +60,7 @@ public class StageInfo
 
     public static StageInfo Load(int stageNum)
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
         string path = "./" + stageNum + ".txt";
         if(File.Exists(path))
         {
