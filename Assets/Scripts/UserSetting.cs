@@ -52,6 +52,7 @@ public class UserSetting
         }
     }
     public static bool IsTermsAgreement { get { return UserSettingInfo.IsTermsAgreement; } set { UserSettingInfo.IsTermsAgreement = value; } }
+    public static LocaleSupportLangType CurrentLang { get { return UserSettingInfo.CurrnetLang; } set { UserSettingInfo.CurrnetLang = value; } }
     public static bool IsReviewed { get { return UserSettingInfo.IsRequestedReview; } set { UserSettingInfo.IsRequestedReview = value; } }
     public static DateTime FirstLaunchDate { get { return UserSettingInfo.FirstLaunchDate; } }
     public static MatchingLevel MatchLevel { get { return UserSettingInfo.MatchLevel; } set { UserSettingInfo.MatchLevel = value; } }
@@ -209,6 +210,7 @@ class UserSettingInfo
     [SerializeField] private float mVolumeSFX = 1;
     [SerializeField] private float mVolumeBackground = 0.3f;
     [SerializeField] private int mTutorialNumber = 4;
+    [SerializeField] private LocaleSupportLangType mCurrentLang = LocaleSupportLangType.None;
     [SerializeField] private Int64[] mAdsLastShowTime = null;
     [SerializeField] private byte[] mStageStarCount = null;
 
@@ -220,10 +222,17 @@ class UserSettingInfo
         mIsRequestedReview = false;
         mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
         mStageStarCount = new byte[UserSetting.StageTotalCount];
+        mCurrentLang = LocaleSupportLangType.None;
 
         for (int i = 0; i < mStageStarCount.Length; ++i)
             mStageStarCount[i] = 0xff;
         mStageStarCount[0] = 0;
+    }
+
+    public LocaleSupportLangType CurrnetLang
+    {
+        get { return mCurrentLang; }
+        set { mCurrentLang = value; Save(); }
     }
 
     public bool IsTermsAgreement

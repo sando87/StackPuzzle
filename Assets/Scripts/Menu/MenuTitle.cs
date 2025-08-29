@@ -63,6 +63,12 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "15%";
 
+        // 최초 1회 시스템 언어에 따라 디폴트 언어 세팅
+        if (UserSetting.CurrentLang == LocaleSupportLangType.None)
+        {
+            UserSetting.CurrentLang = ConvertLangType(Application.systemLanguage);
+        }
+
         Purchases.Initialize();
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "20%";
@@ -195,7 +201,7 @@ public class MenuTitle : MonoBehaviour
         float time = 0;
         while (time < duration)
         {
-            if(isFadeIn)
+            if (isFadeIn)
                 ForegroundImage.color = new Color(0, 0, 0, (duration - time) / duration);
             else
                 ForegroundImage.color = new Color(0, 0, 0, time / duration);
@@ -253,6 +259,17 @@ public class MenuTitle : MonoBehaviour
             StartText.gameObject.SetActive(isShow);
             isShow = !isShow;
             yield return new WaitForSeconds(1);
+        }
+    }
+
+    LocaleSupportLangType ConvertLangType(SystemLanguage systemLang)
+    {
+        switch (systemLang)
+        {
+            case SystemLanguage.Korean: return LocaleSupportLangType.Korea;
+            case SystemLanguage.Japanese: return LocaleSupportLangType.Japan;
+            case SystemLanguage.ChineseSimplified: return LocaleSupportLangType.China;
+            default: return LocaleSupportLangType.English;
         }
     }
 
