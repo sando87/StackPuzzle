@@ -47,14 +47,17 @@ class LOG
         if (logs.Length <= 0)
             return;
 
-        if (IsNetworkAlive())
+        foreach (string log in logs)
         {
-            if (!WriteLogsToDB(logs))
-                WriteLogsToFile(logs);
-        }
-        else
-        {
-            WriteLogsToFile(logs);
+            if (IsNetworkAlive())
+            {
+                if (!WriteLogsToDB(log))
+                    WriteLogToFile(log + Environment.NewLine);
+            }
+            else
+            {
+                WriteLogToFile(log + Environment.NewLine);
+            }
         }
     }
 
@@ -79,29 +82,42 @@ class LOG
             LogWriterConsole?.Invoke("Failed WriteLogsToFile");
         }
     }
-    static bool WriteLogsToDB(string[] logs)
+    static void WriteLogToFile(string logs)
     {
-        foreach (string log in logs)
+        try
         {
-            if (!IsNetworkAlive())
-                return false;
-
-            if (!LogStringWriterDB.Invoke(log))
-                return false;
+            string filename = DateTime.Now.ToString("yyMMdd") + ".txt";
+            string path = mFileLogPath + filename;
+            using (var stream = new FileStream(path, FileMode.Append))
+            {
+                byte[] data = Encoding.UTF8.GetBytes(logs);
+                stream.Write(data, 0, data.Length);
+            }
         }
-        return true;
+        catch
+        {
+            LogWriterConsole?.Invoke("Failed WriteLogToFile");
+        }
+    }
+    static bool WriteLogsToDB(string log)
+    {
+        return LogStringWriterDB.Invoke(log);
     }
     static void WriteFilesToDB()
     {
+        List<byte> bytes = new List<byte>();
         string[] filePaths = Directory.GetFiles(mFileLogPath);
-        foreach(string file in filePaths)
+        foreach (string file in filePaths)
         {
-            if (!IsNetworkAlive())
-                break;
-
+            bytes.Clear();
+            bytes.AddRange(Encoding.UTF8.GetBytes("Logfile:"));
+            bytes.AddRange(Encoding.UTF8.GetBytes(file + Environment.NewLine));
             byte[] filedata = File.ReadAllBytes(file);
-            if(LogBytesWriterDB.Invoke(filedata))
+            bytes.AddRange(filedata);
+            if (LogBytesWriterDB.Invoke(bytes.ToArray()))
                 File.Delete(file);
+            else
+                break;
         }
     }
     static string[] FlushQueue()

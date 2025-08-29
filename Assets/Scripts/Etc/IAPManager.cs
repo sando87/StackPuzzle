@@ -197,18 +197,18 @@ public class IAPManager : MonoBehaviour
     // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
     void OnStoreDisconnected(StoreConnectionFailureDescription description)
     {
-        // Debug.Log($"Store disconnected details: {description.message}");
+        // LOG.trace($"Store disconnected details: {description.message}");
         IsConnected = false;
     }
 
     // Calling StoreController.Connect without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.
     void OnProductsFetched(List<Product> products)
     {
-        // Debug.Log($"Products fetched successfully for {products.Count} products.");
+        // LOG.trace($"Products fetched successfully for {products.Count} products.");
     }
 
     void OnProductsFetchedFailed(ProductFetchFailed failure)
     {
-        // Debug.Log($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
+        // LOG.trace($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
     }
 }
