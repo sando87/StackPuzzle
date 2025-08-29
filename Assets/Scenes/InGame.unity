@@ -143566,8 +143566,6 @@ MonoBehaviour:
   RegistorProducts:
   - ID: 0
   - ID: 1
-  - ID: 2
-  - ID: 3
 --- !u!4 &1939636861
 Transform:
   m_ObjectHideFlags: 0
