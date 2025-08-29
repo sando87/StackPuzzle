@@ -118,9 +118,9 @@ public class MenuTitle : MonoBehaviour
         LoadingText.text = "90%";
 
         // 인앱결제모듈
-        // _IAPManager.SetActive(true);
-        // yield return new WaitForSeconds(0.1f);
-        // LoadingText.text = "92%";
+        _IAPManager.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "92%";
 
         // 리뷰 매니저
         _ReviewManager.SetActive(true);

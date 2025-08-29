@@ -114981,15 +114981,11 @@ MonoBehaviour:
   _iOSGameId: 5929727
   _testMode: 1
   AdsList:
-  - AdsType: 5
+  - AdsType: 1
     AdsID_Adroid: Rewarded_Android
     AdsID_IOS: Rewarded_iOS
     Cooltime: 60
-  - AdsType: 6
-    AdsID_Adroid: Rewarded_Android
-    AdsID_IOS: Rewarded_iOS
-    Cooltime: 60
-  - AdsType: 7
+  - AdsType: 2
     AdsID_Adroid: Rewarded_Android
     AdsID_IOS: Rewarded_iOS
     Cooltime: 60
