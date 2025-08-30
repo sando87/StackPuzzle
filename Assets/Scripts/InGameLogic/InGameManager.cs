@@ -1197,7 +1197,7 @@ public class InGameManager : MonoBehaviour
                 nextTarget = FindHammerTarget(pro.ParentFrame);
                 
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 0.9f);
+                CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 1.0f);
 
                 DestroySelfOnly(pro);
                 return DelayedCallRet.Keep;
@@ -1369,7 +1369,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 0.9f);
+                CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 1);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productBomb);
@@ -1396,7 +1396,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 0.9f);
+                CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 1);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productHori);
@@ -1423,7 +1423,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 0.9f);
+                CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 1);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productVert);
@@ -1454,7 +1454,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
-                    CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 0.9f);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 1);
                     nextTargets.Add(target);
                 }
                 for (int i = 0; i < 3; ++i)
@@ -1462,7 +1462,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
-                    CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 0.9f);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 1);
                     nextTargets.Add(target);
                 }
 
@@ -2001,7 +2001,7 @@ public class InGameManager : MonoBehaviour
             mIsUserEventLock = false;
         }
 
-        float duration = 0.9f;
+        float duration = 1;
         Frame nextTarget = FindHammerTarget(pro.ParentFrame);
         CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, duration);
 
@@ -4293,11 +4293,16 @@ public class InGameManager : MonoBehaviour
     {
         GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity, transform);
         hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        hammerObj.ReturnAfter(duration);
+        hammerObj.ReturnAfter(2);
 
-        StartCoroutine(ThrowOver(hammerObj.transform, endPos.y, duration));
+        float maxPosY = Mathf.Max(startPos.y, endPos.y);
         hammerObj.transform.DORotate(new Vector3(0, 0, 720), duration, RotateMode.FastBeyond360);
-        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear);
+        hammerObj.transform.DOMoveY(maxPosY + 3, duration * 0.5f).SetEase(Ease.OutQuad);
+        hammerObj.transform.DOMoveY(endPos.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f);
+        hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear).OnComplete(() =>
+        {
+            hammerObj.ReturnAfter();
+        });
         // .OnComplete(() =>
         // {
         //     CreateHammerHit(endPos);
