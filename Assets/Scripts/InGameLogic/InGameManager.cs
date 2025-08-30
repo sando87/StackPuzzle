@@ -386,10 +386,19 @@ public class InGameManager : MonoBehaviour
         }
         else if (pro.Skill != ProductSkill.Nothing)
         {
-            Network_Click(pro);
-            RemoveLimit();
-            CastSkillProduct(pro);
-            //DestroyProducts(new Product[] { pro });
+            if (pro.Skill != ProductSkill.KeepCombo)
+            {
+                Network_Click(pro);
+                RemoveLimit();
+                CastSkillProduct(pro);
+            }
+            else
+            {
+                Network_Click(pro);
+                int startCombo = pro.KeepComboNum;
+                StartCoroutine(DoMatchingCycle(new Product[1] { pro }, startCombo));
+                RemoveLimit();
+            }
         }
         else
         {
@@ -1206,10 +1215,9 @@ public class InGameManager : MonoBehaviour
     }
     private void CastKeepComboProduct(Product pro)
     {
-        pro.SkillCasted = true;
-        pro.Animation.Play("destroy");
-
-        StartCoroutine(DoMatchingCycle(new Product[] { pro }, Billboard.CurrentCombo));
+        ComboSet(pro.KeepComboNum);
+        pro.DestroyImmediately(Billboard.CurrentCombo);
+        AcquireScore(Billboard.CurrentCombo, pro.transform.position);
     }
 
     private void CastSkillBomb_Stripe(Product productbomb, Product productStripe)
@@ -1477,13 +1485,18 @@ public class InGameManager : MonoBehaviour
             }
         });
     }
+    private void CastSkillNormal_Combo(Product productNormalA, Product productComboB)
+    {
+        CastSkillProduct(productComboB);
+        CastSkillProduct(productNormalA);
+    }
 
     private void StartSingleSkillLoop()
     {
         AddWorker(0, 2, (cnt) =>
         {
             Product targetSkill = FindNextSingleSkill();
-            if(targetSkill != null)
+            if (targetSkill != null)
             {
                 CastSkillProduct(targetSkill);
                 return DelayedCallRet.Keep;
@@ -1495,7 +1508,7 @@ public class InGameManager : MonoBehaviour
                     return DelayedCallRet.Done;
                 }
             }
-            
+
             return DelayedCallRet.Keep;
         });
     }
@@ -2055,7 +2068,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
                 case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
                 case ProductSkill.Hammer: CastSkillHammer_Hori(sub, main); break;
-                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
+                case ProductSkill.KeepCombo: CastSkillNormal_Combo(main, sub); break;
             }
         }
         else if (main.Skill == ProductSkill.Vertical)
@@ -2066,7 +2079,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillStripe_Stripe(main, sub); break;
                 case ProductSkill.Bomb: CastSkillBomb_Stripe(sub, main); break;
                 case ProductSkill.Hammer: CastSkillHammer_Vert(sub, main); break;
-                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
+                case ProductSkill.KeepCombo: CastSkillNormal_Combo(main, sub); break;
             }
         }
         else if (main.Skill == ProductSkill.Bomb)
@@ -2077,7 +2090,7 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillBomb_Stripe(main, sub); break;
                 case ProductSkill.Bomb: StartCoroutine(DestroySkillBomb_Bomb(main, sub)); break;
                 case ProductSkill.Hammer: CastSkillHammer_Bomb(sub, main); break;
-                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
+                case ProductSkill.KeepCombo: CastSkillNormal_Combo(main, sub); break;
             }
         }
         else if (main.Skill == ProductSkill.Hammer)
@@ -2088,18 +2101,18 @@ public class InGameManager : MonoBehaviour
                 case ProductSkill.Vertical: CastSkillHammer_Vert(main, sub); break;
                 case ProductSkill.Bomb: CastSkillHammer_Bomb(main, sub); break;
                 case ProductSkill.Hammer: CastSkillHammer_Hammer(main, sub); break;
-                case ProductSkill.KeepCombo: CastSkillProduct(main); break;
+                case ProductSkill.KeepCombo: CastSkillNormal_Combo(main, sub); break;
             }
         }
         else if (main.Skill == ProductSkill.KeepCombo)
         {
             switch (sub.Skill)
             {
-                case ProductSkill.Horizontal: CastSkillProduct(sub); break;
-                case ProductSkill.Vertical: CastSkillProduct(sub); break;
-                case ProductSkill.Bomb: CastSkillProduct(sub); break;
-                case ProductSkill.Hammer: CastSkillProduct(sub); break;
-                case ProductSkill.KeepCombo: CastSkillProduct(sub); break;
+                case ProductSkill.Horizontal: CastSkillNormal_Combo(sub, main); break;
+                case ProductSkill.Vertical: CastSkillNormal_Combo(sub, main); break;
+                case ProductSkill.Bomb: CastSkillNormal_Combo(sub, main); break;
+                case ProductSkill.Hammer: CastSkillNormal_Combo(sub, main); break;
+                case ProductSkill.KeepCombo: CastSkillNormal_Combo(sub, main); break;
             }
         }
     }
@@ -2395,10 +2408,12 @@ public class InGameManager : MonoBehaviour
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateProductBullets(sameColor, 0.2f, ProductSkill.Horizontal, pros,
-                (pro) => {
+                (pro) =>
+                {
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
-                () => {
+                () =>
+                {
                     Network_ChangeSkill(netInfo.ToArray());
                     StartSingleSkillLoop();
                 }));
@@ -2411,10 +2426,12 @@ public class InGameManager : MonoBehaviour
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateProductBullets(sameColor, 0.2f, ProductSkill.Bomb, pros,
-                (pro) => {
+                (pro) =>
+                {
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
-                () => {
+                () =>
+                {
                     Network_ChangeSkill(netInfo.ToArray());
                     StartSingleSkillLoop();
                 }));
@@ -2437,6 +2454,11 @@ public class InGameManager : MonoBehaviour
                     StartSingleSkillLoop();
                 }));
         }
+        else if (another.Skill == ProductSkill.KeepCombo)
+        {
+            CastSkillProduct(another);
+            CastSkillProduct(sameColor);
+        }
         else if (another.Skill == ProductSkill.SameColor)
         {
             List<Product> randomProducts = ScanRandomProducts(9);
@@ -2448,13 +2470,15 @@ public class InGameManager : MonoBehaviour
 
             List<ProductInfo> netInfo = new List<ProductInfo>();
             StartCoroutine(CreateDirectBeamAtOnce(TrailingPrefab, sameColor.transform.position, frames,
-                (frame) => {
+                (frame) =>
+                {
                     Product pro = frame.ChildProduct;
                     pro.ChangeProductImage(ProductSkill.SameColor);
                     pro.FlashProduct();
                     netInfo.Add(new ProductInfo(pro.Color, pro.Color, pro.Skill, pro.ParentFrame.IndexX, pro.ParentFrame.IndexY, pro.InstanceID, pro.InstanceID));
                 },
-                () => {
+                () =>
+                {
                     //SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakSameSkill2, mSFXVolume);
                     Network_ChangeSkill(netInfo.ToArray());
                     StartRainbowSkillLoop();
@@ -2720,6 +2744,7 @@ public class InGameManager : MonoBehaviour
             (pro) =>
             {
                 pro.ChangeProductImage(ProductSkill.KeepCombo);
+                pro.KeepComboNum = Billboard.CurrentCombo;
 
                 KeepComboNum keepCombo = Instantiate(KeepComboPrefab, pro.transform.position, Quaternion.identity, pro.transform);
                 keepCombo.SetNumber(Billboard.CurrentCombo);
@@ -3720,6 +3745,11 @@ public class InGameManager : MonoBehaviour
     private void ComboReset(int startCombo = 1)
     {
         Billboard.CurrentCombo = startCombo;
+        EventCombo?.Invoke(Billboard.CurrentCombo);
+    }
+    private void ComboSet(int combo)
+    {
+        Billboard.CurrentCombo = Mathf.Max(Billboard.CurrentCombo, combo);
         EventCombo?.Invoke(Billboard.CurrentCombo);
     }
     private Product[] GetTopIceBlocks(int count)
@@ -4857,7 +4887,6 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Click;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = pro.Combo;
         req.pros = new ProductInfo[1];
         req.pros[0].idxX = pro.ParentFrame.IndexX;
         req.pros[0].idxY = pro.ParentFrame.IndexY;
@@ -4873,7 +4902,6 @@ public class InGameManager : MonoBehaviour
         PVPInfo req = new PVPInfo();
         req.cmd = PVPCommand.Swipe;
         req.oppUserPk = InstPVP_Opponent.UserPk;
-        req.combo = pro.Combo;
         req.dir = dir;
         req.pros = new ProductInfo[1];
         req.pros[0].idxX = pro.ParentFrame.IndexX;

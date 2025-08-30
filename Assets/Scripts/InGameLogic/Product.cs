@@ -22,13 +22,13 @@ namespace JoyPop
         public IceBlock IcedBlock;
 
         public Action EventUnWrapIce;
+        public Action EventDestroy;
 
         public bool IsSkillable { get { return Skill != ProductSkill.Nothing && !SkillCasted; } }
         public InGameManager Manager { get; set; }
         public Frame ParentFrame { get; private set; }
         public ProductSkill Skill { get; private set; }
         public float DropSpeed { get; set; } = 0;
-        public int Combo { get; set; }
         public int InstanceID { get; set; }
         public bool IsMerging { get; private set; }
         public bool IsDestroying { get; private set; }
@@ -40,6 +40,7 @@ namespace JoyPop
         public bool IsIceBlock { get { return IcedBlock.IsIced; } }
         public bool IsClosed { get { return false; } }
         public SwipChain Chain { get; set; } = null;
+        public int KeepComboNum { get; set; } = 0;
 
         private BoxCollider2D mCollider = null;
 
@@ -59,9 +60,11 @@ namespace JoyPop
             transform.localPosition = new Vector3(0, 0, -1);
             Skill = ProductSkill.Nothing;
             DropSpeed = 0;
-            Combo = 0;
             mSkillCasted = false;
             IcedBlock.SetDepth(0);
+            EventUnWrapIce = null;
+            EventDestroy = null;
+            KeepComboNum = 0;
             gameObject.SetActive(true);
             if (mCollider == null)
                 mCollider = GetComponent<BoxCollider2D>();
@@ -125,9 +128,8 @@ namespace JoyPop
         {
             mCollider.enabled = false;
             IsMerging = true;
-            Combo = combo;
             ParentFrame.TouchBush();
-            ParentFrame.CreateComboTextEffect(Combo, Color);
+            ParentFrame.CreateComboTextEffect(combo, Color);
 
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
 
@@ -186,7 +188,6 @@ namespace JoyPop
 
             mCollider.enabled = false;
             IsDestroying = true;
-            Combo = combo;
             ParentFrame.TouchBush();
             Animation.Play("destroy");
             StartCoroutine(AnimateFlash(1.3f));
@@ -200,18 +201,19 @@ namespace JoyPop
             mCollider.enabled = false;
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Match, Manager.SFXVolume);
 
-            Combo = combo;
             IsDestroying = true;
             Animation.Stop();
             transform.localPosition = new Vector3(0, 0, -1);
             transform.localScale = new Vector3(0.6f, 0.6f, 1);
 
-            ParentFrame.CreateComboTextEffect(Combo, Color);
+            ParentFrame.CreateComboTextEffect(combo, Color);
 
             int index = ColorToIndex(Color);
             GameObject vfx = ObjectPooling.Instance.Instantiate(WaterDropPrefabs[index], transform.position, Quaternion.identity, Manager.transform);
             vfx.transform.localScale = new Vector3(0.6f, 0.6f, 1);
             vfx.ReturnAfter(2);
+            
+            EventDestroy?.Invoke();
 
             ReturnToPool();
         }
