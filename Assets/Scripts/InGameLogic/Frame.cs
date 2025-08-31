@@ -242,7 +242,7 @@ public class Frame : MonoBehaviour
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;
         numComp.NumberColor = textColor;
-        numComp.layerName = "UI";
+        // numComp.layerName = "UI";
         numComp.UpdateNumber();
 
         float time = 0;
