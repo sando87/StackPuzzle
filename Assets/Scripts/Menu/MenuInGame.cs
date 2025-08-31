@@ -152,6 +152,12 @@ public class MenuInGame : MonoBehaviour
                 PauseButton.gameObject.SetActive(false);
                 SkipButton.gameObject.SetActive(true);
             }
+
+            if (mMenu != null)
+            {
+                Destroy(mMenu.gameObject);
+                mMenu = null;
+            }
         };
         InGameManager.InstStage.EventReduceLimit = () =>
         {
@@ -338,6 +344,12 @@ public class MenuInGame : MonoBehaviour
 
     public void FinisStagehGame(bool success)
     {
+        if (mMenu != null)
+        {
+            Destroy(mMenu.gameObject);
+            mMenu = null;
+        }
+
         if (success)
         {
             //int starCount = InGameManager.InstStage.GetBillboard().GetGrade(mStageInfo);
@@ -450,7 +462,7 @@ public class MenuInGame : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         if (mMenu != null)
         {
-            Destroy(mMenu);
+            Destroy(mMenu.gameObject);
             mMenu = null;
         }
         else
@@ -484,6 +496,12 @@ public class MenuInGame : MonoBehaviour
             LevelCompleted.gameObject.SetActive(false);
             LevelFailed.gameObject.SetActive(true);
             LevelFailed.GetComponent<Animation>().Play();
+        }
+
+        if (mMenu != null)
+        {
+            Destroy(mMenu.gameObject);
+            mMenu = null;
         }
     }
 

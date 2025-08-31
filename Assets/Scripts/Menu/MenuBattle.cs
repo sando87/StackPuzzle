@@ -197,6 +197,12 @@ public class MenuBattle : MonoBehaviour
 
     private void FinishPVPGame(bool success)
     {
+        if (mMenu != null)
+        {
+            Destroy(mMenu.gameObject);
+            mMenu = null;
+        }
+        
         int prevScore = UserSetting.UserScore;
 
         EndPVP req = new EndPVP();
@@ -247,7 +253,7 @@ public class MenuBattle : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         if (mMenu != null)
         {
-            Destroy(mMenu);
+            Destroy(mMenu.gameObject);
             mMenu = null;
         }
         else
