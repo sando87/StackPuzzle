@@ -43,7 +43,7 @@ public class MenuPlay : MonoBehaviour
         int starCount = UserSetting.GetStageStarCount(info.Num);
         mStageInfo = info;
         StageLevel.text = "STAGE " + info.Num.ToString();
-        if(info.GoalTypeEnum == StageGoalType.Score)
+        if (info.GoalTypeEnum == StageGoalType.Score)
         {
             TargetType.gameObject.SetActive(false);
             TargetScore.gameObject.SetActive(true);
@@ -126,7 +126,7 @@ public class MenuPlay : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         foreach (ItemButton btn in btns)
         {
-            if(btn.GetItem().GetCount() > 0)
+            if (btn.GetItem().GetCount() > 0)
                 rets.Add(btn.GetItem());
         }
         return rets.ToArray();
@@ -138,8 +138,21 @@ public class MenuPlay : MonoBehaviour
         ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         MenuItemSelector.PopUp((item) =>
         {
+            UnSelectSameItem(item);
             curBtn.SetItem(item);
         });
+    }
+
+    void UnSelectSameItem(PurchaseItemType itemType)
+    {
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
+        {
+            if (btn.GetItem() == itemType)
+            {
+                btn.SetItem(PurchaseItemType.None);
+            }
+        }
     }
 
 }

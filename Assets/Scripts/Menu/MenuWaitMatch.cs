@@ -140,13 +140,22 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton curBtn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         MenuItemSelector.PopUp((item) =>
         {
-            if(item.GetCount() > 0)
-            {
-                curBtn.SetItem(item);
-                int idx = curBtn.transform.GetSiblingIndex();
-                UserSetting.UserInfo.PvpItems[idx] = item;
-            }
+            UnSelectSameItem(item);
+            curBtn.SetItem(item);
+            int idx = curBtn.transform.GetSiblingIndex();
+            UserSetting.UserInfo.PvpItems[idx] = item;
         });
+    }
+    void UnSelectSameItem(PurchaseItemType itemType)
+    {
+        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+        foreach (ItemButton btn in btns)
+        {
+            if (btn.GetItem() == itemType)
+            {
+                btn.SetItem(PurchaseItemType.None);
+            }
+        }
     }
 
     public void OnMatch()
