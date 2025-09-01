@@ -344,14 +344,14 @@ public class MenuBattle : MonoBehaviour
                 break;
             case PurchaseItemType.RemoveIce:
                 {
-                    bool ret = InGameManager.InstPVP_Player.UseItemBreakce(btn.transform.position, 10);
+                    bool ret = InGameManager.InstPVP_Player.UseItemBreakce(btn.transform.position, 20);
                     if (ret)
                         break;
                     else
                         return;
                 }
             case PurchaseItemType.MakeSkill1:
-                InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 10);
+                InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 5);
                 break;
             case PurchaseItemType.KeepCombo:
                 {
@@ -362,7 +362,7 @@ public class MenuBattle : MonoBehaviour
                         return;
                 }
             case PurchaseItemType.MakeSkill2:
-                InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 10);
+                InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 5);
                 break;
             case PurchaseItemType.Meteor:
                 InGameManager.InstPVP_Player.UseItemMeteor(10);
@@ -398,14 +398,14 @@ public class MenuBattle : MonoBehaviour
                 break;
             case PurchaseItemType.RemoveIce:
                 {
-                    bool ret = InGameManager.InstPVP_Opponent.UseItemBreakce(btn.transform.position, 10);
+                    bool ret = InGameManager.InstPVP_Opponent.UseItemBreakce(btn.transform.position, 20);
                     if (ret)
                         break;
                     else
                         return;
                 }
             case PurchaseItemType.MakeSkill1:
-                InGameManager.InstPVP_Opponent.UseItemMakeSkill1(btn.transform.position, 10);
+                InGameManager.InstPVP_Opponent.UseItemMakeSkill1(btn.transform.position, 5);
                 break;
             case PurchaseItemType.KeepCombo:
                 {
@@ -416,7 +416,7 @@ public class MenuBattle : MonoBehaviour
                         return;
                 }
             case PurchaseItemType.MakeSkill2:
-                InGameManager.InstPVP_Opponent.UseItemMakeSkill2(btn.transform.position, 10);
+                InGameManager.InstPVP_Opponent.UseItemMakeSkill2(btn.transform.position, 5);
                 break;
             case PurchaseItemType.Meteor:
                 InGameManager.InstPVP_Opponent.UseItemMeteor(10);

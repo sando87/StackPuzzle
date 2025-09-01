@@ -2653,7 +2653,7 @@ public class InGameManager : MonoBehaviour
             }
             else if (FieldType == GameFieldType.pvpPlayer)
             {
-                PVPScoreBar.SetLock(10.0f);
+                PVPScoreBar.SetLock(15.0f);
             }
         }));
     }

@@ -281,14 +281,14 @@ public class MenuInGame : MonoBehaviour
                 break;
             case PurchaseItemType.RemoveIce:
                 {
-                    bool ret = InGameManager.InstStage.UseItemBreakce(btn.transform.position, 10);
+                    bool ret = InGameManager.InstStage.UseItemBreakce(btn.transform.position, 6);
                     if (ret)
                         break;
                     else
                         return;
                 }
             case PurchaseItemType.MakeSkill1:
-                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 10);
+                InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 5);
                 break;
             case PurchaseItemType.KeepCombo:
                 {
@@ -299,7 +299,7 @@ public class MenuInGame : MonoBehaviour
                         return;
                 }
             case PurchaseItemType.MakeSkill2:
-                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 10);
+                InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 5);
                 break;
             case PurchaseItemType.Meteor:
                 InGameManager.InstStage.UseItemMeteor(10);
