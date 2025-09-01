@@ -17,6 +17,7 @@ public class MenuTitle : MonoBehaviour
     public GameObject StartButton;
     public Image ForegroundImage;
 
+    [SerializeField] LocaleManager _LocaleManager;
     [SerializeField] LogWriter _LogWriter;
     [SerializeField] NetClientApp _NetworkObject;
     [SerializeField] LogToGoogleForms _LogToGoogleForms;
@@ -49,7 +50,7 @@ public class MenuTitle : MonoBehaviour
         // 로그 - 로컬파일
         InitLogSystem();
         LoadingText.text = "5%";
-        yield return new WaitForSeconds(1.2f);
+        yield return new WaitForSeconds(0.1f);
         LoadingText.text = "10%";
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR
@@ -57,6 +58,11 @@ public class MenuTitle : MonoBehaviour
         if (di.Exists == false)
             di.Create();
 #endif
+
+        // 현지화로 언어 번역 기능
+        _LocaleManager.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "12%";
 
         // 로컬 파일 IO
         UserSetting.Initialize();

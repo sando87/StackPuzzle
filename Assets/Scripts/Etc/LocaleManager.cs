@@ -24,14 +24,24 @@ public class LocaleManager : MonoBehaviour
     private static LocaleManager mInst = null;
     public static LocaleManager Inst { get { if (mInst == null) mInst = FindObjectOfType<LocaleManager>(); return mInst; } }
 
-    [SerializeField] LocaleLang[] LocalLangs = null;
-
     Dictionary<string, LocaleLang> mDicLocaleLangs = new Dictionary<string, LocaleLang>();
 
     void Awake()
     {
-        foreach (LocaleLang lang in LocalLangs)
+        TextAsset ta = Resources.Load<TextAsset>("locale");
+        string csvFormatRawData = ta.text;
+        string[] lines = csvFormatRawData.Split(Environment.NewLine);
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] parts = lines[i].Split(',');
+            LocaleLang lang = new LocaleLang();
+            lang.EnglishID = parts[0];
+            lang.Korea = parts[1];
+            lang.Japan = parts[2];
+            lang.China = parts[3];
+
             mDicLocaleLangs[lang.EnglishID] = lang;
+        }
     }
 
     public string DoLocaleText(string englishID, LocaleSupportLangType type)
