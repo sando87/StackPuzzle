@@ -541,9 +541,8 @@ namespace ServerApp
                 //         continue;
                 // }
 
-                float detectRange = (me.MatchingTime() + 1) * 50;
                 float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
-                if (scoreDelta < detectRange)
+                if (scoreDelta < me.DetectRange() && scoreDelta < opp.DetectRange())
                     return opp;
             }
             return null;
@@ -656,6 +655,14 @@ namespace ServerApp
         public void ReleaseOpp() { OppEndpoint = ""; MatchState = MatchingState.Idle; WithFriend = MatchingFriend.None; RoomNumber = -1; }
         public void StartSearchOpp() { OppEndpoint = ""; MatchState = MatchingState.TryMatching; MatchingStartTime = DateTime.Now; }
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
+        public float DetectRange()
+        {
+            float waitTime = MatchingTime();
+            if (UserInfo.score < 300)
+                return waitTime < 3 ? 500 : waitTime < 6 ? 700 : 10000;
+
+            return waitTime < 3 ? 150 : waitTime < 6 ? 300 : waitTime < 10 ? 500 : 10000;
+        }
     }
 
     public class ServerMonitoringInfo
