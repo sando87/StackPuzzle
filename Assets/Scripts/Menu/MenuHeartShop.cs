@@ -42,6 +42,12 @@ public class MenuHeartShop : MonoBehaviour
 
         if (type == 0)
         {
+            if (Purchases.IsAdsSkip())
+            {
+                OnChargeHeartFromVideo(AdsType.ChargeLifeA);
+                return;
+            }
+
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
                 MenuMessageBox.PopUp("Network NotReachable", false, null);
@@ -69,6 +75,12 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 1)
         {
+            if (Purchases.IsAdsSkip())
+            {
+                OnChargeHeartFromVideo(AdsType.ChargeLifeB);
+                return;
+            }
+            
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
                 MenuMessageBox.PopUp("Network NotReachable", false, null);

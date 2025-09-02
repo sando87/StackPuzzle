@@ -188,7 +188,7 @@ public class MenuWaitMatch : MonoBehaviour
             return;
         }
 
-        if(Purchases.GetRemainAdsCount() > 0)
+        if(Purchases.GetRemainAdsCount() > 0 && !Purchases.IsAdsSkip())
         {
             MenuMessageBox.PopUp("You have unpaid ads left over", false, (isOK) =>
             {
