@@ -94,18 +94,20 @@ public class MenuFinishBattle : MonoBehaviour
         }
         else
         {
+            GoNext();
+
             //졌을때 광고 재생
-            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
-                    && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
-                    && !Purchases.IsAdsSkip())
-            {
-                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
-                {
-                    GoNext();
-                });
-            }
-            else //졌지만 보여줄 광고가 없을때 스킵
-                GoNext();
+            // if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
+            //         && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
+            //         && !Purchases.IsAdsSkip())
+            // {
+            //     GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
+            //     {
+            //         GoNext();
+            //     });
+            // }
+            // else //졌지만 보여줄 광고가 없을때 스킵
+            //     GoNext();
         }
     }
 

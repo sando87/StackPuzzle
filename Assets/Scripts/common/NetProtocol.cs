@@ -26,7 +26,7 @@ public enum ProductSkill
 };
 public enum PurchaseItemType
 {
-    None, ExtendLimit, RemoveIce, MakeSkill1, KeepCombo, MakeSkill2, Meteor
+    None, ExtendLimit, RemoveIce, MakeSkill1, MakeSkill2, Meteor, KeepCombo
 }
 
 public interface ByteSerializer

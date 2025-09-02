@@ -238,29 +238,19 @@ public class MenuInGame : MonoBehaviour
         {
             int adsIndex = int.Parse(btnTypeName.Substring(3));
             AdsType adsType = adsIndex == 0 ? AdsType.InGameItemA : (adsIndex == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
-            // if (GoogleADMob.Inst.IsLoaded(adsType))
-            // {
-            //     GoogleADMob.Inst.Show(adsType, (reward) =>
-            //     {
-            //         PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
-            //         ItemSlots[adsIndex].name = itemType.ToInt().ToString();
-            //         ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
-            //     });
-            // }
-            // else
-            // {
-            //     MenuMessageBox.PopUp("Not Ready Ads", false, null);
-            // }
-
-
-            MenuMessageBox.PopUp("Test Ads Showing..." + adsType, false, (isOK) =>
+            if (GoogleADMob.Inst.IsLoaded(adsType))
             {
-                MenuItemSelector.PopUpByAds((itemType) =>
+                GoogleADMob.Inst.Show(adsType, (reward) =>
                 {
+                    PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
                     ItemSlots[adsIndex].name = itemType.ToInt().ToString();
                     ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
                 });
-            });
+            }
+            else
+            {
+                MenuMessageBox.PopUp("Ad Not Ready", false, null);
+            }
         }
         else
         {
@@ -384,23 +374,27 @@ public class MenuInGame : MonoBehaviour
             SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGameOver);
 
-            if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
-                && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
-                && !Purchases.IsAdsSkip())
-            {
-                GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
-                {
-                    MenuFailed.PopUp();
-                    InGameManager.InstStage.CleanUpGame();
-                    Hide();
-                });
-            }
-            else
-            {
-                MenuFailed.PopUp();
-                InGameManager.InstStage.CleanUpGame();
-                Hide();
-            }
+            MenuFailed.PopUp();
+            InGameManager.InstStage.CleanUpGame();
+            Hide();
+
+            // if (GoogleADMob.Inst.RemainSec(AdsType.MissionFailed) <= 0
+            //     && GoogleADMob.Inst.IsLoaded(AdsType.MissionFailed)
+            //     && !Purchases.IsAdsSkip())
+            // {
+            //     GoogleADMob.Inst.Show(AdsType.MissionFailed, (reward) =>
+            //     {
+            //         MenuFailed.PopUp();
+            //         InGameManager.InstStage.CleanUpGame();
+            //         Hide();
+            //     });
+            // }
+            // else
+            // {
+            //     MenuFailed.PopUp();
+            //     InGameManager.InstStage.CleanUpGame();
+            //     Hide();
+            // }
         }
     }
     public void UpdateGoalValue()
