@@ -42,7 +42,7 @@ public class UserSetting
 
     #region UserSetting Information in Local
     private static UserSettingInfo mUserSettingInfo = null;
-    private static UserSettingInfo UserSettingInfo
+    public static UserSettingInfo UserSettingInfo
     {
         get
         {
@@ -197,7 +197,7 @@ public class UserSetting
 
 }
 
-class UserSettingInfo
+public class UserSettingInfo
 {
     private const string KeyVersion = "usi2";
 
@@ -213,6 +213,9 @@ class UserSettingInfo
     [SerializeField] private LocaleSupportLangType mCurrentLang = LocaleSupportLangType.None;
     [SerializeField] private Int64[] mAdsLastShowTime = null;
     [SerializeField] private byte[] mStageStarCount = null;
+    [SerializeField] private PurchaseItemType mNextEventItem = PurchaseItemType.ExtendLimit;
+    [SerializeField] private float mCurrentExpForEventItem = 0;
+
 
     public UserSettingInfo()
     {
@@ -223,10 +226,38 @@ class UserSettingInfo
         mAdsLastShowTime = new Int64[Enum.GetValues(typeof(AdsType)).Length];
         mStageStarCount = new byte[UserSetting.StageTotalCount];
         mCurrentLang = LocaleSupportLangType.None;
+        mNextEventItem = PurchaseItemType.ExtendLimit;
+        mCurrentExpForEventItem = 0;
 
         for (int i = 0; i < mStageStarCount.Length; ++i)
             mStageStarCount[i] = 0xff;
         mStageStarCount[0] = 0;
+    }
+
+    public bool IsDoneEventItem()
+    {
+        if (mNextEventItem == PurchaseItemType.None)
+            return false;
+
+        return mCurrentExpForEventItem >= mNextEventItem.GetExpForEvent();
+    }
+    public void AddExpOfEventItem(float exp, out float rateFrom, out float rateTo)
+    {
+        rateFrom = mCurrentExpForEventItem / mNextEventItem.GetExpForEvent();
+        mCurrentExpForEventItem += exp;
+        rateTo = mCurrentExpForEventItem / mNextEventItem.GetExpForEvent();
+        Save();
+    }
+    public PurchaseItemType CurrentEventItem { get => mNextEventItem; }
+    public void ResetNextNewEventItem()
+    {
+        int idx = (int)mNextEventItem + 1;
+        if (idx >= (int)PurchaseItemType.KeepCombo)
+            idx = (int)PurchaseItemType.ExtendLimit;
+
+        mNextEventItem = (PurchaseItemType)idx;
+        mCurrentExpForEventItem = 0;
+        Save();
     }
 
     public LocaleSupportLangType CurrnetLang

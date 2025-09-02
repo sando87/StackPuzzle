@@ -67,6 +67,19 @@ public static class PurchaseItemTypeExtensions
             default: return "Unknown";
         }
     }
+    public static float GetExpForEvent(this PurchaseItemType type)
+    {
+        switch (type)
+        {
+            case PurchaseItemType.ExtendLimit: return 100;
+            case PurchaseItemType.RemoveIce: return 250;
+            case PurchaseItemType.MakeSkill1: return 350;
+            case PurchaseItemType.MakeSkill2: return 680;
+            case PurchaseItemType.Meteor: return 820;
+            case PurchaseItemType.KeepCombo: return 1000;
+            default: return 0;
+        }
+    }
     public static int GetCount(this PurchaseItemType type)
     {
         return Purchases.CountItem(type);
@@ -314,6 +327,11 @@ public class Purchases
         mInfo.countItem[type.ToInt()]--;
         UpdatePurchaseInfo(mInfo);
         return true;
+    }
+    public static void AddItem(PurchaseItemType type)
+    {
+        mInfo.countItem[type.ToInt()]++;
+        UpdatePurchaseInfo(mInfo);
     }
     public static void SetAttendFlag(int dayIdx)
     {

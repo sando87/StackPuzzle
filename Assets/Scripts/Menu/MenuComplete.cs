@@ -74,6 +74,16 @@ public class MenuComplete : MonoBehaviour
         {
             ClearRewards();
             CreateRewordSlot(stageInfo, true);
+            UserSetting.UserSettingInfo.AddExpOfEventItem(30, out float rateFrom, out float rateTo);
+
+            // 이벤트아이템 게이지 올라가는 연출..
+
+            // 이벤트 게이지 완료시 아이템 획득 데이터 처리
+            if (UserSetting.UserSettingInfo.IsDoneEventItem())
+            {
+                Purchases.AddItem(UserSetting.UserSettingInfo.CurrentEventItem);
+                UserSetting.UserSettingInfo.ResetNextNewEventItem();
+            }
         }
         else
         {
