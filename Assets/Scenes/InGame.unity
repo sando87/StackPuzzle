@@ -144078,6 +144078,8 @@ MonoBehaviour:
   RegistorProducts:
   - ID: 0
   - ID: 1
+  - ID: 2
+  - ID: 3
 --- !u!4 &1939636861
 Transform:
   m_ObjectHideFlags: 0
@@ -210607,19 +210609,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235641030401712}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
-        m_MethodName: OnButtonBuyProductC
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &3864235641032629488
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230826,19 +230816,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642044722550}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
-        m_MethodName: OnButtonBuyProductB
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &3864235642044722550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237055,19 +237033,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642945510166}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
-        m_MethodName: OnButtonBuyProductD
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &3864235642945510166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237337,19 +237303,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3864235642969202588}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2090241242}
-        m_TargetAssemblyTypeName: MenuDiamondShop, Assembly-CSharp
-        m_MethodName: OnButtonBuyProductA
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &3864235642969202588
 MonoBehaviour:
   m_ObjectHideFlags: 0

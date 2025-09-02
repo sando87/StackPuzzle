@@ -204,6 +204,14 @@ public class Purchases
         UpdatePurchaseInfo(mInfo);
         return true;
     }
+    public static bool BuyInfiniteLife()
+    {
+        mInfo.infiniteHeart = 1;
+        mInfo.countHeart = mInfo.maxHeart;
+        mInfo.useTimeTick = DateTime.Now.Ticks;
+        UpdatePurchaseInfo(mInfo);
+        return true;
+    }
     public static bool UseHeart()
     {
         if (mInfo.countHeart <= 0)

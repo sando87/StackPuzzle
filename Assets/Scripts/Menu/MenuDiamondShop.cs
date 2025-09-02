@@ -33,10 +33,10 @@ public class MenuDiamondShop : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
     }
 
-    public void OnButtonBuyProductA() { TryBuyProduct(IAPProductType.joypop_product_dia1); }
-    public void OnButtonBuyProductB() { TryBuyProduct(IAPProductType.joypop_product_dia2); }
-    public void OnButtonBuyProductC() { TryBuyProduct(IAPProductType.ProductID_C); }
-    public void OnButtonBuyProductD() { TryBuyProduct(IAPProductType.ProductID_D); }
+    public void OnButtonBuyDiaSmall() { TryBuyProduct(IAPProductType.joypop_product_dia1); }
+    public void OnButtonBuyDiaBig() { TryBuyProduct(IAPProductType.joypop_product_dia2); }
+    public void OnButtonBuyInifiteLife() { TryBuyProduct(IAPProductType.joypop_product_life); }
+    public void OnButtonBuyRemoveAds() { TryBuyProduct(IAPProductType.joypop_product_ads); }
 
     void TryBuyProduct(IAPProductType productID)
     {
@@ -77,11 +77,11 @@ public class MenuDiamondShop : MonoBehaviour
         if (productID == IAPProductType.joypop_product_dia1)
             Purchases.PurchaseDiamond(40);
         else if (productID == IAPProductType.joypop_product_dia2)
-            Purchases.PurchaseDiamond(100);
-        else if (productID == IAPProductType.ProductID_C)
-            Purchases.PurchaseDiamond(250);
-        else if (productID == IAPProductType.ProductID_D)
-            Purchases.PurchaseDiamond(500);
+            Purchases.PurchaseDiamond(200);
+        else if (productID == IAPProductType.joypop_product_life)
+            Purchases.BuyInfiniteLife();
+        else if (productID == IAPProductType.joypop_product_ads)
+            Purchases.PurchaseAdsSkip();
 
         MenuStages.Inst.UpdateTopPanel();
         MenuInformBox.PopUp("Success");
