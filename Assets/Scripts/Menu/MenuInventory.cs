@@ -43,8 +43,8 @@ public class MenuInventory : MonoBehaviour
         UpdateItemCount();
 
         ItemImage.sprite = PurchaseItemType.ExtendLimit.GetSprite();
-        ItemName.text = PurchaseItemType.ExtendLimit.GetName();
-        ItemDescription.text = PurchaseItemType.ExtendLimit.GetDescription();
+        ItemName.text = LocaleManager.Inst.DoLocaleText(PurchaseItemType.ExtendLimit.GetName(), UserSetting.CurrentLang);
+        ItemDescription.text = LocaleManager.Inst.DoLocaleText(PurchaseItemType.ExtendLimit.GetDescription(), UserSetting.CurrentLang);
     }
     public void OnClose()
     {
@@ -68,7 +68,7 @@ public class MenuInventory : MonoBehaviour
         GameObject curBtn = EventSystem.current.currentSelectedGameObject;
         PurchaseItemType type = int.Parse(curBtn.name).ToItemType();
         ItemImage.sprite = type.GetSprite();
-        ItemName.text = type.GetName();
-        ItemDescription.text = type.GetDescription();
+        ItemName.text = LocaleManager.Inst.DoLocaleText(type.GetName(), UserSetting.CurrentLang);
+        ItemDescription.text = LocaleManager.Inst.DoLocaleText(type.GetDescription(), UserSetting.CurrentLang);
     }
 }

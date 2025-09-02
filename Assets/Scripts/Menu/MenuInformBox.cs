@@ -14,7 +14,7 @@ public class MenuInformBox : MonoBehaviour
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MenuInformBox", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuInformBox box = objMenu.GetComponent<MenuInformBox>();
-        box.MessageText.text = message;
+        box.MessageText.text = LocaleManager.Inst.DoLocaleText(message, UserSetting.CurrentLang);
         Destroy(box.gameObject, duration);
         return box;
     }

@@ -87,7 +87,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuInformBox.PopUp("Server Disconnected.");
+            MenuInformBox.PopUp("Server Disconnected");
             return;
         }
 
@@ -118,7 +118,7 @@ public class MenuWaitMatch : MonoBehaviour
             {
                 mRoonJoinID = roomID;
                 RequestMatchJoin(roomID);
-                RoomID.text = "Searching\n" + roomID;
+                RoomID.text = string.Format(LocaleManager.Inst.DoLocaleText("Searching\n{0}", UserSetting.CurrentLang), roomID);
                 RoomID.gameObject.SetActive(true);
             }
 
@@ -162,7 +162,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuInformBox.PopUp("Server Disconnected.");
+            MenuInformBox.PopUp("Server Disconnected");
             return;
         }
 
@@ -190,7 +190,7 @@ public class MenuWaitMatch : MonoBehaviour
 
         if(Purchases.GetRemainAdsCount() > 0)
         {
-            MenuMessageBox.PopUp("You have unpaid ads left over.", false, (isOK) =>
+            MenuMessageBox.PopUp("You have unpaid ads left over", false, (isOK) =>
             {
                 if(isOK)
                 {
@@ -231,20 +231,21 @@ public class MenuWaitMatch : MonoBehaviour
             yield return new WaitUntil(() => adsDone);
             Purchases.RemoveAdsCount();
         }
-        MenuMessageBox.PopUp("All Ads have been paid for.", false, null);
+        MenuMessageBox.PopUp("All Ads have been paid for", false, null);
     }
 
     IEnumerator WaitOpponent()
     {
         int n = 0;
         WaitText.gameObject.SetActive(true);
+        string text = LocaleManager.Inst.DoLocaleText("Matching", UserSetting.CurrentLang);
         while (true)
         {
-            switch(n%3)
+            switch (n % 3)
             {
-                case 0: WaitText.text = "Matching.."; break;
-                case 1: WaitText.text = "Matching..."; break;
-                case 2: WaitText.text = "Matching...."; break;
+                case 0: WaitText.text = text + ".."; break;
+                case 1: WaitText.text = text + "..."; break;
+                case 2: WaitText.text = text + "...."; break;
             }
             n++;
             yield return new WaitForSeconds(1);
@@ -295,7 +296,7 @@ public class MenuWaitMatch : MonoBehaviour
         {
             SearchOpponentInfo res = Utils.Deserialize<SearchOpponentInfo>(ref body);
             mRoonMakeID = res.RoomNumber;
-            RoomID.text = "Room ID\n" + res.RoomNumber;
+            RoomID.text = string.Format(LocaleManager.Inst.DoLocaleText("Room ID\n{0}", UserSetting.CurrentLang), res.RoomNumber);
             RoomID.gameObject.SetActive(true);
         });
     }
@@ -396,8 +397,7 @@ public class MenuWaitMatch : MonoBehaviour
         int rank = info.rank;
         if (info.score > 0)
         {
-            string suffix = rank == 1 ? "st" : rank == 2 ? "nd" : rank == 3 ? "rd" : "th";
-            Ranking.text = rank + suffix;
+            Ranking.text = "Rank " + rank;
         }
         
         UpdateExpBar(info.score);

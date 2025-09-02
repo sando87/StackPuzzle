@@ -467,7 +467,7 @@ public class MenuInGame : MonoBehaviour
         }
         else
         {
-            mMenu = MenuMessageBox.PopUp("Quit Stage?", true, (bool isOK) =>
+            mMenu = MenuMessageBox.PopUp("Do you want to quit stage?", true, (bool isOK) =>
             {
                 if (isOK)
                 {

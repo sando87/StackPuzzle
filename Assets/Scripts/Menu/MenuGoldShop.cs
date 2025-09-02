@@ -35,16 +35,17 @@ public class MenuGoldShop : MonoBehaviour
         int gold = int.Parse(goldText.Replace(",", ""));
         int costDiamond = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
-        MenuMessageBox.PopUp(costDiamond + " Diamonds are used.", true, (isOK) =>
+        string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), costDiamond);
+        MenuMessageBox.PopUp(msg, true, (isOK) =>
         {
             if(isOK)
             {
                 if(Purchases.PurchaseGold(gold, costDiamond))
                 {
-                    MenuInformBox.PopUp("Success.");
+                    MenuInformBox.PopUp("Success");
                 }
                 else
-                    MenuInformBox.PopUp("Not enough Diamonds.");
+                    MenuInformBox.PopUp("Not enough diamonds");
 
                 MenuStages.Inst.UpdateTopPanel();
             }

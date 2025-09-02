@@ -42,7 +42,7 @@ public class MenuPVPFriend : MonoBehaviour
                 }
                 else
                 {
-                    MenuInformBox.PopUp("Write the numbers.");
+                    MenuInformBox.PopUp("Write the numbers");
                 }
             }
         });

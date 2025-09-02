@@ -258,7 +258,7 @@ public class MenuBattle : MonoBehaviour
         }
         else
         {
-            mMenu = MenuMessageBox.PopUp("Finish Game?", true, (bool isOK) =>
+            mMenu = MenuMessageBox.PopUp("Do you want to finish?", true, (bool isOK) =>
             {
                 if (isOK)
                     FinishPVPGame(false);
@@ -296,7 +296,7 @@ public class MenuBattle : MonoBehaviour
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         if (btn.name.StartsWith("ads"))
         {
-            MenuMessageBox.PopUp("Reward-first-Advertisement.", true, (isOK) =>
+            MenuMessageBox.PopUp("Rewarded first\nAd will be paid later", true, (isOK) =>
             {
                 if (isOK)
                 {

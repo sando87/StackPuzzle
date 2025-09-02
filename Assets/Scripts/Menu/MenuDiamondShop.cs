@@ -43,7 +43,7 @@ public class MenuDiamondShop : MonoBehaviour
 #if (UNITY_ANDROID || UNITY_IPHONE) && !UNITY_EDITOR
         if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
-            MenuMessageBox.PopUp("Network NotReachable.", false, null);
+            MenuMessageBox.PopUp("Network NotReachable", false, null);
             return;
         }
 
@@ -68,7 +68,7 @@ public class MenuDiamondShop : MonoBehaviour
         }
         else
         {
-            MenuMessageBox.PopUp(productID.ToString(), false, null);
+            MenuMessageBox.PopUp("Failed", false, null);
         }
     }
 
@@ -84,7 +84,7 @@ public class MenuDiamondShop : MonoBehaviour
             Purchases.PurchaseDiamond(500);
 
         MenuStages.Inst.UpdateTopPanel();
-        MenuInformBox.PopUp("Success Purchase!!");
+        MenuInformBox.PopUp("Success");
 
         string log = "PurchaseDia," + productID + "," + Purchases.CountDiamond();
         LOG.trace(log);

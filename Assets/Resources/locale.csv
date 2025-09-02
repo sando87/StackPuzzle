@@ -60,3 +60,43 @@ LOSE,패배,敗北,失败,Derrota,Niederlage,Défaite,Derrota,Поражение
 Next,다음,次へ,下一步,Siguiente,Weiter,Suivant,Próximo,Далее
 Terms and Conditions,이용 약관,利用規約,条款和条件,Términos y condiciones,Allgemeine Geschäftsbedingungen,Termes et conditions,Termos e condições,Правила и условия
 Agree,동의,同意,同意,Aceptar,Zustimmen,Accepter,Concordar,Согласиться
+STAGE {0},스테이지 {0},ステージ {0},关卡 {0},Etapa {0},Stufe {0},Niveau {0},Fase {0},Этап {0}
+Score {0},점수 {0},スコア {0},得分 {0},Puntuación {0},Punktzahl {0},Score {0},Pontuação {0},Счёт {0}
+Searching\n{0},검색 중\n{0},検索中\n{0},搜索中\n{0},Buscando\n{0},Suche\n{0},Recherche\n{0},Pesquisando\n{0},Поиск\n{0}
+Matching,매칭 중,マッチング中,匹配中,Emparejando,Matching,Correspondance,Emparelhando,Сопоставление
+Check out your combo,콤보를 확인하세요,コンボを確認してください,查看你的连击,Revisa tu combo,Überprüfe deinen Combo,Vérifiez votre combo,Confira seu combo,Проверьте комбо
+Attach and place\nmatchable block sets,연결 가능한 블록 세트를 부착하고 배치하세요,接続可能なブロックセットを配置してください,附加并放置可匹配的方块套装,Adjunta y coloca bloques combinables,Füge kombinierbare Blöcke hinzu,Attachez et placez les blocs combinables,Anexar e posicionar blocos combináveis,Прикрепите и разместите подходящие блоки
+Click to use special block,특수 블록 사용하려면 클릭,特別ブロックを使用するにはクリック,点击使用特殊方块,Haz clic para usar bloque especial,"Klicke, um Spezialblock zu verwenden",Cliquez pour utiliser le bloc spécial,Clique para usar bloco especial,"Нажмите, чтобы использовать специальный блок"
+START!!,시작!!,スタート!!,开始!!,¡Inicio!!,START!!,DÉMARRER!!,INICIAR!!,СТАРТ!!
+MISSION COMPLETE!!,미션 완료!!,ミッションクリア!!,任务完成!!,¡Misión completada!!,MISSION ERFOLGREICH!!,MISSION TERMINÉE!!,MISSÃO CONCLUÍDA!!,МИССИЯ ВЫПОЛНЕНА!!
+MOVE LIMITTED,이동 제한,移動制限,移动限制,Movimientos limitados,Bewegungslimit,Nombre de mouvements limité,Limite de movimentos,Ограничение ходов
+TIMEOUT,시간 종료,タイムアウト,超时,Se acabó el tiempo,Zeitüberschreitung,Déconnexion pour dépassement de temps,Tempo esgotado,Время истекло
+GAME OVER,게임 오버,ゲームオーバー,游戏结束,Fin del juego,Spiel vorbei,Fin du jeu,Fim de jogo,Игра окончена
+WIN,승리,勝利,胜利,Victoria,Sieg,Victoire,Vitória,Победа
+LOSE,패배,敗北,失败,Derrota,Niederlage,Défaite,Derrota,Поражение
+Network Disconnected,네트워크 연결 끊김,ネットワーク切断,网络断开,Red desconectada,Netzwerk getrennt,Réseau déconnecté,Rede desconectada,Сеть отключена
+Success,성공,成功,成功,Éxito,Erfolg,Succès,Sucesso,Успех
+Not enough diamonds,다이아몬드 부족,ダイヤモンド不足,钻石不足,No hay suficientes diamantes,Nicht genug Diamanten,Pas assez de diamants,Diamantes insuficientes,Недостаточно алмазов
+LIFE Max,라이프 최대,ライフ最大,生命值满,Vida máxima,Leben max,Vie max,Vida máxima,Макс. жизни
+Already Infinite Mode,이미 무한 모드,すでに無限モード,已是无限模式,Ya en modo infinito,Bereits Unendlicher Modus,Déjà en mode infini,Já no modo infinito,Режим бесконечности уже активен
+Lifes are rewarded,라이프가 지급되었습니다,ライフが付与されました,获得生命,Se otorgaron vidas,Leben erhalten,Vies attribuées,Vidas concedidas,Жизни начислены
+Not enough golds,골드 부족,ゴールド不足,金币不足,Oro insuficiente,Nicht genug Gold,Or insuffisant,Ouro insuficiente,Недостаточно золота
+Write the numbers,숫자를 입력하세요,数字を入力してください,输入数字,Escribe los números,Zahlen eingeben,Écrivez les chiffres,Digite os números,Введите числа
+Connection Failed,연결 실패,接続失敗,连接失败,Fallo de conexión,Verbindung fehlgeschlagen,Échec de la connexion,Falha na conexão,Ошибка соединения
+Server Disconnected,서버 연결 끊김,サーバー切断,服务器断开,Servidor desconectado,Server getrennt,Serveur déconnecté,Servidor desconectado,Сервер отключен
+No Stage Info,스테이지 정보 없음,ステージ情報なし,没有关卡信息,Sin información de etapa,Keine Stufeninformationen,Pas d’information sur le niveau,Sem informações da fase,Нет информации о стадии
+Do you want to finish?,종료하시겠습니까？,終了しますか？,是否要结束？,¿Deseas terminar?,Möchten Sie beenden?,Voulez-vous terminer ?,Deseja finalizar?,Вы хотите завершить?
+Rewarded first\nAd will be paid later,선보상 후 광고,先に報酬、後で広告,先奖励，后观看广告,Recompensa primero\nel anuncio se pagará después,Belohnung zuerst\nAnzeige wird später bezahlt,Récompense d'abord\nPub plus tard,Primeiro recompensa\nAnúncio depois,Сначала награда\nРеклама позже
+Network NotReachable,네트워크 연결 불가,ネットワークに接続できません,网络无法访问,Red no disponible,Netzwerk nicht erreichbar,Réseau inaccessible,Rede não disponível,Сеть недоступна
+Failed,실패,失敗,失败,Fallido,Fehlgeschlagen,Échec,Falhou,Не удалось
+{0} diamonds will be consumed,다이아몬드 {0}개가 소모됩니다,ダイヤモンド{0}個が消費されます,将消耗{0}颗钻石,Se consumirán {0} diamantes,{0} Diamanten werden verbraucht,{0} diamants seront consommés,Serão consumidos {0} diamantes,Будет потрачено {0} алмазов
+Ad Not Ready,광고 준비 중,広告準備中,广告未准备好,Anuncio no listo,Anzeige nicht bereit,Publicité pas prête,Anúncio não pronto,Реклама не готова
+Do you want to quit stage?,스테이지를 포기하시겠습니까？,ステージをやめますか？,是否要退出关卡？,¿Deseas abandonar la etapa?,Möchten Sie die Stufe verlassen?,Voulez-vous quitter le niveau ?,Deseja sair da fase?,Вы хотите покинуть этап?
+No Life,라이프 없음,ライフなし,没有生命,Sin vidas,Keine Leben,Pas de vies,Sem vidas,Нет жизней
+Exit Game,게임 종료,ゲーム終了,退出游戏,Salir del juego,Spiel beenden,Quitter le jeu,Sair do jogo,Выйти из игры
+You need to clear {0} Stages,스테이지 {0}개를 클리어해야 합니다,ステージ{0}をクリアする必要があります,需要通关{0}关卡,Debes completar {0} etapas,Du musst {0} Stufen abschließen,Vous devez terminer {0} niveaux,Você precisa completar {0} fases,Необходимо пройти {0} этапов
+You have unpaid ads left over,미지급 광고가 남아 있습니다,未払い広告が残っています,你有未完成的广告,Quedan anuncios no pagados,Unbezahlte Anzeigen verbleiben,Il reste des publicités non payées,Ainda há anúncios não pagos,Остались неоплаченные объявления
+All Ads have been paid for,모든 광고가 지급되었습니다,すべての広告が支払われました,所有广告已支付,Todos los anuncios han sido pagados,Alle Anzeigen wurden bezahlt,Toutes les publicités ont été payées,Todos os anúncios foram pagos,Все объявления оплачены
+Write Room ID,방 ID 입력,ルームIDを入力,输入房间ID,Escribe el ID de la sala,Geben Sie die Raum-ID ein,Entrez l’ID de la salle,Digite o ID da sala,Введите ID комнаты
+Edit Username,닉네임 수정,ユーザー名編集,编辑用户名,Editar nombre de usuario,Benutzername bearbeiten,Modifier le nom d’utilisateur,Editar nome de usuário,Изменить имя пользователя
+Connecting Server,서버에 연결 중,サーバーに接続中,连接服务器中,Conectando al servidor,Verbinde mit Server,Connexion au serveur,Conectando ao servidor,Подключение к серверу

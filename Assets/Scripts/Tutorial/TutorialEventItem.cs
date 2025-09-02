@@ -41,7 +41,7 @@ public class TutorialEventItem : TutorialEvent
                 ClickBlock.SetActive(false);
                 ClickItem.SetActive(true);
                 MessageBox.transform.parent.gameObject.SetActive(true);
-                MessageBox.text = "Click to use special block.";
+                MessageBox.text = LocaleManager.Inst.DoLocaleText("Click to use special block", UserSetting.CurrentLang);
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     ShowBasePoint(true);

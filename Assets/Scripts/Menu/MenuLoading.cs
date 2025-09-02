@@ -21,7 +21,7 @@ public class MenuLoading : MonoBehaviour
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MenuLoading", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuLoading box = objMenu.GetComponent<MenuLoading>();
-        box.TitleText.text = title;
+        box.TitleText.text = LocaleManager.Inst.DoLocaleText(title, UserSetting.CurrentLang);
         box.MessageText.text = "";
         box.mCheckLoading = checkLoading;
         box.mOnClose = onClose;

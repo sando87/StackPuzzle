@@ -27,7 +27,7 @@ public class MapStage : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
         StageInfo stageInfo = StageInfo.Load(Number);
         if (stageInfo == null)
-            MenuMessageBox.PopUp("No Stage Info.", false, null);
+            MenuMessageBox.PopUp("No Stage Info", false, null);
         else
             MenuPlay.PopUp(stageInfo);
     }

@@ -101,7 +101,7 @@ public class MenuSettings : MonoBehaviour
     public static void EditUserName()
     {
         string currentUserName = UserSetting.UserInfo.userName;
-        MenuEditBox.PopUp("Edit Username.", currentUserName, (isOK, inputText) =>
+        MenuEditBox.PopUp("Edit Username", currentUserName, (isOK, inputText) =>
         {
             if (isOK)
             {

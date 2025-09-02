@@ -26,7 +26,7 @@ public class MenuMessageBox : MonoBehaviour
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuMessageBox box = objMenu.GetComponent<MenuMessageBox>();
         box.mOnClick = onClick;
-        box.MessageText.text = message;
+        box.MessageText.text = LocaleManager.Inst.DoLocaleText(message, UserSetting.CurrentLang);
         if (twoButtonMode)
         {
             box.BtnYes.SetActive(true);

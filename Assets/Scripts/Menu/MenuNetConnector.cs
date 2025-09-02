@@ -22,7 +22,7 @@ public class MenuNetConnector : MonoBehaviour
 
     public void Init()
     {
-        MessageText.text = "Connecting";
+        // MessageText.text = "Connecting";
         StartCoroutine("UpdateConnectionMessage");
         //NetClientApp.GetInstance().ConnectASync((isConnected) =>
         //{

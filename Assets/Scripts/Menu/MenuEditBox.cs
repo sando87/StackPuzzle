@@ -18,8 +18,8 @@ public class MenuEditBox : MonoBehaviour
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuEditBox box = objMenu.GetComponent<MenuEditBox>();
         box.EventClick = onClick;
-        box.Title.text = title;
-        box.InputField.text = defaultText;
+        box.Title.text = LocaleManager.Inst.DoLocaleText(title, UserSetting.CurrentLang);
+        box.InputField.text = LocaleManager.Inst.DoLocaleText(defaultText, UserSetting.CurrentLang);
         return box;
     }
 

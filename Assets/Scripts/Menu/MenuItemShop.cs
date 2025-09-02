@@ -58,12 +58,12 @@ public class MenuItemShop : MonoBehaviour
         if (Purchases.ChargeItemUseGold(type.ToItemType(), cnt, cost))
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectCashGold);
-            MenuInformBox.PopUp("Success.", 0.8f);
+            MenuInformBox.PopUp("Success", 0.8f);
         }
         else
         {
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectWrongMatched);
-            MenuInformBox.PopUp("Not enough Golds.");
+            MenuInformBox.PopUp("Not enough golds");
         }
 
         UpdateState();
@@ -77,16 +77,17 @@ public class MenuItemShop : MonoBehaviour
         int cnt = int.Parse(itemCountText.Replace("x", ""));
         int cost = int.Parse(btnObj.transform.Find("Group_Cost/Text_Cost").GetComponent<TextMeshProUGUI>().text);
 
-        MenuMessageBox.PopUp(cost + " Diamonds are used.", true, (isOK) =>
+        string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), cost);
+        MenuMessageBox.PopUp(msg, true, (isOK) =>
         {
             if(isOK)
             {
                 if(Purchases.ChargeItemUseDia(type.ToItemType(), cnt, cost))
                 {
-                    MenuInformBox.PopUp("Success.", 0.8f);
+                    MenuInformBox.PopUp("Success", 0.8f);
                 }
                 else
-                    MenuInformBox.PopUp("Not enough Diamonds.");
+                    MenuInformBox.PopUp("Not enough diamonds");
 
                 UpdateState();
             }

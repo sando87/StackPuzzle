@@ -3124,9 +3124,9 @@ public class InGameManager : MonoBehaviour
         else
         {
             if (isSuccess)
-                MenuInformBox.PopUp("YOU WIN");
+                MenuInformBox.PopUp("WIN");
             else
-                MenuInformBox.PopUp("YOU LOSE");
+                MenuInformBox.PopUp("LOSE");
         }
 
         yield return new WaitForSeconds(UserSetting.InfoBoxDisplayTime);

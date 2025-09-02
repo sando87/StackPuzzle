@@ -52,7 +52,7 @@ public class MenuComplete : MonoBehaviour
 
         ScoreDisplay.Init(score);
         ScoreDisplay.SetScore(score);
-        StageLevel.text = "STAGE " + level.ToString() + " Clear!!";
+        StageLevel.text = string.Format(LocaleManager.Inst.DoLocaleText("STAGE {0} CLEAR!!", UserSetting.CurrentLang), level);
         GoldValue.text = "0";
 
         gameObject.SetActive(true);
@@ -271,13 +271,13 @@ public class MenuComplete : MonoBehaviour
 
         if (!NetClientApp.GetInstance().IsNetworkAlive)
         {
-            MenuMessageBox.PopUp("Network NotReachable.", false, null);
+            MenuMessageBox.PopUp("Network NotReachable", false, null);
             return;
         }
 
         if (!GoogleADMob.Inst.IsLoaded(AdsType.RewardItem))
         {
-            MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
+            MenuMessageBox.PopUp("Ad Not Ready", false, null);
             return;
         }
 

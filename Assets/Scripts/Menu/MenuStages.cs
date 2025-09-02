@@ -86,7 +86,7 @@ public class MenuStages : MonoBehaviour
 
     public void OnExit()
     {
-        MenuMessageBox.PopUp("Quit??", true, (bool isOK) =>
+        MenuMessageBox.PopUp("Exit Game", true, (bool isOK) =>
         {
             if (isOK)
                 Application.Quit();
@@ -149,7 +149,8 @@ public class MenuStages : MonoBehaviour
 #if UNITY_ANDROID || UNITY_IOS
         if (UserSetting.GetHighestStageNumber() < UserSetting.BattleModeUnlockStage)
         {
-            MenuMessageBox.PopUp("You need to clear " + UserSetting.BattleModeUnlockStage + " Stages.", false, null);
+            string msg = string.Format(LocaleManager.Inst.DoLocaleText("You need to clear {0} Stages", UserSetting.CurrentLang), UserSetting.BattleModeUnlockStage);
+            MenuMessageBox.PopUp(msg, false, null);
             return;
         }
 #endif
@@ -217,7 +218,7 @@ public class MenuStages : MonoBehaviour
         {
             if (mMenu == null)
             {
-                mMenu = MenuMessageBox.PopUp("Quit??", true, (bool isOK) =>
+                mMenu = MenuMessageBox.PopUp("Exit Game", true, (bool isOK) =>
                 {
                     if (isOK)
                         Application.Quit();

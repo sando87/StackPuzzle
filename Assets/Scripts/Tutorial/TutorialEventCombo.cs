@@ -60,7 +60,7 @@ public class TutorialEventCombo : TutorialEvent
 
             MessageBox.transform.parent.gameObject.SetActive(true);
             MessageBox.transform.parent.position += new Vector3(0, -0.5f, 0);
-            MessageBox.text = "Check out your combo.";
+            MessageBox.text = LocaleManager.Inst.DoLocaleText("Check out your combo", UserSetting.CurrentLang);
 
             StartCoroutine(UnityUtils.CallAfterSeconds(5.0f, () =>
             {
@@ -118,7 +118,7 @@ public class TutorialEventCombo : TutorialEvent
             {
                 Anim.Play("tutorialDim", -1, 0);
                 MessageBox.transform.parent.gameObject.SetActive(true);
-                MessageBox.text = "Attach and place\nmatchable block sets.";
+                MessageBox.text = LocaleManager.Inst.DoLocaleText("Attach and place\nmatchable block sets", UserSetting.CurrentLang);
                 StartCoroutine(UnityUtils.CallAfterSeconds(1.0f, () =>
                 {
                     EnLightCombo();

@@ -44,19 +44,19 @@ public class MenuHeartShop : MonoBehaviour
         {
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuMessageBox.PopUp("Network NotReachable.", false, null);
+                MenuMessageBox.PopUp("Network NotReachable", false, null);
                 return;
             }
 
             if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA) > 0)
             {
-                MenuMessageBox.PopUp("Ad Not Ready.", false, null);
+                MenuMessageBox.PopUp("Ad Not Ready", false, null);
                 return;
             }
 
             if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeA))
             {
-                MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
+                MenuMessageBox.PopUp("Ad Not Ready", false, null);
                 return;
             }
 
@@ -71,19 +71,19 @@ public class MenuHeartShop : MonoBehaviour
         {
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
-                MenuMessageBox.PopUp("Network NotReachable.", false, null);
+                MenuMessageBox.PopUp("Network NotReachable", false, null);
                 return;
             }
 
             if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB) > 0)
             {
-                MenuMessageBox.PopUp("Ad Not Ready.", false, null);
+                MenuMessageBox.PopUp("Ad Not Ready", false, null);
                 return;
             }
 
             if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeB))
             {
-                MenuMessageBox.PopUp("Ad was requested.\nPlease try again in a while.", false, null);
+                MenuMessageBox.PopUp("Ad Not Ready", false, null);
                 return;
             }
 
@@ -98,20 +98,21 @@ public class MenuHeartShop : MonoBehaviour
         {
             int diamond = 5;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuMessageBox.PopUp(diamond + " Diamonds are used.", true, (isOK) =>
+            string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
+            MenuMessageBox.PopUp(msg, true, (isOK) =>
             {
                 if (isOK)
                 {
                     if(Purchases.IsHeartMax())
-                        MenuInformBox.PopUp("LIFE Max.");
+                        MenuInformBox.PopUp("LIFE Max");
                     else
                     {
                         if (Purchases.ChargeHeart(20, diamond))
                         {
-                            MenuInformBox.PopUp("Success!!");
+                            MenuInformBox.PopUp("Success");
                         }
                         else
-                            MenuInformBox.PopUp("Not enough Diamonds.");
+                            MenuInformBox.PopUp("Not enough diamonds");
                     }
 
                     MenuStages.Inst.UpdateTopPanel();
@@ -122,20 +123,21 @@ public class MenuHeartShop : MonoBehaviour
         {
             int diamond = 20;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuMessageBox.PopUp(diamond + " Diamonds are used.", true, (isOK) =>
+            string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
+            MenuMessageBox.PopUp(msg, true, (isOK) =>
             {
                 if (isOK)
                 {
                     if (Purchases.ChargeHeartInfinite(diamond))
                     {
-                        MenuInformBox.PopUp("Success!!");
+                        MenuInformBox.PopUp("Success");
                     }
                     else
                     {
                         if (Purchases.IsInfinite())
-                            MenuInformBox.PopUp("Already Infinite Mode.");
+                            MenuInformBox.PopUp("Already Infinite Mode");
                         else
-                            MenuInformBox.PopUp("Not enough Diamonds.");
+                            MenuInformBox.PopUp("Not enough diamonds");
                     }
 
                     MenuStages.Inst.UpdateTopPanel();
@@ -155,7 +157,7 @@ public class MenuHeartShop : MonoBehaviour
 
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectRewards);
         MenuStages.Inst.UpdateTopPanel();
-        MenuInformBox.PopUp("finished playing video ");
+        MenuInformBox.PopUp("Lifes are rewarded");
     }
 
     private IEnumerator TimerCount()
@@ -164,10 +166,10 @@ public class MenuHeartShop : MonoBehaviour
         while (true)
         {
             remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA);
-            AdsRewardA.text = remainSec <= 0 ? "15m" : MenuBattle.TimeToString((int)remainSec);
+            AdsRewardA.text = remainSec <= 0 ? "15:00" : MenuBattle.TimeToString((int)remainSec);
 
             remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB);
-            AdsRewardB.text = remainSec <= 0 ? "60m" : MenuBattle.TimeToString((int)remainSec);
+            AdsRewardB.text = remainSec <= 0 ? "60:00" : MenuBattle.TimeToString((int)remainSec);
 
             yield return new WaitForSeconds(1);
         }

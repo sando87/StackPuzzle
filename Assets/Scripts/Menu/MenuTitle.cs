@@ -272,9 +272,9 @@ public class MenuTitle : MonoBehaviour
     {
         switch (systemLang)
         {
-            case SystemLanguage.Korean: return LocaleSupportLangType.Korea;
-            case SystemLanguage.Japanese: return LocaleSupportLangType.Japan;
-            case SystemLanguage.ChineseSimplified: return LocaleSupportLangType.China;
+            case SystemLanguage.Korean: return LocaleSupportLangType.Korean;
+            case SystemLanguage.Japanese: return LocaleSupportLangType.Japanese;
+            case SystemLanguage.ChineseSimplified: return LocaleSupportLangType.Chinese;
             default: return LocaleSupportLangType.English;
         }
     }

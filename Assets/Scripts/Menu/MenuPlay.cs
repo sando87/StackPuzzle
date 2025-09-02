@@ -42,12 +42,12 @@ public class MenuPlay : MonoBehaviour
     {
         int starCount = UserSetting.GetStageStarCount(info.Num);
         mStageInfo = info;
-        StageLevel.text = "STAGE " + info.Num.ToString();
+        StageLevel.text = string.Format(LocaleManager.Inst.DoLocaleText("STAGE {0}", UserSetting.CurrentLang), info.Num);
         if (info.GoalTypeEnum == StageGoalType.Score)
         {
             TargetType.gameObject.SetActive(false);
             TargetScore.gameObject.SetActive(true);
-            TargetScore.text = "Score " + info.GoalValue.ToString();
+            TargetScore.text = string.Format(LocaleManager.Inst.DoLocaleText("Score {0}", UserSetting.CurrentLang), info.GoalValue);
         }
         else
         {
