@@ -1,13 +1,62 @@
-EnglishID,Korea,Japan,China
-Tap to start,시작하려면 탭하세요,タップして開始,点击开始
-Limit,한계,制限,限制
-Combo,콤보,コンボ,连击
-Item,목,アイテム,物品
-Completed,완전한,完了,完全的
-Failed,실패한,失敗した,失败的
-Score,점수,スコア,分数
-Goal,목표,ゴール,目标
-Score,점수,スコア,分数
-Skip,건너뛰다,スキップ,跳过
-Item1,항목1,アイテム1,项目1
-Item2,항목2,アイテム2,项目2
+English,Korean,Japanese,Chinese,Spanish,German,French,Portuguese,Russian
+Tap to start,탭하여 시작,タップして開始,点击开始,Toca para empezar,Tippen zum Starten,Tapez pour commencer,Toque para começar,"Нажмите, чтобы начать"
+Combo,콤보,コンボ,连击,Combo,Kombo,Combo,Combo,Комбо
+Item,아이템,アイテム,道具,Ítem,Gegenstand,Objet,Item,Предмет
+Goal,목표,目標,目标,Meta,Ziel,Objectif,Objetivo,Цель
+Limit,제한,制限,限制,Límite,Limitierung,Limite,Limite,Лимит
+Score,점수,スコア,得分,Puntuación,Punktzahl,Score,Pontuação,Счёт
+Item1,아이템1,アイテム1,道具1,Ítem1,Gegenstand1,Objet1,Item1,Предмет1
+Item2,아이템2,アイテム2,道具2,Ítem2,Gegenstand2,Objet2,Item2,Предмет2
+Item3,아이템3,アイテム3,道具3,Ítem3,Gegenstand3,Objet3,Item3,Предмет3
+LIFE SHOP,라이프 상점,ライフショップ,生命商店,Tienda de vidas,Laden für Leben,Boutique de vies,Loja de vidas,Магазин жизней
+LIFE x5,라이프 x5,ライフ×5,生命x5,Vida x5,Leben x5,Vie x5,Vida x5,Жизни x5
+LIFE max,라이프 최대,ライフ最大,生命满值,Vida máxima,Leben max,Vie max,Vida máxima,Макс. жизни
+LIFE INF,라이프 무한,ライフ無限,无限生命,Vida infinita,Unendliche Leben,Vie infinie,Vida infinita,Бесконечные жизни
+GEM SHOP,젬 상점,ジェムショップ,宝石商店,Tienda de gemas,Edelsteinladen,Boutique de gemmes,Loja de gemas,Магазин самоцветов
+ITEM SHOP,아이템 상점,アイテムショップ,道具商店,Tienda de ítems,Itemladen,Boutique d’objets,Loja de itens,Магазин предметов
+Timer,타이머,タイマー,计时器,Temporizador,Timer,Minuteur,Cronômetro,Таймер
+Missile,미사일,ミサイル,导弹,Misil,Rakete,Missile,Míssil,Ракета
+Bomb,폭탄,ボム,炸弹,Bomba,Bombe,Bombe,Bomba,Бомба
+Booster,부스터,ブースター,加速器,Impulsor,Booster,Booster,Booster,Ускоритель
+Rainbow,레인보우,レインボー,彩虹,Arcoíris,Regenbogen,Arc-en-ciel,Arco-íris,Радуга
+Meteor,메테오,メテオ,流星,Meteoro,Meteorit,Météore,Meteoro,Метеор
+GOLD SHOP,골드 상점,ゴールドショップ,金币商店,Tienda de oro,Goldladen,Boutique d’or,Loja de ouro,Золотой магазин
+Shop,상점,ショップ,商店,Tienda,Laden,Boutique,Loja,Магазин
+Inventory,인벤토리,インベントリ,背包,Inventario,Inventar,Inventaire,Inventário,Инвентарь
+Settings,설정,設定,设置,Ajustes,Einstellungen,Paramètres,Configurações,Настройки
+Battle,배틀,バトル,战斗,Batalla,Kampf,Bataille,Batalha,Бой
+Extends limits,제한 연장,制限延長,延长限制,Extender límites,Grenzen erweitern,Étendre les limites,Estender limites,Расширить лимиты
+Break obstacles,장애물 제거,障害物破壊,破坏障碍物,Romper obstáculos,Hindernisse zerstören,Casser les obstacles,Quebrar obstáculos,Сломать преграды
+Generate skill1 blocks,스킬1 블록 생성,スキル1ブロック生成,生成技能1方块,Generar bloques de habilidad1,Skill1-Blöcke erzeugen,Générer des blocs compétence1,Gerar blocos habilidade1,Создать блоки умения1
+Keep combo,콤보 유지,コンボ維持,保持连击,Mantener combo,Kombos halten,Garder le combo,Manter combo,Сохранять комбо
+Generate skill2 blocks,스킬2 블록 생성,スキル2ブロック生成,生成技能2方块,Generar bloques de habilidad2,Skill2-Blöcke erzeugen,Générer des blocs compétence2,Gerar blocos habilidade2,Создать блоки умения2
+Meteor fall,메테오 낙하,メテオ落下,流星坠落,Caída de meteoros,Meteoritfall,Chute de météore,Queda de meteoro,Падение метеора
+Unknown,알 수 없음,不明,未知,Desconocido,Unbekannt,Inconnu,Desconhecido,Неизвестно
+Push Alarm,푸시 알림,プッシュ通知,推送通知,Notificación push,Push-Benachrichtigung,Notification push,Notificação push,Push-уведомление
+Sound FX,효과음,効果音,音效,Efectos de sonido,Soundeffekte,Effets sonores,Efeitos sonoros,Звуковые эффекты
+BGM,BGM,BGM,BGM,Música de fondo,Hintergrundmusik,Musique de fond,Música de fundo,Фоновая музыка
+Terms,약관,利用規約,条款,Términos,Bedingungen,Conditions,Termos,Условия
+Stats,통계,統計,统计,Estadísticas,Statistiken,Statistiques,Estatísticas,Статистика
+Ranking,랭킹,ランキング,排行,Clasificación,Rangliste,Classement,Ranking,Рейтинг
+Items,아이템,アイテム,道具,Ítems,Gegenstände,Objets,Itens,Предметы
+Waitting,대기중,待機中,等待中,Esperando,Warten,En attente,Aguardando,Ожидание
+Cancle,취소,キャンセル,取消,Cancelar,Abbrechen,Annuler,Cancelar,Отмена
+Quick Start,빠른 시작,クイックスタート,快速开始,Inicio rápido,Schnellstart,Démarrage rapide,Início rápido,Быстрый старт
+Friend,친구,友達,好友,Amigo,Freund,Ami,Amigo,Друг
+Room ID\n{0},방 ID\n{0},ルームID\n{0},房间ID\n{0},ID de sala\n{0},Raum-ID\n{0},ID de salle\n{0},ID da sala\n{0},ID комнаты\n{0}
+STAGE {0},스테이지 {0},ステージ {0},关卡 {0},Etapa {0},Stufe {0},Niveau {0},Fase {0},Этап {0}
+Goal,목표,目標,目标,Meta,Ziel,Objectif,Objetivo,Цель
+Score {0},점수 {0},スコア {0},得分 {0},Puntuación {0},Punktzahl {0},Score {0},Pontuação {0},Счёт {0}
+Items,아이템,アイテム,道具,Ítems,Gegenstände,Objets,Itens,Предметы
+Start,시작,スタート,开始,Comenzar,Start,Démarrer,Iniciar,Старт
+STAGE {0} CLEAR!!,스테이지 {0} 클리어!!,ステージ {0} クリア!!,关卡 {0} 通关!!,¡Etapa {0} completada!,Stufe {0} geschafft!!,Niveau {0} terminé !!,Fase {0} concluída!!,Этап {0} пройден!!
+REWARDS,보상,報酬,奖励,Recompensas,Belohnungen,Récompenses,Recompensas,Награды
+BONUS,보너스,ボーナス,奖励 extra,Bonificación,Bonus,Bonus,Bônus,Бонус
+Next,다음,次へ,下一步,Siguiente,Weiter,Suivant,Próximo,Далее
+GAME OVER,게임 오버,ゲームオーバー,游戏结束,Fin del juego,Spiel vorbei,Fin du jeu,Fim de jogo,Игра окончена
+Continue,계속하기,続ける,继续,Continuar,Weiterspielen,Continuer,Continuar,Продолжить
+WIN,승리,勝利,胜利,Victoria,Sieg,Victoire,Vitória,Победа
+LOSE,패배,敗北,失败,Derrota,Niederlage,Défaite,Derrota,Поражение
+Next,다음,次へ,下一步,Siguiente,Weiter,Suivant,Próximo,Далее
+Terms and Conditions,이용 약관,利用規約,条款和条件,Términos y condiciones,Allgemeine Geschäftsbedingungen,Termes et conditions,Termos e condições,Правила и условия
+Agree,동의,同意,同意,Aceptar,Zustimmen,Accepter,Concordar,Согласиться

@@ -9140,7 +9140,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -15084,7 +15083,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Matching...
+  m_text: Waitting
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b741db7ac3d1c423aad5b49a9780ca2d, type: 2}
   m_sharedMaterial: {fileID: 5568139486216784236, guid: b741db7ac3d1c423aad5b49a9780ca2d,
@@ -49604,7 +49603,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -60670,6 +60668,7 @@ GameObject:
   - component: {fileID: 700203875}
   - component: {fileID: 700203877}
   - component: {fileID: 700203876}
+  - component: {fileID: 700203878}
   m_Layer: 5
   m_Name: Text_Dead
   m_TagString: Untagged
@@ -60717,7 +60716,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GAME OVER
+  m_text: LOSE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7659f6d6ec9b642db8be29bc45fe97cc, type: 2}
   m_sharedMaterial: {fileID: 8690591861142563998, guid: 7659f6d6ec9b642db8be29bc45fe97cc,
@@ -60795,6 +60794,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 700203874}
   m_CullTransparentMesh: 0
+--- !u!114 &700203878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700203874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5012056dceef19a488a4d5f879b6e9df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &703458859
 GameObject:
   m_ObjectHideFlags: 0
@@ -67526,7 +67537,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: You Win
+  m_text: WIN
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7659f6d6ec9b642db8be29bc45fe97cc, type: 2}
   m_sharedMaterial: {fileID: 8690591861142563998, guid: 7659f6d6ec9b642db8be29bc45fe97cc,
@@ -68014,7 +68025,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -107246,7 +107256,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -300061,7 +300070,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &4734491267940940866
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -312269,7 +312278,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Quick
+  m_text: Quick Start
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c2f49fe8c22d94f9a9e6cd06ad490155, type: 2}
   m_sharedMaterial: {fileID: 3074828514974314926, guid: c2f49fe8c22d94f9a9e6cd06ad490155,
