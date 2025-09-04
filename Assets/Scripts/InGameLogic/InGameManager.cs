@@ -84,7 +84,7 @@ public class InGameManager : MonoBehaviour
 
     private bool mIsWorkingCycle = false;
     private List<DelayedCall> mWorkerList = new List<DelayedCall>();
-    private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
+    private LinkedList<KeyValuePair<Int64, PVPInfo>> mNetMessages = new LinkedList<KeyValuePair<Int64, PVPInfo>>();
 
     public float SFXVolume { get { return mSFXVolume; } }
     public bool IsFInished { get { return mIsFinished; } }
@@ -4678,9 +4678,10 @@ public class InGameManager : MonoBehaviour
         {
             PVPInfo resMsg = new PVPInfo();
             resMsg.Deserialize(body);
-            mNetMessages.AddLast(resMsg);
+            mNetMessages.AddLast(new KeyValuePair<Int64, PVPInfo>(head.RequestID, resMsg));
         }
     }
+    Int64 mTestSeq = 0;
     IEnumerator ProcessNetMessages()
     {
         while (true)
@@ -4690,7 +4691,8 @@ public class InGameManager : MonoBehaviour
             if (mNetMessages.Count == 0)
                 continue;
 
-            PVPInfo body = mNetMessages.First.Value;
+            Int64 reqID = mNetMessages.First.Value.Key;
+            PVPInfo body = mNetMessages.First.Value.Value;
             if (body.cmd == PVPCommand.StartGame)
             {
                 int randomSeed = body.remainTime;
@@ -4704,7 +4706,9 @@ public class InGameManager : MonoBehaviour
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                 }
 
+                mTestSeq = reqID;
                 mNetMessages.RemoveFirst();
+                LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
             }
             else if (body.cmd == PVPCommand.Click)
             {
@@ -4714,16 +4718,36 @@ public class InGameManager : MonoBehaviour
                     OnClick(pro.gameObject);
 
                     mNetMessages.RemoveFirst();
+                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    {
+                        mTestSeq = reqID;
+                    }
+                    else
+                    {
+                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        yield break;
+                    }
                 }
             }
             else if (body.cmd == PVPCommand.Swipe)
             {
-                if(IsIdle && IsAllProductIdle())
+                if (IsIdle && IsAllProductIdle())
                 {
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     OnSwipe(pro.gameObject, body.dir);
 
                     mNetMessages.RemoveFirst();
+                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    {
+                        mTestSeq = reqID;
+                    }
+                    else
+                    {
+                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        yield break;
+                    }
                 }
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
@@ -4746,6 +4770,16 @@ public class InGameManager : MonoBehaviour
                         StartCoroutine(FlushObstacles(rets));
 
                         mNetMessages.RemoveFirst();
+                        LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
+                        if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                        {
+                            mTestSeq = reqID;
+                        }
+                        else
+                        {
+                            LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            yield break;
+                        }
                     }
                 }
             }
@@ -4766,6 +4800,16 @@ public class InGameManager : MonoBehaviour
                     MenuBattle.Inst().UseOpponentItem(body.item);
 
                     mNetMessages.RemoveFirst();
+                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    {
+                        mTestSeq = reqID;
+                    }
+                    else
+                    {
+                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        yield break;
+                    }
                 }
             }
             else if (body.cmd == PVPCommand.GetItem)
@@ -4775,6 +4819,16 @@ public class InGameManager : MonoBehaviour
                     MenuBattle.Inst().GetOpponentItem(body.item, body.slotIndex);
 
                     mNetMessages.RemoveFirst();
+                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    {
+                        mTestSeq = reqID;
+                    }
+                    else
+                    {
+                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        yield break;
+                    }
                 }
             }
         }
@@ -4883,6 +4937,8 @@ public class InGameManager : MonoBehaviour
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Click(Product pro)
     {
@@ -4896,8 +4952,11 @@ public class InGameManager : MonoBehaviour
         req.pros[0].idxX = pro.ParentFrame.IndexX;
         req.pros[0].idxY = pro.ParentFrame.IndexY;
         req.pros[0].prvColor = pro.Color;
+        req.remainTime = Billboard.CurrentScore;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
     {
@@ -4912,8 +4971,11 @@ public class InGameManager : MonoBehaviour
         req.pros[0].idxX = pro.ParentFrame.IndexX;
         req.pros[0].idxY = pro.ParentFrame.IndexY;
         req.pros[0].prvColor = pro.Color;
+        req.remainTime = Billboard.CurrentScore;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect, int timerCounter)
     {
@@ -4958,10 +5020,13 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = Billboard.CurrentCombo;
         req.item = item;
+        req.remainTime = Billboard.CurrentScore;
         //req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     public void Network_GetItem(PurchaseItemType item, int slotIndex)
     {
@@ -4973,10 +5038,13 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.item = item;
         req.slotIndex = slotIndex;
+        req.remainTime = Billboard.CurrentScore;
         //req.pros = pros;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
     {
@@ -5002,9 +5070,12 @@ public class InGameManager : MonoBehaviour
         req.oppUserPk = InstPVP_Opponent.UserPk;
         req.combo = point;
         req.pros = pros;
+        req.remainTime = Billboard.CurrentScore;
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
+        else
+            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_SyncTimer(int remainSec)
     {
