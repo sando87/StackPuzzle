@@ -56,6 +56,8 @@ public class LocaleManager : MonoBehaviour
 
     public string DoLocaleText(string englishID, LocaleSupportLangType type)
     {
+        return englishID;
+        
         if (mDicLocaleLangs.ContainsKey(englishID))
         {
             switch (type)
