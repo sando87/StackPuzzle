@@ -4714,12 +4714,13 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle())
                 {
+                    int localScore = Billboard.CurrentScore;
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     OnClick(pro.gameObject);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    LOG.trace("recv," + reqID + "," + localScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                     {
                         mTestSeq = reqID;
                     }
@@ -4734,12 +4735,13 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle())
                 {
+                    int localScore = Billboard.CurrentScore;
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     OnSwipe(pro.gameObject, body.dir);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    LOG.trace("recv," + reqID + "," + localScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                     {
                         mTestSeq = reqID;
                     }
@@ -4758,6 +4760,7 @@ public class InGameManager : MonoBehaviour
                     int point = body.combo;
                     if (PVPScoreBar.CurrentScore >= point * UserSetting.ScorePerAttack)
                     {
+                        int localScore = Billboard.CurrentScore;
                         PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
                         List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
                         Product[] rets = products.ToArray();
@@ -4770,8 +4773,8 @@ public class InGameManager : MonoBehaviour
                         StartCoroutine(FlushObstacles(rets));
 
                         mNetMessages.RemoveFirst();
-                        LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
-                        if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                        LOG.trace("recv," + reqID + "," + localScore);
+                        if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                         {
                             mTestSeq = reqID;
                         }
@@ -4797,11 +4800,12 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle())
                 {
+                    int localScore = Billboard.CurrentScore;
                     MenuBattle.Inst().UseOpponentItem(body.item);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    LOG.trace("recv," + reqID + "," + localScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                     {
                         mTestSeq = reqID;
                     }
@@ -4816,11 +4820,12 @@ public class InGameManager : MonoBehaviour
             {
                 // if (IsIdle && IsAllProductIdle())
                 {
+                    int localScore = Billboard.CurrentScore;
                     MenuBattle.Inst().GetOpponentItem(body.item, body.slotIndex);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == Billboard.CurrentScore)
+                    LOG.trace("recv," + reqID + "," + localScore);
+                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                     {
                         mTestSeq = reqID;
                     }
