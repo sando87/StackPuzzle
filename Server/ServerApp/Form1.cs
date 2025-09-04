@@ -193,7 +193,7 @@ namespace ServerApp
                     case NetCMD.AddLogFile: resBody = ProcAddLogFile(body); break;
                     case NetCMD.SearchOpponent: resBody = ProcSearchOpponent(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
                     case NetCMD.StopMatching: resBody = ProcStopMatching(Utils.Deserialize<SearchOpponentInfo>(ref body)); break;
-                    case NetCMD.PVP: resBody = ProcPVPCommand(body); break;
+                    case NetCMD.PVP: resBody = ProcPVPCommand(body, requestMsg.RequestID); break;
                     case NetCMD.EndPVP: resBody = ProcEndPVPGame(Utils.Deserialize<EndPVP>(ref body)); break;
 
                     default: resBody = new LogInfo("Undefied Command"); break;
@@ -345,7 +345,7 @@ namespace ServerApp
                 mCurrentSession.ReleaseOpp();
             return requestBody;
         }
-        private UserInfo ProcPVPCommand(byte[] body)
+        private UserInfo ProcPVPCommand(byte[] body, Int64 reqID)
         {
             PVPInfo requestBody = new PVPInfo();
             requestBody.Deserialize(body);
@@ -362,10 +362,10 @@ namespace ServerApp
                 case PVPCommand.SkillBomb:
                 case PVPCommand.SkillIce:
                 case PVPCommand.SkillIceRes:
-                    isOK = BypassToOppPlayer(requestBody);
+                    isOK = BypassToOppPlayer(requestBody, reqID);
                     break;
                 default:
-                    isOK = BypassToOppPlayer(requestBody);
+                    isOK = BypassToOppPlayer(requestBody, reqID);
                     break;
             }
 
@@ -398,7 +398,7 @@ namespace ServerApp
 
             return requestBody;
         }
-        private bool BypassToOppPlayer(PVPInfo requestBody)
+        private bool BypassToOppPlayer(PVPInfo requestBody, Int64 reqID)
         {
             SessionUser oppSessoion = GetUser(mCurrentSession.OppEndpoint);
             if (oppSessoion == null)
@@ -406,6 +406,7 @@ namespace ServerApp
 
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.PVP;
+            responseMsg.RequestID = reqID;
             responseMsg.UserPk = mCurrentSession.UserInfo.userPk;
 
             byte[] response = NetProtocol.ToArray(responseMsg, requestBody.Serialize());
