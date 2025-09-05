@@ -300,7 +300,8 @@ public class MenuBattle : MonoBehaviour
         {
             if (itemButton.GetItem() == itemType)
             {
-                return itemButton.IsEnabled();
+                if (itemButton.IsEnabled())
+                    return true;
             }
         }
         return false;

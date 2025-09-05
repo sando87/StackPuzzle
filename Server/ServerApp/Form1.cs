@@ -468,11 +468,11 @@ namespace ServerApp
             userB.MatchState = MatchingState.FoundOpp;
 
             // 상위 티어의 두명이 만나면 더 어려운 맵으로 대전
-            MatchingLevel mapLevel = MatchingLevel.Bronze;
+            MatchingLevel mapLevel = MatchingLevel.Silver;
             if (userA.UserInfo.score > 900 && userB.UserInfo.score> 900)
                 mapLevel = MatchingLevel.Silver;
 
-            int seed = (int)DateTime.Now.Ticks;
+            int seed = 227061580; // (int)DateTime.Now.Ticks;
 
             SendMatchingInfoTo(userA.Endpoint, userB.UserInfo, mapLevel, MatchingState.FoundOpp, seed);
             SendMatchingInfoTo(userB.Endpoint, userA.UserInfo, mapLevel, MatchingState.FoundOpp, seed);

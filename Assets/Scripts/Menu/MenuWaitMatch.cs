@@ -340,7 +340,7 @@ public class MenuWaitMatch : MonoBehaviour
     private IEnumerator AutoMatch()
     {
         yield return new WaitForSeconds(1);
-        List<int> itemTypes = new List<int>() { 1, 2, 3, 4, 5, 6 };
+        List<int> itemTypes = new List<int>() { 5, 5, 5, 5, 5, 5 };
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
@@ -348,7 +348,7 @@ public class MenuWaitMatch : MonoBehaviour
                 continue;
 
             int index = UnityEngine.Random.Range(0, itemTypes.Count);
-            PurchaseItemType itemType = (PurchaseItemType)itemTypes[index];
+            PurchaseItemType itemType = i == 0 ? PurchaseItemType.MakeSkill2 : (PurchaseItemType)itemTypes[index];
             itemTypes.RemoveAt(index);
             if (itemType.GetCount() <= 0)
                 Purchases.ChargeItemUseGold(itemType, 100, 0);
