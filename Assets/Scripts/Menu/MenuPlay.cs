@@ -14,6 +14,7 @@ public class MenuPlay : MonoBehaviour
     public TextMeshProUGUI TargetValue;
     public TextMeshProUGUI TargetScore;
     public Image TargetType;
+    public RewardUISet _RewardUISet;
 
     public static MenuPlay Inst()
     {
@@ -63,6 +64,8 @@ public class MenuPlay : MonoBehaviour
         {
             btn.UpdateItem();
         }
+
+        _RewardUISet.UpdateRewordSlot(mStageInfo);
     }
 
     public void OnClose()

@@ -327,7 +327,7 @@ public class UserSettingInfo
     public byte GetStageStarCount(int stageNum)
     {
         byte cnt = mStageStarCount[stageNum - 1];
-        return cnt == 0xff ? (byte)0 : cnt;
+        return cnt == 0xff ? (byte)0 : (byte)(cnt % 10);
     }
     public int GetHighestStageNumber()
     {
@@ -338,8 +338,16 @@ public class UserSettingInfo
     }
     public void SetStageStarCount(int stageNum, byte starCount)
     {
-        mStageStarCount[stageNum - 1] = starCount;
+        mStageStarCount[stageNum - 1] = IsRewardedBox(stageNum) ? (byte)(starCount + 10) : starCount;
         Save();
+    }
+    public bool IsRewardedBox(int stageNum)
+    {
+        return mStageStarCount[stageNum - 1] != 0xff && mStageStarCount[stageNum - 1] > 10;
+    }
+    public void DoRewardBox(int stageNum)
+    {
+        mStageStarCount[stageNum - 1] = (byte)(GetStageStarCount(stageNum) + 10);
     }
 
     public static UserSettingInfo Load()
