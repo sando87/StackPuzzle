@@ -10,6 +10,7 @@ public class ItemButton : MonoBehaviour
 {
     [SerializeField] private Sprite BtnBgImgA = null;
     [SerializeField] private Sprite BtnBgImgB = null;
+    [SerializeField] private Sprite AdsImage = null;
     [SerializeField] private Image ItemImg = null;
     [SerializeField] private Image ItemEmptyImg = null;
     [SerializeField] private TextMeshProUGUI ItemCount = null;
@@ -19,11 +20,6 @@ public class ItemButton : MonoBehaviour
     public void SetItem(PurchaseItemType item)
     {
         ItemType = item;
-        UpdateItem();
-    }
-    public void SetAdsImage()
-    {
-        ItemType = PurchaseItemType.None;
         UpdateItem();
     }
 
@@ -36,21 +32,41 @@ public class ItemButton : MonoBehaviour
     {
         if (ItemType == PurchaseItemType.None)
         {
-            GetComponent<Image>().sprite = BtnBgImgB;
-            ItemImg.gameObject.SetActive(false);
-            ItemEmptyImg.gameObject.SetActive(true);
-            ItemCount.gameObject.SetActive(false);
+            SetEmptyImage();
         }
         else
         {
-            GetComponent<Image>().sprite = BtnBgImgA;
-            ItemImg.gameObject.SetActive(true);
-            ItemEmptyImg.gameObject.SetActive(false);
-            ItemCount.gameObject.SetActive(true);
-
-            ItemImg.sprite = ItemType.GetSprite();
-            ItemCount.text = ItemType.GetCount().ToString();
+            SetItemImage();
         }
+    }
+
+    public void SetEmptyImage()
+    {
+        GetComponent<Image>().sprite = BtnBgImgB;
+        ItemImg.gameObject.SetActive(false);
+        ItemEmptyImg.gameObject.SetActive(true);
+
+        ItemCount.gameObject.SetActive(false);
+    }
+    public void SetAdsImage()
+    {
+        GetComponent<Image>().sprite = BtnBgImgA;
+        ItemImg.gameObject.SetActive(true);
+        ItemEmptyImg.gameObject.SetActive(false);
+        ItemImg.sprite = AdsImage;
+
+        ItemCount.gameObject.SetActive(true);
+        ItemCount.text = ItemType.GetCount().ToString();
+    }
+    public void SetItemImage()
+    {
+        GetComponent<Image>().sprite = BtnBgImgA;
+        ItemImg.gameObject.SetActive(true);
+        ItemEmptyImg.gameObject.SetActive(false);
+        ItemImg.sprite = ItemType.GetSprite();
+
+        ItemCount.gameObject.SetActive(true);
+        ItemCount.text = ItemType.GetCount().ToString();
     }
 
     public void HideItemCount()

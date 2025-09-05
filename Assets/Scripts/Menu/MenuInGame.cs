@@ -104,6 +104,7 @@ public class MenuInGame : MonoBehaviour
         CurrentScore = 0;
         GoldBundleText.text = "x0";
 
+        bool isAdsAdded = false;
         PurchaseItemType[] items = MenuPlay.Inst().GetSelectedItems();
         for (int i = 0; i < ItemSlots.Length; ++i)
         {
@@ -115,13 +116,20 @@ public class MenuInGame : MonoBehaviour
                 ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
                 //ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = items[i].GetName();
             }
-            else
+            else if (!isAdsAdded)
             {
+                isAdsAdded = true;
                 ItemSlots[i].name = "ads" + i;
                 ItemSlots[i].GetComponentInChildren<Button>().enabled = true;
                 ItemSlots[i].GetComponentInChildren<Image>().sprite = ItemAdsImage;
                 ItemSlots[i].GetComponentInChildren<Image>().color = Color.white;
                 //ItemSlots[i].GetComponentInChildren<TextMeshProUGUI>().text = "Empty";
+            }
+            else
+            {
+                ItemSlots[i].name = "empty";
+                ItemSlots[i].GetComponentInChildren<Button>().enabled = false;
+                ItemSlots[i].GetComponentInChildren<Image>().color = Color.gray;
             }
         }
 

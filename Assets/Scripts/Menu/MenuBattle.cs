@@ -102,38 +102,65 @@ public class MenuBattle : MonoBehaviour
 
         InitPVPScoreBar();
 
+        bool isAdsAdded = false;
         PurchaseItemType[] items = InGameManager.InstPVP_Player.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
             if (items[i] == PurchaseItemType.None)
             {
-                PlayerItemSlots[i].name = "ads" + i;
-                PlayerItemSlots[i].SetAdsImage();
-                PlayerItemSlots[i].SetEnable(true);
-                PlayerItemSlots[i].HideItemCount();
+                if (isAdsAdded)
+                {
+                    PlayerItemSlots[i].name = "empty";
+                    PlayerItemSlots[i].SetEmptyImage();
+                    PlayerItemSlots[i].SetEnable(false);
+                    PlayerItemSlots[i].HideItemCount();
+                }
+                else
+                {
+                    isAdsAdded = true;
+                    PlayerItemSlots[i].name = "ads" + i;
+                    PlayerItemSlots[i].SetAdsImage();
+                    PlayerItemSlots[i].SetEnable(true);
+                    PlayerItemSlots[i].HideItemCount();
+                }
             }
             else
             {
                 PlayerItemSlots[i].SetItem(items[i]);
+                PlayerItemSlots[i].SetItemImage();
                 PlayerItemSlots[i].SetEnable(true);
                 PlayerItemSlots[i].HideItemCount();
             }
         }
 
+        isAdsAdded = false;
         items = InGameManager.InstPVP_Opponent.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
             if(items[i] == PurchaseItemType.None)
             {
-                OpponentItemSlots[i].name = "ads" + i;
-                OpponentItemSlots[i].SetAdsImage();
-                OpponentItemSlots[i].SetEnable(true);
-                OpponentItemSlots[i].HideItemCount();
-                OpponentItemSlots[i].GetComponent<Button>().enabled = false;
+                if (isAdsAdded)
+                {
+                    OpponentItemSlots[i].name = "empty";
+                    OpponentItemSlots[i].SetEmptyImage();
+                    OpponentItemSlots[i].SetEnable(false);
+                    OpponentItemSlots[i].HideItemCount();
+                    OpponentItemSlots[i].GetComponent<Button>().enabled = false;
+                }
+                else
+                {
+                    isAdsAdded = true;
+                    OpponentItemSlots[i].name = "ads" + i;
+                    OpponentItemSlots[i].SetAdsImage();
+                    OpponentItemSlots[i].SetEnable(true);
+                    OpponentItemSlots[i].HideItemCount();
+                    OpponentItemSlots[i].GetComponent<Button>().enabled = false;
+                }
             }
             else
             {
                 OpponentItemSlots[i].SetItem(items[i]);
+                OpponentItemSlots[i].SetItemImage();
                 OpponentItemSlots[i].SetEnable(true);
                 OpponentItemSlots[i].HideItemCount();
                 OpponentItemSlots[i].GetComponent<Button>().enabled = false;
@@ -303,6 +330,7 @@ public class MenuBattle : MonoBehaviour
                 {
                     PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
                     PlayerItemSlots[adsIndex].SetItem(itemType);
+                    PlayerItemSlots[adsIndex].SetItemImage();
                     PlayerItemSlots[adsIndex].SetEnable(true);
                     PlayerItemSlots[adsIndex].HideItemCount();
 
@@ -322,6 +350,7 @@ public class MenuBattle : MonoBehaviour
 
                         PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
                         PlayerItemSlots[adsIndex].SetItem(itemType);
+                        PlayerItemSlots[adsIndex].SetItemImage();
                         PlayerItemSlots[adsIndex].SetEnable(true);
                         PlayerItemSlots[adsIndex].HideItemCount();
 
@@ -343,6 +372,7 @@ public class MenuBattle : MonoBehaviour
             return;
 
         OpponentItemSlots[slotIndex].SetItem(itemType);
+        OpponentItemSlots[slotIndex].SetItemImage();
         OpponentItemSlots[slotIndex].SetEnable(true);
         OpponentItemSlots[slotIndex].HideItemCount();
         OpponentItemSlots[slotIndex].GetComponent<Button>().enabled = false;
