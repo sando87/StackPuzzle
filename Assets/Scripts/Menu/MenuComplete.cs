@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,11 +19,14 @@ public class MenuComplete : MonoBehaviour
     public ScoreBar ScoreDisplay;
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
-    public GameObject RewardPrefab;
-    public GameObject RewardPackPrefab;
-    public GameObject RewardParent;
+    public RewardUISet _RewardUISet;
+    public GameObject EventItemFXPrefab;
+
     private List<GameObject> Effects = new List<GameObject>();
     private int ScorePerCoin = UserSetting.ScorePerCoin;
+    private int mScore = 0;
+    private bool mIsFirstClear = false;
+    private bool mIsFirst3StarClear = false;
 
     public static void PopUp(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
@@ -43,6 +47,10 @@ public class MenuComplete : MonoBehaviour
 
     private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
+        mScore = score;
+        mIsFirstClear = isFirstClear;
+        mIsFirst3StarClear = isFirstThreeStar;
+
         foreach (var effect in Effects)
             if (effect != null)
                 Destroy(effect);
@@ -57,48 +65,9 @@ public class MenuComplete : MonoBehaviour
 
         gameObject.SetActive(true);
 
-        int coin = score / UserSetting.ScorePerCoin;
-        if (coin < 12)
-        {
-            ScorePerCoin = score / UnityEngine.Random.Range(10, 14);
-            coin = score / ScorePerCoin;
-        }
-        else
-        {
-            ScorePerCoin = UserSetting.ScorePerCoin;
-            coin = score / ScorePerCoin;
-        }
-        Purchases.AddGold(coin * UserSetting.GoldPerCoin);
+        _RewardUISet.UpdateForRewarding(stageInfo, isFirstClear, isFirstThreeStar);
 
-        if (isFirstThreeStar)
-        {
-            ClearRewards();
-            CreateRewordSlot(stageInfo, true);
-            UserSetting.UserSettingInfo.AddExpOfEventItem(30, out float rateFrom, out float rateTo);
-
-            // 이벤트아이템 게이지 올라가는 연출..
-
-            // 이벤트 게이지 완료시 아이템 획득 데이터 처리
-            if (UserSetting.UserSettingInfo.IsDoneEventItem())
-            {
-                Purchases.AddItem(UserSetting.UserSettingInfo.CurrentEventItem);
-                UserSetting.UserSettingInfo.ResetNextNewEventItem();
-            }
-        }
-        else
-        {
-            if (UserSetting.GetStageStarCount(level) < 3)
-            {
-                ClearRewards();
-                CreateRewordSlot(stageInfo, false);
-            }
-            else
-            {
-                ClearRewards();
-            }
-        }
-
-        StartCoroutine(AnimateReward(score));
+        StartCoroutine(AnimateCollectCoins(score));
         StartCoroutine(AnimateStars(starCount));
         StartCoroutine(AnimateFireworkParticles());
     }
@@ -135,8 +104,47 @@ public class MenuComplete : MonoBehaviour
         Star3.gameObject.SetActive(starCount >= 3);
         if (starCount >= 3)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
+        yield return new WaitForSeconds(1);
+        StartCoroutine(AnimateEventItem());
     }
-    IEnumerator AnimateReward(int score)
+    IEnumerator AnimateEventItem()
+    {
+        UserSetting.UserSettingInfo.GetRateRangeOfEventItem(UserSetting.EventItemExpPerWin, out float rateFrom, out float rateTo);
+        float time = 0;
+        float duration = 0.5f;
+        GameObject targetObj = _RewardUISet.EventItemReward;
+        GameObject lastStarVFX = null;
+        while (time < duration)
+        {
+            float rate = time / duration;
+            float rateItem = rateTo * rate + rateFrom * (1 - rate);
+            GameObject star = Instantiate(EventItemFXPrefab, Star2.transform.position, Quaternion.identity, targetObj.transform);
+            Effects.Add(star);
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
+            lastStarVFX = star;
+
+            star.transform.DOLocalMove(Vector3.zero, 1.0f).OnComplete(() =>
+            {
+                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
+                _RewardUISet.SetEventItemRate(rateItem);
+                Destroy(star);
+            });
+            yield return new WaitForSeconds(0.05f);
+            time += 0.05f;
+        }
+
+        yield return new WaitUntil(() => lastStarVFX == null);
+        yield return new WaitForSeconds(0.5f);
+
+        _RewardUISet.SetEventItemRate(rateTo);
+        if (rateTo >= 1)
+        {
+            Sprite nextEventItemImage = UserSetting.UserSettingInfo.GetNextEventItem().GetSprite();
+            _RewardUISet.ChangeEventItemTween(nextEventItemImage);
+        }
+
+    }
+    IEnumerator AnimateCollectCoins(int score)
     {
         yield return new WaitForSeconds(0.5f);
         float duration = 3.0f;
@@ -196,6 +204,8 @@ public class MenuComplete : MonoBehaviour
 
     public void OnNext()
     {
+        DoReward();
+
         TryRequestReview();
 
         foreach (var effect in Effects)
@@ -210,99 +220,39 @@ public class MenuComplete : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
-    private void ClearRewards()
+    void DoReward()
     {
-        for (int i = 1; i < RewardParent.transform.childCount; ++i)
+        int coin = mScore / UserSetting.ScorePerCoin;
+        if (coin < 12)
         {
-            GameObject obj = RewardParent.transform.GetChild(i).gameObject;
-            Destroy(obj);
+            ScorePerCoin = mScore / UnityEngine.Random.Range(10, 14);
+            coin = mScore / ScorePerCoin;
         }
-    }
-    private void CreateRewordSlot(StageInfo stageInfo, bool enabled)
-    {
-        var rewardInfos = stageInfo.GetRewardInfos();
-        foreach (var rewardInfo in rewardInfos)
+        else
         {
-            string rewardString = rewardInfo.Item1;
-            Sprite rewardImage = rewardInfo.Item2;
-            int rewardCount = rewardInfo.Item3;
+            ScorePerCoin = UserSetting.ScorePerCoin;
+            coin = mScore / ScorePerCoin;
+        }
+        Purchases.AddGold(coin * UserSetting.GoldPerCoin);
 
-            if (rewardImage == PurchaseItemTypeExtensions.GetChestSprite())
+        if (mIsFirstClear)
+        {
+            _RewardUISet.DoReword();
+        }
+
+        if (mIsFirst3StarClear)
+        {
+            UserSetting.UserSettingInfo.AddExpOfEventItem(UserSetting.EventItemExpPerWin);
+
+            // 이벤트아이템 게이지 올라가는 연출..
+
+            // 이벤트 게이지 완료시 아이템 획득 데이터 처리
+            if (UserSetting.UserSettingInfo.IsDoneEventItem())
             {
-                GameObject obj = Instantiate(RewardPackPrefab, RewardParent.transform);
-                obj.name = rewardString;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                if (enabled)
-                {
-                    obj.GetComponent<Button>().onClick.AddListener(OnClickReward);
-                }
-                else
-                {
-                    obj.GetComponent<Button>().enabled = false;
-                    obj.GetComponent<Image>().color = Color.gray;
-                    obj.transform.GetChild(0).gameObject.SetActive(false);
-                    obj.transform.GetChild(1).gameObject.SetActive(false);
-                    obj.transform.GetChild(2).GetComponent<Image>().color = Color.gray;
-                }
-            }
-            else
-            {
-                GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
-                obj.name = rewardString;
-                obj.transform.GetChild(0).GetComponent<Image>().sprite = rewardImage;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                if (enabled)
-                {
-                    StageInfo.DoReward(rewardString);
-                }
-                else
-                {
-                    obj.GetComponentInChildren<ParticleSystem>().gameObject.SetActive(false);
-                    obj.transform.GetChild(0).GetComponent<Image>().color = Color.gray;
-                }
+                Purchases.AddItem(UserSetting.UserSettingInfo.CurrentEventItem);
+                UserSetting.UserSettingInfo.ResetNextNewEventItem();
             }
         }
-    }
-    private void OnClickReward()
-    {
-        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        string[] subRewards = btn.name.Split(' ');
-
-        if (Purchases.IsAdsSkip())
-        {
-            foreach (string subReward in subRewards)
-                StageInfo.DoReward(subReward);
-
-            btn.transform.GetChild(0).gameObject.SetActive(false);
-            btn.transform.GetChild(1).gameObject.SetActive(false);
-            btn.enabled = false;
-            return;
-        }
-
-        if (!NetClientApp.GetInstance().IsNetworkAlive)
-        {
-            MenuMessageBox.PopUp("Network NotReachable", false, null);
-            return;
-        }
-
-        if (!GoogleADMob.Inst.IsLoaded(AdsType.RewardItem))
-        {
-            MenuMessageBox.PopUp("Ad Not Ready", false, null);
-            return;
-        }
-
-        GoogleADMob.Inst.Show(AdsType.RewardItem, (rewarded) =>
-        {
-            if (rewarded)
-            {
-                foreach (string subReward in subRewards)
-                    StageInfo.DoReward(subReward);
-
-                btn.transform.GetChild(0).gameObject.SetActive(false);
-                btn.transform.GetChild(1).gameObject.SetActive(false);
-                btn.enabled = false;
-            }
-        });
     }
 
     private void TryRequestReview()

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Android;
@@ -36,6 +37,7 @@ public class UserSetting
     public const int ScorePerCoin = 50;
     public const int GoldPerCoin = 1;
     public const int BattleModeUnlockStage = 10;
+    public const int EventItemExpPerWin = 30;
     private const string UserInfoVersion = "ui1";
     #endregion
 
@@ -241,23 +243,30 @@ public class UserSettingInfo
 
         return mCurrentExpForEventItem >= mNextEventItem.GetExpForEvent();
     }
-    public void AddExpOfEventItem(float exp, out float rateFrom, out float rateTo)
+    public void AddExpOfEventItem(float exp)
+    {
+        mCurrentExpForEventItem += exp;
+        Save();
+    }
+    public void GetRateRangeOfEventItem(float exp, out float rateFrom, out float rateTo)
     {
         rateFrom = mCurrentExpForEventItem / mNextEventItem.GetExpForEvent();
-        mCurrentExpForEventItem += exp;
-        rateTo = mCurrentExpForEventItem / mNextEventItem.GetExpForEvent();
-        Save();
+        rateTo = (mCurrentExpForEventItem + exp) / mNextEventItem.GetExpForEvent();
     }
     public PurchaseItemType CurrentEventItem { get => mNextEventItem; }
     public void ResetNextNewEventItem()
+    {
+        mNextEventItem = GetNextEventItem();
+        mCurrentExpForEventItem = 0;
+        Save();
+    }
+    public PurchaseItemType GetNextEventItem()
     {
         int idx = (int)mNextEventItem + 1;
         if (idx >= (int)PurchaseItemType.KeepCombo)
             idx = (int)PurchaseItemType.ExtendLimit;
 
-        mNextEventItem = (PurchaseItemType)idx;
-        mCurrentExpForEventItem = 0;
-        Save();
+        return (PurchaseItemType)idx;
     }
 
     public LocaleSupportLangType CurrnetLang

@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,54 +15,19 @@ public class RewardUISet : MonoBehaviour
 
     private StageInfo mStageInfo = null;
 
-    public static void PopUp(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
-    {
-        // GameObject menuComp = GameObject.Find(UIObjName);
+    public GameObject GoldReward { get; private set; } = null;
+    public GameObject EventItemReward { get; private set; } = null;
+    public GameObject PackBoxReward { get; private set; } = null;
 
-        // RewardUISet menu = menuComp.GetComponent<RewardUISet>();
-        // menu.UpdateUIState(level, starCount, score, isFirstClear, isFirstThreeStar);
+    private Image mEventItemBar = null;
 
-        // if (UserSetting.IsBotPlayer)
-        //     menu.StartCoroutine(menu.AutoEnd());
-    }
-
-    public void UpdateCurrentState()
-    {
-
-    }
-
-    private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
-    {
-        StageInfo stageInfo = null;
-        if (isFirstThreeStar)
-        {
-            ClearRewards();
-            CreateRewordSlot(stageInfo, true);
-            UserSetting.UserSettingInfo.AddExpOfEventItem(30, out float rateFrom, out float rateTo);
-
-            // 이벤트아이템 게이지 올라가는 연출..
-
-            // 이벤트 게이지 완료시 아이템 획득 데이터 처리
-            if (UserSetting.UserSettingInfo.IsDoneEventItem())
-            {
-                Purchases.AddItem(UserSetting.UserSettingInfo.CurrentEventItem);
-                UserSetting.UserSettingInfo.ResetNextNewEventItem();
-            }
-        }
-        else
-        {
-            if (UserSetting.GetStageStarCount(level) < 3)
-            {
-                ClearRewards();
-                CreateRewordSlot(stageInfo, false);
-            }
-            else
-            {
-                ClearRewards();
-            }
-        }
-    }
-
+    Image BG(GameObject obj) { return obj.GetComponent<Image>(); }
+    Image Icon(GameObject obj) { return obj.transform.Find("Icon").GetComponent<Image>(); }
+    TextMeshProUGUI Text(GameObject obj) { return obj.transform.Find("Text_Value").GetComponent<TextMeshProUGUI>(); }
+    Transform FX(GameObject obj) { return obj.transform.Find("Fx_Star"); }
+    Transform Glow(GameObject obj) { return obj.transform.Find("Glow"); }
+    Transform Adv(GameObject obj) { return obj.transform.Find("Adv"); }
+    Transform Bonus(GameObject obj) { return obj.transform.Find("Bonus"); }
 
     private void ClearRewards()
     {
@@ -70,57 +37,21 @@ public class RewardUISet : MonoBehaviour
             Destroy(obj);
         }
     }
-    private void CreateRewordSlot(StageInfo stageInfo, bool enabled)
-    {
-        mStageInfo = stageInfo;
-        var rewardInfos = stageInfo.GetRewardInfos();
-        foreach (var rewardInfo in rewardInfos)
-        {
-            string rewardString = rewardInfo.Item1;
-            Sprite rewardImage = rewardInfo.Item2;
-            int rewardCount = rewardInfo.Item3;
 
-            if (rewardImage == PurchaseItemTypeExtensions.GetChestSprite())
-            {
-                GameObject obj = Instantiate(RewardPackPrefab, RewardParent.transform);
-                obj.name = rewardString;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                if (enabled)
-                {
-                    obj.GetComponent<Button>().onClick.AddListener(OnClickReward);
-                }
-                else
-                {
-                    obj.GetComponent<Button>().enabled = false;
-                    obj.GetComponent<Image>().color = Color.gray;
-                    obj.transform.GetChild(0).gameObject.SetActive(false);
-                    obj.transform.GetChild(1).gameObject.SetActive(false);
-                    obj.transform.GetChild(2).GetComponent<Image>().color = Color.gray;
-                }
-            }
-            else
-            {
-                GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
-                obj.name = rewardString;
-                obj.transform.GetChild(0).GetComponent<Image>().sprite = rewardImage;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                if (enabled)
-                {
-                    StageInfo.DoReward(rewardString);
-                }
-                else
-                {
-                    obj.GetComponentInChildren<ParticleSystem>().gameObject.SetActive(false);
-                    obj.transform.GetChild(0).GetComponent<Image>().color = Color.gray;
-                }
-            }
-        }
-    }
-    
-    public void UpdateRewordSlot(StageInfo stageInfo)
+    public void UpdateToReady(StageInfo stageInfo)
     {
+        bool isStageCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) > 0;
+        bool is3StarCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) >= 3;
+        bool isPackageRewarded = UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num);
+
         ClearRewards();
-        
+
+        // 기본 골드 보상
+        GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
+        Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Text(GoldReward).gameObject.SetActive(false);
+        SetReward_Ready(GoldReward);
+
         var rewardInfos = stageInfo.GetRewardInfos();
         foreach (var rewardInfo in rewardInfos)
         {
@@ -130,46 +61,187 @@ public class RewardUISet : MonoBehaviour
 
             if (rewardImage == PurchaseItemTypeExtensions.GetChestSprite())
             {
-                GameObject obj = Instantiate(RewardPackPrefab, RewardParent.transform);
-                obj.name = rewardString;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                if (UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num))
+                PackBoxReward = Instantiate(RewardPackPrefab, RewardParent.transform);
+                PackBoxReward.name = rewardString;
+                Text(PackBoxReward).text = rewardCount.ToString();
+                if (isPackageRewarded)
                 {
-                    obj.GetComponent<Button>().enabled = false;
-                    obj.GetComponent<Image>().color = Color.gray;
-                    obj.transform.GetChild(0).gameObject.SetActive(false);
-                    obj.transform.GetChild(1).gameObject.SetActive(false);
-                    obj.transform.GetChild(2).GetComponent<Image>().color = Color.gray;
+                    SetReward_Finished(PackBoxReward);
                 }
                 else
                 {
-                    obj.GetComponent<Button>().onClick.AddListener(OnClickReward);
+                    SetReward_Ready(PackBoxReward);
                 }
             }
             else
             {
                 GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
                 obj.name = rewardString;
-                obj.transform.GetChild(0).GetComponent<Image>().sprite = rewardImage;
-                obj.GetComponentInChildren<TextMeshProUGUI>().text = rewardCount.ToString();
-                bool isStageCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) > 0;
-                if (rewardImage == PurchaseItemTypeExtensions.GetGoldSprite() || !isStageCleared)
+                Icon(obj).sprite = rewardImage;
+                Text(obj).text = rewardCount.ToString();
+                if (isStageCleared)
                 {
-                    obj.GetComponentInChildren<ParticleSystem>().gameObject.SetActive(true);
-                    obj.transform.GetChild(0).GetComponent<Image>().color = Color.white;
+                    SetReward_Finished(PackBoxReward);
                 }
                 else
                 {
-                    obj.GetComponentInChildren<ParticleSystem>().gameObject.SetActive(false);
-                    obj.transform.GetChild(0).GetComponent<Image>().color = Color.gray;
+                    SetReward_Ready(PackBoxReward);
                 }
             }
         }
+
+        EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
+        Icon(EventItemReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Text(EventItemReward).gameObject.SetActive(false);
+        mEventItemBar = Bonus(EventItemReward).GetComponent<Image>();
+        if (is3StarCleared)
+        {
+            SetReward_Finished(EventItemReward);
+        }
+        else
+        {
+            SetReward_Ready(EventItemReward);
+        }
     }
-    
-    private void DoReword(StageInfo stageInfo)
+
+    public void UpdateForRewarding(StageInfo stageInfo, bool isFirstClear, bool isFirstThreeStarClear)
     {
+        bool isPackageRewarded = UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num);
+
+        ClearRewards();
+
+        // 기본 골드 보상
+        GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
+        Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Text(GoldReward).gameObject.SetActive(false);
+        SetReward_Rewardable(GoldReward);
+
         var rewardInfos = stageInfo.GetRewardInfos();
+        foreach (var rewardInfo in rewardInfos)
+        {
+            string rewardString = rewardInfo.Item1;
+            Sprite rewardImage = rewardInfo.Item2;
+            int rewardCount = rewardInfo.Item3;
+
+            if (rewardImage == PurchaseItemTypeExtensions.GetChestSprite())
+            {
+                PackBoxReward = Instantiate(RewardPackPrefab, RewardParent.transform);
+                PackBoxReward.name = rewardString;
+                Text(PackBoxReward).text = rewardCount.ToString();
+                if (isPackageRewarded)
+                {
+                    SetReward_Finished(PackBoxReward);
+                }
+                else
+                {
+                    SetReward_Rewardable(PackBoxReward);
+                }
+            }
+            else
+            {
+                GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
+                obj.name = rewardString;
+                Icon(obj).sprite = rewardImage;
+                Text(obj).text = rewardCount.ToString();
+                if (!isFirstClear)
+                {
+                    SetReward_Finished(PackBoxReward);
+                }
+                else
+                {
+                    SetReward_Rewardable(PackBoxReward);
+                }
+            }
+        }
+
+        EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
+        Icon(EventItemReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Text(EventItemReward).gameObject.SetActive(false);
+        if (!isFirstThreeStarClear)
+        {
+            SetReward_Finished(EventItemReward);
+        }
+        else
+        {
+            SetReward_Rewardable(EventItemReward);
+        }
+    }
+
+
+    void SetReward_Finished(GameObject rewardObj)
+    {
+        BG(rewardObj).color = Color.gray;
+        Icon(rewardObj).GetComponent<Image>().color = Color.gray;
+        FX(rewardObj).gameObject.SetActive(false);
+    }
+    void SetReward_Ready(GameObject rewardObj)
+    {
+        BG(rewardObj).color = Color.white;
+        Icon(rewardObj).GetComponent<Image>().color = Color.white;
+        FX(rewardObj).gameObject.SetActive(false);
+    }
+    void SetReward_Rewardable(GameObject rewardObj)
+    {
+        BG(rewardObj).color = Color.white;
+        Icon(rewardObj).GetComponent<Image>().color = Color.white;
+        FX(rewardObj).gameObject.SetActive(true);
+    }
+
+    public void SetPackageBox_Rewardable()
+    {
+        if (PackBoxReward != null)
+        {
+            PackBoxReward.GetComponent<Button>().enabled = true;
+
+            FX(PackBoxReward).gameObject.SetActive(true);
+            Glow(PackBoxReward).gameObject.SetActive(true);
+            Adv(PackBoxReward).gameObject.SetActive(true);
+
+            PackBoxReward.GetComponent<Button>().onClick.AddListener(OnClickReward);
+        }
+    }
+    public void SetPackageBox_Finished()
+    {
+        if (PackBoxReward != null)
+        {
+            PackBoxReward.GetComponent<Button>().enabled = false;
+
+            FX(PackBoxReward).gameObject.SetActive(false);
+            Glow(PackBoxReward).gameObject.SetActive(false);
+            Adv(PackBoxReward).gameObject.SetActive(false);
+            SetReward_Finished(PackBoxReward);
+
+            PackBoxReward.GetComponent<Button>().onClick.RemoveListener(OnClickReward);
+        }
+    }
+
+    public void SetEventItemRate(float rate)
+    {
+        if (mEventItemBar != null)
+        {
+            mEventItemBar.fillAmount = rate;
+        }
+    }
+    public void ChangeEventItemTween(Sprite nextItemImage)
+    {
+        if (EventItemReward != null)
+        {
+            Image img = Icon(EventItemReward);
+            Vector3 curPos = img.transform.position;
+            img.transform.DOMoveY(curPos.y + 1, 0.5f);
+            img.DOFade(0, 0.5f);
+            this.ExDelayedCoroutine(0.6f, () =>
+            {
+                img.sprite = nextItemImage;
+                img.transform.DOMoveY(curPos.y, 0.5f).From(curPos.y - 1);
+                img.DOFade(1, 0.5f);
+            });
+        }
+    }
+
+    public void DoReword()
+    {
+        var rewardInfos = mStageInfo.GetRewardInfos();
         foreach (var rewardInfo in rewardInfos)
         {
             string rewardString = rewardInfo.Item1;

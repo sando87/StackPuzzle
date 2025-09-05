@@ -65,7 +65,7 @@ public class MenuPlay : MonoBehaviour
             btn.UpdateItem();
         }
 
-        _RewardUISet.UpdateRewordSlot(mStageInfo);
+        _RewardUISet.UpdateToReady(mStageInfo);
     }
 
     public void OnClose()
