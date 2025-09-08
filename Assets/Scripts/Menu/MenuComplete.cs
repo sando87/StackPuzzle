@@ -13,9 +13,7 @@ public class MenuComplete : MonoBehaviour
     public Image Star1;
     public Image Star2;
     public Image Star3;
-    public Animator RewardCoin;
     public TextMeshProUGUI StageLevel;
-    public TextMeshProUGUI GoldValue;
     public ScoreBar ScoreDisplay;
     public GameObject CoinPrefab;
     public GameObject FireworkPrefab;
@@ -61,7 +59,6 @@ public class MenuComplete : MonoBehaviour
         ScoreDisplay.Init(score);
         ScoreDisplay.SetScore(score);
         StageLevel.text = string.Format(LocaleManager.Inst.DoLocaleText("STAGE {0} CLEAR!!", UserSetting.CurrentLang), level);
-        GoldValue.text = "0";
 
         gameObject.SetActive(true);
 
@@ -105,38 +102,27 @@ public class MenuComplete : MonoBehaviour
         if (starCount >= 3)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
         yield return new WaitForSeconds(1);
-        StartCoroutine(AnimateEventItem());
+
+        if (mIsFirst3StarClear)
+            StartCoroutine(AnimateEventItem());
     }
     IEnumerator AnimateEventItem()
     {
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(UserSetting.EventItemExpPerWin, out float rateFrom, out float rateTo);
-        float time = 0;
-        float duration = 0.5f;
         GameObject targetObj = _RewardUISet.EventItemReward;
-        GameObject lastStarVFX = null;
-        while (time < duration)
-        {
-            float rate = time / duration;
-            float rateItem = rateTo * rate + rateFrom * (1 - rate);
-            GameObject star = Instantiate(EventItemFXPrefab, Star2.transform.position, Quaternion.identity, targetObj.transform);
-            Effects.Add(star);
-            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
-            lastStarVFX = star;
+        GameObject star = Instantiate(EventItemFXPrefab, Star3.transform.position, Quaternion.identity, targetObj.transform);
+        Effects.Add(star);
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
 
-            star.transform.DOLocalMove(Vector3.zero, 1.0f).OnComplete(() =>
-            {
-                SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
-                _RewardUISet.SetEventItemRate(rateItem);
-                Destroy(star);
-            });
-            yield return new WaitForSeconds(0.05f);
-            time += 0.05f;
-        }
+        star.transform.DOLocalMove(Vector3.zero, 1.0f);
+        yield return new WaitForSeconds(1f);
+        
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
+        star.GetComponent<ParticleSystem>().Stop();
+        LOG.trace(rateTo);
+        _RewardUISet.SetEventItemRate(rateTo, 1.0f);
+        yield return new WaitForSeconds(1f);
 
-        yield return new WaitUntil(() => lastStarVFX == null);
-        yield return new WaitForSeconds(0.5f);
-
-        _RewardUISet.SetEventItemRate(rateTo);
         if (rateTo >= 1)
         {
             Sprite nextEventItemImage = UserSetting.UserSettingInfo.GetNextEventItem().GetSprite();
@@ -150,6 +136,8 @@ public class MenuComplete : MonoBehaviour
         float duration = 3.0f;
         float curScore = score;
         int prvCoinCount = score / ScorePerCoin;
+        int curGold = 0;
+        TextMeshProUGUI goldVal = _RewardUISet.GoldReward.GetComponentInChildren<TextMeshProUGUI>();
         while (curScore > 0)
         {
             float step = score * Time.deltaTime / duration;
@@ -159,46 +147,18 @@ public class MenuComplete : MonoBehaviour
             if (prvCoinCount != curCoinCount)
             {
                 prvCoinCount = curCoinCount;
-                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.EndPosition, Quaternion.identity, RewardCoin.transform);
+                GameObject coinObj = Instantiate(CoinPrefab, ScoreDisplay.EndPosition, Quaternion.identity, _RewardUISet.GoldReward.transform);
                 Effects.Add(coinObj);
-                StartCoroutine(UnityUtils.AnimateThrow(coinObj));
+                coinObj.transform.DOLocalMove(Vector3.zero, 1).OnComplete(() =>
+                {
+                    curGold += UserSetting.GoldPerCoin;
+                    goldVal.text = curGold.ToString();
+                    Destroy(coinObj);
+                    SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
+                });
                 SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin1);
             }
             yield return null;
-        }
-        yield return new WaitForSeconds(1);
-        StartCoroutine(AnimateCollectCoins());
-    }
-    private IEnumerator AnimateCollectCoins()
-    {
-        int speed = 0;
-        Image[] coins = RewardCoin.GetComponentsInChildren<Image>();
-        while (true)
-        {
-            yield return null;
-            bool isAllDone = true;
-            foreach (Image coin in coins)
-            {
-                if (coin == null || coin.gameObject == RewardCoin.gameObject)
-                    continue;
-
-                isAllDone = false;
-                Vector3 dir = coin.transform.localPosition;
-                dir.Normalize();
-                coin.transform.localPosition -= speed * dir * Time.deltaTime;
-                if (Vector3.Dot(dir, coin.transform.localPosition) < 0)
-                {
-                    SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
-                    RewardCoin.Play("push", -1, 0);
-                    int curGold = int.Parse(GoldValue.text);
-                    GoldValue.text = (curGold + UserSetting.GoldPerCoin).ToString();
-                    Destroy(coin.gameObject);
-                }
-            }
-
-            speed += 50;
-            if (isAllDone)
-                break;
         }
     }
 
@@ -243,8 +203,6 @@ public class MenuComplete : MonoBehaviour
         if (mIsFirst3StarClear)
         {
             UserSetting.UserSettingInfo.AddExpOfEventItem(UserSetting.EventItemExpPerWin);
-
-            // 이벤트아이템 게이지 올라가는 연출..
 
             // 이벤트 게이지 완료시 아이템 획득 데이터 처리
             if (UserSetting.UserSettingInfo.IsDoneEventItem())

@@ -27,11 +27,12 @@ public class RewardUISet : MonoBehaviour
     Transform FX(GameObject obj) { return obj.transform.Find("Fx_Star"); }
     Transform Glow(GameObject obj) { return obj.transform.Find("Glow"); }
     Transform Adv(GameObject obj) { return obj.transform.Find("Adv"); }
-    Transform Bonus(GameObject obj) { return obj.transform.Find("Bonus"); }
+    Transform Gauge(GameObject obj) { return obj.transform.Find("Gauge_Outline"); }
+    Image GaugeFill(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_BG/Gauge_Fill").GetComponent<Image>(); }
 
     private void ClearRewards()
     {
-        for (int i = 1; i < RewardParent.transform.childCount; ++i)
+        for (int i = 0; i < RewardParent.transform.childCount; ++i)
         {
             GameObject obj = RewardParent.transform.GetChild(i).gameObject;
             Destroy(obj);
@@ -40,6 +41,7 @@ public class RewardUISet : MonoBehaviour
 
     public void UpdateToReady(StageInfo stageInfo)
     {
+        mStageInfo = stageInfo;
         bool isStageCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) > 0;
         bool is3StarCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) >= 3;
         bool isPackageRewarded = UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num);
@@ -47,10 +49,10 @@ public class RewardUISet : MonoBehaviour
         ClearRewards();
 
         // 기본 골드 보상
-        GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
-        Text(GoldReward).gameObject.SetActive(false);
-        SetReward_Ready(GoldReward);
+        // GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
+        // Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        // Text(GoldReward).gameObject.SetActive(false);
+        // SetReward_Ready(GoldReward);
 
         var rewardInfos = stageInfo.GetRewardInfos();
         foreach (var rewardInfo in rewardInfos)
@@ -64,6 +66,8 @@ public class RewardUISet : MonoBehaviour
                 PackBoxReward = Instantiate(RewardPackPrefab, RewardParent.transform);
                 PackBoxReward.name = rewardString;
                 Text(PackBoxReward).text = rewardCount.ToString();
+                Glow(PackBoxReward).gameObject.SetActive(false);
+                PackBoxReward.GetComponent<Button>().enabled = false;
                 if (isPackageRewarded)
                 {
                     SetReward_Finished(PackBoxReward);
@@ -81,19 +85,20 @@ public class RewardUISet : MonoBehaviour
                 Text(obj).text = rewardCount.ToString();
                 if (isStageCleared)
                 {
-                    SetReward_Finished(PackBoxReward);
+                    SetReward_Finished(obj);
                 }
                 else
                 {
-                    SetReward_Ready(PackBoxReward);
+                    SetReward_Ready(obj);
                 }
             }
         }
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(EventItemReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Icon(EventItemReward).sprite = UserSetting.UserSettingInfo.CurrentEventItem.GetSprite();
         Text(EventItemReward).gameObject.SetActive(false);
-        mEventItemBar = Bonus(EventItemReward).GetComponent<Image>();
+        Gauge(EventItemReward).gameObject.SetActive(true);
+        mEventItemBar = GaugeFill(EventItemReward);
         if (is3StarCleared)
         {
             SetReward_Finished(EventItemReward);
@@ -102,10 +107,15 @@ public class RewardUISet : MonoBehaviour
         {
             SetReward_Ready(EventItemReward);
         }
+
+        UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
+        LOG.trace(rateTo);
+        SetEventItemRate(rateTo);
     }
 
     public void UpdateForRewarding(StageInfo stageInfo, bool isFirstClear, bool isFirstThreeStarClear)
     {
+        mStageInfo = stageInfo;
         bool isPackageRewarded = UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num);
 
         ClearRewards();
@@ -113,7 +123,8 @@ public class RewardUISet : MonoBehaviour
         // 기본 골드 보상
         GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
         Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
-        Text(GoldReward).gameObject.SetActive(false);
+        Text(GoldReward).gameObject.SetActive(true);
+        Text(GoldReward).text = "0";
         SetReward_Rewardable(GoldReward);
 
         var rewardInfos = stageInfo.GetRewardInfos();
@@ -131,10 +142,12 @@ public class RewardUISet : MonoBehaviour
                 if (isPackageRewarded)
                 {
                     SetReward_Finished(PackBoxReward);
+                    SetPackageBox_Finished();
                 }
                 else
                 {
                     SetReward_Rewardable(PackBoxReward);
+                    SetPackageBox_Rewardable();
                 }
             }
             else
@@ -145,18 +158,20 @@ public class RewardUISet : MonoBehaviour
                 Text(obj).text = rewardCount.ToString();
                 if (!isFirstClear)
                 {
-                    SetReward_Finished(PackBoxReward);
+                    SetReward_Finished(obj);
                 }
                 else
                 {
-                    SetReward_Rewardable(PackBoxReward);
+                    SetReward_Rewardable(obj);
                 }
             }
         }
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(EventItemReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        Icon(EventItemReward).sprite = UserSetting.UserSettingInfo.CurrentEventItem.GetSprite();
         Text(EventItemReward).gameObject.SetActive(false);
+        Gauge(EventItemReward).gameObject.SetActive(true);
+        mEventItemBar = GaugeFill(EventItemReward);
         if (!isFirstThreeStarClear)
         {
             SetReward_Finished(EventItemReward);
@@ -165,6 +180,10 @@ public class RewardUISet : MonoBehaviour
         {
             SetReward_Rewardable(EventItemReward);
         }
+
+        UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
+        LOG.trace(rateTo);
+        SetEventItemRate(rateTo);
     }
 
 
@@ -215,17 +234,27 @@ public class RewardUISet : MonoBehaviour
         }
     }
 
-    public void SetEventItemRate(float rate)
+    public void SetEventItemRate(float rate, float duration = 0)
     {
         if (mEventItemBar != null)
         {
-            mEventItemBar.fillAmount = rate;
+            if (duration <= 0)
+            {
+                mEventItemBar.DOKill();
+                mEventItemBar.transform.localScale = new Vector3(rate, 1, 1);
+            }
+            else
+            {
+                mEventItemBar.DOKill();
+                mEventItemBar.transform.DOScaleX(rate, duration);
+            }
         }
     }
     public void ChangeEventItemTween(Sprite nextItemImage)
     {
         if (EventItemReward != null)
         {
+            mEventItemBar.transform.DOScaleX(0, 1);
             Image img = Icon(EventItemReward);
             Vector3 curPos = img.transform.position;
             img.transform.DOMoveY(curPos.y + 1, 0.5f);
