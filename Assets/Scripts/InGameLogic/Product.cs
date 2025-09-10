@@ -160,7 +160,7 @@ namespace JoyPop
                 if (Chain != null)
                     Chain.DestroyChain();
 
-                StartCoroutine(AnimateMoveTo(destProduct, 0.2f, () =>
+                StartCoroutine(AnimateMoveTo(destProduct.transform.position, 0.2f, () =>
                 {
                     ReturnToPool();
                 }));
@@ -272,21 +272,21 @@ namespace JoyPop
         }
 
 
-        IEnumerator AnimateMoveTo(Product destProduct, float duration, Action EventMoveEnd)
+        IEnumerator AnimateMoveTo(Vector3 destPos, float duration, Action EventMoveEnd)
         {
             IsMoving = true;
-            float vel = (transform.position - destProduct.transform.position).magnitude / duration;
+            float vel = (transform.position - destPos).magnitude / duration;
             float time = 0;
             while (time < duration)
             {
-                Vector3 dir = destProduct.transform.position - transform.position;
+                Vector3 dir = destPos - transform.position;
                 dir.z = 0;
                 dir.Normalize();
                 transform.position += dir * vel * Time.deltaTime;
                 time += Time.deltaTime;
                 yield return null;
             }
-            transform.position = destProduct.transform.position;
+            transform.position = destPos;
             IsMoving = false;
             EventMoveEnd?.Invoke();
         }
