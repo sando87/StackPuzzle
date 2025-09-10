@@ -209,10 +209,10 @@ public class MenuInGame : MonoBehaviour
         {
             if (int.TryParse(itemButton.name, out int btnItemType))
             {
-                if (btnItemType == (int)itemType)
+                Button btn = itemButton.GetComponentInChildren<Button>();
+                if (btnItemType == (int)itemType && btn != null && btn.enabled)
                 {
-                    Button btn = itemButton.GetComponentInChildren<Button>();
-                    return btn.enabled;
+                    return true;
                 }
             }
         }
@@ -232,6 +232,7 @@ public class MenuInGame : MonoBehaviour
                         UseItem(btn);
                         btn.GetComponentInChildren<Image>().color = Color.gray;
                         btn.enabled = false;
+                        return;
                     }
                 }
             }
