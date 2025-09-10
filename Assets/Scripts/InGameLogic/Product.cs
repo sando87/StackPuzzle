@@ -78,7 +78,8 @@ namespace JoyPop
         public void ReturnToPool()
         {
             gameObject.SetActive(false);
-            Detach(Manager.ProductsPoolParent);
+            Detach(Manager.transform);
+            Destroy(gameObject);
         }
 
         void Awake()

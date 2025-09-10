@@ -47,8 +47,6 @@ public class InGameManager : MonoBehaviour
     public SwipChain SwipChainPrefab;
     public KeepComboNum KeepComboPrefab;
 
-    public Transform ProductsPoolParent;
-
     public GameObject SmokeParticle;
     public GameObject ExplosionParticle;
     public GameObject StripeParticle;
@@ -329,18 +327,9 @@ public class InGameManager : MonoBehaviour
     }
     Product AssignNewProduct(Transform parent)
     {
-        if (ProductsPoolParent.childCount <= 0)
-        {
-            for (int i = 0; i < 10; ++i)
-            {
-                Product pro = Instantiate(ProductPrefab, ProductsPoolParent);
-                pro.gameObject.SetActive(false);
-            }
-        }
-
-        Product ret = ProductsPoolParent.GetChild(0).GetComponent<Product>();
-        ret.transform.SetParent(parent);
-        return ret;
+        Product pro = Instantiate(ProductPrefab, parent);
+        pro.gameObject.SetActive(true);
+        return pro;
     }
     private StageInfoCell GetCellInversed(int xIdx, int yIdx)
     {
