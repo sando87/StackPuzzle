@@ -267,6 +267,8 @@ public class PVPScoreBar : MonoBehaviour
     {
         CurrentScoreBar.DOKill();
         CurrentScoreBar.rectTransform.DOKill();
+        ScoreAddSubEffectBar.DOKill();
+        ScoreAddSubEffectBar.rectTransform.DOKill();
         ScoreAddSubEffectBar.gameObject.SetActive(false);
         // for (int i = CurrentScoreBar.transform.childCount - 1; i >= 0; --i)
         // {
