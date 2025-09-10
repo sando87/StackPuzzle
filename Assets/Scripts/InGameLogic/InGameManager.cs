@@ -221,7 +221,6 @@ public class InGameManager : MonoBehaviour
         mStageInfo = info;
         mUserInfo = userInfo;
         mStartRandomSeed = info.RandomSeed == -1 ? (int)DateTime.Now.Ticks : (info.RandomSeed == 0 ? info.Num : info.RandomSeed);
-        LOG.trace(mStartRandomSeed);
         mRandomSeed = new System.Random(mStartRandomSeed);
         mStartPos = transform.position;
 
