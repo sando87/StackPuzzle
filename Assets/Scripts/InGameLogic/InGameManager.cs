@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using JoyPop;
+using System.Linq;
 
 public enum GameFieldType { Noting, Stage, pvpPlayer, pvpOpponent }
 public enum InGameState { Noting, Running, Paused, Win, Lose }
@@ -83,7 +84,8 @@ public class InGameManager : MonoBehaviour
     public bool ItWasToughBattle { get; private set; } = false;
 
     private bool mIsWorkingCycle = false;
-    private List<DelayedCall> mWorkerList = new List<DelayedCall>();
+    float mLateUpdateTime = 0;
+    private LinkedList<DelayedCall> mWorkerList = new LinkedList<DelayedCall>();
     private LinkedList<KeyValuePair<Int64, PVPInfo>> mNetMessages = new LinkedList<KeyValuePair<Int64, PVPInfo>>();
 
     public float SFXVolume { get { return mSFXVolume; } }
@@ -663,17 +665,94 @@ public class InGameManager : MonoBehaviour
         }
     }
 
-
     // delayTick은 처음 callback함수가 실행되기까지 지연시간(tick당 0.1초)
     // stepTick은 callback함수가 실행되는 간격(tick당 0.1초)
     private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
-        mWorkerList.Add(new DelayedCall(delayTick, stepTick, callback));
-        if(!mIsWorkingCycle)
+        mWorkerList.AddLast(new DelayedCall(delayTick, stepTick, callback));
+        // if(!mIsWorkingCycle)
+        // {
+        //     StartCoroutine(DoWorkerCycle());
+        // }
+    }
+    private void AddWorkerFirst(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
+    {
+        mWorkerList.AddFirst(new DelayedCall(delayTick, stepTick, callback));
+        // if (!mIsWorkingCycle)
+        // {
+        //     StartCoroutine(DoWorkerCycle());
+        // }
+    }
+
+    void LateUpdate()
+    {
+        if (mWorkerList.Count > 0)
         {
-            StartCoroutine(DoWorkerCycle());
+            if (!mIsWorkingCycle)
+            {
+                mDropCounter = 0;
+                mLateUpdateTime = 0;
+                mIsUserEventLock = true;
+                mIsWorkingCycle = true;
+            }
+
+            mLateUpdateTime += Time.deltaTime;
+            if (mLateUpdateTime > 0.1f)
+            {
+                mLateUpdateTime = 0;
+
+                DelayedCall[] workers = mWorkerList.ToArray();
+
+                foreach (DelayedCall worker in workers)
+                {
+                    worker.tickTotalCount++;
+
+                    // 초기 딜레이 시간보다 클때까지 기다림
+                    if (worker.tickTotalCount >= worker.tickDelayRef)
+                    {
+                        // 함수 호출 간격마다 callback 호출
+                        if (worker.tickCurrentCount == 0)
+                        {
+                            DelayedCallRet ret = worker.callback(worker.callCount);
+                            worker.callCount++;
+                            if (ret == DelayedCallRet.Done)
+                            {
+                                mWorkerList.Remove(worker);
+                            }
+                        }
+                        worker.tickCurrentCount = (worker.tickCurrentCount + 1) % worker.tickStepRef;
+                    }
+
+                }
+
+                // 드랍 프로세스 시작
+                Product[] droppingPros = DoDropProcess();
+                if (droppingPros.Length > 0)
+                {
+                    // 떨어지는 동안의 delay 후
+                    AddWorkerFirst(3, 3, (tick) =>
+                    {
+                        // EndDrop 처리
+                        foreach (Product droppingPro in droppingPros)
+                            droppingPro.DropEnd();
+
+                        // 매치가능한 블럭들이 있으면 재매칭 수행
+                        TryMatchAfterDrop(droppingPros);
+                        return DelayedCallRet.Done;
+                    });
+                }
+
+            }
+
+        }
+        else
+        {
+            mIsUserEventLock = false;
+            mIsWorkingCycle = false;
+            mLateUpdateTime = 0;
         }
     }
+
 
     private void StartToDrop()
     {
