@@ -36,8 +36,8 @@ public class MenuHeartShop : MonoBehaviour
         int type = int.Parse(btnObj.name.Replace("ItemType", ""));
 
         //type0 : 영상 15초 : +5 life
-        //type1 : 영상 60초 : max life
-        //type2 : 다이아 5 : max life
+        //type1 : 골드 100 : +5 life
+        //type2 : 다이아 5 : +20 life
         //type3 : 다이아 20 : infinite life
 
         if (type == 0)
@@ -75,40 +75,30 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 1)
         {
-            if (Purchases.IsAdsSkip())
-            {
-                OnChargeHeartFromVideo(AdsType.ChargeLifeB);
-                return;
-            }
-            
-            if (!NetClientApp.GetInstance().IsNetworkAlive)
-            {
-                MenuMessageBox.PopUp("Network NotReachable", false, null);
-                return;
-            }
-
-            if (GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB) > 0)
-            {
-                MenuMessageBox.PopUp("Ad Not Ready", false, null);
-                return;
-            }
-
-            if (!GoogleADMob.Inst.IsLoaded(AdsType.ChargeLifeB))
-            {
-                MenuMessageBox.PopUp("Ad Not Ready", false, null);
-                return;
-            }
-
+            int gold = 100;
+            int lifeCount = 5;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            GoogleADMob.Inst.Show(AdsType.ChargeLifeB, (rewardSuccess) =>
+            
+            if (Purchases.IsHeartMax())
+                MenuInformBox.PopUp("LIFE Max");
+            else
             {
-                if (rewardSuccess)
-                    OnChargeHeartFromVideo(AdsType.ChargeLifeB);
-            });
+                if (Purchases.ChargeHeartWithGold(lifeCount, gold))
+                {
+                    MenuInformBox.PopUp("Success");
+                }
+                else
+                {
+                    MenuInformBox.PopUp("Not enough golds");
+                }
+            }
+
+            MenuStages.Inst.UpdateTopPanel();
         }
         else if (type == 2)
         {
             int diamond = 5;
+            int lifeCount = 20;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
             MenuMessageBox.PopUp(msg, true, (isOK) =>
@@ -119,12 +109,14 @@ public class MenuHeartShop : MonoBehaviour
                         MenuInformBox.PopUp("LIFE Max");
                     else
                     {
-                        if (Purchases.ChargeHeart(20, diamond))
+                        if (Purchases.ChargeHeartWithDia(lifeCount, diamond))
                         {
                             MenuInformBox.PopUp("Success");
                         }
                         else
+                        {
                             MenuInformBox.PopUp("Not enough diamonds");
+                        }
                     }
 
                     MenuStages.Inst.UpdateTopPanel();
@@ -133,7 +125,7 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 3)
         {
-            int diamond = 20;
+            int diamond = 50;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
             MenuMessageBox.PopUp(msg, true, (isOK) =>
@@ -162,8 +154,8 @@ public class MenuHeartShop : MonoBehaviour
     {
         switch (type)
         {
-            case AdsType.ChargeLifeA: Purchases.ChargeHeart(5, 0); break;
-            case AdsType.ChargeLifeB: Purchases.ChargeHeart(20, 0); break;
+            case AdsType.ChargeLifeA: Purchases.ChargeHeartWithDia(5, 0); break;
+            // case AdsType.ChargeLifeB: Purchases.ChargeHeart(20, 0); break;
             default: break;
         }
 

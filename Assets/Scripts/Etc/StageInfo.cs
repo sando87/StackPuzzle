@@ -272,7 +272,7 @@ public class StageInfo
         string[] sub = rewardPair.Split('/');
         int count = int.Parse(sub[1]);
         if (sub[0] == "life")
-            Purchases.ChargeHeart(count, 0);
+            Purchases.ChargeHeartWithDia(count, 0);
         else if (sub[0] == "gold")
             Purchases.AddGold(count);
         else if (sub[0] == "dia")

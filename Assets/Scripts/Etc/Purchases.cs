@@ -194,7 +194,19 @@ public class Purchases
     {
         return mInfo.countHeart >= mInfo.maxHeart;
     }
-    public static bool ChargeHeart(int cnt, int diamond)
+    public static bool ChargeHeartWithGold(int cnt, int gold)
+    {
+        if (mInfo.countGold < gold)
+            return false;
+        mInfo.countGold -= gold;
+        mInfo.countHeart += cnt;
+        if (mInfo.countHeart > mInfo.maxHeart)
+            mInfo.countHeart = mInfo.maxHeart;
+        mInfo.useTimeTick = DateTime.Now.Ticks;
+        UpdatePurchaseInfo(mInfo);
+        return true;
+    }
+    public static bool ChargeHeartWithDia(int cnt, int diamond)
     {
         if (mInfo.countDiamond < diamond)
             return false;
