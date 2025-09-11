@@ -81,7 +81,7 @@ public class RewardUISet : MonoBehaviour
             {
                 GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
                 obj.name = rewardString;
-                Icon(obj).sprite = rewardImage;
+                SetIconImage(Icon(obj), rewardImage);
                 Text(obj).text = rewardCount.ToString();
                 if (isStageCleared)
                 {
@@ -95,7 +95,7 @@ public class RewardUISet : MonoBehaviour
         }
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(EventItemReward).sprite = UserSetting.UserSettingInfo.CurrentEventItem.GetSprite();
+        SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
         Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
         mEventItemBar = GaugeFill(EventItemReward);
@@ -109,7 +109,6 @@ public class RewardUISet : MonoBehaviour
         }
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
-        LOG.trace(rateTo);
         SetEventItemRate(rateTo);
     }
 
@@ -122,7 +121,7 @@ public class RewardUISet : MonoBehaviour
 
         // 기본 골드 보상
         GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(GoldReward).sprite = PurchaseItemTypeExtensions.GetGoldSprite();
+        SetIconImage(Icon(GoldReward), PurchaseItemTypeExtensions.GetGoldSprite());
         Text(GoldReward).gameObject.SetActive(true);
         Text(GoldReward).text = "0";
         SetReward_Rewardable(GoldReward);
@@ -154,7 +153,7 @@ public class RewardUISet : MonoBehaviour
             {
                 GameObject obj = Instantiate(RewardPrefab, RewardParent.transform);
                 obj.name = rewardString;
-                Icon(obj).sprite = rewardImage;
+                SetIconImage(Icon(obj), rewardImage);
                 Text(obj).text = rewardCount.ToString();
                 if (!isFirstClear)
                 {
@@ -168,7 +167,7 @@ public class RewardUISet : MonoBehaviour
         }
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
-        Icon(EventItemReward).sprite = UserSetting.UserSettingInfo.CurrentEventItem.GetSprite();
+        SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
         Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
         mEventItemBar = GaugeFill(EventItemReward);
@@ -182,7 +181,6 @@ public class RewardUISet : MonoBehaviour
         }
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
-        LOG.trace(rateTo);
         SetEventItemRate(rateTo);
     }
 
@@ -261,7 +259,7 @@ public class RewardUISet : MonoBehaviour
             img.DOFade(0, 0.5f);
             this.ExDelayedCoroutine(0.6f, () =>
             {
-                img.sprite = nextItemImage;
+                SetIconImage(img, nextItemImage);
                 img.transform.DOMoveY(curPos.y, 0.5f).From(curPos.y - 1);
                 img.DOFade(1, 0.5f);
             });
@@ -323,5 +321,12 @@ public class RewardUISet : MonoBehaviour
                 btn.enabled = false;
             }
         });
+    }
+
+    void SetIconImage(Image img, Sprite sprite)
+    {
+        img.sprite = sprite;
+        Vector2 resized = sprite.ExSetSizeFitSmall(new Vector2(90, 90));
+        img.rectTransform.sizeDelta = resized;
     }
 }

@@ -385,7 +385,7 @@ public static class MyExtensions
     }
     public static Sprite GetSprite(this ProductSkill skill)
     {
-        switch(skill)
+        switch (skill)
         {
             case ProductSkill.Horizontal: return SkillImageHori;
             case ProductSkill.Vertical: return SkillImageVert;
@@ -425,5 +425,21 @@ public static class MyExtensions
     {
         yield return new WaitForSeconds(delay);
         func.Invoke();
+    }
+    public static Vector2 ExSetSizeFitBig(this Sprite sprite, Vector2 refSize)
+    {
+        Vector2 spriteSize = new Vector2(sprite.texture.width, sprite.texture.height);
+        float rateX = refSize.x / spriteSize.x;
+        float rateY = refSize.y / spriteSize.y;
+        float rate = Mathf.Max(rateX, rateY);
+        return spriteSize * rate;
+    }
+    public static Vector2 ExSetSizeFitSmall(this Sprite sprite, Vector2 refSize)
+    {
+        Vector2 spriteSize = new Vector2(sprite.texture.width, sprite.texture.height);
+        float rateX = refSize.x / spriteSize.x;
+        float rateY = refSize.y / spriteSize.y;
+        float rate = Mathf.Min(rateX, rateY);
+        return spriteSize * rate;
     }
 }

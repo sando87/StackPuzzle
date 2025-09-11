@@ -16,6 +16,12 @@ public class ItemButton : MonoBehaviour
     [SerializeField] private TextMeshProUGUI ItemCount = null;
 
     private PurchaseItemType ItemType = PurchaseItemType.None;
+    private Vector2 mIconImgSizeOri = Vector2.zero;
+
+    void Awake()
+    {
+        mIconImgSizeOri = ItemImg.rectTransform.sizeDelta;
+    }
 
     public void SetItem(PurchaseItemType item)
     {
@@ -53,7 +59,7 @@ public class ItemButton : MonoBehaviour
         GetComponent<Image>().sprite = BtnBgImgA;
         ItemImg.gameObject.SetActive(true);
         ItemEmptyImg.gameObject.SetActive(false);
-        ItemImg.sprite = AdsImage;
+        SetIconImage(ItemImg, AdsImage);
 
         ItemCount.gameObject.SetActive(true);
         ItemCount.text = ItemType.GetCount().ToString();
@@ -63,10 +69,17 @@ public class ItemButton : MonoBehaviour
         GetComponent<Image>().sprite = BtnBgImgA;
         ItemImg.gameObject.SetActive(true);
         ItemEmptyImg.gameObject.SetActive(false);
-        ItemImg.sprite = ItemType.GetSprite();
+        SetIconImage(ItemImg, ItemType.GetSprite());
 
         ItemCount.gameObject.SetActive(true);
         ItemCount.text = ItemType.GetCount().ToString();
+    }
+
+    void SetIconImage(Image img, Sprite sprite)
+    {
+        img.sprite = sprite;
+        Vector2 resized = sprite.ExSetSizeFitBig(mIconImgSizeOri);
+        img.rectTransform.sizeDelta = resized;
     }
 
     public void HideItemCount()
