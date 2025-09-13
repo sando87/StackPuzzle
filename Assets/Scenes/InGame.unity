@@ -8169,6 +8169,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4117ab4672563f044914760e6c53b4af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _FontAssetForEng: {fileID: 11400000, guid: c2f49fe8c22d94f9a9e6cd06ad490155, type: 2}
+  _FontAssetForOthers: {fileID: 11400000, guid: 0c16b65c72fa46a42b936d012f038626,
+    type: 2}
 --- !u!4 &122448894
 Transform:
   m_ObjectHideFlags: 0
@@ -128966,7 +128969,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: Tap to start
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c1482dbce654844b9ba1c753cbea5d80, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c2f49fe8c22d94f9a9e6cd06ad490155, type: 2}
   m_sharedMaterial: {fileID: 7374927986402738804, guid: c1482dbce654844b9ba1c753cbea5d80,
     type: 2}
   m_fontSharedMaterials: []
@@ -128975,7 +128978,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 1979711488
-  m_fontColor: {r: 0, g: 0, b: 0, a: 0.4627451}
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -128987,7 +128990,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -128999,9 +129002,9 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
-  m_textAlignment: 514
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
   m_characterSpacing: -1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -129031,7 +129034,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &1704858406

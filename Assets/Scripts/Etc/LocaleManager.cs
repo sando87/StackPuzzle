@@ -26,8 +26,13 @@ public enum LocaleSupportLangType
 
 public class LocaleManager : MonoBehaviour
 {
+    [SerializeField] TMPro.TMP_FontAsset _FontAssetForEng = null;
+    [SerializeField] TMPro.TMP_FontAsset _FontAssetForOthers = null;
+
     private static LocaleManager mInst = null;
     public static LocaleManager Inst { get { if (mInst == null) mInst = FindObjectOfType<LocaleManager>(); return mInst; } }
+
+    public TMPro.TMP_FontAsset CurrentFontAsset { get { return UserSetting.CurrentLang == LocaleSupportLangType.English ? _FontAssetForEng : _FontAssetForOthers; } }
 
     Dictionary<string, LocaleLang> mDicLocaleLangs = new Dictionary<string, LocaleLang>();
 
