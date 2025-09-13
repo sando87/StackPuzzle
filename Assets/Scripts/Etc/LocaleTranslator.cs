@@ -25,7 +25,7 @@ public class LocaleTranslator : MonoBehaviour
         DoTranlateText();
     }
 
-    void DoTranlateText()
+    public void DoTranlateText()
     {
         if (mUIText != null)
         {

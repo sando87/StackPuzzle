@@ -38,14 +38,14 @@ public class MenuLangSelector : MonoBehaviour
             if (UserSetting.CurrentLang == langType)
             {
                 Button btn = Instantiate(LangButtonPrefab, RootButtons);
-                btn.GetComponentInChildren<TextMeshProUGUI>().text = langType.ToString();
+                btn.GetComponentInChildren<TextMeshProUGUI>().text = LocaleManager.Inst.DoLocaleText(langType.ToString(), UserSetting.CurrentLang);
                 btn.GetComponent<Image>().color = Color.gray;
                 btn.enabled = false;
             }
             else
             {
                 Button btn = Instantiate(LangButtonPrefab, RootButtons);
-                btn.GetComponentInChildren<TextMeshProUGUI>().text = langType.ToString();
+                btn.GetComponentInChildren<TextMeshProUGUI>().text = LocaleManager.Inst.DoLocaleText(langType.ToString(), UserSetting.CurrentLang);
                 btn.onClick.AddListener(() => OnClickLangButton(langType));
             }
         }

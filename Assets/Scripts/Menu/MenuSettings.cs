@@ -19,6 +19,7 @@ public class MenuSettings : MonoBehaviour
     public Slider ExpBar;
     public Image LeagueLevel;
     public TextMeshProUGUI LeagueText;
+    public TextMeshProUGUI LangText;
 
     public static void PopUp()
     {
@@ -61,9 +62,9 @@ public class MenuSettings : MonoBehaviour
         mTouchCount++;
         if (mTouchCount >= 5)
         {
-            MenuMessageBox.PopUp("Do Unlock All Stages", false, (isOK) => 
+            MenuMessageBox.PopUp("Do Unlock All Stages", false, (isOK) =>
             {
-                if(isOK)
+                if (isOK)
                 {
                     for (int i = 0; i < UserSetting.StageTotalCount; ++i)
                     {
@@ -77,11 +78,11 @@ public class MenuSettings : MonoBehaviour
         {
             string currentBotLevel = UserSetting.UserInfo.botLevel.ToString();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuEditBox.PopUp("SwitchingToBot(Write bot level:0~5)", currentBotLevel,(isOK, inputText) =>
+            MenuEditBox.PopUp("SwitchingToBot(Write bot level:0~5)", currentBotLevel, (isOK, inputText) =>
             {
-                if(isOK)
+                if (isOK)
                 {
-                    if(int.TryParse(inputText, out int botLevel))
+                    if (int.TryParse(inputText, out int botLevel))
                     {
                         UserSetting.SwitchBotPlayer(botLevel);
                     }
@@ -130,6 +131,7 @@ public class MenuSettings : MonoBehaviour
         UserName.text = UserSetting.UserName;
         LeagueLevel.sprite = UserSetting.UserInfo.maxLeague.GetSprite();
         LeagueText.text = UserSetting.UserInfo.maxLeague.GetText();
+        LangText.text = UserSetting.CurrentLang.ToString();
 
         int score = UserSetting.UserScore;
         int level = Utils.ToLevel(score);
@@ -143,5 +145,22 @@ public class MenuSettings : MonoBehaviour
     public void OnBtnTerms()
     {
         MenuTermsAndConditions.PopUp();
+    }
+
+    public void OnBtnLanguage()
+    {
+        MenuLangSelector.PopUp((langType) =>
+        {
+            UserSetting.CurrentLang = langType;
+
+            UpdateUserInfoUI();
+
+            LocaleTranslator[] textUIs = GetComponentsInChildren<LocaleTranslator>();
+            foreach (LocaleTranslator textUI in textUIs)
+            {
+                textUI.DoTranlateText();
+            }
+
+        });
     }
 }
