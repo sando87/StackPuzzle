@@ -89,7 +89,7 @@ public class Frame : MonoBehaviour
 
         mRopeCount = Mathf.Max(0, mRopeCount - count);
         RopeRenderer.sprite = Ropes[mRopeCount];
-        RopeRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mRopeCount - 1)), 0.5f, RotateMode.FastBeyond360);
+        // RopeRenderer.transform.DORotate(new Vector3(0, 0, 90 * (mRopeCount - 1)), 0.5f, RotateMode.FastBeyond360);
         CreateBreakStoneEffect();
         if(mRopeCount <= 0)
             EventBreakRope?.Invoke(this);
@@ -184,20 +184,14 @@ public class Frame : MonoBehaviour
         if (!IsCapped)
             return;
 
-        StartCoroutine(AnimateFlash(CapObject.GetComponent<SpriteRenderer>(), 0.24f, () =>
-        {
-            if (!IsCapped)
-                return;
+        mCapIndex = Mathf.Max(0, mCapIndex - count);
+        Instantiate(CapEffectPrefab, transform.position, Quaternion.identity, transform);
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
 
-            mCapIndex = Mathf.Max(0, mCapIndex - count);
-            Instantiate(CapEffectPrefab, transform.position, Quaternion.identity, transform);
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakCap);
+        UpdateCap();
 
-            UpdateCap();
-
-            if (!IsCapped)
-                EventBreakCap?.Invoke(this);
-        }));
+        if (!IsCapped)
+            EventBreakCap?.Invoke(this);
     }
     private void UpdateCap()
     {
