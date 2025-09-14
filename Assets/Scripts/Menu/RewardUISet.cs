@@ -266,6 +266,73 @@ public class RewardUISet : MonoBehaviour
         }
     }
 
+    public void OpenGoldBoxTween()
+    {
+        if (PackBoxReward == null)
+            return;
+            
+        StartCoroutine(CoOpenGoldBox());
+    }
+    IEnumerator CoOpenGoldBox()
+    {
+        Button packBtn = PackBoxReward.GetComponent<Button>();
+        string[] subRewards = packBtn.name.Split(' ');
+        
+        UserSetting.UserSettingInfo.DoRewardBox(mStageInfo.Num);
+        foreach (string subReward in subRewards)
+            StageInfo.DoReward(subReward);
+
+        packBtn.enabled = false;
+
+        Transform fxBefore = PackBoxReward.transform.Find("Fx_Star");
+        Transform glow = PackBoxReward.transform.Find("Glow");
+        Transform adv = PackBoxReward.transform.Find("Adv");
+        Transform dimObj = PackBoxReward.transform.Find("Dimed");
+        Transform fxAfter = PackBoxReward.transform.Find("Fx_StarAfter");
+        Transform items = PackBoxReward.transform.Find("Items");
+        
+        fxBefore.gameObject.SetActive(false);
+        glow.gameObject.SetActive(false);
+        adv.gameObject.SetActive(false);
+
+        dimObj.gameObject.SetActive(true);
+        dimObj.GetComponent<Image>().DOFade(1, 0.5f);
+        yield return new WaitForSeconds(0.5f);
+        fxAfter.gameObject.SetActive(true);
+
+        items.gameObject.SetActive(true);
+        for (int i = 0; i < items.childCount; ++i)
+        {
+            if (i < subRewards.Length)
+            {
+                var rewardInfo = StageInfo.StringToRewardInfo(subRewards[i]);
+                items.GetChild(i).gameObject.SetActive(true);
+                items.GetChild(i).GetComponent<Image>().sprite = rewardInfo.Item2;
+                items.GetChild(i).GetComponentInChildren<TextMeshProUGUI>().text = rewardInfo.Item3.ToString();
+            }
+            else
+            {
+                items.GetChild(i).gameObject.SetActive(false);
+            }
+        }
+
+        items.GetComponent<RectTransform>().DOLocalMoveY(200, 1).From(0).SetEase(Ease.OutQuad);
+
+        float time = 0;
+        while (time < 1)
+        {
+            items.GetComponent<HorizontalLayoutGroup>().spacing = (1 - time) * -500.0f;
+            yield return null;
+            time += Time.deltaTime;
+        }
+        items.GetComponent<HorizontalLayoutGroup>().spacing = 0;
+        
+        yield return new WaitForSeconds(0.5f);
+        dimObj.GetComponent<Image>().DOFade(0, 0.5f);
+        yield return new WaitForSeconds(0.5f);
+        dimObj.gameObject.SetActive(false);
+    }
+
     public void DoReword()
     {
         var rewardInfos = mStageInfo.GetRewardInfos();
@@ -281,18 +348,9 @@ public class RewardUISet : MonoBehaviour
     }
     private void OnClickReward()
     {
-        Button btn = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
-        string[] subRewards = btn.name.Split(' ');
-
         if (Purchases.IsAdsSkip())
         {
-            UserSetting.UserSettingInfo.DoRewardBox(mStageInfo.Num);
-            foreach (string subReward in subRewards)
-                StageInfo.DoReward(subReward);
-
-            btn.transform.GetChild(0).gameObject.SetActive(false);
-            btn.transform.GetChild(1).gameObject.SetActive(false);
-            btn.enabled = false;
+            OpenGoldBoxTween();
             return;
         }
 
@@ -312,13 +370,7 @@ public class RewardUISet : MonoBehaviour
         {
             if (rewarded)
             {
-                UserSetting.UserSettingInfo.DoRewardBox(mStageInfo.Num);
-                foreach (string subReward in subRewards)
-                    StageInfo.DoReward(subReward);
-
-                btn.transform.GetChild(0).gameObject.SetActive(false);
-                btn.transform.GetChild(1).gameObject.SetActive(false);
-                btn.enabled = false;
+                OpenGoldBoxTween();
             }
         });
     }
