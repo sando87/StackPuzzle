@@ -29,6 +29,7 @@ public class MenuTitle : MonoBehaviour
     [SerializeField] GameObject _ReviewManager;
     [SerializeField] GameObject _Tutorial;
     [SerializeField] PerformanceMonitering _Monitoring;
+    [SerializeField] GameObject _MobileNotification;
 
     private void Awake()
     {
@@ -137,6 +138,11 @@ public class MenuTitle : MonoBehaviour
         _Tutorial.SetActive(true);
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "95%";
+
+        // 알람 기능
+        _MobileNotification.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        LoadingText.text = "97%";
 
         // 기타 시스템 설정 초기화
         Application.targetFrameRate = 30; //FPS 30프레임 고정
