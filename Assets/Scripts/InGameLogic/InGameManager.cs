@@ -658,6 +658,10 @@ public class InGameManager : MonoBehaviour
     private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
         mWorkerList.AddLast(new DelayedCall(delayTick, stepTick, callback));
+
+        mIsUserEventLock = true;
+        mIsWorkingCycle = true;
+
         // if(!mIsWorkingCycle)
         // {
         //     StartCoroutine(DoWorkerCycle());
@@ -666,6 +670,10 @@ public class InGameManager : MonoBehaviour
     private void AddWorkerFirst(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
         mWorkerList.AddFirst(new DelayedCall(delayTick, stepTick, callback));
+
+        mIsUserEventLock = true;
+        mIsWorkingCycle = true;
+        
         // if (!mIsWorkingCycle)
         // {
         //     StartCoroutine(DoWorkerCycle());
