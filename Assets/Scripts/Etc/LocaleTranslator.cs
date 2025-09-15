@@ -29,7 +29,7 @@ public class LocaleTranslator : MonoBehaviour
     {
         if (mUIText != null)
         {
-            mUIText.font = LocaleManager.Inst.CurrentFontAsset;
+            // mUIText.font = LocaleManager.Inst.CurrentFontAsset;
             mUIText.text = LocaleManager.Inst.DoLocaleText(mEnglishID, UserSetting.CurrentLang);
         }
     }
