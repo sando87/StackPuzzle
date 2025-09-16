@@ -81,7 +81,7 @@ public class InGameManager : MonoBehaviour
     private VerticalFrames[] mVerticalFrames = null;
     public bool ItWasToughBattle { get; private set; } = false;
 
-    private bool mIsWorkingCycle = false;
+    private bool IsWorkingCycle { get => mWorkerList.Count > 0; }
     float mLateUpdateTime = 0;
     private LinkedList<DelayedCall> mWorkerList = new LinkedList<DelayedCall>();
     private LinkedList<KeyValuePair<Int64, PVPInfo>> mNetMessages = new LinkedList<KeyValuePair<Int64, PVPInfo>>();
@@ -103,7 +103,7 @@ public class InGameManager : MonoBehaviour
     }
     public Frame Frame(int x, int y) { return mFrames[x, y]; }
     public Frame CenterFrame { get { return mFrames[CountX / 2, CountY / 2]; } }
-    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null && !mIsWorkingCycle; } }
+    public bool IsIdle { get { return IsDroppable && !mIsDropping && !mIsUserEventLock && !mIsFlushing && !mItemLooping && !mIsAutoMatching && !mIsItemEffect && !mIsLightningSkill && mStageInfo != null && !IsWorkingCycle; } }
     public int CountX { get { return mStageInfo.XCount; } }
     public int CountY { get { return mStageInfo.YCount; } }
     public int StageNum { get { return mStageInfo.Num; } }
@@ -657,10 +657,13 @@ public class InGameManager : MonoBehaviour
     // stepTick은 callback함수가 실행되는 간격(tick당 0.1초)
     private void AddWorker(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
-        mWorkerList.AddLast(new DelayedCall(delayTick, stepTick, callback));
+        if (mWorkerList.Count <= 0)
+        {
+            mDropCounter = 0;
+            mLateUpdateTime = 0;
+        }
 
-        mIsUserEventLock = true;
-        mIsWorkingCycle = true;
+        mWorkerList.AddLast(new DelayedCall(delayTick, stepTick, callback));
 
         // if(!mIsWorkingCycle)
         // {
@@ -669,10 +672,13 @@ public class InGameManager : MonoBehaviour
     }
     private void AddWorkerFirst(int delayTick, int stepTick, System.Func<int, DelayedCallRet> callback)
     {
-        mWorkerList.AddFirst(new DelayedCall(delayTick, stepTick, callback));
+        if (mWorkerList.Count <= 0)
+        {
+            mDropCounter = 0;
+            mLateUpdateTime = 0;
+        }
 
-        mIsUserEventLock = true;
-        mIsWorkingCycle = true;
+        mWorkerList.AddFirst(new DelayedCall(delayTick, stepTick, callback));
         
         // if (!mIsWorkingCycle)
         // {
@@ -684,14 +690,6 @@ public class InGameManager : MonoBehaviour
     {
         if (mWorkerList.Count > 0)
         {
-            if (!mIsWorkingCycle)
-            {
-                mDropCounter = 0;
-                mLateUpdateTime = 0;
-                mIsUserEventLock = true;
-                mIsWorkingCycle = true;
-            }
-
             mLateUpdateTime += Time.deltaTime;
             if (mLateUpdateTime > 0.1f)
             {
@@ -741,12 +739,6 @@ public class InGameManager : MonoBehaviour
             }
 
         }
-        else
-        {
-            mIsUserEventLock = false;
-            mIsWorkingCycle = false;
-            mLateUpdateTime = 0;
-        }
     }
 
 
@@ -759,7 +751,6 @@ public class InGameManager : MonoBehaviour
     IEnumerator DoWorkerCycle()
     {
         mIsUserEventLock = true;
-        mIsWorkingCycle = true;
         
         yield return new WaitForSeconds(0.1f);
 
@@ -810,7 +801,6 @@ public class InGameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        mIsWorkingCycle = false;
         mIsUserEventLock = false;
     }
 
@@ -3356,7 +3346,7 @@ public class InGameManager : MonoBehaviour
                     pro.ChangeProductImage(skillIndex);
                     eventEnd?.Invoke();
                     Destroy(obj);
-                    if (!mIsWorkingCycle)
+                    if (!IsWorkingCycle)
                         StartSingleSkillLoop();
                     break;
                 }
@@ -3981,7 +3971,6 @@ public class InGameManager : MonoBehaviour
         mPVPIceBlockLevel = 0;
         mUseCombo = false;
         mDropCounter = 0;
-        mIsWorkingCycle = false;
         mStartRandomSeed = -1;
         mWorkerList.Clear();
         ItWasToughBattle = false;
