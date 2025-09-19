@@ -349,10 +349,8 @@ public class PVPScoreBar : MonoBehaviour
     }
     public int DoFlush(int score)
     {
-        if (Mathf.Abs(score) > Mathf.Abs(CurrentScore))
-            return 0;
-
-        float width = Mathf.Abs(score) * mWidthPerScore;
+        float minScore = Mathf.Min(Mathf.Abs(score), Mathf.Abs(CurrentScore));
+        float width = Mathf.Abs(minScore) * mWidthPerScore;
         Image newSubScoreBar = Instantiate(ScoreSubBar, RootScoreArea);
         newSubScoreBar.color = Color.blue;
         newSubScoreBar.rectTransform.pivot = new Vector2(0, 0.5f);

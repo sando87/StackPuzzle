@@ -4819,36 +4819,24 @@ public class InGameManager : MonoBehaviour
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
-                if (IsIdle && IsAllProductIdle() && PVPScoreBar.IsIdle)
+                int flushedIceBlockCount = body.ArrayCount;
+                int point = body.combo;
+                int localScore = Billboard.CurrentScore;
+                PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
+                List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
+                Product[] rets = products.ToArray();
+                StartCoroutine(FlushObstacles(rets));
+
+                mNetMessages.RemoveFirst();
+                LOG.trace("recv," + reqID + "," + localScore);
+                if (mTestSeq + 1 == reqID && body.remainTime == localScore)
                 {
-                    int flushedIceBlockCount = body.ArrayCount;
-                    int point = body.combo;
-                    if (PVPScoreBar.CurrentScore >= point * UserSetting.ScorePerAttack)
-                    {
-                        int localScore = Billboard.CurrentScore;
-                        PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
-                        List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
-                        Product[] rets = products.ToArray();
-                        if (body.ArrayCount != rets.Length)
-                        {
-                            // LOG.warn("body: " + body.ArrayCount);
-                            // LOG.warn("point,ret: " + point + "," + rets.Length);
-                        }
-
-                        StartCoroutine(FlushObstacles(rets));
-
-                        mNetMessages.RemoveFirst();
-                        LOG.trace("recv," + reqID + "," + localScore);
-                        if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                        {
-                            mTestSeq = reqID;
-                        }
-                        else
-                        {
-                            LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                            yield break;
-                        }
-                    }
+                    mTestSeq = reqID;
+                }
+                else
+                {
+                    LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    yield break;
                 }
             }
             // else if (body.cmd == PVPCommand.SyncTimer)
