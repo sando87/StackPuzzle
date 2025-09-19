@@ -53,6 +53,7 @@ public class MenuPVPReady : MonoBehaviour
     private IEnumerator StartBattle()
     {
         yield return new WaitForSeconds(1);
+        LOG.trace(mMapRandomSeed);
         StageInfo info = StageInfo.Load(mLevel, mMapRandomSeed);
         Vector3 pos = MenuBattle.Inst().OpponentRect.transform.position;
         InGameManager.InstPVP_Opponent.transform.SetPosition2D(pos);

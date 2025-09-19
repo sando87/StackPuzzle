@@ -34,12 +34,16 @@ public class AutoBalancer : MonoBehaviour
     }
 
     InGameManager mCurrentManager = null;
+    static System.Random mRandomSeed = null;
 
     public void StartAI(InGameManager manager)
     {
         StopCoroutine(nameof(DoAutoBalancerNew));
 
         mCurrentManager = manager;
+        int seed = (int)DateTime.Now.Ticks;
+        LOG.trace(seed);
+        mRandomSeed = new System.Random(seed);
         StartCoroutine(nameof(DoAutoBalancerNew));
     }
     public void StopAI()
@@ -50,7 +54,7 @@ public class AutoBalancer : MonoBehaviour
 
     IEnumerator DoAutoBalancerNew()
     {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(0.1f, 2));
+        yield return new WaitForSeconds(1);
         const int MODE_SWIPE = 1;
         const int MODE_COMBOUP = 2;
         const int MODE_ATTACK = 3;
@@ -232,7 +236,7 @@ public class AutoBalancer : MonoBehaviour
         List<SwipeDirection> dirs = new List<SwipeDirection>();
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        int yOff = UnityEngine.Random.Range(0, mCntY);
+        int yOff = mRandomSeed.Next(0, mCntY);
         for (int y = 0; y < mCntY; ++y)
         {
             int fixedY = (y + yOff) % mCntY;
@@ -288,7 +292,7 @@ public class AutoBalancer : MonoBehaviour
 
                 if (dirs.Count > 0)
                 {
-                    SwipeDirection selectedDir = dirs[UnityEngine.Random.Range(0, dirs.Count)];
+                    SwipeDirection selectedDir = dirs[mRandomSeed.Next(0, dirs.Count)];
                     swipedProducts.Add(cenPro);
                     swipedProducts.Add(cenPro.Dir(selectedDir));
                     mgr.OnSwipe(cenPro.gameObject, selectedDir);
@@ -305,7 +309,7 @@ public class AutoBalancer : MonoBehaviour
         List<Product> firstMatches = new List<Product>();
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        int yOff = UnityEngine.Random.Range(0, mCntY);
+        int yOff = mRandomSeed.Next(0, mCntY);
         List<Product[]> productGroups = null;
         int maxCombo = 0;
         for (int y = 0; y < mCntY; ++y)
@@ -385,7 +389,7 @@ public class AutoBalancer : MonoBehaviour
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        int yOff = UnityEngine.Random.Range(0, mCntY);
+        int yOff = mRandomSeed.Next(0, mCntY);
         for (int y = 0; y < mCntY; ++y)
         {
             int fixedY = (y + yOff) % mCntY;
@@ -436,7 +440,7 @@ public class AutoBalancer : MonoBehaviour
     {
         int mCntX = mgr.CountX;
         int mCntY = mgr.CountY;
-        int yOff = UnityEngine.Random.Range(0, mCntY);
+        int yOff = mRandomSeed.Next(0, mCntY);
         for (int y = 0; y < mCntY; ++y)
         {
             int fixedY = (y + yOff) % mCntY;
@@ -503,12 +507,12 @@ public class AutoBalancer : MonoBehaviour
         int level = UserSetting.UserInfo.botLevel / 100;
         switch (level)
         {
-            case 1: return UnityEngine.Random.Range(1, 6);
-            case 2: return UnityEngine.Random.Range(0.5f, 4);
-            case 3: return UnityEngine.Random.Range(0.1f, 1.5f);
+            case 1: return mRandomSeed.Next(10, 60) * 0.1f;
+            case 2: return mRandomSeed.Next(5, 40) * 0.1f;
+            case 3: return mRandomSeed.Next(1, 15) * 0.1f;
             default: break;
         }
-        return UnityEngine.Random.Range(0.5f, 4);
+        return mRandomSeed.Next(5, 40) * 0.1f;
     }
     private int NextSwipeCount()
     {
@@ -516,9 +520,9 @@ public class AutoBalancer : MonoBehaviour
         int level = (UserSetting.UserInfo.botLevel / 10) % 10;
         switch (level)
         {
-            case 1: return UnityEngine.Random.Range(0, 1);
-            case 2: return UnityEngine.Random.Range(4, 8);
-            case 3: return UnityEngine.Random.Range(8, 13);
+            case 1: return mRandomSeed.Next(0, 1);
+            case 2: return mRandomSeed.Next(4, 8);
+            case 3: return mRandomSeed.Next(8, 13);
             default: break;
         }
         return 10;
@@ -527,7 +531,7 @@ public class AutoBalancer : MonoBehaviour
     {
         // 세번째 자리수 숫자
         int level = UserSetting.UserInfo.botLevel % 10;
-        int percent = UnityEngine.Random.Range(0, 1000) % 100;
+        int percent = mRandomSeed.Next(0, 1000) % 100;
         switch (level)
         {
             case 1: return percent < 0;
