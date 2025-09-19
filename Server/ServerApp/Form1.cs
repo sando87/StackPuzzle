@@ -520,8 +520,8 @@ namespace ServerApp
         }
         private SessionUser FindOpponent(SessionUser me, SessionUser[] list)
         {
-            /*if (me.UserInfo.IsBot || me.MatchState != MatchingState.TryMatching)
-                return null;*/
+            if (me.UserInfo.IsBot || me.MatchState != MatchingState.TryMatching)
+                return null;
 
             bool botSkip = me.MatchingTime() < mRandomForBotMatching.Next(100);
 
@@ -530,8 +530,8 @@ namespace ServerApp
                 if (opp.MatchState != MatchingState.TryMatching)
                     continue;
 
-                /*if (botSkip && opp.UserInfo.IsBot)
-                    continue;*/
+                if (botSkip && opp.UserInfo.IsBot)
+                    continue;
 
                 if (me == opp)
                     continue;
