@@ -148,9 +148,11 @@ public class UserInfo
     public int rank = 0;
     public int botLevel = 0;
     public int StartCount = 0;
+    public int isSkipFindMatching = 0;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
     public bool IsBot { get { return botLevel > 0; } }
+    public bool IsSkipFindMatching { get { return isSkipFindMatching > 0; } }
     public int NetworkLatency { get; set; } = -1;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public PurchaseItemType[] PvpItems = new PurchaseItemType[3];
