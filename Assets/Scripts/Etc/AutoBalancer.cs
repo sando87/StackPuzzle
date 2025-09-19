@@ -42,7 +42,7 @@ public class AutoBalancer : MonoBehaviour
 
         mCurrentManager = manager;
         int seed = (int)DateTime.Now.Ticks;
-        LOG.trace(seed);
+        // LOG.trace(seed);
         mRandomSeed = new System.Random(seed);
         StartCoroutine(nameof(DoAutoBalancerNew));
     }

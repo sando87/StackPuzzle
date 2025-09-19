@@ -84,7 +84,7 @@ public class InGameManager : MonoBehaviour
     private bool IsWorkingCycle { get => mWorkerList.Count > 0; }
     float mLateUpdateTime = 0;
     private LinkedList<DelayedCall> mWorkerList = new LinkedList<DelayedCall>();
-    private LinkedList<KeyValuePair<Int64, PVPInfo>> mNetMessages = new LinkedList<KeyValuePair<Int64, PVPInfo>>();
+    private LinkedList<PVPInfo> mNetMessages = new LinkedList<PVPInfo>();
 
     public float SFXVolume { get { return mSFXVolume; } }
     public bool IsFInished { get { return mIsFinished; } }
@@ -4743,10 +4743,9 @@ public class InGameManager : MonoBehaviour
         {
             PVPInfo resMsg = new PVPInfo();
             resMsg.Deserialize(body);
-            mNetMessages.AddLast(new KeyValuePair<Int64, PVPInfo>(head.RequestID, resMsg));
+            mNetMessages.AddLast(resMsg);
         }
     }
-    Int64 mTestSeq = 0;
     IEnumerator ProcessNetMessages()
     {
         while (true)
@@ -4756,8 +4755,7 @@ public class InGameManager : MonoBehaviour
             if (mNetMessages.Count == 0)
                 continue;
 
-            Int64 reqID = mNetMessages.First.Value.Key;
-            PVPInfo body = mNetMessages.First.Value.Value;
+            PVPInfo body = mNetMessages.First.Value;
             if (body.cmd == PVPCommand.StartGame)
             {
                 int randomSeed = body.remainTime;
@@ -4771,73 +4769,38 @@ public class InGameManager : MonoBehaviour
                     pro.gameObject.layer = LayerMask.NameToLayer("ProductOpp");
                 }
 
-                mTestSeq = reqID;
                 mNetMessages.RemoveFirst();
-                LOG.trace("recv," + reqID + "," + Billboard.CurrentScore);
             }
             else if (body.cmd == PVPCommand.Click)
             {
                 if (IsIdle && IsAllProductIdle())
                 {
-                    int localScore = Billboard.CurrentScore;
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     OnClick(pro.gameObject);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + localScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                    {
-                        mTestSeq = reqID;
-                    }
-                    else
-                    {
-                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        yield break;
-                    }
                 }
             }
             else if (body.cmd == PVPCommand.Swipe)
             {
                 if (IsIdle && IsAllProductIdle())
                 {
-                    int localScore = Billboard.CurrentScore;
                     Product pro = mFrames[body.pros[0].idxX, body.pros[0].idxY].ChildProduct;
                     OnSwipe(pro.gameObject, body.dir);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + localScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                    {
-                        mTestSeq = reqID;
-                    }
-                    else
-                    {
-                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        yield break;
-                    }
                 }
             }
             else if (body.cmd == PVPCommand.FlushAttacks)
             {
                 int flushedIceBlockCount = body.ArrayCount;
                 int point = body.combo;
-                int localScore = Billboard.CurrentScore;
                 PVPScoreBar.DoFlush(point * UserSetting.ScorePerAttack);
                 List<Product> products = GetNextFlushTargets(flushedIceBlockCount);
                 Product[] rets = products.ToArray();
                 StartCoroutine(FlushObstacles(rets));
 
                 mNetMessages.RemoveFirst();
-                LOG.trace("recv," + reqID + "," + localScore);
-                if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                {
-                    mTestSeq = reqID;
-                }
-                else
-                {
-                    LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    yield break;
-                }
             }
             // else if (body.cmd == PVPCommand.SyncTimer)
             // {
@@ -4853,40 +4816,18 @@ public class InGameManager : MonoBehaviour
             {
                 if (IsIdle && IsAllProductIdle())
                 {
-                    int localScore = Billboard.CurrentScore;
                     MenuBattle.Inst().UseOpponentItem(body.item);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + localScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                    {
-                        mTestSeq = reqID;
-                    }
-                    else
-                    {
-                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        yield break;
-                    }
                 }
             }
             else if (body.cmd == PVPCommand.GetItem)
             {
                 // if (IsIdle && IsAllProductIdle())
                 {
-                    int localScore = Billboard.CurrentScore;
                     MenuBattle.Inst().GetOpponentItem(body.item, body.slotIndex);
 
                     mNetMessages.RemoveFirst();
-                    LOG.trace("recv," + reqID + "," + localScore);
-                    if (mTestSeq + 1 == reqID && body.remainTime == localScore)
-                    {
-                        mTestSeq = reqID;
-                    }
-                    else
-                    {
-                        LOG.trace("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        yield break;
-                    }
                 }
             }
         }
@@ -4995,8 +4936,6 @@ public class InGameManager : MonoBehaviour
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Click(Product pro)
     {
@@ -5013,8 +4952,6 @@ public class InGameManager : MonoBehaviour
         req.remainTime = Billboard.CurrentScore;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Swipe(Product pro, SwipeDirection dir)
     {
@@ -5032,8 +4969,6 @@ public class InGameManager : MonoBehaviour
         req.remainTime = Billboard.CurrentScore;
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_Destroy(ProductInfo[] pros, ProductSkill skill, bool withLaserEffect, int timerCounter)
     {
@@ -5083,8 +5018,6 @@ public class InGameManager : MonoBehaviour
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     public void Network_GetItem(PurchaseItemType item, int slotIndex)
     {
@@ -5101,8 +5034,6 @@ public class InGameManager : MonoBehaviour
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_ChangeSkill(ProductInfo[] pros)
     {
@@ -5132,8 +5063,6 @@ public class InGameManager : MonoBehaviour
 
         if (!NetClientApp.GetInstance().Request(NetCMD.PVP, req, Network_PVPAck))
             StartFinish(false);
-        else
-            LOG.trace("send," + NetClientApp.GetInstance().RequestID + "," + Billboard.CurrentScore);
     }
     private void Network_SyncTimer(int remainSec)
     {

@@ -241,16 +241,16 @@ public class MenuTitle : MonoBehaviour
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         // LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
         LOG.LogStringWriterDB = (msg) => {
-            // LogInfo info = new LogInfo();
-            // info.userPk = UserSetting.UserPK;
-            // info.message = msg;
-            return false; // NetClientApp.GetInstance().Request(NetCMD.AddLog, info, null);
+            LogInfo info = new LogInfo();
+            info.userPk = UserSetting.UserPK;
+            info.message = msg;
+            return NetClientApp.GetInstance().Request(NetCMD.AddLog, info, null);
         };
         LOG.LogBytesWriterDB = (data) => {
-            // LogFile info = new LogFile();
-            // info.userPk = UserSetting.UserPK;
-            // info.data = data;
-            return false;  //NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
+            LogFile info = new LogFile();
+            info.userPk = UserSetting.UserPK;
+            info.data = data;
+            return NetClientApp.GetInstance().Request(NetCMD.AddLogFile, info, null);
         };
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR

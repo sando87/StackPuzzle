@@ -249,11 +249,11 @@ public class NetClientApp : MonoBehaviour
             else
             {
                 DateTime reqTime = DateTime.Now;
-                // Request(NetCMD.HeartCheck, UserSetting.UserInfo, (body) =>
-                // {
-                //     TimeSpan latency = DateTime.Now - reqTime;
-                //     UserSetting.Latency = (int)(latency.TotalSeconds * 1000);
-                // });
+                Request(NetCMD.HeartCheck, UserSetting.UserInfo, (body) =>
+                {
+                    TimeSpan latency = DateTime.Now - reqTime;
+                    UserSetting.Latency = (int)(latency.TotalSeconds * 1000);
+                });
             }
             
             yield return new WaitForSeconds(NetProtocol.HeartCheckInterval);
