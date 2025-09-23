@@ -4664,7 +4664,7 @@ public class InGameManager : MonoBehaviour
     {
         Frame defaultRet = null;
         List<Frame> frames = new List<Frame>();
-        int ranOffSet = mRandomSeed.Next(frames.Count);
+        int ranOffSet = mRandomSeed.Next(mFrames.Length);
         for (int i = 0; i < mFrames.Length; ++i)
         {
             int ranIdx = (i + ranOffSet) % mFrames.Length;
@@ -4678,7 +4678,7 @@ public class InGameManager : MonoBehaviour
             {
                 defaultRet = frame;
             }
-                
+
             if (frame.IsBushed || frame.IsCapped || frame.IsRope)
             {
                 frames.Add(frame);
