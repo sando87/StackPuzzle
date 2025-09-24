@@ -19,7 +19,8 @@ public class RewardUISet : MonoBehaviour
     public GameObject EventItemReward { get; private set; } = null;
     public GameObject PackBoxReward { get; private set; } = null;
 
-    private Image mEventItemBar = null;
+    private Image mEventItemBarFrom = null;
+    private Image mEventItemBarTo = null;
 
     Image BG(GameObject obj) { return obj.GetComponent<Image>(); }
     Image Icon(GameObject obj) { return obj.transform.Find("Icon").GetComponent<Image>(); }
@@ -28,7 +29,9 @@ public class RewardUISet : MonoBehaviour
     Transform Glow(GameObject obj) { return obj.transform.Find("Glow"); }
     Transform Adv(GameObject obj) { return obj.transform.Find("Adv"); }
     Transform Gauge(GameObject obj) { return obj.transform.Find("Gauge_Outline"); }
-    Image GaugeFill(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_BG/Gauge_Fill").GetComponent<Image>(); }
+    Image GaugeFillTo(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskTo").GetComponent<Image>(); }
+    Image GaugeFillFrom(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskFrom").GetComponent<Image>(); }
+    
 
     private void ClearRewards()
     {
@@ -98,7 +101,8 @@ public class RewardUISet : MonoBehaviour
         SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
         Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
-        mEventItemBar = GaugeFill(EventItemReward);
+        mEventItemBarFrom = GaugeFillFrom(EventItemReward);
+        mEventItemBarTo = GaugeFillTo(EventItemReward);
         if (is3StarCleared)
         {
             SetReward_Finished(EventItemReward);
@@ -109,7 +113,7 @@ public class RewardUISet : MonoBehaviour
         }
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
-        SetEventItemRate(rateTo);
+        SetEventItemRate(rateFrom, rateTo);
     }
 
     public void UpdateForRewarding(StageInfo stageInfo, bool isFirstClear, bool isFirstThreeStarClear)
@@ -170,7 +174,8 @@ public class RewardUISet : MonoBehaviour
         SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
         Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
-        mEventItemBar = GaugeFill(EventItemReward);
+        mEventItemBarFrom = GaugeFillFrom(EventItemReward);
+        mEventItemBarTo = GaugeFillTo(EventItemReward);
         if (!isFirstThreeStarClear)
         {
             SetReward_Finished(EventItemReward);
@@ -181,7 +186,7 @@ public class RewardUISet : MonoBehaviour
         }
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
-        SetEventItemRate(rateTo);
+        SetEventItemRate(rateFrom, rateTo);
     }
 
 
@@ -232,19 +237,25 @@ public class RewardUISet : MonoBehaviour
         }
     }
 
-    public void SetEventItemRate(float rate, float duration = 0)
+    public void SetEventItemRate(float rateFrom, float rateTo, float duration = 0)
     {
-        if (mEventItemBar != null)
+        if (mEventItemBarFrom != null && mEventItemBarTo != null)
         {
             if (duration <= 0)
             {
-                mEventItemBar.DOKill();
-                mEventItemBar.transform.localScale = new Vector3(rate, 1, 1);
+                mEventItemBarFrom.DOKill();
+                mEventItemBarFrom.fillAmount = rateFrom;
+                mEventItemBarTo.DOKill();
+                mEventItemBarTo.fillAmount = rateTo;
             }
             else
             {
-                mEventItemBar.DOKill();
-                mEventItemBar.transform.DOScaleX(rate, duration);
+                mEventItemBarFrom.DOKill();
+                mEventItemBarFrom.fillAmount = rateFrom;
+                mEventItemBarTo.DOKill();
+                mEventItemBarTo.fillAmount = rateTo;
+
+                mEventItemBarFrom.DOFillAmount(rateTo, duration);
             }
         }
     }
@@ -252,7 +263,8 @@ public class RewardUISet : MonoBehaviour
     {
         if (EventItemReward != null)
         {
-            mEventItemBar.transform.DOScaleX(0, 1);
+            mEventItemBarFrom.DOFillAmount(0, 1);
+            mEventItemBarTo.DOFillAmount(0, 1);
             Image img = Icon(EventItemReward);
             Vector3 curPos = img.transform.position;
             img.transform.DOMoveY(curPos.y + 1, 0.5f);
