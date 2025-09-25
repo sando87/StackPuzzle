@@ -101,7 +101,7 @@ public class MenuComplete : MonoBehaviour
         Star3.gameObject.SetActive(starCount >= 3);
         if (starCount >= 3)
             SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(2);
 
         if (mIsFirst3StarClear)
             StartCoroutine(AnimateEventItem());
@@ -113,20 +113,20 @@ public class MenuComplete : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
 
         GameObject starA = Instantiate(EventItemFXPrefab, Star1.transform.position, Quaternion.identity, targetObj.transform);
-        starA.transform.DOLocalMove(Vector3.zero, 1.0f);
+        starA.transform.DOLocalMove(Vector3.zero, 2.0f);
         Effects.Add(starA);
         GameObject starB = Instantiate(EventItemFXPrefab, Star2.transform.position, Quaternion.identity, targetObj.transform);
-        starB.transform.DOLocalMove(Vector3.zero, 1.0f);
+        starB.transform.DOLocalMove(Vector3.zero, 2.0f);
         Effects.Add(starB);
         GameObject starC = Instantiate(EventItemFXPrefab, Star3.transform.position, Quaternion.identity, targetObj.transform);
-        starC.transform.DOLocalMove(Vector3.zero, 1.0f);
+        starC.transform.DOLocalMove(Vector3.zero, 2.0f);
         Effects.Add(starC);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
         
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
         _RewardUISet.SetEventItemRate(rateFrom, rateTo, 3.0f);
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
 
         if (rateTo >= 1)
         {
@@ -202,7 +202,7 @@ public class MenuComplete : MonoBehaviour
 
         if (mIsFirstClear)
         {
-            _RewardUISet.DoReword();
+            _RewardUISet.DoReward();
         }
 
         if (mIsFirst3StarClear)

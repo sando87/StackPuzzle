@@ -21,6 +21,7 @@ public class RewardUISet : MonoBehaviour
 
     private Image mEventItemBarFrom = null;
     private Image mEventItemBarTo = null;
+    private Tween mCountTween = null;
 
     Image BG(GameObject obj) { return obj.GetComponent<Image>(); }
     Image Icon(GameObject obj) { return obj.transform.Find("Icon").GetComponent<Image>(); }
@@ -28,12 +29,18 @@ public class RewardUISet : MonoBehaviour
     Transform FX(GameObject obj) { return obj.transform.Find("Fx_Star"); }
     Transform Glow(GameObject obj) { return obj.transform.Find("Glow"); }
     Transform Adv(GameObject obj) { return obj.transform.Find("Adv"); }
-    Transform Gauge(GameObject obj) { return obj.transform.Find("Gauge_Outline"); }
-    Image GaugeFillTo(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskTo").GetComponent<Image>(); }
-    Image GaugeFillFrom(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskFrom").GetComponent<Image>(); }
-    Image GaugeFocusTo(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskTo/Gauge_Focus").GetComponent<Image>(); }
-    Image GaugeFocusFrom(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskFrom/Gauge_Focus").GetComponent<Image>(); }
-    
+    Image Gauge(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG").GetComponent<Image>(); }
+    Image GaugeFillTo(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG/Gauge_Timer_To").GetComponent<Image>(); }
+    Image GaugeFillFrom(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG/Gauge_Timer_From").GetComponent<Image>(); }
+
+    void OnDisable()
+    {
+        if (mCountTween != null)
+        {
+            mCountTween.Kill();
+            mCountTween = null;
+        }
+    }
 
     private void ClearRewards()
     {
@@ -101,7 +108,6 @@ public class RewardUISet : MonoBehaviour
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
         SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
-        Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
         mEventItemBarFrom = GaugeFillFrom(EventItemReward);
         mEventItemBarTo = GaugeFillTo(EventItemReward);
@@ -113,6 +119,8 @@ public class RewardUISet : MonoBehaviour
         {
             SetReward_Ready(EventItemReward);
         }
+        Icon(EventItemReward).color = Color.black;
+        FX(EventItemReward).gameObject.SetActive(false);
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
         SetEventItemRate(rateFrom, rateTo);
@@ -122,6 +130,7 @@ public class RewardUISet : MonoBehaviour
     {
         mStageInfo = stageInfo;
         bool isPackageRewarded = UserSetting.UserSettingInfo.IsRewardedBox(stageInfo.Num);
+        bool is3StarCleared = UserSetting.UserSettingInfo.GetStageStarCount(stageInfo.Num) >= 3;
 
         ClearRewards();
 
@@ -174,18 +183,19 @@ public class RewardUISet : MonoBehaviour
 
         EventItemReward = Instantiate(RewardPrefab, RewardParent.transform);
         SetIconImage(Icon(EventItemReward), UserSetting.UserSettingInfo.CurrentEventItem.GetSprite());
-        Text(EventItemReward).gameObject.SetActive(false);
         Gauge(EventItemReward).gameObject.SetActive(true);
         mEventItemBarFrom = GaugeFillFrom(EventItemReward);
         mEventItemBarTo = GaugeFillTo(EventItemReward);
-        if (!isFirstThreeStarClear)
-        {
-            SetReward_Finished(EventItemReward);
-        }
-        else
+        if (isFirstThreeStarClear || !is3StarCleared)
         {
             SetReward_Rewardable(EventItemReward);
         }
+        else
+        {
+            SetReward_Finished(EventItemReward);
+        }
+        Icon(EventItemReward).color = Color.black;
+        FX(EventItemReward).gameObject.SetActive(false);
 
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(0, out float rateFrom, out float rateTo);
         SetEventItemRate(rateFrom, rateTo);
@@ -194,26 +204,27 @@ public class RewardUISet : MonoBehaviour
 
     void SetReward_Finished(GameObject rewardObj)
     {
-        LOG.trace();
         BG(rewardObj).color = Color.gray;
         Icon(rewardObj).GetComponent<Image>().color = Color.gray;
-        GaugeFocusFrom(rewardObj).color = Color.gray;
-        GaugeFocusTo(rewardObj).gameObject.SetActive(false);
+        Gauge(rewardObj).color = Color.gray;
+        GaugeFillFrom(rewardObj).color = new Color(0.8f, 0.8f, 0.8f, 1);
+        GaugeFillTo(rewardObj).gameObject.SetActive(false);
         FX(rewardObj).gameObject.SetActive(false);
+        Text(rewardObj).color = Color.gray;
     }
     void SetReward_Ready(GameObject rewardObj)
     {
-        LOG.trace();
         BG(rewardObj).color = Color.white;
         Icon(rewardObj).GetComponent<Image>().color = Color.white;
         FX(rewardObj).gameObject.SetActive(false);
+        Text(rewardObj).color = Color.white;
     }
     void SetReward_Rewardable(GameObject rewardObj)
     {
-        LOG.trace();
         BG(rewardObj).color = Color.white;
         Icon(rewardObj).GetComponent<Image>().color = Color.white;
         FX(rewardObj).gameObject.SetActive(true);
+        Text(rewardObj).color = Color.white;
     }
 
     public void SetPackageBox_Rewardable()
@@ -254,6 +265,9 @@ public class RewardUISet : MonoBehaviour
                 mEventItemBarFrom.fillAmount = rateFrom;
                 mEventItemBarTo.DOKill();
                 mEventItemBarTo.fillAmount = rateTo;
+
+                int percent = (int)(rateTo * 100f);
+                Text(EventItemReward).text = percent + "%";
             }
             else
             {
@@ -261,6 +275,14 @@ public class RewardUISet : MonoBehaviour
                 mEventItemBarFrom.fillAmount = rateFrom;
                 mEventItemBarTo.DOKill();
                 mEventItemBarTo.fillAmount = rateTo;
+
+                int percentFrom = (int)(rateFrom * 100f);
+                int percentTo = (int)(rateTo * 100f);
+                int curPercent = percentFrom;
+                TextMeshProUGUI targetText = Text(EventItemReward);
+                mCountTween = DOTween.To(() => curPercent, val => { curPercent = val; targetText.text = curPercent + "%"; }, percentTo, duration)
+                .SetEase(Ease.Linear)
+                .OnComplete(() => mCountTween = null);
 
                 mEventItemBarFrom.DOFillAmount(rateTo, duration).SetEase(Ease.Linear);
             }
@@ -270,26 +292,46 @@ public class RewardUISet : MonoBehaviour
     {
         if (EventItemReward != null)
         {
-            mEventItemBarFrom.DOFillAmount(0, 1);
-            mEventItemBarTo.DOFillAmount(0, 1);
-            Image img = Icon(EventItemReward);
-            Vector3 curPos = img.transform.position;
-            img.transform.DOMoveY(curPos.y + 1, 0.5f);
-            img.DOFade(0, 0.5f);
-            this.ExDelayedCoroutine(0.6f, () =>
-            {
-                SetIconImage(img, nextItemImage);
-                img.transform.DOMoveY(curPos.y, 0.5f).From(curPos.y - 1);
-                img.DOFade(1, 0.5f);
-            });
+            StartCoroutine(CoChangeEventItemTween(nextItemImage));
         }
+    }
+
+    IEnumerator CoChangeEventItemTween(Sprite nextItemImage)
+    {
+        Text(EventItemReward).text = "100%";
+        Gauge(EventItemReward).transform.DOShakePosition(0.3f, 5, 100);
+        yield return new WaitForSeconds(1);
+
+        Gauge(EventItemReward).gameObject.SetActive(false);
+
+        Image img = Icon(EventItemReward);
+        img.DOColor(Color.white, 1f);
+
+        yield return new WaitForSeconds(1.5f);
+
+        Vector3 curPos = img.transform.position;
+        img.transform.DOMoveY(curPos.y + 1, 1);
+        img.DOFade(0, 1);
+
+        yield return new WaitForSeconds(0.5f);
+
+        SetIconImage(img, nextItemImage);
+        img.transform.DOMoveY(curPos.y, 1).From(curPos.y - 1);
+        img.DOFade(1, 1);
+
+        yield return new WaitForSeconds(1.5f);
+
+        img.color = Color.black;
+        Gauge(EventItemReward).gameObject.SetActive(true);
+        Gauge(EventItemReward).transform.DOShakePosition(0.3f, 5, 100);
+        SetEventItemRate(0, 0);
     }
 
     public void OpenGoldBoxTween()
     {
         if (PackBoxReward == null)
             return;
-            
+
         StartCoroutine(CoOpenGoldBox());
     }
     IEnumerator CoOpenGoldBox()
@@ -352,7 +394,7 @@ public class RewardUISet : MonoBehaviour
         dimObj.gameObject.SetActive(false);
     }
 
-    public void DoReword()
+    public void DoReward()
     {
         var rewardInfos = mStageInfo.GetRewardInfos();
         foreach (var rewardInfo in rewardInfos)

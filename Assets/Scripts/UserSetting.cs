@@ -252,6 +252,7 @@ public class UserSettingInfo
     {
         rateFrom = mCurrentExpForEventItem / mNextEventItem.GetExpForEvent();
         rateTo = (mCurrentExpForEventItem + exp) / mNextEventItem.GetExpForEvent();
+        rateTo = Mathf.Min(rateTo, 1);
     }
     public PurchaseItemType CurrentEventItem { get => mNextEventItem; }
     public void ResetNextNewEventItem()
