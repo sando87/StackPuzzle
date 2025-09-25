@@ -690,10 +690,9 @@ public class InGameManager : MonoBehaviour
     {
         if (mWorkerList.Count > 0)
         {
-            mLateUpdateTime += Time.deltaTime;
             if (mLateUpdateTime > 0.1f)
             {
-                mLateUpdateTime = 0;
+                mLateUpdateTime -= 0.1f;
 
                 DelayedCall[] workers = mWorkerList.ToArray();
 
@@ -737,6 +736,8 @@ public class InGameManager : MonoBehaviour
                 }
 
             }
+
+            mLateUpdateTime += Time.deltaTime;
 
         }
     }
@@ -1263,7 +1264,7 @@ public class InGameManager : MonoBehaviour
                 nextTarget = FindHammerTarget(pro.ParentFrame);
                 
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 1.0f);
+                CreateHammerEffect(ProductSkill.Hammer, pro.transform.position, nextTarget.transform.position, 0.9f);
 
                 DestroySelfOnly(pro);
                 return DelayedCallRet.Keep;
