@@ -31,6 +31,8 @@ public class RewardUISet : MonoBehaviour
     Transform Gauge(GameObject obj) { return obj.transform.Find("Gauge_Outline"); }
     Image GaugeFillTo(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskTo").GetComponent<Image>(); }
     Image GaugeFillFrom(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskFrom").GetComponent<Image>(); }
+    Image GaugeFocusTo(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskTo/Gauge_Focus").GetComponent<Image>(); }
+    Image GaugeFocusFrom(GameObject obj) { return obj.transform.Find("Gauge_Outline/Gauge_MaskFrom/Gauge_Focus").GetComponent<Image>(); }
     
 
     private void ClearRewards()
@@ -192,18 +194,23 @@ public class RewardUISet : MonoBehaviour
 
     void SetReward_Finished(GameObject rewardObj)
     {
+        LOG.trace();
         BG(rewardObj).color = Color.gray;
         Icon(rewardObj).GetComponent<Image>().color = Color.gray;
+        GaugeFocusFrom(rewardObj).color = Color.gray;
+        GaugeFocusTo(rewardObj).gameObject.SetActive(false);
         FX(rewardObj).gameObject.SetActive(false);
     }
     void SetReward_Ready(GameObject rewardObj)
     {
+        LOG.trace();
         BG(rewardObj).color = Color.white;
         Icon(rewardObj).GetComponent<Image>().color = Color.white;
         FX(rewardObj).gameObject.SetActive(false);
     }
     void SetReward_Rewardable(GameObject rewardObj)
     {
+        LOG.trace();
         BG(rewardObj).color = Color.white;
         Icon(rewardObj).GetComponent<Image>().color = Color.white;
         FX(rewardObj).gameObject.SetActive(true);
@@ -255,7 +262,7 @@ public class RewardUISet : MonoBehaviour
                 mEventItemBarTo.DOKill();
                 mEventItemBarTo.fillAmount = rateTo;
 
-                mEventItemBarFrom.DOFillAmount(rateTo, duration);
+                mEventItemBarFrom.DOFillAmount(rateTo, duration).SetEase(Ease.Linear);
             }
         }
     }

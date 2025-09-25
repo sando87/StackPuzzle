@@ -110,17 +110,22 @@ public class MenuComplete : MonoBehaviour
     {
         UserSetting.UserSettingInfo.GetRateRangeOfEventItem(UserSetting.EventItemExpPerWin, out float rateFrom, out float rateTo);
         GameObject targetObj = _RewardUISet.EventItemReward;
-        GameObject star = Instantiate(EventItemFXPrefab, Star3.transform.position, Quaternion.identity, targetObj.transform);
-        Effects.Add(star);
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star1);
 
-        star.transform.DOLocalMove(Vector3.zero, 1.0f);
+        GameObject starA = Instantiate(EventItemFXPrefab, Star1.transform.position, Quaternion.identity, targetObj.transform);
+        starA.transform.DOLocalMove(Vector3.zero, 1.0f);
+        Effects.Add(starA);
+        GameObject starB = Instantiate(EventItemFXPrefab, Star2.transform.position, Quaternion.identity, targetObj.transform);
+        starB.transform.DOLocalMove(Vector3.zero, 1.0f);
+        Effects.Add(starB);
+        GameObject starC = Instantiate(EventItemFXPrefab, Star3.transform.position, Quaternion.identity, targetObj.transform);
+        starC.transform.DOLocalMove(Vector3.zero, 1.0f);
+        Effects.Add(starC);
+
         yield return new WaitForSeconds(1f);
         
         SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star2);
-        star.GetComponent<ParticleSystem>().Stop();
-        LOG.trace(rateTo);
-        _RewardUISet.SetEventItemRate(rateTo, 1.0f);
+        _RewardUISet.SetEventItemRate(rateFrom, rateTo, 3.0f);
         yield return new WaitForSeconds(1f);
 
         if (rateTo >= 1)
