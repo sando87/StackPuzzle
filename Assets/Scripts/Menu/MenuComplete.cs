@@ -29,6 +29,7 @@ public class MenuComplete : MonoBehaviour
     public static void PopUp(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
         GameObject menuComp = GameObject.Find(UIObjName);
+        menuComp.SetActive(true);
 
         MenuComplete menu = menuComp.GetComponent<MenuComplete>();
         menu.UpdateUIState(level, starCount, score, isFirstClear, isFirstThreeStar);
@@ -59,8 +60,6 @@ public class MenuComplete : MonoBehaviour
         ScoreDisplay.Init(score);
         ScoreDisplay.SetScore(score);
         StageLevel.text = string.Format(LocaleManager.Inst.DoLocaleText("STAGE {0} CLEAR!!", UserSetting.CurrentLang), level);
-
-        gameObject.SetActive(true);
 
         _RewardUISet.UpdateForRewarding(stageInfo, isFirstClear, isFirstThreeStar);
 
