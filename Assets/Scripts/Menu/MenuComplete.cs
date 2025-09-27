@@ -142,7 +142,7 @@ public class MenuComplete : MonoBehaviour
         float curScore = score;
         int prvCoinCount = score / ScorePerCoin;
         int curGold = 0;
-        TextMeshProUGUI goldVal = _RewardUISet.GoldReward.GetComponentInChildren<TextMeshProUGUI>();
+        TextMeshProUGUI goldVal = _RewardUISet.GoldReward.parent.GetComponentInChildren<TextMeshProUGUI>();
         while (curScore > 0)
         {
             float step = score * Time.deltaTime / duration;
@@ -159,7 +159,6 @@ public class MenuComplete : MonoBehaviour
                     curGold += UserSetting.GoldPerCoin;
                     goldVal.text = curGold.ToString();
                     Destroy(coinObj);
-                    SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin2);
                 });
                 SoundPlayer.Inst.PlaySoundEffect(ClipSound.Coin1);
             }

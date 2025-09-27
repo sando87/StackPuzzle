@@ -15,7 +15,7 @@ public class RewardUISet : MonoBehaviour
 
     private StageInfo mStageInfo = null;
 
-    public GameObject GoldReward { get; private set; } = null;
+    public Transform GoldReward { get; private set; } = null;
     public GameObject EventItemReward { get; private set; } = null;
     public GameObject PackBoxReward { get; private set; } = null;
 
@@ -135,11 +135,12 @@ public class RewardUISet : MonoBehaviour
         ClearRewards();
 
         // 기본 골드 보상
-        GoldReward = Instantiate(RewardPrefab, RewardParent.transform);
-        SetIconImage(Icon(GoldReward), PurchaseItemTypeExtensions.GetGoldSprite());
-        Text(GoldReward).gameObject.SetActive(true);
-        Text(GoldReward).text = "0";
-        SetReward_Rewardable(GoldReward);
+        GameObject goldReward = Instantiate(RewardPrefab, RewardParent.transform);
+        SetIconImage(Icon(goldReward), PurchaseItemTypeExtensions.GetGoldSprite());
+        Text(goldReward).gameObject.SetActive(true);
+        Text(goldReward).text = "0";
+        SetReward_Rewardable(goldReward);
+        GoldReward = Icon(goldReward).transform;
 
         var rewardInfos = stageInfo.GetRewardInfos();
         foreach (var rewardInfo in rewardInfos)
