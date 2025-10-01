@@ -53,5 +53,20 @@ public class DataEditor : EditorWindow
         GUILayout.EndVertical();
     }
 
+    [MenuItem("CONTEXT/Transform/RenameAllChild")]
+    static void RenameAllChild(MenuCommand command)
+    {
+        Transform objTr = (Transform)command.context;
+        if (objTr.childCount <= 0)
+            return;
+
+        int startNum = int.Parse(objTr.GetChild(0).name);
+        for (int i = 0; i < objTr.childCount; ++i)
+        {
+            objTr.GetChild(i).name = startNum.ToString();
+            startNum++;
+        }
+    }
+
 }
 #endif
