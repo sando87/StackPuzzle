@@ -232,7 +232,7 @@ public class Frame : MonoBehaviour
         Vector3 startPos = transform.position + new Vector3(0, 0, -2.0f);
         GameObject obj = ObjectPooling.Instance.Instantiate(ComboNumPrefab, startPos, Quaternion.identity, GameManager.transform);
         obj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
-        obj.ReturnAfter(1);
+        obj.ReturnAfter(3);
         Numbers numComp = obj.GetComponent<Numbers>();
         numComp.Number = combo;
         numComp.NumberColor = textColor;
@@ -255,11 +255,14 @@ public class Frame : MonoBehaviour
 
         if(GameManager == InGameManager.InstStage)
         {
-            StartCoroutine(UnityUtils.MoveNatural(obj, GameManager.ScoreTextDest.transform.position, 0.5f, () =>
+            Vector3 dest = GameManager.ScoreTextDest.transform.position;
+            dest.z = obj.transform.position.z;
+            obj.transform.DOScale(0.7f, 0.5f);
+            obj.transform.DOMove(dest, 0.5f).OnComplete(() => 
             {
                 EventScoreText?.Invoke(combo);
                 obj.ReturnAfter();
-            }));
+            });
         }
         else
         {

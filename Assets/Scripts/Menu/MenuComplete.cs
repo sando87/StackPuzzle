@@ -47,6 +47,8 @@ public class MenuComplete : MonoBehaviour
     private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)
     {
         mScore = score;
+        UpdateScorePerCoin();
+        
         mIsFirstClear = isFirstClear;
         mIsFirst3StarClear = isFirstThreeStar;
 
@@ -139,6 +141,8 @@ public class MenuComplete : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         float duration = 3.0f;
         float curScore = score;
+        
+        UpdateScorePerCoin();
         int prvCoinCount = score / ScorePerCoin;
         int curGold = 0;
         TextMeshProUGUI goldVal = _RewardUISet.GoldReward.parent.GetComponentInChildren<TextMeshProUGUI>();
@@ -183,19 +187,23 @@ public class MenuComplete : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
     }
 
-    void DoReward()
+    void UpdateScorePerCoin()
     {
         int coin = mScore / UserSetting.ScorePerCoin;
         if (coin < 12)
         {
             ScorePerCoin = mScore / UnityEngine.Random.Range(10, 14);
-            coin = mScore / ScorePerCoin;
         }
         else
         {
             ScorePerCoin = UserSetting.ScorePerCoin;
-            coin = mScore / ScorePerCoin;
         }
+    }
+
+    void DoReward()
+    {
+        UpdateScorePerCoin();
+        int coin = mScore / ScorePerCoin;
         Purchases.AddGold(coin * UserSetting.GoldPerCoin);
 
         if (mIsFirstClear)

@@ -379,7 +379,7 @@ public class MenuInGame : MonoBehaviour
 
             SoundPlayer.Inst.StopBackMusic();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectSuccess);
-            MenuComplete.PopUp(mStageInfo.Num, starCount, CurrentScore, isFirstClear, isFirstThreeStar);
+            MenuComplete.PopUp(mStageInfo.Num, starCount, InGameManager.InstStage.Billboard.CurrentScore, isFirstClear, isFirstThreeStar);
             InGameManager.InstStage.CleanUpGame();
             Hide();
         }
@@ -566,7 +566,7 @@ public class MenuInGame : MonoBehaviour
 
     void AddScore(int score)
     {
-        int goldBundleUnit = 100;
+        int goldBundleUnit = 1000;
         int prevGoldBundleCount = CurrentScore / goldBundleUnit;
         CurrentScore += score;
         int newGoldBundleCount = CurrentScore / goldBundleUnit;
