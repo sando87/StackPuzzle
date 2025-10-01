@@ -1436,7 +1436,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 1);
+                CreateHammerEffect(ProductSkill.Bomb, productBomb.transform.position, nextTarget.transform.position, 0.9f);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productBomb);
@@ -1463,7 +1463,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 1);
+                CreateHammerEffect(ProductSkill.Horizontal, productHori.transform.position, nextTarget.transform.position, 0.9f);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productHori);
@@ -1490,7 +1490,7 @@ public class InGameManager : MonoBehaviour
                 // 망치가 날아갈 목적지 찾고
                 nextTarget = FindHammerTarget(productHammer.ParentFrame);
                 // 날아가는 연출
-                CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 1);
+                CreateHammerEffect(ProductSkill.Vertical, productVert.transform.position, nextTarget.transform.position, 0.9f);
 
                 DestroySelfOnly(productHammer);
                 DestroySelfOnly(productVert);
@@ -1521,7 +1521,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
-                    CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 1);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerA.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
                 }
                 for (int i = 0; i < 3; ++i)
@@ -1529,7 +1529,7 @@ public class InGameManager : MonoBehaviour
                     // 도착블럭 찾고
                     Frame target = FindHammerTarget(productHammerA.ParentFrame);
                     // 날아가는 연출
-                    CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 1);
+                    CreateHammerEffect(ProductSkill.Hammer, productHammerB.transform.position, target.transform.position, 0.9f);
                     nextTargets.Add(target);
                 }
 
