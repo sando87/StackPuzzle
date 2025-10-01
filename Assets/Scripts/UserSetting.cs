@@ -12,9 +12,8 @@ public class UserSetting
 {
 
     #region Game System Config Values
-    public const int GameVersion = 1;
     public const int NameLengthMin = 3;
-    public const int StageTotalCount = 100;
+    public const int StageTotalCount = 120;
     public const float SameSkillInterval = 0.3f; //SameSkill2 매칭 간격
     public const float ComboMatchInterval = 0.3f; //콤보 매칭간 시간
     public const float MatchReadyInterval = 0.3f; //매칭되고 실제 터지기까지 시간
@@ -203,7 +202,7 @@ public class UserSettingInfo
 {
     private const string KeyVersion = "usi2";
 
-    [SerializeField] private int mVersion = UserSetting.GameVersion;
+    [SerializeField] private int mVersion = 0;
     [SerializeField] private bool mIsTermsAgreement = false;
     [SerializeField] private Int64 mFirstLaunchDate = 0;
     [SerializeField] private bool mIsRequestedReview = false;
@@ -221,7 +220,8 @@ public class UserSettingInfo
 
     public UserSettingInfo()
     {
-        mVersion = UserSetting.GameVersion;
+        float version = float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture);
+        mVersion = (int)(version * 100f);
         mIsTermsAgreement = false;
         mFirstLaunchDate = DateTime.Now.Ticks;
         mIsRequestedReview = false;
@@ -275,6 +275,8 @@ public class UserSettingInfo
         get { return mCurrentLang; }
         set { mCurrentLang = value; Save(); }
     }
+
+    public float Version { get => mVersion * 0.01f; }
 
     public bool IsTermsAgreement
     {
@@ -368,6 +370,23 @@ public class UserSettingInfo
         {
             string jsonUserSettingInfo = File.ReadAllText(path);
             UserSettingInfo info = JsonUtility.FromJson<UserSettingInfo>(jsonUserSettingInfo);
+
+            // 버전업해서 이전 버전의 파일 충돌시 여기서 버전 비교해서 대응 및 호환 처리
+
+            // 스테이지 확장에 대한 대응
+            if (info.mStageStarCount.Length < UserSetting.StageTotalCount)
+            {
+                byte[] old = info.mStageStarCount;
+
+                info.mStageStarCount = new byte[UserSetting.StageTotalCount];
+                for (int i = 0; i < info.mStageStarCount.Length; ++i)
+                    info.mStageStarCount[i] = 0xff;
+
+                Array.Copy(old, 0, info.mStageStarCount, 0, old.Length);
+            }
+
+            float version = float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture);
+            info.mVersion = (int)(version * 100f);
             return info;
         }
         else

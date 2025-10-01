@@ -12,6 +12,7 @@ public class MenuTitle : MonoBehaviour
     private bool mIsTouched = false;
 
     public Slider LoadingBar;
+    public TextMeshProUGUI VersionText;
     public TextMeshProUGUI LoadingText;
     public TextMeshProUGUI StartText;
     public GameObject StartButton;
@@ -69,6 +70,7 @@ public class MenuTitle : MonoBehaviour
         UserSetting.Initialize();
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "15%";
+        VersionText.text = "v" + UserSetting.UserSettingInfo.Version;
 
         // 최초 1회 시스템 언어에 따라 디폴트 언어 세팅
         if (UserSetting.CurrentLang == LocaleSupportLangType.None)
@@ -153,7 +155,9 @@ public class MenuTitle : MonoBehaviour
         uint tickSecond = (uint)(DateTime.Now.Ticks / TimeSpan.TicksPerSecond);
         string sessionID = tickSecond.ToString() + "." + UserSetting.UserInfo.userPk;
         UserSetting.SessionID = sessionID;
-        string log = "GameStart," + UserSetting.SessionID
+        string log = "GameStart"
+        + "," + UserSetting.UserSettingInfo.Version
+        + "," + UserSetting.SessionID
         + "," + Purchases.CountGold()
         + "," + Purchases.CountDiamond()
         + "," + Purchases.CountItem(PurchaseItemType.ExtendLimit)

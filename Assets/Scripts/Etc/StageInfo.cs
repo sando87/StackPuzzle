@@ -130,7 +130,7 @@ public class StageInfo
             else if (tokens[0].Equals("GoalValue")) info.GoalValue = int.Parse(tokens[1]);
             else if (tokens[0].Equals("MoveLimit")) info.MoveLimit = int.Parse(tokens[1]);
             else if (tokens[0].Equals("TimeLimit")) info.TimeLimit = int.Parse(tokens[1]);
-            else if (tokens[0].Equals("ColorCount")) info.ColorCount = float.Parse(tokens[1]);
+            else if (tokens[0].Equals("ColorCount")) info.ColorCount = float.Parse(tokens[1], System.Globalization.CultureInfo.InvariantCulture);
             else if (tokens[0].Equals("MatchingChance")) info.MatchingChance = int.Parse(tokens[1]);
             else if (tokens[0].Equals("RandomSeed")) info.RandomSeed = int.Parse(tokens[1]);
             else if (tokens[0].Equals("StarPoint")) info.StarPoint = int.Parse(tokens[1]);
