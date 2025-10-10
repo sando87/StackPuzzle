@@ -71,12 +71,12 @@ public static class PurchaseItemTypeExtensions
     {
         switch (type)
         {
-            case PurchaseItemType.ExtendLimit: return 100;
-            case PurchaseItemType.RemoveIce: return 250;
-            case PurchaseItemType.MakeSkill1: return 350;
-            case PurchaseItemType.MakeSkill2: return 680;
-            case PurchaseItemType.Meteor: return 820;
-            case PurchaseItemType.KeepCombo: return 1000;
+            case PurchaseItemType.ExtendLimit: return 110;
+            case PurchaseItemType.RemoveIce: return 140;
+            case PurchaseItemType.MakeSkill1: return 200;
+            case PurchaseItemType.MakeSkill2: return 290;
+            case PurchaseItemType.Meteor: return 260;
+            case PurchaseItemType.KeepCombo: return 390;
             default: return 0;
         }
     }
