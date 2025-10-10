@@ -18,10 +18,22 @@ public class SwipeDetector : MonoBehaviour
 
     void Update()
     {
-        if (EventSystem.current.IsPointerOverGameObject(-1))
+        if (IsPointerOverUI())
             return;
 
         CheckSwipe();
+    }
+
+    bool IsPointerOverUI()
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        return EventSystem.current.IsPointerOverGameObject();
+#elif UNITY_ANDROID || UNITY_IOS
+        if (Input.touchCount > 0)
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        else
+            return false;
+#endif
     }
 
     void CheckSwipe()
