@@ -627,7 +627,7 @@ MonoBehaviour:
   EffectCooltime: {fileID: 8300000, guid: b0c7cf81477245f409ae22e24363c9ea, type: 3}
   EffectFirework: {fileID: 8300000, guid: c1a68810c19c74d41b8b36746e3405d5, type: 3}
   EffectDropIce: {fileID: 8300000, guid: dd1160f36063c3648a88be7d8700c7b6, type: 3}
-  EffectBreakIce: {fileID: 8300000, guid: 5211859303672e54d8a36bc99b753668, type: 3}
+  EffectBreakIce: {fileID: 8300000, guid: 1f6c2da656b53bb42a006fca28ac558f, type: 3}
   EffectLevelComplete: {fileID: 8300000, guid: d1fd00eefe75f5d458536344c66b9c26, type: 3}
   EffectBreakStone: {fileID: 8300000, guid: c01c27c574d2f8e448ad66185ade5008, type: 3}
   EffectCashGold: {fileID: 8300000, guid: c0956dc30c2aa9443924858f62e91a5c, type: 3}
