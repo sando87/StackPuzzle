@@ -264,7 +264,7 @@ public class UserSettingInfo
     public PurchaseItemType GetNextEventItem()
     {
         int idx = (int)mNextEventItem + 1;
-        if (idx >= (int)PurchaseItemType.KeepCombo)
+        if (idx > (int)PurchaseItemType.KeepCombo)
             idx = (int)PurchaseItemType.ExtendLimit;
 
         return (PurchaseItemType)idx;
