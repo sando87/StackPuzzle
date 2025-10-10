@@ -3285,7 +3285,7 @@ public class InGameManager : MonoBehaviour
 
         return isSuccess;
     }
-    private int RewardCount()
+    public int RewardCount()
     {
         if (mStageInfo.TimeLimit > 0)
         {

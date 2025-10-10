@@ -157,6 +157,10 @@ public class MenuInGame : MonoBehaviour
         {
             if (success)
             {
+                int addFactor = mStageInfo.XCount + mStageInfo.YCount;
+                int addedScore = InGameManager.InstStage.RewardCount() * addFactor * InGameManager.InstStage.Billboard.CurrentCombo;
+                InGameManager.InstStage.Billboard.PredictScoreOnSkip = InGameManager.InstStage.Billboard.CurrentScore + addedScore;
+
                 PauseButton.gameObject.SetActive(false);
                 SkipButton.gameObject.SetActive(true);
             }
@@ -374,7 +378,7 @@ public class MenuInGame : MonoBehaviour
                 nextStage.UnLock();
             }
 
-            string log = "StageEnd," + UserSetting.SessionID + ",win," + mStageInfo.Num + "," + starCount + "," + CurrentScore;
+            string log = "StageEnd," + UserSetting.SessionID + ",win," + mStageInfo.Num + "," + starCount + "," + InGameManager.InstStage.Billboard.CurrentScore;
             LOG.trace(log);
 
             SoundPlayer.Inst.StopBackMusic();
@@ -490,6 +494,9 @@ public class MenuInGame : MonoBehaviour
 
     public void OnSkip()
     {
+        if (InGameManager.InstStage.Billboard.CurrentScore < InGameManager.InstStage.Billboard.PredictScoreOnSkip)
+            InGameManager.InstStage.Billboard.CurrentScore = InGameManager.InstStage.Billboard.PredictScoreOnSkip;
+            
         FinisStagehGame(true);
     }
 

@@ -16,6 +16,7 @@ public class InGameBillboard
     public int DestroyCount;
     public int MoveCount;
     public int KeepCombo;
+    public int PredictScoreOnSkip;
     public float PlayTime;
     public byte[] ComboCounter = new byte[1024];
     public void Reset(InGameManager mgr)
@@ -35,6 +36,7 @@ public class InGameBillboard
         MoveCount = 0;
         KeepCombo = 0;
         PlayTime = 0;
+        PredictScoreOnSkip = 0;
         Array.Clear(ComboCounter, 0, 1024);
     }
     public string ToCSVString()
