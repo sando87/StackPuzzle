@@ -103,5 +103,5 @@ MonoBehaviour:
   - {fileID: 21300000, guid: f863a726097a437498f9679377cb2a87, type: 3}
   - {fileID: 21300000, guid: ecc23cef2234279449a7c4d8a8d2c0d7, type: 3}
   - {fileID: 21300000, guid: 247f975a3fb81614389322c6bf0c9367, type: 3}
-  IceBreakEffectPrefab: {fileID: 2181236465794078134, guid: c61be0b104de5844390ddd67a31bd86c,
+  IceBreakEffectPrefab: {fileID: 2181236465794078134, guid: 1169eb95f40da7a4d8ce411d4b23c947,
     type: 3}
