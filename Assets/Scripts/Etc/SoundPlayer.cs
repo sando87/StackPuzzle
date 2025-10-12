@@ -59,6 +59,8 @@ public class SoundPlayer : MonoBehaviour
     public AudioClip EffectBreakBomb2;
     public AudioClip EffectBreakSameSkill;
     public AudioClip EffectBreakSameSkill2;
+    public AudioClip EffectBreakHammer1;
+    public AudioClip EffectBreakHammer2;
     public AudioClip EffectBreakFruit;
     public AudioClip EffectSmoke;
 

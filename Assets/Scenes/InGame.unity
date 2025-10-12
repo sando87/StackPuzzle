@@ -640,14 +640,16 @@ MonoBehaviour:
   EffectTouchBush: {fileID: 8300000, guid: dfdd92aed38a6984ba7e0c98e71ac65d, type: 3}
   EffectBreakBush: {fileID: 8300000, guid: 15dbd63185207504dbd7e08ec1ac09c3, type: 3}
   EffectBreakCap: {fileID: 8300000, guid: b831d2e02892c4845b45e67ddb78869a, type: 3}
-  EffectBreakStripe1: {fileID: 8300000, guid: ced20fd263c2a774aa21a464c3877c51, type: 3}
-  EffectBreakStripe2: {fileID: 8300000, guid: 025852ba6545fd24ba4006238d039057, type: 3}
+  EffectBreakStripe1: {fileID: 8300000, guid: 0f6d54091fdd397468b14f73e79f25be, type: 3}
+  EffectBreakStripe2: {fileID: 8300000, guid: 44ad3575dba3f314cab24200aa7fcdbf, type: 3}
   EffectBreakBomb1: {fileID: 8300000, guid: 4026fe59cd79895499a433497b418f98, type: 3}
   EffectBreakBomb2: {fileID: 8300000, guid: f1d9b39d32a672243b6fa1ab0d722c6d, type: 3}
   EffectBreakSameSkill: {fileID: 8300000, guid: cd48c4997b4827a41a1b0519115ac850,
     type: 3}
   EffectBreakSameSkill2: {fileID: 8300000, guid: af39da7023663ab40bea5cda95a19913,
     type: 3}
+  EffectBreakHammer1: {fileID: 8300000, guid: c76740ea820772a4aad14bf0f7cc8abd, type: 3}
+  EffectBreakHammer2: {fileID: 8300000, guid: c76740ea820772a4aad14bf0f7cc8abd, type: 3}
   EffectBreakFruit: {fileID: 8300000, guid: 6be68abd5c2af21429b930c1236d0180, type: 3}
   EffectSmoke: {fileID: 8300000, guid: 1970aadac3b7e1746bbb396b34560c91, type: 3}
   MatchClip:

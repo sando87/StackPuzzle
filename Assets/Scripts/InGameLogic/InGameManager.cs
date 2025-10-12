@@ -1292,6 +1292,8 @@ public class InGameManager : MonoBehaviour
         mUseCombo = true;
         if (productStripe.Skill == ProductSkill.Horizontal)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe1, mSFXVolume);
+            
             productbomb.SkillCasted = true;
             productStripe.SkillCasted = true;
 
@@ -1351,6 +1353,8 @@ public class InGameManager : MonoBehaviour
         }
         else if (productStripe.Skill == ProductSkill.Vertical)
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe1, mSFXVolume);
+
             productbomb.SkillCasted = true;
             productStripe.SkillCasted = true;
 
@@ -4357,6 +4361,8 @@ public class InGameManager : MonoBehaviour
     }
     private void CreateHammerEffect(ProductSkill skillType, Vector2 startPos, Vector2 endPos, float duration)
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakHammer1, mSFXVolume);
+
         GameObject hammerObj = ObjectPooling.Instance.Instantiate(HammerPrefab, startPos, Quaternion.identity, transform);
         hammerObj.transform.localScale = new Vector3(0.6f, 0.6f, 1);
         hammerObj.ReturnAfter(2);
@@ -4367,6 +4373,8 @@ public class InGameManager : MonoBehaviour
         hammerObj.transform.DOMoveY(endPos.y, duration * 0.5f).SetEase(Ease.InQuad).SetDelay(duration * 0.5f);
         hammerObj.transform.DOMoveX(endPos.x, duration).SetEase(Ease.Linear).OnComplete(() =>
         {
+            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakHammer2, mSFXVolume);
+
             hammerObj.ReturnAfter();
         });
         // .OnComplete(() =>
@@ -4423,6 +4431,7 @@ public class InGameManager : MonoBehaviour
         projectail.GetComponent<SpriteRenderer>().enabled = true;
         projectail.transform.GetChild(1).gameObject.SetActive(false);
         projectail.transform.DOMove(new Vector2(destPos.x, destPos.y), duration).SetEase(Ease.Linear).SetDelay(delay)
+        .OnStart(() => SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakStripe2, mSFXVolume))
         .OnComplete(() =>
         {
             projectail.GetComponent<SpriteRenderer>().enabled = false;
