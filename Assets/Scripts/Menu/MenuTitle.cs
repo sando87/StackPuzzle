@@ -75,7 +75,9 @@ public class MenuTitle : MonoBehaviour
         // 최초 1회 시스템 언어에 따라 디폴트 언어 세팅
         if (UserSetting.CurrentLang == LocaleSupportLangType.None)
         {
-            UserSetting.CurrentLang = ConvertLangType(Application.systemLanguage);
+            // 우선 현지화 언어 대응은 영어권 국가만 지원
+            UserSetting.CurrentLang = LocaleSupportLangType.English;
+            // UserSetting.CurrentLang = ConvertLangType(Application.systemLanguage);
         }
 
         Purchases.Initialize();
