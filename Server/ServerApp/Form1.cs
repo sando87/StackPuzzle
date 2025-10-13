@@ -545,7 +545,7 @@ namespace ServerApp
                 //         continue;
                 // }
 
-                float scoreDelta = Math.Abs(me.UserInfo.score - opp.UserInfo.score);
+                float scoreDelta = Math.Abs(me.UserInfo.MatchingScore - opp.UserInfo.MatchingScore);
                 if (scoreDelta < me.DetectRange() && scoreDelta < opp.DetectRange())
                     return opp;
             }
@@ -588,8 +588,18 @@ namespace ServerApp
 
             user.UserInfo.score += deltaScore;
             user.UserInfo.score = Math.Max(user.UserInfo.score, 0);
-            if (isWin) user.UserInfo.win++;
-            if (!isWin) user.UserInfo.lose++;
+            if (isWin)
+            {
+                user.UserInfo.win++;
+                user.UserInfo.winCounter++;
+                user.UserInfo.winCounter = Math.Min(user.UserInfo.winCounter, 3);
+            }
+            else
+            {
+                user.UserInfo.lose++;
+                user.UserInfo.winCounter--;
+                user.UserInfo.winCounter = Math.Max(user.UserInfo.winCounter, -3);
+            }
             user.UserInfo.total++;
             DBManager.Inst().UpdateUserInfo(user.UserInfo);
             user.UserInfo.rankingRate = DBManager.Inst().GetRankingRate(user.UserInfo.score);
@@ -662,10 +672,7 @@ namespace ServerApp
         public float DetectRange()
         {
             float waitTime = MatchingTime();
-            if (UserInfo.score < 300)
-                return waitTime < 3 ? 500 : waitTime < 6 ? 700 : 10000;
-
-            return waitTime < 3 ? 150 : waitTime < 6 ? 300 : waitTime < 10 ? 500 : 10000;
+            return waitTime < 3 ? 150 : waitTime < 6 ? 300 : waitTime < 10 ? 600 : 1000000;
         }
     }
 

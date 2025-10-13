@@ -271,6 +271,8 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void RequestMatch()
     {
+        LOG.trace();
+
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();
@@ -280,6 +282,8 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void RequestMatchMake()
     {
+        LOG.trace();
+
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();
@@ -297,6 +301,8 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void RequestMatchJoin(int roomNumber)
     {
+        LOG.trace();
+        
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.MyUserInfo = UserSetting.UserInfo;
         info.OppUserInfo = new UserInfo();
