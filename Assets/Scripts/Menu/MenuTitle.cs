@@ -146,6 +146,7 @@ public class MenuTitle : MonoBehaviour
         // 알람 기능
         _MobileNotification.SetActive(true);
         yield return new WaitForSeconds(0.1f);
+        MobileNotificationManager.Inst.SetUpAlarm(UserSetting.IsAlarmOn);
         LoadingText.text = "97%";
 
         // 기타 시스템 설정 초기화

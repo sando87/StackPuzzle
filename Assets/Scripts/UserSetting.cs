@@ -60,6 +60,7 @@ public class UserSetting
     public static bool Mute { get { return UserSettingInfo.Mute; } set { UserSettingInfo.Mute = value; } }
     public static float VolumeSFX { get { return UserSettingInfo.VolumeSFX; } set { UserSettingInfo.VolumeSFX = value; } }
     public static float VolumeBackground { get { return UserSettingInfo.VolumeBackground; } set { UserSettingInfo.VolumeBackground = value; } }
+    public static bool IsAlarmOn { get { return UserSettingInfo.IsAlarmOn; } set { UserSettingInfo.IsAlarmOn = value; } }
     public static int TutorialNumber { get { return UserSettingInfo.TutorialNumber; } set { UserSettingInfo.TutorialNumber = value; } }
     public static DateTime GetLastExcuteTime(AdsType type) { return UserSettingInfo.GetLastExcuteTime(type); }
     public static void SetLastExcuteTime(AdsType type, DateTime time) { UserSettingInfo.SetLastExcuteTime(type, time); }
@@ -216,6 +217,7 @@ public class UserSettingInfo
     [SerializeField] private byte[] mStageStarCount = null;
     [SerializeField] private PurchaseItemType mNextEventItem = PurchaseItemType.ExtendLimit;
     [SerializeField] private float mCurrentExpForEventItem = 0;
+    [SerializeField] private bool mIsAlarmOn = true;
 
 
     public UserSettingInfo()
@@ -230,6 +232,7 @@ public class UserSettingInfo
         mCurrentLang = LocaleSupportLangType.None;
         mNextEventItem = PurchaseItemType.ExtendLimit;
         mCurrentExpForEventItem = 0;
+        mIsAlarmOn = true;
 
         for (int i = 0; i < mStageStarCount.Length; ++i)
             mStageStarCount[i] = 0xff;
@@ -301,6 +304,11 @@ public class UserSettingInfo
     {
         get { return mMute; }
         set { mMute = value; Save(); }
+    }
+    public bool IsAlarmOn
+    {
+        get { return mIsAlarmOn; }
+        set { mIsAlarmOn = value; Save(); }
     }
     public float VolumeSFX
     {

@@ -11,14 +11,36 @@ using Unity.Notifications.Android;
 
 public class MobileNotificationManager : MonoBehaviour
 {
+    static private MobileNotificationManager mInst = null;
+    static public MobileNotificationManager Inst
+    {
+        get
+        {
+            if(mInst == null)
+                mInst = GameObject.Find("MobileNotification").GetComponent<MobileNotificationManager>();
+            return mInst;
+        }
+    }
+
     private const string CHANNEL_ID = "oneday_channel";
 
     void Start()
     {
-        Init();
     }
 
-    void Init()
+    public void SetUpAlarm(bool isOn)
+    {
+        if (isOn)
+        {
+            RegisterAlarm();
+        }
+        else
+        {
+            RemoveAllAlarm();
+        }
+    }
+
+    void RegisterAlarm()
     {
 #if UNITY_ANDROID
         // 기존 알림 제거
@@ -44,6 +66,14 @@ public class MobileNotificationManager : MonoBehaviour
 
         // 3. 알림 발송
         AndroidNotificationCenter.SendNotification(notification, CHANNEL_ID);
+#endif
+    }
+
+    void RemoveAllAlarm()
+    {
+#if UNITY_ANDROID
+        // 기존 알림 제거
+        AndroidNotificationCenter.CancelAllScheduledNotifications();
 #endif
     }
 }

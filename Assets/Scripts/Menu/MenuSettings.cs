@@ -20,6 +20,8 @@ public class MenuSettings : MonoBehaviour
     public Image LeagueLevel;
     public TextMeshProUGUI LeagueText;
     public TextMeshProUGUI LangText;
+    public GameObject AlarmOn;
+    public GameObject AlarmOff;
 
     public static void PopUp()
     {
@@ -132,6 +134,8 @@ public class MenuSettings : MonoBehaviour
         LeagueLevel.sprite = UserSetting.UserInfo.maxLeague.GetSprite();
         LeagueText.text = UserSetting.UserInfo.maxLeague.GetText();
         LangText.text = UserSetting.CurrentLang.ToString();
+        AlarmOn.gameObject.SetActive(UserSetting.IsAlarmOn);
+        AlarmOff.gameObject.SetActive(!UserSetting.IsAlarmOn);
 
         int score = UserSetting.UserScore;
         int level = Utils.ToLevel(score);
@@ -162,5 +166,16 @@ public class MenuSettings : MonoBehaviour
             }
 
         });
+    }
+
+    public void OnToggleAlarm(bool isON)
+    {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
+        AlarmOn.gameObject.SetActive(isON);
+        AlarmOff.gameObject.SetActive(!isON);
+
+        UserSetting.IsAlarmOn = isON;
+        MobileNotificationManager.Inst.SetUpAlarm(isON);
     }
 }
