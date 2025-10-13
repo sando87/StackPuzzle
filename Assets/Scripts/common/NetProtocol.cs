@@ -140,7 +140,7 @@ public class UserInfo
     public int userPk = -1;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string userName = "";
-    public int score = 500;
+    public int score = 0;
     public int win = 0;
     public int winCounter = 0;
     public int lose = 0;
@@ -158,7 +158,14 @@ public class UserInfo
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public PurchaseItemType[] PvpItems = new PurchaseItemType[3];
     public MatchingLevel maxLeague = MatchingLevel.Bronze;
-    public int MatchingScore { get => winCounter >= 0 ? score + (winCounter * winCounter * 50) : score - (winCounter * winCounter * 50); }
+    public int MatchingScore
+    {
+        get
+        {
+            int adjScore = score < 500 ? 500 : score;
+            return winCounter >= 0 ? adjScore + (winCounter * winCounter * 50) : adjScore - (winCounter * winCounter * 50);
+        }
+    }
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

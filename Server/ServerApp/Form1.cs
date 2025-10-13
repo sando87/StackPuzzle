@@ -592,13 +592,13 @@ namespace ServerApp
             {
                 user.UserInfo.win++;
                 user.UserInfo.winCounter++;
-                user.UserInfo.winCounter = Math.Min(user.UserInfo.winCounter, 3);
+                user.UserInfo.winCounter = Math.Min(user.UserInfo.winCounter, 5);
             }
             else
             {
                 user.UserInfo.lose++;
                 user.UserInfo.winCounter--;
-                user.UserInfo.winCounter = Math.Max(user.UserInfo.winCounter, -3);
+                user.UserInfo.winCounter = Math.Max(user.UserInfo.winCounter, -5);
             }
             user.UserInfo.total++;
             DBManager.Inst().UpdateUserInfo(user.UserInfo);
