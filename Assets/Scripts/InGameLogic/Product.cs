@@ -142,16 +142,25 @@ namespace JoyPop
         {
             if (destProduct == this)
             {
-                mCollider.enabled = true;
-                ChangeProductImage(skill);
-                IsMerging = false;
-
+                mCollider.enabled = false;
+                IsMerging = true;
+                
                 if (skill == ProductSkill.SameColor)
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, Manager.SFXVolume);
                 else if (skill == ProductSkill.Bomb)
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2, Manager.SFXVolume);
                 else
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1, Manager.SFXVolume);
+                
+                ChangeProductImage(skill);
+                Vector3 localScale = Renderer.transform.localScale;
+                Renderer.transform.DOScale(localScale, 0.3f).From(Vector3.zero);
+
+                Renderer.transform.DORotate(new Vector3(0, 0, 360), 0.3f, RotateMode.FastBeyond360).OnComplete(() =>
+                {
+                    mCollider.enabled = true;
+                    IsMerging = false;
+                });
             }
             else
             {
@@ -160,7 +169,7 @@ namespace JoyPop
                 if (Chain != null)
                     Chain.DestroyChain();
 
-                StartCoroutine(AnimateMoveTo(destProduct.transform.position, 0.2f, () =>
+                StartCoroutine(AnimateMoveTo(destProduct.transform.position, 0.3f, () =>
                 {
                     ReturnToPool();
                 }));
@@ -407,7 +416,7 @@ namespace JoyPop
         }
         public void ChangeProductImage(ProductSkill skill)
         {
-            Animation.Play("swap");
+            // Animation.Play("swap");
             Skill = skill;
             switch (skill)
             {
@@ -419,6 +428,10 @@ namespace JoyPop
                 case ProductSkill.KeepCombo: Renderer.sprite = ImgKeepCombo; break;
                 default: break;
             }
+
+            Vector3 localPos = Renderer.transform.localPosition;
+            localPos.z -= 0.1f;
+            Renderer.transform.localPosition = localPos;
         }
         public void EnableMasking(int order)
         {
