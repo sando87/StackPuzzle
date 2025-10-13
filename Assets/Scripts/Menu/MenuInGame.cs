@@ -250,14 +250,6 @@ public class MenuInGame : MonoBehaviour
         if (btnTypeName.StartsWith("ads"))
         {
             int adsIndex = int.Parse(btnTypeName.Substring(3));
-            if (Purchases.IsAdsSkip())
-            {
-                PurchaseItemType itemType = (PurchaseItemType)(Random.Range(0, (int)PurchaseItemType.Meteor) + 1);
-                ItemSlots[adsIndex].name = itemType.ToInt().ToString();
-                ItemSlots[adsIndex].GetComponentInChildren<Image>().sprite = itemType.GetSprite();
-                return;
-            }
-
             AdsType adsType = adsIndex == 0 ? AdsType.InGameItemA : (adsIndex == 1 ? AdsType.InGameItemB : AdsType.InGameItemC);
             if (GoogleADMob.Inst.IsLoaded(adsType))
             {

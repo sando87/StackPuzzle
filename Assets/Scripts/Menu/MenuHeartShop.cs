@@ -36,18 +36,12 @@ public class MenuHeartShop : MonoBehaviour
         int type = int.Parse(btnObj.name.Replace("ItemType", ""));
 
         //type0 : 영상 15초 : +5 life
-        //type1 : 골드 100 : +5 life
-        //type2 : 다이아 5 : +20 life
-        //type3 : 다이아 20 : infinite life
+        //type1 : 골드 850 : +5 life
+        //type2 : 다이아 3 : +20 life
+        //type3 : 다이아 120 : infinite life
 
         if (type == 0)
         {
-            if (Purchases.IsAdsSkip())
-            {
-                OnChargeHeartFromVideo(AdsType.ChargeLifeA);
-                return;
-            }
-
             if (!NetClientApp.GetInstance().IsNetworkAlive)
             {
                 MenuMessageBox.PopUp("Network NotReachable", false, null);
@@ -75,7 +69,7 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 1)
         {
-            int gold = 100;
+            int gold = 850;
             int lifeCount = 5;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             
@@ -97,7 +91,7 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 2)
         {
-            int diamond = 5;
+            int diamond = 3;
             int lifeCount = 20;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
@@ -125,7 +119,7 @@ public class MenuHeartShop : MonoBehaviour
         }
         else if (type == 3)
         {
-            int diamond = 50;
+            int diamond = 120;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             string msg = string.Format(LocaleManager.Inst.DoLocaleText("{0} diamonds will be consumed", UserSetting.CurrentLang), diamond);
             MenuMessageBox.PopUp(msg, true, (isOK) =>
@@ -170,10 +164,10 @@ public class MenuHeartShop : MonoBehaviour
         while (true)
         {
             remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeA);
-            AdsRewardA.text = remainSec <= 0 ? "15:00" : MenuBattle.TimeToString((int)remainSec);
+            AdsRewardA.text = remainSec <= 0 ? "60:00" : MenuBattle.TimeToString((int)remainSec);
 
-            remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB);
-            AdsRewardB.text = remainSec <= 0 ? "60:00" : MenuBattle.TimeToString((int)remainSec);
+            // remainSec = GoogleADMob.Inst.RemainSec(AdsType.ChargeLifeB);
+            // AdsRewardB.text = remainSec <= 0 ? "60:00" : MenuBattle.TimeToString((int)remainSec);
 
             yield return new WaitForSeconds(1);
         }

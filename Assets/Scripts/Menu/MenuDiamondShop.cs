@@ -35,7 +35,7 @@ public class MenuDiamondShop : MonoBehaviour
 
     public void OnButtonBuyDiaSmall() { TryBuyProduct(IAPProductType.joypop_product_dia1); }
     public void OnButtonBuyDiaBig() { TryBuyProduct(IAPProductType.joypop_product_dia2); }
-    public void OnButtonBuyInifiteLife() { TryBuyProduct(IAPProductType.joypop_product_life); }
+    public void OnButtonBuyDiaMass() { TryBuyProduct(IAPProductType.joypop_product_dia3); }
     public void OnButtonBuyRemoveAds() { TryBuyProduct(IAPProductType.joypop_product_ads); }
 
     void TryBuyProduct(IAPProductType productID)
@@ -78,8 +78,8 @@ public class MenuDiamondShop : MonoBehaviour
             Purchases.PurchaseDiamond(40);
         else if (productID == IAPProductType.joypop_product_dia2)
             Purchases.PurchaseDiamond(200);
-        else if (productID == IAPProductType.joypop_product_life)
-            Purchases.BuyInfiniteLife();
+        else if (productID == IAPProductType.joypop_product_dia3)
+            Purchases.PurchaseDiamond(1000);
         else if (productID == IAPProductType.joypop_product_ads)
             Purchases.PurchaseAdsSkip();
 

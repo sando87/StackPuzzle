@@ -324,22 +324,6 @@ public class MenuBattle : MonoBehaviour
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
         if (btn.name.StartsWith("ads"))
         {
-            if (Purchases.IsAdsSkip())
-            {
-                int adsIndex = int.Parse(btn.name.Substring(3));
-                MenuItemSelector.PopUpByAds((itemType) =>
-                {
-                    PlayerItemSlots[adsIndex].name = itemType.ToInt().ToString();
-                    PlayerItemSlots[adsIndex].SetItem(itemType);
-                    PlayerItemSlots[adsIndex].SetItemImage();
-                    PlayerItemSlots[adsIndex].SetEnable(true);
-                    PlayerItemSlots[adsIndex].HideItemCount();
-
-                    InGameManager.InstPVP_Player.Network_GetItem(itemType, adsIndex);
-                });
-                return;
-            }
-
             MenuMessageBox.PopUp("Rewarded first\nAd will be paid later", true, (isOK) =>
             {
                 if (isOK)
