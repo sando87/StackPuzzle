@@ -13,8 +13,9 @@ public class NetClientApp : MonoBehaviour
 
     public static NetClientApp mInst = null;
     public int ServerPort = 9435;
-    private string ServerAddress = "localhost"; //"sjleeserver.iptime.org";
-    // private string ServerAddress = "ec2-13-124-106-4.ap-northeast-2.compute.amazonaws.com";
+    // private string ServerAddress = "localhost";
+    private string ServerAddress = "ec2-54-151-220-1.ap-southeast-1.compute.amazonaws.com"; // 싱가포르 서버;
+    // private string ServerAddress = "ec2-13-124-106-4.ap-northeast-2.compute.amazonaws.com"; // 서울 서버
 
     TcpClient mSession = null;
     NetworkStream mStream = null;
