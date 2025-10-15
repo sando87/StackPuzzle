@@ -11,6 +11,7 @@ namespace JoyPop
         public ProductColor Color;
         public Animation Animation;
         public SpriteRenderer Renderer;
+        public SpriteRenderer SkillRenderer;
         public Sprite[] ColorImages;
         public GameObject[] WaterDropPrefabs;
         public Sprite ImgHorizontal;
@@ -54,8 +55,10 @@ namespace JoyPop
             IsMoving = false;
             IsDropping = false;
             Color = color;
+            Renderer.enabled = true;
             Renderer.sprite = ColorImages[ColorToIndex(color)];
             Renderer.material.SetColor("_Color", new Color(0, 0, 0, 0));
+            SkillRenderer.gameObject.SetActive(false);
             transform.localScale = new Vector3(0.6f, 0.6f, 1);
             transform.localPosition = new Vector3(0, 0, -1);
             Skill = ProductSkill.Nothing;
@@ -142,8 +145,8 @@ namespace JoyPop
         {
             if (destProduct == this)
             {
-                mCollider.enabled = false;
-                IsMerging = true;
+                mCollider.enabled = true;
+                IsMerging = false;
                 
                 if (skill == ProductSkill.SameColor)
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge3, Manager.SFXVolume);
@@ -151,16 +154,13 @@ namespace JoyPop
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge2, Manager.SFXVolume);
                 else
                     SoundPlayer.Inst.PlaySoundEffect(ClipSound.Merge1, Manager.SFXVolume);
-                
-                ChangeProductImage(skill);
-                Vector3 localScale = Renderer.transform.localScale;
-                Renderer.transform.DOScale(localScale, 0.3f).From(Vector3.zero);
 
-                Renderer.transform.DORotate(new Vector3(0, 0, 360), 0.3f, RotateMode.FastBeyond360).OnComplete(() =>
-                {
-                    mCollider.enabled = true;
-                    IsMerging = false;
-                });
+                ChangeProductImage(skill);
+
+                Renderer.enabled = true;
+                SkillRenderer.transform.DOScale(Vector3.one, 0.3f).From(Vector3.zero).OnComplete(() => Renderer.enabled = false);
+
+                SkillRenderer.transform.DORotate(new Vector3(0, 0, 360), 0.3f, RotateMode.FastBeyond360);
             }
             else
             {
@@ -169,7 +169,7 @@ namespace JoyPop
                 if (Chain != null)
                     Chain.DestroyChain();
 
-                StartCoroutine(AnimateMoveTo(destProduct.transform.position, 0.3f, () =>
+                StartCoroutine(AnimateMoveTo(destProduct.transform.position, 0.2f, () =>
                 {
                     ReturnToPool();
                 }));
@@ -328,10 +328,15 @@ namespace JoyPop
                 light = light < 0 ? 0 : light;
                 light = light > 1 ? 1 : light;
                 Renderer.material.SetColor("_Color", new Color(light, light, light, 0));
+                if (SkillRenderer.gameObject.activeSelf)
+                    SkillRenderer.material.SetColor("_Color", new Color(light, light, light, 0));
                 t += Time.deltaTime;
                 yield return null;
             }
+            
             Renderer.material.color = new Color(0, 0, 0, 0);
+            if (SkillRenderer.gameObject.activeSelf)
+                SkillRenderer.material.color = new Color(0, 0, 0, 0);
         }
 
 
@@ -418,20 +423,18 @@ namespace JoyPop
         {
             // Animation.Play("swap");
             Skill = skill;
+            SkillRenderer.gameObject.SetActive(true);
+            Renderer.enabled = false;
             switch (skill)
             {
-                case ProductSkill.Horizontal: Renderer.sprite = ImgHorizontal; break;
-                case ProductSkill.Vertical: Renderer.sprite = ImgVertical; break;
-                case ProductSkill.Bomb: Renderer.sprite = ImgBomb; break;
-                case ProductSkill.SameColor: Renderer.sprite = ImgSameColor; break;
-                case ProductSkill.Hammer: Renderer.sprite = ImgHammer; break;
-                case ProductSkill.KeepCombo: Renderer.sprite = ImgKeepCombo; break;
+                case ProductSkill.Horizontal: SkillRenderer.sprite = ImgHorizontal; break;
+                case ProductSkill.Vertical: SkillRenderer.sprite = ImgVertical; break;
+                case ProductSkill.Bomb: SkillRenderer.sprite = ImgBomb; break;
+                case ProductSkill.SameColor: SkillRenderer.sprite = ImgSameColor; break;
+                case ProductSkill.Hammer: SkillRenderer.sprite = ImgHammer; break;
+                case ProductSkill.KeepCombo: SkillRenderer.sprite = ImgKeepCombo; break;
                 default: break;
             }
-
-            Vector3 localPos = Renderer.transform.localPosition;
-            localPos.z -= 0.1f;
-            Renderer.transform.localPosition = localPos;
         }
         public void EnableMasking(int order)
         {

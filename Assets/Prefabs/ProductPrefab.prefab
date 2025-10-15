@@ -32,8 +32,8 @@ Transform:
   m_LocalScale: {x: 0.6, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6619821349760222798}
   - {fileID: 5994693275771075153}
+  - {fileID: 6619821349760222798}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -104,6 +104,7 @@ MonoBehaviour:
   Color: 1
   Animation: {fileID: 2859214841169769124}
   Renderer: {fileID: 1825208520085279932}
+  SkillRenderer: {fileID: 2803253163894736081}
   ColorImages:
   - {fileID: 21300000, guid: 33d3b034f7eb8654d81c1c82625961b6, type: 3}
   - {fileID: 21300000, guid: a07c203b6a0d11d478b65b2115a9bfc0, type: 3}
@@ -118,21 +119,12 @@ MonoBehaviour:
   - {fileID: 9212938086510351215, guid: 78e9dcbf9d90d0648aead7770cec0ec5, type: 3}
   - {fileID: 9212938086510351215, guid: 3b1577d44404004438f65888a5814119, type: 3}
   - {fileID: 9212938086510351215, guid: 9606b364686aff245bd1d8adc4f39eb2, type: 3}
-  IceBreakSprites:
-  - {fileID: 21300000, guid: 087ffa7e17791bc45bd99384fcf53c19, type: 3}
-  - {fileID: 21300000, guid: 0e3771d780f52da469b76acdfd05d149, type: 3}
-  - {fileID: 21300000, guid: fe14384f03543094da4a01bef9d5c660, type: 3}
-  - {fileID: 21300000, guid: c47fbddfe10081b47bb951ee69020d01, type: 3}
   ImgHorizontal: {fileID: 21300000, guid: a6bd615bc3ec64ad9b9fac7f4eaa7654, type: 3}
   ImgVertical: {fileID: 21300000, guid: 376f927787651434d829f459c9aade4d, type: 3}
   ImgBomb: {fileID: 21300000, guid: e5e05a422b9f82f469905445f179f73c, type: 3}
   ImgSameColor: {fileID: 21300000, guid: 1ef8c6073aa03dc4eb73f3faf2de4798, type: 3}
   ImgHammer: {fileID: 21300000, guid: f155c897078834e6abd1d72767f75704, type: 3}
   ImgKeepCombo: {fileID: 21300000, guid: 55c014f6f86c740299759cf0e19a0460, type: 3}
-  ImgCombo: {fileID: 21300000, guid: 5b01b2672ab677c4e9b9f1e417379e14, type: 3}
-  ImgClosed: {fileID: 21300000, guid: 794a78f24577c1b4a9e16856b79d7555, type: 3}
-  ComboNumPrefab: {fileID: 898846607419276643, guid: 01cee80dd37ec34448a1865c4cfbc47c,
-    type: 3}
   IcedBlock: {fileID: 1466156896592561910}
 --- !u!61 &5074820504115643339
 BoxCollider2D:
@@ -208,12 +200,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7103423912785193115}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.15, y: -0.15, z: -0.1}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6165751900113006987}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2803253163894736081
 SpriteRenderer:
@@ -235,7 +227,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 0e6191d6a96e9464fa29976720c996e5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -256,7 +248,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: e5e05a422b9f82f469905445f179f73c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a6bd615bc3ec64ad9b9fac7f4eaa7654, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -265,7 +257,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 1
+  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1001 &1454664076648249523
 PrefabInstance:
@@ -287,7 +279,7 @@ PrefabInstance:
     - target: {fileID: 5759634659459907325, guid: 8b84475bbe26ffe40a3f93674d798b52,
         type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5759634659459907325, guid: 8b84475bbe26ffe40a3f93674d798b52,
         type: 3}
