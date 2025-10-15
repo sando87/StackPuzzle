@@ -527,7 +527,7 @@ public class AutoBalancer : MonoBehaviour
         }
         return 10;
     }
-    public static bool IsUseItem()
+    private bool IsUseItem()
     {
         // 세번째 자리수 숫자
         int level = UserSetting.UserInfo.botLevel % 10;

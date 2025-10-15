@@ -126,6 +126,7 @@ public class MenuBattle : MonoBehaviour
             }
             else
             {
+                PlayerItemSlots[i].name = items[i].ToInt().ToString();
                 PlayerItemSlots[i].SetItem(items[i]);
                 PlayerItemSlots[i].SetItemImage();
                 PlayerItemSlots[i].SetEnable(true);

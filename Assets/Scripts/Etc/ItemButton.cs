@@ -90,6 +90,8 @@ public class ItemButton : MonoBehaviour
     public void SetEnable(bool enable)
     {
         ItemImg.color = enable ? Color.white : Color.gray;
+        GetComponent<Image>().color = enable ? Color.white : Color.gray;
+        ItemEmptyImg.color =  enable ? Color.white : Color.gray;
         GetComponent<Button>().enabled = enable;
     }
 

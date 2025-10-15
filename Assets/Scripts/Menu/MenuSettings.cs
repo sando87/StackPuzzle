@@ -55,8 +55,10 @@ public class MenuSettings : MonoBehaviour
 
     public void OnAutoPlay()
     {
+#if UNITY_STANDALONE_WIN
         StopCoroutine("DetectFiveTouch");
         StartCoroutine("DetectFiveTouch");
+#endif
     }
 
     IEnumerator DetectFiveTouch()
@@ -80,7 +82,7 @@ public class MenuSettings : MonoBehaviour
         {
             string currentBotLevel = UserSetting.UserInfo.botLevel.ToString();
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
-            MenuEditBox.PopUp("SwitchingToBot(Write bot level:0~5)", currentBotLevel, (isOK, inputText) =>
+            MenuEditBox.PopUp("SwitchingToBot(000~333)", currentBotLevel, (isOK, inputText) =>
             {
                 if (isOK)
                 {

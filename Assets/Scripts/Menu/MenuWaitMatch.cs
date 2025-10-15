@@ -350,7 +350,7 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
-            if (!AutoBalancer.IsUseItem())
+            if (SkipItemSlot())
                 continue;
 
             int index = UnityEngine.Random.Range(0, itemTypes.Count);
@@ -364,6 +364,21 @@ public class MenuWaitMatch : MonoBehaviour
         }
         
         OnMatch();
+    }
+    private bool SkipItemSlot()
+    {
+        // 세번째 자리수 숫자
+        int level = UserSetting.UserInfo.botLevel % 10;
+        int percent = UnityEngine.Random.Range(0, 1000) % 100;
+        switch (level)
+        {
+            case 0: return false;
+            case 1: return percent < 30;
+            case 2: return percent < 70;
+            case 3: return percent < 100;
+            default: break;
+        }
+        return false;
     }
     private void ResetMatchUI()
     {
