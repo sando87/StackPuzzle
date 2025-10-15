@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuHeartShop : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/LifeShop";
+    private const string UIObjName = "UISpace/CanvasGameUI/LifeShop";
     public TextMeshProUGUI AdsRewardA;
     public TextMeshProUGUI AdsRewardB;
 

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuItemShop : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/ItemShop";
+    private const string UIObjName = "UISpace/CanvasGameUI/ItemShop";
 
     public GameObject ItemStateParent;
     public GameObject ItemSlotPrefab;

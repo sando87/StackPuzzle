@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuGoldShop : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/GoldShop";
+    private const string UIObjName = "UISpace/CanvasGameUI/GoldShop";
 
     public static void PopUp()
     {

@@ -10,7 +10,7 @@ using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 
 public class MenuWaitMatch : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/SearchBattle";
+    private const string UIObjName = "UISpace/CanvasGameUI/SearchBattle";
     private bool mIsSearching = false;
     private int mRoonMakeID = -1;
     private int mRoonJoinID = 1234;

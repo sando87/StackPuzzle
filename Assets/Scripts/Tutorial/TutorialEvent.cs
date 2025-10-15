@@ -31,7 +31,7 @@ public class TutorialEvent : MonoBehaviour
         comp.ParentObject = obj;
         comp.EventUserAction = eventUserAction;
         comp.type = type;
-        comp.UIEvnets = GameObject.Find("UISpace/CanvasPopup").GetComponent<GraphicRaycaster>();
+        comp.UIEvnets = GameObject.Find("UISpace/CanvasGameUI").GetComponent<GraphicRaycaster>();
         comp.WorldEvnets = GameObject.Find("Main Camera").GetComponent<DragStageMap>();
 
         Transform baseTr = obj.transform.Find("Point");

@@ -16,7 +16,7 @@ public class MenuLangSelector : MonoBehaviour
     public static MenuLangSelector PopUp(Action<LocaleSupportLangType> onSelect)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/LangSelector", typeof(GameObject));
-        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasGameUI").transform);
         MenuLangSelector box = objMenu.GetComponent<MenuLangSelector>();
         box.EventSelectLang = onSelect;
         box.UpdateLangSelector();

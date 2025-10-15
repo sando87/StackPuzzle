@@ -13,7 +13,7 @@ public class MenuPVPFriend : MonoBehaviour
     public static MenuPVPFriend PopUp(int defaultJoinID, Action<MatchingFriend, int> eventClick)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/MenuPVPFriend", typeof(GameObject));
-        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasGameUI").transform);
         MenuPVPFriend box = objMenu.GetComponent<MenuPVPFriend>();
         box.EventClick = eventClick;
         box.mDefaultJoinID = defaultJoinID;

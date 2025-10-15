@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class MenuSettings : MonoBehaviour
 {
     private static MenuSettings mInst = null;
-    private const string UIObjName = "UISpace/CanvasPopup/Settings";
+    private const string UIObjName = "UISpace/CanvasGameUI/Settings";
     private int mTouchCount = 0;
 
     public Slider SoundSFX;

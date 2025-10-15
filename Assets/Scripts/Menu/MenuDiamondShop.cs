@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class MenuDiamondShop : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/DiamondShop";
+    private const string UIObjName = "UISpace/CanvasGameUI/DiamondShop";
 
     public static void PopUp()
     {

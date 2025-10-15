@@ -57,6 +57,9 @@ TagManager:
   - name: UI
     uniqueID: 58496801
     locked: 0
+  - name: UIPopup
+    uniqueID: 2595237655
+    locked: 0
   - name: UIParticle
     uniqueID: 133436885
     locked: 0

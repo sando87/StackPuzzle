@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuPlay : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/StageDetail";
+    private const string UIObjName = "UISpace/CanvasGameUI/StageDetail";
     private StageInfo mStageInfo;
 
     public TextMeshProUGUI StageLevel;

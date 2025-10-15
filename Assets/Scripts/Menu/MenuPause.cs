@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuPause : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/PlayPause";
+    private const string UIObjName = "UISpace/CanvasGameUI/PlayPause";
 
     public static void PopUp()
     {

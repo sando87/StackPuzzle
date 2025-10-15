@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuNetConnector : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/MenuNetConnector";
+    private const string UIObjName = "UISpace/CanvasGameUI/MenuNetConnector";
     public TextMeshProUGUI MessageText;
     public Action EventConnect;
 

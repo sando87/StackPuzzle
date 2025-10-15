@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class MenuFailed : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/PlayFailed";
+    private const string UIObjName = "UISpace/CanvasGameUI/PlayFailed";
 
     public static void PopUp()
     {

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 public class MenuComplete : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/PlayComplete";
+    private const string UIObjName = "UISpace/CanvasGameUI/PlayComplete";
 
     public Image Star1;
     public Image Star2;

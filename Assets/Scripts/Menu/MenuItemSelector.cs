@@ -14,7 +14,7 @@ public class MenuItemSelector : MonoBehaviour
     public static MenuItemSelector PopUp(Action<PurchaseItemType> onSelect)
     {
         GameObject prefab = (GameObject)Resources.Load("Prefabs/ItemSelector", typeof(GameObject));
-        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
+        GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasGameUI").transform);
         MenuItemSelector box = objMenu.GetComponent<MenuItemSelector>();
         box.EventSelectItem = onSelect;
         box.UpdateItemSelector();

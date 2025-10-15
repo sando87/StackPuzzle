@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class MenuBattle : MonoBehaviour
 {
     private static MenuBattle mInst = null;
-    private const string UIObjName = "UISpace/CanvasPopup/PVP";
+    private const string UIObjName = "UISpace/CanvasGameUI/PVP";
 
     public GameObject EffectParent;
     public NumbersUI ComboPlayer;

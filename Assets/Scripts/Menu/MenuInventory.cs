@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class MenuInventory : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/Inventory";
+    private const string UIObjName = "UISpace/CanvasGameUI/Inventory";
 
     public GameObject ItemSlots;
     public GameObject ItemSlotPrefab;

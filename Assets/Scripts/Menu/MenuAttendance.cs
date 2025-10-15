@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 public class MenuAttendance : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/Attendance";
+    private const string UIObjName = "UISpace/CanvasGameUI/Attendance";
     public GameObject RewardsParent;
 
     public static MenuAttendance Inst()

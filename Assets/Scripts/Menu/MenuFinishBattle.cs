@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class MenuFinishBattle : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/PlayFinishPVP";
+    private const string UIObjName = "UISpace/CanvasGameUI/PlayFinishPVP";
 
     public GameObject WinEffect;
     public GameObject LoseEffect;

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class MenuTermsAndConditions : MonoBehaviour
 {
     private static MenuTermsAndConditions mInst = null;
-    private const string UIObjName = "UISpace/CanvasPopup/TermsAndConditions";
+    private const string UIObjName = "UISpace/CanvasGameUI/TermsAndConditions";
 
     [SerializeField] private Button BtnAgree = null;
     [SerializeField] private Button BtnDeveloper = null;

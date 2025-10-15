@@ -9,7 +9,7 @@ using SkillPair = System.Tuple<PVPCommand, UnityEngine.Sprite>;
 
 public class MenuPVPReady : MonoBehaviour
 {
-    private const string UIObjName = "UISpace/CanvasPopup/PlayPVPReady";
+    private const string UIObjName = "UISpace/CanvasGameUI/PlayPVPReady";
 
     public Image PlayerLeague;
     public TextMeshProUGUI PlayerName;
