@@ -2879,7 +2879,7 @@ public class InGameManager : MonoBehaviour
 
             GameObject projectileEffect = ObjectPooling.Instance.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            projectileEffect.ReturnAfter(3);
+            // projectileEffect.ReturnAfter(3);
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
@@ -2895,7 +2895,7 @@ public class InGameManager : MonoBehaviour
 
             GameObject projectileEffect = ObjectPooling.Instance.Instantiate(AttackBullet, fromPos, Quaternion.identity, transform);
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
-            projectileEffect.ReturnAfter(3);
+            // projectileEffect.ReturnAfter(3);
 
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
@@ -2961,6 +2961,7 @@ public class InGameManager : MonoBehaviour
     // }
     IEnumerator AnimateAttackNew(GameObject obj, Transform destTr, Action EventEnd)
     {
+        yield return null;
         yield return null;
         float dragFactor = 0.015f;
         float destFactor = 0;

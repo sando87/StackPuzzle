@@ -372,13 +372,13 @@ public class MenuWaitMatch : MonoBehaviour
         int percent = UnityEngine.Random.Range(0, 1000) % 100;
         switch (level)
         {
-            case 0: return false;
-            case 1: return percent < 30;
-            case 2: return percent < 70;
-            case 3: return percent < 100;
+            case 0: return true;
+            case 1: return percent < 70;
+            case 2: return percent < 30;
+            case 3: return percent < 0;
             default: break;
         }
-        return false;
+        return true;
     }
     private void ResetMatchUI()
     {
