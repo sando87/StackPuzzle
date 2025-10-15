@@ -48,7 +48,7 @@ public class IceBlock : MonoBehaviour
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectBreakIce);
 
         GameObject vfx = ObjectPooling.Instance.Instantiate(IceBreakEffectPrefab, transform.position, Quaternion.identity, inGameManager.transform);
-        // vfx.transform.localScale = new Vector3(0.6f, 0.6f, 1);
+        vfx.transform.localScale = new Vector3(1, 1, 1);
         vfx.ReturnAfter(2);
 
         // IceBlock obj = Instantiate(this, transform.position, Quaternion.identity, ParentFrame.transform);

@@ -2726,6 +2726,10 @@ public class InGameManager : MonoBehaviour
             {
                 PVPScoreBar.SetLock(15.0f);
             }
+            else if (FieldType == GameFieldType.pvpOpponent)
+            {
+                PVPScoreBar.SetLock(15.0f);
+            }
         }));
     }
     public bool UseItemBreakce(Vector3 startWorldPos, int count)
