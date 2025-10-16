@@ -33,15 +33,6 @@ public class MenuComplete : MonoBehaviour
 
         MenuComplete menu = menuComp.GetComponent<MenuComplete>();
         menu.UpdateUIState(level, starCount, score, isFirstClear, isFirstThreeStar);
-
-        if (UserSetting.IsBotPlayer)
-            menu.StartCoroutine(menu.AutoEnd());
-    }
-    IEnumerator AutoEnd()
-    {
-        yield return new WaitForSeconds(1);
-        MenuStages.Inst.AutoStartAfterSec(1);
-        OnNext();
     }
 
     private void UpdateUIState(int level, int starCount, int score, bool isFirstClear, bool isFirstThreeStar)

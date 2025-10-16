@@ -26,18 +26,6 @@ public class MenuPlay : MonoBehaviour
         menuPlay.SetActive(true);
         MenuPlay menu = menuPlay.GetComponent<MenuPlay>();
         menu.UpdateUIState(info);
-
-        if (UserSetting.IsBotPlayer)
-            menu.StartCoroutine(menu.AutoStart());
-    }
-    IEnumerator AutoStart()
-    {
-        yield return new WaitForSeconds(1);
-        // ItemButton[] btns = GetComponentsInChildren<ItemButton>();
-        // btns[0].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 1));
-        // btns[1].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 3));
-        // btns[2].SetItem((PurchaseItemType)(UnityEngine.Random.Range(0, 2) + 5));
-        OnPlay();
     }
     public void UpdateUIState(StageInfo info)
     {
@@ -91,15 +79,12 @@ public class MenuPlay : MonoBehaviour
         MenuStages.Hide();
         gameObject.SetActive(false);
 
-        if (!UserSetting.IsBotPlayer)
-        {
-            Purchases.UseHeart();
+        Purchases.UseHeart();
 
-            string log = "StageStart," + UserSetting.SessionID + "," + mStageInfo.Num + "," + Purchases.CountHeart();
-            LOG.trace(log);
+        string log = "StageStart," + UserSetting.SessionID + "," + mStageInfo.Num + "," + Purchases.CountHeart();
+        LOG.trace(log);
 
-            LogToGoogleForms.Instance.LogStageStart(UserSetting.SessionID, mStageInfo.Num);
-        }
+        LogToGoogleForms.Instance.LogStageStart(UserSetting.SessionID, mStageInfo.Num);
     }
 
     private PurchaseItemType[] ScanOwnedItems()

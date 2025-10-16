@@ -330,10 +330,14 @@ public class MenuWaitMatch : MonoBehaviour
         if (!UserSetting.IsBotPlayer)
         {
             Purchases.UseHeart();
-
-            string log = "PVPStart," + UserSetting.SessionID + "," + pvpInfo.OppUserInfo.userPk + "," + Purchases.CountHeart();
-            LOG.trace(log);
         }
+
+        string log = "PVPStart,"
+        + UserSetting.SessionID
+        + "," + pvpInfo.OppUserInfo.userPk
+        + "," + Purchases.CountHeart()
+        + "," + (UserSetting.IsBotPlayer ? "bot" : "user");
+        LOG.trace(log);
 
         //SkillPair[] oppSkillMap = InGameManager.InstPVP_Opponent.SkillMapping;
         //oppSkillMap[(int)ProductColor.Blue] = new Tuple<PVPCommand, Sprite>(opponentInfo.skillBlue, GetSkillimage(opponentInfo.skillBlue));

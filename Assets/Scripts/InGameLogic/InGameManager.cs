@@ -177,9 +177,6 @@ public class InGameManager : MonoBehaviour
             Animator anim = GetComponent<Animator>();
             if (anim != null)
                 anim.enabled = false;
-
-            if (UserSetting.UserInfo.IsBot)
-                AutoBalancer.Instance.StartAI(this);
         }));
     }
     public void StartGameInPVPPlayer(StageInfo info, UserInfo userInfo)

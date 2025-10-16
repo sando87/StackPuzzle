@@ -14,15 +14,6 @@ public class MenuFailed : MonoBehaviour
         MenuFailed menu = menuFailed.GetComponent<MenuFailed>();
 
         menuFailed.SetActive(true);
-
-        if (UserSetting.IsBotPlayer)
-            menu.StartCoroutine(menu.AutoEnd());
-    }
-    IEnumerator AutoEnd()
-    {
-        yield return new WaitForSeconds(1);
-        MenuStages.Inst.AutoStartAfterSec(1);
-        OnAgain();
     }
 
     public void OnAgain()

@@ -21,9 +21,6 @@ public class MenuStages : MonoBehaviour
 
     public GameObject BackgroundStageField;
 
-    private int mAutoNextStageNum = 1;
-
-
     private MenuMessageBox mMenu = null;
 
     private void Start()
@@ -64,24 +61,6 @@ public class MenuStages : MonoBehaviour
         Inst.BackButton.SetActive(false);
         Inst.BottomGroup.SetActive(false);
         Inst.BackgroundStageField.SetActive(false);
-    }
-
-
-    public void AutoStartAfterSec(float second)
-    {
-        Invoke("AutoStartNextStage", second);
-    }
-    private void AutoStartNextStage()
-    {
-        StageInfo stageInfo = StageInfo.Load(mAutoNextStageNum);
-        if (stageInfo == null)
-        {
-            mAutoNextStageNum = 1;
-            stageInfo = StageInfo.Load(mAutoNextStageNum);
-        }
-
-        MenuPlay.PopUp(stageInfo);
-        mAutoNextStageNum++;
     }
 
     public void OnExit()
