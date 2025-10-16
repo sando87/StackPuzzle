@@ -223,7 +223,7 @@ public class MenuBattle : MonoBehaviour
         return min * 60 + sec;
     }
 
-    private void FinishPVPGame(bool success)
+    public void FinishPVPGame(bool success)
     {
         if (mMenu != null)
         {

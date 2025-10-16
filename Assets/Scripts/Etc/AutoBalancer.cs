@@ -172,7 +172,9 @@ public class AutoBalancer : MonoBehaviour
 
             if (skipCount >= 3)
             {
-                // gave up game...
+                MenuBattle.Inst().FinishPVPGame(false);
+                StopAI();
+                yield break;
             }
         }
     }
