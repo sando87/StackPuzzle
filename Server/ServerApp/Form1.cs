@@ -526,7 +526,7 @@ namespace ServerApp
             if (me.UserInfo.IsSkipFindMatching)
                 return null;
 
-            bool botSkip = me.MatchingTime() < mRandomForBotMatching.Next(100);
+            bool botSkip = me.UserInfo.score < 100 ? false : me.MatchingTime() < mRandomForBotMatching.Next(100);
 
             foreach (SessionUser opp in list)
             {
