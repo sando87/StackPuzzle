@@ -532,7 +532,7 @@ public class AutoBalancer : MonoBehaviour
     private bool IsUseItem()
     {
         // 세번째 자리수 숫자
-        int level = UserSetting.UserInfo.botLevel % 10;
+        int level = UserSetting.UserInfo.BotItemLevel;
         int percent = mRandomSeed.Next(0, 1000) % 100;
         switch (level)
         {

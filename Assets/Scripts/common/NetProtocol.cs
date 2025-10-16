@@ -153,6 +153,7 @@ public class UserInfo
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
     public string deviceName = "";
     public bool IsBot { get { return botLevel > 0; } }
+    public int BotItemLevel { get { return botLevel % 10; } }
     public bool IsSkipFindMatching { get { return isSkipFindMatching > 0; } }
     public int NetworkLatency { get; set; } = -1;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]

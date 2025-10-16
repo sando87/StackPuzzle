@@ -366,10 +366,15 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
-            if (SkipItemSlot())
+            // 세번째 자리수 숫자
+            int botItemLevel = UserSetting.UserInfo.BotItemLevel;
+            int percent = UnityEngine.Random.Range(0, 1000) % 100;
+            bool isSkipItemSlot = botItemLevel == 0 ? true : (botItemLevel == 1 ? percent < 70 : (botItemLevel == 2 ? percent < 30 : false));
+            if (isSkipItemSlot)
                 continue;
 
-            int index = UnityEngine.Random.Range(0, itemTypes.Count);
+            int itemMaxCount = botItemLevel == 4 ? itemTypes.Count : itemTypes.Count - 1;
+            int index = UnityEngine.Random.Range(0, itemMaxCount);
             PurchaseItemType itemType = (PurchaseItemType)itemTypes[index];
             itemTypes.RemoveAt(index);
             if (itemType.GetCount() <= 0)
@@ -380,21 +385,6 @@ public class MenuWaitMatch : MonoBehaviour
         }
         
         OnMatch();
-    }
-    private bool SkipItemSlot()
-    {
-        // 세번째 자리수 숫자
-        int level = UserSetting.UserInfo.botLevel % 10;
-        int percent = UnityEngine.Random.Range(0, 1000) % 100;
-        switch (level)
-        {
-            case 0: return true;
-            case 1: return percent < 70;
-            case 2: return percent < 30;
-            case 3: return percent < 0;
-            default: break;
-        }
-        return true;
     }
     private void ResetMatchUI()
     {
