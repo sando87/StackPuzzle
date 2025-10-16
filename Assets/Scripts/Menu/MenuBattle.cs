@@ -111,6 +111,7 @@ public class MenuBattle : MonoBehaviour
                 if (isAdsAdded)
                 {
                     PlayerItemSlots[i].name = "empty";
+                    PlayerItemSlots[i].SetItem(PurchaseItemType.None);
                     PlayerItemSlots[i].SetEmptyImage();
                     PlayerItemSlots[i].SetEnable(false);
                     PlayerItemSlots[i].HideItemCount();
@@ -119,6 +120,7 @@ public class MenuBattle : MonoBehaviour
                 {
                     isAdsAdded = true;
                     PlayerItemSlots[i].name = "ads" + i;
+                    PlayerItemSlots[i].SetItem(PurchaseItemType.None);
                     PlayerItemSlots[i].SetAdsImage();
                     PlayerItemSlots[i].SetEnable(true);
                     PlayerItemSlots[i].HideItemCount();
@@ -143,6 +145,7 @@ public class MenuBattle : MonoBehaviour
                 if (isAdsAdded)
                 {
                     OpponentItemSlots[i].name = "empty";
+                    OpponentItemSlots[i].SetItem(PurchaseItemType.None);
                     OpponentItemSlots[i].SetEmptyImage();
                     OpponentItemSlots[i].SetEnable(false);
                     OpponentItemSlots[i].HideItemCount();
@@ -152,6 +155,7 @@ public class MenuBattle : MonoBehaviour
                 {
                     isAdsAdded = true;
                     OpponentItemSlots[i].name = "ads" + i;
+                    OpponentItemSlots[i].SetItem(PurchaseItemType.None);
                     OpponentItemSlots[i].SetAdsImage();
                     OpponentItemSlots[i].SetEnable(true);
                     OpponentItemSlots[i].HideItemCount();
@@ -160,6 +164,7 @@ public class MenuBattle : MonoBehaviour
             }
             else
             {
+                OpponentItemSlots[i].name = items[i].ToInt().ToString();
                 OpponentItemSlots[i].SetItem(items[i]);
                 OpponentItemSlots[i].SetItemImage();
                 OpponentItemSlots[i].SetEnable(true);
@@ -301,7 +306,7 @@ public class MenuBattle : MonoBehaviour
         {
             if (itemButton.GetItem() == itemType)
             {
-                if (itemButton.IsEnabled())
+                if (itemButton.IsUseable())
                     return true;
             }
         }
@@ -311,7 +316,7 @@ public class MenuBattle : MonoBehaviour
     {
         foreach (ItemButton itemButton in PlayerItemSlots)
         {
-            if (itemButton.GetItem() == itemType && itemButton.IsEnabled())
+            if (itemButton.GetItem() == itemType && itemButton.IsUseable())
             {
                 UseItem(itemButton);
                 itemButton.SetEnable(false);
@@ -433,6 +438,9 @@ public class MenuBattle : MonoBehaviour
         ItemButton btn = null;
         foreach(ItemButton itemBtn in OpponentItemSlots)
         {
+            if (!itemBtn.IsUseable())
+                continue;
+
             if(itemBtn.GetItem() == itemType)
             {
                 btn = itemBtn;

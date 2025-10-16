@@ -17,6 +17,7 @@ public class ItemButton : MonoBehaviour
 
     private PurchaseItemType ItemType = PurchaseItemType.None;
     private Vector2 mIconImgSizeOri = Vector2.zero;
+    private bool mIsUseable = false;
 
     void Awake()
     {
@@ -93,11 +94,12 @@ public class ItemButton : MonoBehaviour
         GetComponent<Image>().color = enable ? Color.white : Color.gray;
         ItemEmptyImg.color =  enable ? Color.white : Color.gray;
         GetComponent<Button>().enabled = enable;
+        mIsUseable = enable;
     }
 
-    public bool IsEnabled()
+    public bool IsUseable()
     {
-        return GetComponent<Button>().enabled;
+        return mIsUseable;
     }
 
     public void AddEvent(Action<PurchaseItemType> eventClick)

@@ -366,6 +366,9 @@ public class MenuWaitMatch : MonoBehaviour
         ItemButton[] btns = GetComponentsInChildren<ItemButton>();
         for (int i = 0; i < 3; ++i)
         {
+            btns[i].SetItem(PurchaseItemType.None);
+            UserSetting.UserInfo.PvpItems[i] = PurchaseItemType.None;
+
             // 세번째 자리수 숫자
             int botItemLevel = UserSetting.UserInfo.BotItemLevel;
             int percent = UnityEngine.Random.Range(0, 1000) % 100;

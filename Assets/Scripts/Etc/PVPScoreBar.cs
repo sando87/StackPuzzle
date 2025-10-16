@@ -42,6 +42,7 @@ public class PVPScoreBar : MonoBehaviour
     // private float mAccScoreOnWaiting = 0;
     // private bool mIsOnWaitting = false;
     private int mTweenCounter = 0;
+    private Coroutine mLockFlicker = null;
 
     void Awake()
     {
@@ -72,6 +73,7 @@ public class PVPScoreBar : MonoBehaviour
 
         InitZoomUISet();
         InitFlushImageObjects();
+        ResetLockImageState();
     }
 
     void InitFlushImageObjects()
@@ -383,34 +385,52 @@ public class PVPScoreBar : MonoBehaviour
     public bool IsLocked { get { return LockImage.gameObject.activeSelf; } }
     public void SetLock(float duration)
     {
+        ResetLockImageState();
+        
         LockImage.gameObject.SetActive(true);
-        StopCoroutine(nameof(CoFlickLockImage));
-        LockImage.DOKill();
-        LockImage.DOFade(1, duration * 0.7f).From(1).OnComplete(() =>
-        {
-            StopCoroutine(nameof(CoFlickLockImage));
-            StartCoroutine(CoFlickLockImage(0.3f));
-        });
-        LockImage.DOFade(1, duration * 0.9f).From(1).OnComplete(() =>
-        {
-            StopCoroutine(nameof(CoFlickLockImage));
-            StartCoroutine(CoFlickLockImage(0.1f));
-        });
-        LockImage.DOFade(1, duration).From(1).OnComplete(() =>
-        {
-            StopCoroutine(nameof(CoFlickLockImage));
-            LockImage.gameObject.SetActive(false);
-        });
+        LockImage.enabled = true;
+        mLockFlicker = StartCoroutine(CoFlickLockImage(duration));
     }
-    IEnumerator CoFlickLockImage(float interval)
+    void ResetLockImageState()
     {
-        while (true)
+        LockImage.gameObject.SetActive(false);
+        LockImage.enabled = false;
+        if (mLockFlicker != null)
+        {
+            StopCoroutine(mLockFlicker);
+            mLockFlicker = null;
+        }
+    }
+    IEnumerator CoFlickLockImage(float duration)
+    {
+        LockImage.enabled = true;
+        yield return new WaitForSeconds(duration * 0.7f);
+
+        float time = duration * 0.7f;
+        float interval = 0.3f;
+        while (time < duration * 0.9f)
         {
             LockImage.enabled = false;
             yield return new WaitForSeconds(interval);
+            time += interval;
             LockImage.enabled = true;
             yield return new WaitForSeconds(interval);
+            time += interval;
         }
+        
+        interval = 0.1f;
+        while (time < duration)
+        {
+            LockImage.enabled = false;
+            yield return new WaitForSeconds(interval);
+            time += interval;
+            LockImage.enabled = true;
+            yield return new WaitForSeconds(interval);
+            time += interval;
+        }
+        
+        LockImage.enabled = false;
+        LockImage.gameObject.SetActive(false);
     }
 
     public void SetAddedIceBlockCount(int addedIceBlockCount)

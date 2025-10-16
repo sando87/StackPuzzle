@@ -542,8 +542,9 @@ public class AutoBalancer : MonoBehaviour
         int percent = mRandomSeed.Next(0, 1000) % 100;
         switch (level)
         {
-            case 1: return percent < 0;
-            case 2: return percent < 50;
+            case 0: return percent < 0;
+            case 1: return percent < 30;
+            case 2: return percent < 70;
             case 3: return percent < 100;
             default: break;
         }

@@ -2704,6 +2704,7 @@ public class InGameManager : MonoBehaviour
         GameObject missile = GameObject.Instantiate(TrailingPrefab, startWorldPos, Quaternion.identity, transform);
         StartCoroutine(UnityUtils.MoveDecelerate(missile, destWorldPos, 0.3f, () =>
         {
+            Destroy(missile.gameObject);
             mIsItemEffect = false;
             if (FieldType == GameFieldType.Stage)
             {
