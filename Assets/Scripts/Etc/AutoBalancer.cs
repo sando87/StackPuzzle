@@ -83,6 +83,12 @@ public class AutoBalancer : MonoBehaviour
                 UseItem(PurchaseItemType.RemoveIce);
                 continue;
             }
+            
+            if (mRandomSeed.Next(0, 1000) % 100 < 5)
+            {
+                MenuBattle.Inst().UseAdsByAutoBot();
+                continue;
+            }
 
             int skipCount = 0;
             if (mode == MODE_SWIPE)

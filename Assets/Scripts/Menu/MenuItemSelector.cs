@@ -9,6 +9,8 @@ using UnityEngine.UI;
 public class MenuItemSelector : MonoBehaviour
 {
     public GameObject ItemSlotRoot;
+    public bool IsHideLastItem = false;
+
     private Action<PurchaseItemType> EventSelectItem = null;
 
     public static MenuItemSelector PopUp(Action<PurchaseItemType> onSelect)
@@ -25,6 +27,10 @@ public class MenuItemSelector : MonoBehaviour
     {
         ItemButton[] slots = ItemSlotRoot.GetComponentsInChildren<ItemButton>();
         int itemTypeCount = System.Enum.GetValues(typeof(PurchaseItemType)).Length;
+        
+        if (IsHideLastItem)
+            itemTypeCount--;
+
         for(int i = 0; i < itemTypeCount; ++i)
         {
             PurchaseItemType type = (PurchaseItemType)i;
@@ -38,6 +44,7 @@ public class MenuItemSelector : MonoBehaviour
         GameObject prefab = (GameObject)Resources.Load("Prefabs/ItemSelector", typeof(GameObject));
         GameObject objMenu = GameObject.Instantiate(prefab, GameObject.Find("UISpace/CanvasPopup").transform);
         MenuItemSelector box = objMenu.GetComponent<MenuItemSelector>();
+        box.IsHideLastItem = true;
         box.EventSelectItem = onSelect;
         box.UpdateItemSelectorByAds();
         return box;

@@ -320,6 +320,27 @@ public class MenuBattle : MonoBehaviour
         }
     }
 
+    public void UseAdsByAutoBot()
+    {
+        for (int i = 0; i < PlayerItemSlots.Length; ++i)
+        {
+            ItemButton itemButton = PlayerItemSlots[i];
+            if (itemButton.name.StartsWith("ads"))
+            {
+                int itemTypeIndex = UnityEngine.Random.Range(0, (int)PurchaseItemType.KeepCombo - 1) + 1;
+                PurchaseItemType itemType = (PurchaseItemType)itemTypeIndex;
+                PlayerItemSlots[i].name = itemType.ToInt().ToString();
+                PlayerItemSlots[i].SetItem(itemType);
+                PlayerItemSlots[i].SetItemImage();
+                PlayerItemSlots[i].SetEnable(true);
+                PlayerItemSlots[i].HideItemCount();
+
+                InGameManager.InstPVP_Player.Network_GetItem(itemType, i);
+                return;
+            }
+        }
+    }
+
     public void OnClickItem()
     {
         ItemButton btn = EventSystem.current.currentSelectedGameObject.GetComponent<ItemButton>();
