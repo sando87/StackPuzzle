@@ -87,7 +87,7 @@ public class MenuWaitMatch : MonoBehaviour
     {
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuInformBox.PopUp("Server Disconnected");
+            TryConnectToServer();
             return;
         }
 
@@ -158,11 +158,23 @@ public class MenuWaitMatch : MonoBehaviour
         }
     }
 
+    void TryConnectToServer()
+    {
+        NetClientApp.GetInstance().TryConnectImmediate();
+        MenuLoading.PopUp("Connecting Server", 10, () => !NetClientApp.GetInstance().IsDisconnected(), () =>
+        {
+            if (NetClientApp.GetInstance().IsDisconnected())
+            {
+                MenuInformBox.PopUp("Connection Failed");
+            }
+        });
+    }
+
     public void OnMatch()
     {
         if (NetClientApp.GetInstance().IsDisconnected())
         {
-            MenuInformBox.PopUp("Server Disconnected");
+            TryConnectToServer();
             return;
         }
 

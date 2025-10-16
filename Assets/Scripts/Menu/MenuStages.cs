@@ -155,27 +155,8 @@ public class MenuStages : MonoBehaviour
         }
 #endif
 
-        if (NetClientApp.GetInstance().IsDisconnected())
-        {
-            NetClientApp.GetInstance().TryConnectImmediate();
-            MenuLoading.PopUp("Connecting Server", 10, () => !NetClientApp.GetInstance().IsDisconnected(), () =>
-            {
-                if (!NetClientApp.GetInstance().IsDisconnected())
-                {
-                    MenuWaitMatch.PopUp();
-                    Hide();
-                }
-                else
-                {
-                    MenuInformBox.PopUp("Connection Failed");
-                }
-            });
-        }
-        else
-        {
-            MenuWaitMatch.PopUp();
-            Hide();
-        }
+        MenuWaitMatch.PopUp();
+        Hide();
     }
     IEnumerator UpdateHeartTimer()
     {
