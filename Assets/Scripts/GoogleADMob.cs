@@ -78,20 +78,29 @@ public class GoogleADMob : MonoBehaviour, IUnityAdsInitializationListener
 
     public int RemainSec(AdsType type)
     {
+#if UNITY_ANDROID || UNITY_IOS
         if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
             return -1;
 
         return (int)AdsUnits[type].RemainSec;
+#else
+        return (int)AdsUnits[type].RemainSec;
+#endif
     }
     public bool IsLoaded(AdsType type)
     {
+#if UNITY_ANDROID || UNITY_IOS
         if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
             return false;
 
         return AdsUnits[type].IsLoaded;
+#else
+        return true;
+#endif
     }
     public void Show(AdsType type, Action<bool> eventReward)
     {
+#if UNITY_ANDROID || UNITY_IOS
         if (!IsSuceessInit || !AdsUnits.ContainsKey(type))
             return;
 
@@ -102,6 +111,10 @@ public class GoogleADMob : MonoBehaviour, IUnityAdsInitializationListener
         }
 
         AdsUnits[type].Show(eventReward);
+#else
+        AdsUnits[type].LastTime = DateTime.Now;
+        eventReward?.Invoke(true);
+#endif
     }
 
     private IEnumerator CheckAdsUnitLoading()
@@ -144,7 +157,7 @@ public class AdsUnit : IUnityAdsLoadListener, IUnityAdsShowListener
     public double Cooltime = 0;
 
     public string AdsUnitID { get { return Application.platform == RuntimePlatform.IPhonePlayer ? AdsID_IOS : AdsID_Adroid; } }
-    private DateTime LastTime = new DateTime();
+    public DateTime LastTime = new DateTime();
     public AdsUnitState State { get; private set; } = AdsUnitState.UnLoaded;
 
     private Action<bool> mEventOnReward = null; // 인자로는 보상 성공 여부를 전달
