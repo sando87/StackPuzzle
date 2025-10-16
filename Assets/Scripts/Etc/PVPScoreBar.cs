@@ -25,13 +25,9 @@ public class PVPScoreBar : MonoBehaviour
 
     public int CurrentScore { get; private set; } = 0;
     public Vector3 RootPosition { get { return RootScoreArea.position; } }
-    public bool IsIdle
-    {
-        get
-        {
-            return Time.time > mTouchedTime + UserSetting.IceFlushInterval;
-        }
-    }
+    public bool IsIdle { get => Time.time > mTouchedTime + UserSetting.IceFlushInterval; }
+    public bool WiilBeIdleSoon { get => Time.time > mTouchedTime + (UserSetting.IceFlushInterval * 0.5f); }
+
 
     private Image mPrevSub = null;
     private float mTouchedTime = 0;

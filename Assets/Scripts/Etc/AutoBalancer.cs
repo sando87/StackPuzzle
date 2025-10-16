@@ -71,8 +71,8 @@ public class AutoBalancer : MonoBehaviour
             if (mCurrentManager.IsFInished || !mCurrentManager.gameObject.activeInHierarchy)
                 break;
 
-            bool isItemUse = IsUseItem();
-            if (isItemUse && IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable())
+            bool isItemUse = IsHitItemUse();
+            if (isItemUse && IsItemPossible(PurchaseItemType.ExtendLimit) && IsFlushedable() && mode != MODE_ATTACK)
             {
                 UseItem(PurchaseItemType.ExtendLimit);
                 continue;
@@ -84,7 +84,7 @@ public class AutoBalancer : MonoBehaviour
                 continue;
             }
             
-            if (mRandomSeed.Next(0, 1000) % 100 < 5)
+            if (isItemUse && mRandomSeed.Next(0, 1000) % 100 < 5 && mCurrentManager.PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack)
             {
                 MenuBattle.Inst().UseAdsByAutoBot();
                 continue;
@@ -535,20 +535,20 @@ public class AutoBalancer : MonoBehaviour
         }
         return 10;
     }
-    private bool IsUseItem()
+    private bool IsHitItemUse()
     {
-        // 세번째 자리수 숫자
-        int level = UserSetting.UserInfo.BotItemLevel;
         int percent = mRandomSeed.Next(0, 1000) % 100;
-        switch (level)
-        {
-            case 0: return percent < 0;
-            case 1: return percent < 30;
-            case 2: return percent < 70;
-            case 3: return percent < 100;
-            default: break;
-        }
-        return false;
+        int refCount = 16;
+        float refSCore = refCount * UserSetting.ScorePerAttack - mCurrentManager.PVPScoreBar.CurrentScore;
+        int curCount = (int)(refSCore / UserSetting.ScorePerAttack);
+        if (curCount < 0)
+            return percent < 3;
+        else if (curCount < 16)
+            return percent < 30;
+        else if (curCount < 32)
+            return percent < 60;
+        else
+            return percent < 80;
     }
     private bool IsValid(Frame frame)
     {
@@ -580,7 +580,9 @@ public class AutoBalancer : MonoBehaviour
     }
     bool IsFlushedable()
     {
-        return mCurrentManager.PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack;
+        return mCurrentManager.PVPScoreBar.CurrentScore < -UserSetting.ScorePerAttack
+                && mCurrentManager.PVPScoreBar.WiilBeIdleSoon
+                && !mCurrentManager.PVPScoreBar.IsLocked;
     }
 
     bool AutoClickKeepCombo()
