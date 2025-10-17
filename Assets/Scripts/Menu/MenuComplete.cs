@@ -122,6 +122,7 @@ public class MenuComplete : MonoBehaviour
 
         if (rateTo >= 1)
         {
+            SoundPlayer.Inst.PlaySoundEffect(ClipSound.Star3);
             Sprite nextEventItemImage = UserSetting.UserSettingInfo.GetNextEventItem().GetSprite();
             _RewardUISet.ChangeEventItemTween(nextEventItemImage);
         }

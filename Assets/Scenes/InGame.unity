@@ -652,6 +652,9 @@ MonoBehaviour:
   EffectBreakHammer2: {fileID: 8300000, guid: c76740ea820772a4aad14bf0f7cc8abd, type: 3}
   EffectBreakFruit: {fileID: 8300000, guid: 6be68abd5c2af21429b930c1236d0180, type: 3}
   EffectSmoke: {fileID: 8300000, guid: 1970aadac3b7e1746bbb396b34560c91, type: 3}
+  EffectGetEventItem: {fileID: 8300000, guid: 458d8fc32bfda3948bc8c4cb9c25afef, type: 3}
+  EffectNewEventItem: {fileID: 8300000, guid: dfbd472768f2bdd40aa383262f3e35a7, type: 3}
+  EffectOpenItemBox: {fileID: 8300000, guid: 298c80baca68e04479819a62722cc709, type: 3}
   MatchClip:
   - {fileID: 8300000, guid: 1970aadac3b7e1746bbb396b34560c91, type: 3}
   - {fileID: 8300000, guid: ce71c284486d9f041bfdaa22f4651a55, type: 3}

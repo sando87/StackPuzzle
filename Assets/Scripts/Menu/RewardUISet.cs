@@ -29,6 +29,7 @@ public class RewardUISet : MonoBehaviour
     Transform FX(GameObject obj) { return obj.transform.Find("Fx_Star"); }
     Transform Glow(GameObject obj) { return obj.transform.Find("Glow"); }
     Transform Adv(GameObject obj) { return obj.transform.Find("Adv"); }
+    bool IsGauge(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG") != null; }
     Image Gauge(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG").GetComponent<Image>(); }
     Image GaugeFillTo(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG/Gauge_Timer_To").GetComponent<Image>(); }
     Image GaugeFillFrom(GameObject obj) { return obj.transform.Find("Gauge_Timer_BG/Gauge_Timer_From").GetComponent<Image>(); }
@@ -207,11 +208,15 @@ public class RewardUISet : MonoBehaviour
     {
         BG(rewardObj).color = Color.gray;
         Icon(rewardObj).GetComponent<Image>().color = Color.gray;
-        Gauge(rewardObj).color = Color.gray;
-        GaugeFillFrom(rewardObj).color = new Color(0.8f, 0.8f, 0.8f, 1);
-        GaugeFillTo(rewardObj).gameObject.SetActive(false);
         FX(rewardObj).gameObject.SetActive(false);
         Text(rewardObj).color = Color.gray;
+        
+        if (IsGauge(rewardObj))
+        {
+            Gauge(rewardObj).color = Color.gray;
+            GaugeFillFrom(rewardObj).color = new Color(0.8f, 0.8f, 0.8f, 1);
+            GaugeFillTo(rewardObj).gameObject.SetActive(false);
+        }
     }
     void SetReward_Ready(GameObject rewardObj)
     {
@@ -310,17 +315,23 @@ public class RewardUISet : MonoBehaviour
 
         yield return new WaitForSeconds(1.5f);
 
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectGetEventItem);
+            
         Vector3 curPos = img.transform.position;
         img.transform.DOMoveY(curPos.y + 1, 1);
         img.DOFade(0, 1);
 
         yield return new WaitForSeconds(0.5f);
 
+        SoundPlayer.Inst.PlaySoundEffect(ClipSound.Swipe);
+
         SetIconImage(img, nextItemImage);
         img.transform.DOMoveY(curPos.y, 1).From(curPos.y - 1);
         img.DOFade(1, 1);
 
         yield return new WaitForSeconds(1.5f);
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectNewEventItem);
 
         img.color = Color.black;
         Gauge(EventItemReward).gameObject.SetActive(true);
@@ -360,6 +371,9 @@ public class RewardUISet : MonoBehaviour
         dimObj.gameObject.SetActive(true);
         dimObj.GetComponent<Image>().DOFade(1, 0.5f);
         yield return new WaitForSeconds(0.5f);
+
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectOpenItemBox);
+
         fxAfter.gameObject.SetActive(true);
 
         items.gameObject.SetActive(true);
