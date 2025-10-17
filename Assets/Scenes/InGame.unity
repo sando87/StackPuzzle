@@ -7963,6 +7963,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: StagePage8
       objectReference: {fileID: 0}
+    - target: {fileID: 777285000132675081, guid: 638b04a5b8c63b548a264d6405ddacee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 777285000132675126, guid: 638b04a5b8c63b548a264d6405ddacee,
         type: 3}
       propertyPath: m_Pivot.x
@@ -29632,6 +29637,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: StagePage7
+      objectReference: {fileID: 0}
+    - target: {fileID: 777285000132675081, guid: 638b04a5b8c63b548a264d6405ddacee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 777285000132675126, guid: 638b04a5b8c63b548a264d6405ddacee,
         type: 3}
@@ -66241,6 +66251,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: StagePage9
       objectReference: {fileID: 0}
+    - target: {fileID: 777285000132675081, guid: 638b04a5b8c63b548a264d6405ddacee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 777285000132675126, guid: 638b04a5b8c63b548a264d6405ddacee,
         type: 3}
       propertyPath: m_Pivot.x
@@ -75747,6 +75762,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: StagePage6
+      objectReference: {fileID: 0}
+    - target: {fileID: 777285000132675081, guid: 638b04a5b8c63b548a264d6405ddacee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 777285000132675126, guid: 638b04a5b8c63b548a264d6405ddacee,
         type: 3}
@@ -158931,6 +158951,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: StagePage10
+      objectReference: {fileID: 0}
+    - target: {fileID: 777285000132675081, guid: 638b04a5b8c63b548a264d6405ddacee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 777285000132675126, guid: 638b04a5b8c63b548a264d6405ddacee,
         type: 3}
