@@ -88,9 +88,8 @@ public class SoundPlayer : MonoBehaviour
             foreach (var item in mRequestedClips)
             {
                 AudioClip clip = item.Key;
-                float volume = item.Value;
-                Player.volume = refvolume * volume;
-                Player.PlayOneShot(clip);
+                float curVolume = refvolume * item.Value;
+                Player.PlayOneShot(clip, curVolume);
             }
             mRequestedClips.Clear();
             Player.volume = refvolume;
@@ -128,7 +127,7 @@ public class SoundPlayer : MonoBehaviour
     {
         float vol = volume;
         if (mRequestedClips.ContainsKey(sound))
-            vol = Mathf.Max(vol, mRequestedClips[sound]);
+            vol = Mathf.Min(vol, mRequestedClips[sound]);
 
         mRequestedClips[sound] = vol;
     }
@@ -137,7 +136,7 @@ public class SoundPlayer : MonoBehaviour
         float vol = volume;
         AudioClip clip = GetAudioClip(sound);
         if (mRequestedClips.ContainsKey(clip))
-            vol = Mathf.Max(vol, mRequestedClips[clip]);
+            vol = Mathf.Min(vol, mRequestedClips[clip]);
 
         mRequestedClips[clip] = vol;
     }
