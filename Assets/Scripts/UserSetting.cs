@@ -279,7 +279,6 @@ public class UserSettingInfo
     }
 
     public float VersionFloat { get => float.Parse(mVersion, System.Globalization.CultureInfo.InvariantCulture); }
-    public string VersionString { get => mVersion; }
 
     public bool IsTermsAgreement
     {
@@ -393,12 +392,12 @@ public class UserSettingInfo
                 Array.Copy(old, 0, info.mStageStarCount, 0, old.Length);
             }
 
-            info.mVersion = Application.version;
             return info;
         }
         else
         {
             UserSettingInfo info = new UserSettingInfo();
+            info.mVersion = Application.version;
             Save(info);
             return info;
         }
@@ -409,6 +408,7 @@ public class UserSettingInfo
 
     private void Save()
     {
+        mVersion = Application.version;
         Save(this);
     }
     
