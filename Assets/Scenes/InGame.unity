@@ -117824,7 +117824,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _androidGameId: 5929726
   _iOSGameId: 5929727
-  _testMode: 1
+  _testMode: 0
   AdsList:
   - AdsType: 1
     AdsID_Adroid: joypop_life
