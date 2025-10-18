@@ -70,7 +70,7 @@ public class MenuTitle : MonoBehaviour
         UserSetting.Initialize();
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "15%";
-        VersionText.text = "v" + UserSetting.UserSettingInfo.Version;
+        VersionText.text = "v" + UserSetting.UserSettingInfo.VersionString;
 
         // 최초 1회 시스템 언어에 따라 디폴트 언어 세팅
         if (UserSetting.CurrentLang == LocaleSupportLangType.None)
@@ -159,7 +159,7 @@ public class MenuTitle : MonoBehaviour
         string sessionID = tickSecond.ToString() + "." + UserSetting.UserInfo.userPk;
         UserSetting.SessionID = sessionID;
         string log = "GameStart"
-        + "," + UserSetting.UserSettingInfo.Version
+        + "," + UserSetting.UserSettingInfo.VersionString
         + "," + UserSetting.SessionID
         + "," + Purchases.CountGold()
         + "," + Purchases.CountDiamond()

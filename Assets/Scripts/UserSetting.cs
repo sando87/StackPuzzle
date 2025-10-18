@@ -203,7 +203,7 @@ public class UserSettingInfo
 {
     private const string KeyVersion = "usi2";
 
-    [SerializeField] private int mVersion = 0;
+    [SerializeField] private string mVersion = "0";
     [SerializeField] private bool mIsTermsAgreement = false;
     [SerializeField] private Int64 mFirstLaunchDate = 0;
     [SerializeField] private bool mIsRequestedReview = false;
@@ -222,8 +222,7 @@ public class UserSettingInfo
 
     public UserSettingInfo()
     {
-        float version = float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture);
-        mVersion = (int)(version * 100f);
+        mVersion = Application.version;
         mIsTermsAgreement = false;
         mFirstLaunchDate = DateTime.Now.Ticks;
         mIsRequestedReview = false;
@@ -279,7 +278,8 @@ public class UserSettingInfo
         set { mCurrentLang = value; Save(); }
     }
 
-    public float Version { get => mVersion * 0.01f; }
+    public float VersionFloat { get => float.Parse(mVersion, System.Globalization.CultureInfo.InvariantCulture); }
+    public string VersionString { get => mVersion; }
 
     public bool IsTermsAgreement
     {
@@ -393,8 +393,7 @@ public class UserSettingInfo
                 Array.Copy(old, 0, info.mStageStarCount, 0, old.Length);
             }
 
-            float version = float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture);
-            info.mVersion = (int)(version * 100f);
+            info.mVersion = Application.version;
             return info;
         }
         else
