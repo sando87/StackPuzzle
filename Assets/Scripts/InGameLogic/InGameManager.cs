@@ -2879,7 +2879,7 @@ public class InGameManager : MonoBehaviour
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             // projectileEffect.ReturnAfter(3);
 
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+            // SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
@@ -2895,7 +2895,7 @@ public class InGameManager : MonoBehaviour
             projectileEffect.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
             // projectileEffect.ReturnAfter(3);
 
-            SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
+            // SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectAttackPVP, mSFXVolume);
 
             StartCoroutine(AnimateAttackNew(projectileEffect, PVPScoreBar.HitPoint.transform, () =>
             {
