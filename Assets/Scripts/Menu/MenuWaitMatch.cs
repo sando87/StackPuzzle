@@ -167,6 +167,10 @@ public class MenuWaitMatch : MonoBehaviour
             {
                 MenuInformBox.PopUp("Connection Failed");
             }
+            else
+            {
+                OnMatch();
+            }
         });
     }
 
@@ -361,33 +365,41 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private IEnumerator AutoMatch()
     {
-        yield return new WaitForSeconds(1);
-        List<int> itemTypes = new List<int>() { 1, 2, 3, 4, 5, 6 };
-        ItemButton[] btns = GetComponentsInChildren<ItemButton>();
-        for (int i = 0; i < 3; ++i)
+        while (true)
         {
-            btns[i].SetItem(PurchaseItemType.None);
-            UserSetting.UserInfo.PvpItems[i] = PurchaseItemType.None;
+            yield return new WaitForSeconds(1);
+            
+            List<int> itemTypes = new List<int>() { 1, 2, 3, 4, 5, 6 };
+            ItemButton[] btns = GetComponentsInChildren<ItemButton>();
+            for (int i = 0; i < 3; ++i)
+            {
+                btns[i].SetItem(PurchaseItemType.None);
+                UserSetting.UserInfo.PvpItems[i] = PurchaseItemType.None;
 
-            // 세번째 자리수 숫자
-            int botItemLevel = UserSetting.UserInfo.BotItemLevel;
-            int percent = UnityEngine.Random.Range(0, 1000) % 100;
-            bool isSkipItemSlot = botItemLevel == 0 ? true : (botItemLevel == 1 ? percent < 70 : (botItemLevel == 2 ? percent < 30 : false));
-            if (isSkipItemSlot)
-                continue;
+                // 세번째 자리수 숫자
+                int botItemLevel = UserSetting.UserInfo.BotItemLevel;
+                int percent = UnityEngine.Random.Range(0, 1000) % 100;
+                bool isSkipItemSlot = botItemLevel == 0 ? true : (botItemLevel == 1 ? percent < 70 : (botItemLevel == 2 ? percent < 30 : false));
+                if (isSkipItemSlot)
+                    continue;
 
-            int itemMaxCount = botItemLevel == 4 ? itemTypes.Count : itemTypes.Count - 1;
-            int index = UnityEngine.Random.Range(0, itemMaxCount);
-            PurchaseItemType itemType = (PurchaseItemType)itemTypes[index];
-            itemTypes.RemoveAt(index);
-            if (itemType.GetCount() <= 0)
-                Purchases.ChargeItemUseGold(itemType, 100, 0);
+                int itemMaxCount = botItemLevel == 4 ? itemTypes.Count : itemTypes.Count - 1;
+                int index = UnityEngine.Random.Range(0, itemMaxCount);
+                PurchaseItemType itemType = (PurchaseItemType)itemTypes[index];
+                itemTypes.RemoveAt(index);
+                if (itemType.GetCount() <= 0)
+                    Purchases.ChargeItemUseGold(itemType, 100, 0);
 
-            btns[i].SetItem(itemType);
-            UserSetting.UserInfo.PvpItems[i] = itemType;
+                btns[i].SetItem(itemType);
+                UserSetting.UserInfo.PvpItems[i] = itemType;
+            }
+
+            OnMatch();
+
+            yield return new WaitForSeconds(60 * 60);
+
+            OnCancle();
         }
-        
-        OnMatch();
     }
     private void ResetMatchUI()
     {
