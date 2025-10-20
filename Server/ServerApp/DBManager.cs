@@ -211,20 +211,16 @@ namespace ServerApp
         {
             try
             {
-                using (var cmd = new NpgsqlCommand())
+                using (var cmd = new NpgsqlCommand("INSERT INTO log (userPk, logTime, message) VALUES (@userPk, now(), @message)", mDBSession))
                 {
-                    string query = String.Format("INSERT INTO log (userPk, logTime, message) VALUES ({0}, now(), '{1}')", log.userPk, log.message);
-                    cmd.Connection = mDBSession;
-                    cmd.CommandText = query;
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        return true;
-                    }
+                    cmd.Parameters.AddWithValue("@userPk", log.userPk);
+                    cmd.Parameters.AddWithValue("@message", log.message);
+                    cmd.ExecuteNonQuery();
                 }
             }
             catch (NpgsqlException ex) { LOG.warn(ex.Message); }
             catch (Exception ex) { LOG.warn(ex.Message); }
-            return false;
+            return true;
         }
         public UserInfo[] GetUsers()
         {
