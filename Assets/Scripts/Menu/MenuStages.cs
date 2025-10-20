@@ -125,7 +125,7 @@ public class MenuStages : MonoBehaviour
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
 
-#if UNITY_ANDROID || UNITY_IOS
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         if (UserSetting.GetHighestStageNumber() < UserSetting.BattleModeUnlockStage)
         {
             string msg = string.Format(LocaleManager.Inst.DoLocaleText("You need to clear {0} Stages", UserSetting.CurrentLang), UserSetting.BattleModeUnlockStage);
