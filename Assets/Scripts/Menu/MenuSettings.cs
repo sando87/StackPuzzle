@@ -55,7 +55,7 @@ public class MenuSettings : MonoBehaviour
 
     public void OnAutoPlay()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE || UNITY_EDITOR
         StopCoroutine("DetectFiveTouch");
         StartCoroutine("DetectFiveTouch");
 #endif
