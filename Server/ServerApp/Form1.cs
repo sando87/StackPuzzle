@@ -609,11 +609,14 @@ namespace ServerApp
         private void ServerMonitoring()
         {
             mMonitoringInfo.userCount = mUsers.Count;
+            mMonitoringInfo.pvpWaittingCount = 0;
             mMonitoringInfo.pvpMatchingCount = 0;
             foreach (var user in mUsers)
             {
                 if (user.Value.MatchState == MatchingState.Matched)
                     mMonitoringInfo.pvpMatchingCount++;
+                else if (user.Value.MatchState == MatchingState.TryMatching)
+                    mMonitoringInfo.pvpWaittingCount++;
 
                 int avg = 0;
                 if (user.Value.Pings.Count > 0)
@@ -685,6 +688,7 @@ namespace ServerApp
         public int networkReadBytes;
         public int networkWriteBytes;
         public int userCount;
+        public int pvpWaittingCount;
         public int pvpMatchingCount;
         public List<string> userPings = new List<string>();
         
@@ -693,6 +697,7 @@ namespace ServerApp
             networkReadBytes = 0;
             networkWriteBytes = 0;
             userCount = 0;
+            pvpWaittingCount = 0;
             pvpMatchingCount = 0;
             userPings.Clear();
         }
@@ -701,7 +706,7 @@ namespace ServerApp
         {
             string pings = String.Join<string>("/", userPings);
             //return "[read : 123] [write : 123] [user : 123] [pvp : 123] [pings : 25/15/35/25/36/47]";
-            return "[read : "+networkReadBytes+ "] [write : "+networkWriteBytes+ "] [user : "+userCount+ "] [pvp : "+pvpMatchingCount+ "] [pings : "+ pings + "]";
+            return "[read : "+networkReadBytes+ "] [write : "+networkWriteBytes+ "] [user : "+userCount + "] [wait : " + pvpWaittingCount + "] [pvp : "+pvpMatchingCount+ "] [pings : "+ pings + "]";
         }
     }
 }
