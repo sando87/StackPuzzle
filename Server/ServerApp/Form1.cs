@@ -671,8 +671,12 @@ namespace ServerApp
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
         public float DetectRange()
         {
+            if (UserInfo.IsBot && UserInfo.IsSkipFindMatching)
+                return 10000;
+
             float waitTime = MatchingTime();
-            return waitTime < 3 ? 150 : waitTime < 6 ? 300 : waitTime < 10 ? 600 : 1000000;
+            float range = waitTime * 100;
+            return range;
         }
     }
 

@@ -163,6 +163,9 @@ public class UserInfo
     {
         get
         {
+            if (IsBot && IsSkipFindMatching)
+                return score;
+
             int adjScore = score < 500 ? 500 : score;
             return winCounter >= 0 ? adjScore + (winCounter * winCounter * 50) : adjScore - (winCounter * winCounter * 50);
         }
