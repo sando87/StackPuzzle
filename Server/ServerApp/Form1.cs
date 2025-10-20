@@ -528,6 +528,9 @@ namespace ServerApp
 
             bool botSkip = me.UserInfo.score < 200 ? false : me.MatchingTime() < mRandomForBotMatching.Next(100);
 
+            SessionUser mostCloseOpp = null;
+            float minScoreDelta = float.MaxValue;
+
             foreach (SessionUser opp in list)
             {
                 if (opp.MatchState != MatchingState.TryMatching)
@@ -547,9 +550,15 @@ namespace ServerApp
 
                 float scoreDelta = Math.Abs(me.UserInfo.MatchingScore - opp.UserInfo.MatchingScore);
                 if (scoreDelta < me.DetectRange() && scoreDelta < opp.DetectRange())
-                    return opp;
+                {
+                    if (scoreDelta < minScoreDelta)
+                    {
+                        minScoreDelta = scoreDelta;
+                        mostCloseOpp = opp;
+                    }
+                }
             }
-            return null;
+            return mostCloseOpp;
         }
 
 
@@ -678,7 +687,7 @@ namespace ServerApp
                 return 10000;
 
             float waitTime = MatchingTime();
-            float range = waitTime * 100;
+            float range = waitTime * waitTime * 30;
             return range;
         }
     }

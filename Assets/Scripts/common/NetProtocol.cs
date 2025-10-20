@@ -166,8 +166,9 @@ public class UserInfo
             if (IsBot && IsSkipFindMatching)
                 return score;
 
-            int adjScore = score < 500 ? 500 : score;
-            return winCounter >= 0 ? adjScore + (winCounter * winCounter * 50) : adjScore - (winCounter * winCounter * 50);
+            int adjScore = winCounter >= 0 ? score + (winCounter * winCounter * 50) : score - (winCounter * winCounter * 50);
+            adjScore = Math.Max(adjScore, 500);
+            return adjScore;
         }
     }
 }
