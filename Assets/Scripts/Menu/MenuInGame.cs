@@ -163,6 +163,8 @@ public class MenuInGame : MonoBehaviour
 
                 PauseButton.gameObject.SetActive(false);
                 SkipButton.gameObject.SetActive(true);
+
+                HideItemSlot();
             }
 
             if (mMenu != null)
@@ -190,6 +192,17 @@ public class MenuInGame : MonoBehaviour
 
             UpdateTimeLimit(remainSec);
         };
+    }
+
+    void HideItemSlot()
+    {
+        foreach (GameObject itemButton in ItemSlots)
+        {
+            Button btn = itemButton.GetComponentInChildren<Button>();
+            btn.enabled = false;
+        }
+
+        GetComponent<Animator>().CrossFade("HideItemSlots", 0);
     }
 
     private int CurrentCombo
