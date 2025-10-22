@@ -130,6 +130,7 @@ public class Header
     public int Length = 0;
     public int Ack = 0;
     public int UserPk = -1;
+    public int Version = 0;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
     public string message = "";
 }

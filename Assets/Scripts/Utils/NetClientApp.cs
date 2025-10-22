@@ -27,11 +27,12 @@ public class NetClientApp : MonoBehaviour
 
     [Serializable]
     public class UnityEventClick : UnityEvent<Header, byte[]> { }
-    public UnityEventClick EventMessage = null;
     public Action EventConnection = null;
     public Int64 RequestID { get => mRequestID; }
 
     public bool IsTryingConnect { get { return mIsTryingConnect; } }
+
+    public bool IsOldVersion { get; private set; } = false;
 
     static public NetClientApp GetInstance()
     {
@@ -77,6 +78,7 @@ public class NetClientApp : MonoBehaviour
             head.RequestID = mRequestID++;
             head.Ack = 0;
             head.UserPk = UserSetting.UserPK;
+            head.Version = (int)(float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture) * 100.0f);
 
             byte[] data = NetProtocol.ToArray(head, Utils.Serialize(body));
 
@@ -102,6 +104,7 @@ public class NetClientApp : MonoBehaviour
             head.RequestID = mRequestID++;
             head.Ack = 0;
             head.UserPk = UserSetting.UserPK;
+            head.Version = (int)(float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture) * 100.0f);
 
             byte[] data = NetProtocol.ToArray(head, body.Serialize());
 
@@ -225,13 +228,16 @@ public class NetClientApp : MonoBehaviour
                 if (recvMsg == null || recvMsg.Magic != 0x12345678)
                     continue;
 
+                int serverVersion = recvMsg.Version;
+                int clientVersion = (int)(float.Parse(Application.version, System.Globalization.CultureInfo.InvariantCulture) * 100.0f);
+                if (clientVersion < serverVersion)
+                    IsOldVersion = true;
+                    
                 if (mHandlerTable.ContainsKey(recvMsg.RequestID))
                 {
                     mHandlerTable[recvMsg.RequestID]?.Invoke(resBody);
                     mHandlerTable.Remove(recvMsg.RequestID);
                 }
-
-                EventMessage?.Invoke(recvMsg, resBody);
             }
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }

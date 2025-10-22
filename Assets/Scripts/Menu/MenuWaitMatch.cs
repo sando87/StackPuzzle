@@ -85,13 +85,19 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatchFriend()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
         if (NetClientApp.GetInstance().IsDisconnected())
         {
             TryConnectToServer();
             return;
         }
-
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        
+        if (NetClientApp.GetInstance().IsOldVersion)
+        {
+            MenuMessageBox.PopUp("You need to update app", false, null);
+            return;
+        }
 
         if (UserSetting.UserName.Length < UserSetting.NameLengthMin)
         {
@@ -176,13 +182,19 @@ public class MenuWaitMatch : MonoBehaviour
 
     public void OnMatch()
     {
+        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+
         if (NetClientApp.GetInstance().IsDisconnected())
         {
             TryConnectToServer();
             return;
         }
 
-        SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
+        if (NetClientApp.GetInstance().IsOldVersion)
+        {
+            MenuMessageBox.PopUp("You need to update app", false, null);
+            return;
+        }
 
         if (UserSetting.UserName.Length < UserSetting.NameLengthMin)
         {

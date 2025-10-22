@@ -14,6 +14,7 @@ namespace ServerApp
 {
     public partial class Form1 : Form
     {
+        const int ServerVersion = 73;
         ServerModule mServer = new ServerModule();
         ServerMonitoringInfo mMonitoringInfo = new ServerMonitoringInfo();
         PerformanceMonitor mPerformanceMon = new PerformanceMonitor();
@@ -206,6 +207,7 @@ namespace ServerApp
                     responseMsg.RequestID = requestMsg.RequestID;
                     responseMsg.Ack = 1;
                     responseMsg.UserPk = requestMsg.UserPk;
+                    responseMsg.Version = ServerVersion;
 
                     byte[] responseData = NetProtocol.ToArray(responseMsg, Utils.Serialize(resBody));
                     mServer.SendData(mCurrentSession.Endpoint, responseData);
@@ -383,6 +385,7 @@ namespace ServerApp
                 Header finishMsg = new Header();
                 finishMsg.Cmd = NetCMD.EndPVP;
                 finishMsg.UserPk = mCurrentSession.UserInfo.userPk;
+                finishMsg.Version = ServerVersion;
 
                 byte[] response = NetProtocol.ToArray(finishMsg, Utils.Serialize(requestBody));
                 mServer.SendData(oppSessoion.Endpoint, response);
@@ -408,6 +411,7 @@ namespace ServerApp
             responseMsg.Cmd = NetCMD.PVP;
             responseMsg.RequestID = reqID;
             responseMsg.UserPk = mCurrentSession.UserInfo.userPk;
+            responseMsg.Version = ServerVersion;
 
             byte[] response = NetProtocol.ToArray(responseMsg, requestBody.Serialize());
             if (mServer.SendData(oppSessoion.Endpoint, response) <= 0)
@@ -514,6 +518,7 @@ namespace ServerApp
             Header responseMsg = new Header();
             responseMsg.Cmd = NetCMD.SearchOpponent;
             responseMsg.UserPk = destSession.UserInfo.userPk;
+            responseMsg.Version = ServerVersion;
 
             byte[] response = NetProtocol.ToArray(responseMsg, Utils.Serialize(body));
             mServer.SendData(destSession.Endpoint, response);
