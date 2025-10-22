@@ -58,8 +58,8 @@ public class MobileNotificationManager : MonoBehaviour
 
         // 2. 알림 생성
         var notification = new AndroidNotification();
-        notification.Title = "Come back to the game!";
-        notification.Text = "A dat has passed.Please try connecting again!";
+        notification.Title = "A day has passed";
+        notification.Text = "Come back and enjoy the game!";
         notification.SmallIcon = "NotificationIcon";      // Assets/Plugins/Android/Res/drawable/icon_0.png 24x24~96x96 작은 아이콘 (필수), 배경 투명, 아이콘 단색
         // notification.LargeIcon = "icon_1";      // Assets/Plugins/Android/Res/drawable/icon_1.png 128x128 큰 아이콘 (선택)
         notification.FireTime = System.DateTime.Now.AddDays(1); // 하루 뒤 실행
