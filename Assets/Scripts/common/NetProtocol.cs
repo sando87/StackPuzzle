@@ -163,8 +163,14 @@ public class UserInfo
     {
         get
         {
-            int adjScore = score < 500 ? 500 : score;
-            return winCounter >= 0 ? adjScore + (winCounter * winCounter * 50) : adjScore - (winCounter * winCounter * 50);
+            if (IsBot && IsSkipFindMatching)
+                return score;
+
+            int adjScore = Math.Max(score, 500);
+            adjScore = winCounter >= 0 ? adjScore + (winCounter * winCounter * 50) : adjScore - (winCounter * winCounter * 50);
+            adjScore = Math.Max(adjScore, 0);
+
+            return adjScore;
         }
     }
 }

@@ -53,7 +53,7 @@ public class MenuDiamondShop : MonoBehaviour
             OnResultPurchase(productID, isSuccess);
         });
 #else
-        MenuMessageBox.PopUp("구매진행(개발자용) : " + productID, true, (isOK) =>
+        MenuMessageBox.PopUp("Purchase(Test) : " + productID, true, (isOK) =>
         {
             if(isOK)
                 OnResultPurchase(productID, true);

@@ -528,8 +528,11 @@ namespace ServerApp
 
             bool botSkip = me.UserInfo.score < 200 ? false : me.MatchingTime() < mRandomForBotMatching.Next(100);
 
-            foreach (SessionUser opp in list)
+            int startIdx = mRandomForBotMatching.Next(list.Length);
+            for (int i = 0; i < list.Length; ++i)
             {
+                int idx = (i + startIdx) % list.Length;
+                SessionUser opp = list[idx];
                 if (opp.MatchState != MatchingState.TryMatching)
                     continue;
 
@@ -547,7 +550,9 @@ namespace ServerApp
 
                 float scoreDelta = Math.Abs(me.UserInfo.MatchingScore - opp.UserInfo.MatchingScore);
                 if (scoreDelta < me.DetectRange() && scoreDelta < opp.DetectRange())
+                {
                     return opp;
+                }
             }
             return null;
         }
@@ -609,11 +614,14 @@ namespace ServerApp
         private void ServerMonitoring()
         {
             mMonitoringInfo.userCount = mUsers.Count;
+            mMonitoringInfo.pvpWaittingCount = 0;
             mMonitoringInfo.pvpMatchingCount = 0;
             foreach (var user in mUsers)
             {
                 if (user.Value.MatchState == MatchingState.Matched)
                     mMonitoringInfo.pvpMatchingCount++;
+                else if (user.Value.MatchState == MatchingState.TryMatching)
+                    mMonitoringInfo.pvpWaittingCount++;
 
                 int avg = 0;
                 if (user.Value.Pings.Count > 0)
@@ -671,8 +679,12 @@ namespace ServerApp
         public float MatchingTime() { return (float)(DateTime.Now - MatchingStartTime).TotalSeconds; }
         public float DetectRange()
         {
+            if (UserInfo.IsBot && UserInfo.IsSkipFindMatching)
+                return 10000;
+
             float waitTime = MatchingTime();
-            return waitTime < 3 ? 150 : waitTime < 6 ? 300 : waitTime < 10 ? 600 : 1000000;
+            float range = waitTime * waitTime * 30;
+            return range;
         }
     }
 
@@ -681,6 +693,7 @@ namespace ServerApp
         public int networkReadBytes;
         public int networkWriteBytes;
         public int userCount;
+        public int pvpWaittingCount;
         public int pvpMatchingCount;
         public List<string> userPings = new List<string>();
         
@@ -689,6 +702,7 @@ namespace ServerApp
             networkReadBytes = 0;
             networkWriteBytes = 0;
             userCount = 0;
+            pvpWaittingCount = 0;
             pvpMatchingCount = 0;
             userPings.Clear();
         }
@@ -697,7 +711,7 @@ namespace ServerApp
         {
             string pings = String.Join<string>("/", userPings);
             //return "[read : 123] [write : 123] [user : 123] [pvp : 123] [pings : 25/15/35/25/36/47]";
-            return "[read : "+networkReadBytes+ "] [write : "+networkWriteBytes+ "] [user : "+userCount+ "] [pvp : "+pvpMatchingCount+ "] [pings : "+ pings + "]";
+            return "[read : "+networkReadBytes+ "] [write : "+networkWriteBytes+ "] [user : "+userCount + "] [wait : " + pvpWaittingCount + "] [pvp : "+pvpMatchingCount+ "] [pings : "+ pings + "]";
         }
     }
 }
