@@ -473,7 +473,7 @@ namespace ServerApp
 
             // 상위 티어의 두명이 만나면 더 어려운 맵으로 대전
             MatchingLevel mapLevel = MatchingLevel.Bronze;
-            if (userA.UserInfo.score > 900 && userB.UserInfo.score> 900)
+            if (userA.UserInfo.score > 1000 && userB.UserInfo.score> 1000)
                 mapLevel = MatchingLevel.Silver;
 
             int seed = (int)DateTime.Now.Ticks;
