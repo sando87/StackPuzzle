@@ -14,7 +14,7 @@ namespace ServerApp
 {
     public partial class Form1 : Form
     {
-        const int ServerVersion = 73;
+        const int ServerVersion = 74;
         ServerModule mServer = new ServerModule();
         ServerMonitoringInfo mMonitoringInfo = new ServerMonitoringInfo();
         PerformanceMonitor mPerformanceMon = new PerformanceMonitor();
