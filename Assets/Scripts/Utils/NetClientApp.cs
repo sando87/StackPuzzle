@@ -27,6 +27,7 @@ public class NetClientApp : MonoBehaviour
 
     [Serializable]
     public class UnityEventClick : UnityEvent<Header, byte[]> { }
+    public UnityEventClick EventMessage = null;
     public Action EventConnection = null;
     public Int64 RequestID { get => mRequestID; }
 
@@ -238,6 +239,8 @@ public class NetClientApp : MonoBehaviour
                     mHandlerTable[recvMsg.RequestID]?.Invoke(resBody);
                     mHandlerTable.Remove(recvMsg.RequestID);
                 }
+
+                EventMessage?.Invoke(recvMsg, resBody);
             }
         }
         catch (SocketException ex) { LOG.warn(ex.Message); DisConnect(); }
