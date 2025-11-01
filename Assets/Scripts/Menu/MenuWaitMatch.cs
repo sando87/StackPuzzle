@@ -299,7 +299,8 @@ public class MenuWaitMatch : MonoBehaviour
     }
     private void RequestMatch()
     {
-        LOG.trace();
+        if (!UserSetting.IsBotPlayer)
+            LOG.trace();
 
         SearchOpponentInfo info = new SearchOpponentInfo();
         info.MyUserInfo = UserSetting.UserInfo;

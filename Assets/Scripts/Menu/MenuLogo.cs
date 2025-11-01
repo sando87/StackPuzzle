@@ -26,7 +26,7 @@ public class MenuLogo : MonoBehaviour
         }
         LogoForeground.color = new Color(0, 0, 0, 0);
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1f);
 
         time = 0;
         while (time < duration)
