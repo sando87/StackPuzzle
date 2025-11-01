@@ -84,6 +84,21 @@ public class MenuTitle : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         LoadingText.text = "20%";
 
+        // 네트워크매니저
+        _NetworkObject.EventConnection = OnNetConnected;
+        _NetworkObject.gameObject.SetActive(true);
+        yield return new WaitUntil(() => !_NetworkObject.IsTryingConnect);
+        LoadingText.text = "45%";
+        if (!_NetworkObject.IsDisconnected())
+        {
+            yield return new WaitUntil(() => UserSetting.UserPK >= 0);
+            LOG.trace("NetConnection[ OK ]");
+        }
+        else
+        {
+            LOG.trace("NetConnection[ Failed ]");
+        }
+
         // 약정 동의
         if (!UserSetting.IsTermsAgreement)
         {
@@ -95,12 +110,6 @@ public class MenuTitle : MonoBehaviour
 
             yield return new WaitUntil(() => UserSetting.IsTermsAgreement);
         }
-
-        // 네트워크매니저
-        _NetworkObject.EventConnection = OnNetConnected;
-        _NetworkObject.gameObject.SetActive(true);
-        yield return new WaitUntil(() => !_NetworkObject.IsTryingConnect);
-        LoadingText.text = "45%";
 
         // 로그 - 구글폼
         _LogToGoogleForms.gameObject.SetActive(true);
@@ -233,7 +242,6 @@ public class MenuTitle : MonoBehaviour
 
     public void OnNetConnected()
     {
-        LOG.trace("NetConnection[ OK ]");
         if (UserSetting.UserInfo.userPk < 0)
             UserSetting.AddNewUserInfoToServer();
         else
@@ -247,13 +255,15 @@ public class MenuTitle : MonoBehaviour
     {
         LOG.LogWriterConsole = (msg) => { Debug.Log(msg); };
         // LOG.IsNetworkAlive = () => { return !NetClientApp.GetInstance().IsDisconnected(); };
-        LOG.LogStringWriterDB = (msg) => {
+        LOG.LogStringWriterDB = (msg) =>
+        {
             LogInfo info = new LogInfo();
             info.userPk = UserSetting.UserPK;
             info.message = msg;
             return NetClientApp.GetInstance().Request(NetCMD.AddLog, info, null);
         };
-        LOG.LogBytesWriterDB = (data) => {
+        LOG.LogBytesWriterDB = (data) =>
+        {
             LogFile info = new LogFile();
             info.userPk = UserSetting.UserPK;
             info.data = data;
