@@ -49,7 +49,7 @@ public static class PurchaseItemTypeExtensions
             case PurchaseItemType.RemoveIce: return "Break obstacles";
             case PurchaseItemType.MakeSkill1: return "Generate bomb blocks";
             case PurchaseItemType.KeepCombo: return "Keep combo";
-            case PurchaseItemType.MakeSkill2: return "Generate ranbow blocks";
+            case PurchaseItemType.MakeSkill2: return "Generate rainbow blocks";
             case PurchaseItemType.Meteor: return "Meteor fall";
             default: return "Unknown";
         }
