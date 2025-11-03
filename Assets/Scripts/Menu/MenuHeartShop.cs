@@ -32,6 +32,12 @@ public class MenuHeartShop : MonoBehaviour
     
     public void OnChargeHeart()
     {
+        if (Purchases.IsHeartMax())
+        {
+            MenuInformBox.PopUp("LIFE Max");
+            return;
+        }
+            
         GameObject btnObj = EventSystem.current.currentSelectedGameObject;
         int type = int.Parse(btnObj.name.Replace("ItemType", ""));
 
@@ -73,18 +79,13 @@ public class MenuHeartShop : MonoBehaviour
             int lifeCount = 5;
             SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton1);
             
-            if (Purchases.IsHeartMax())
-                MenuInformBox.PopUp("LIFE Max");
+            if (Purchases.ChargeHeartWithGold(lifeCount, gold))
+            {
+                MenuInformBox.PopUp("Success");
+            }
             else
             {
-                if (Purchases.ChargeHeartWithGold(lifeCount, gold))
-                {
-                    MenuInformBox.PopUp("Success");
-                }
-                else
-                {
-                    MenuInformBox.PopUp("Not enough golds");
-                }
+                MenuInformBox.PopUp("Not enough golds");
             }
 
             MenuStages.Inst.UpdateTopPanel();
@@ -99,18 +100,13 @@ public class MenuHeartShop : MonoBehaviour
             {
                 if (isOK)
                 {
-                    if(Purchases.IsHeartMax())
-                        MenuInformBox.PopUp("LIFE Max");
+                    if (Purchases.ChargeHeartWithDia(lifeCount, diamond))
+                    {
+                        MenuInformBox.PopUp("Success");
+                    }
                     else
                     {
-                        if (Purchases.ChargeHeartWithDia(lifeCount, diamond))
-                        {
-                            MenuInformBox.PopUp("Success");
-                        }
-                        else
-                        {
-                            MenuInformBox.PopUp("Not enough diamonds");
-                        }
+                        MenuInformBox.PopUp("Not enough diamonds");
                     }
 
                     MenuStages.Inst.UpdateTopPanel();

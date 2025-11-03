@@ -32,20 +32,10 @@ public class MenuTermsAndConditions : MonoBehaviour
 
     public void UpdateUI()
     {
-        if (UserSetting.IsTermsAgreement)
-        {
-            BtnAgree.gameObject.SetActive(false);
-            BtnDeveloper.gameObject.SetActive(false);
-            BtnClose.gameObject.SetActive(true);
-            DeveloperView.SetActive(false);
-        }
-        else
-        {
-            BtnAgree.gameObject.SetActive(true);
-            BtnDeveloper.gameObject.SetActive(false);
-            BtnClose.gameObject.SetActive(false);
-            DeveloperView.SetActive(false);
-        }
+        BtnAgree.gameObject.SetActive(true);
+        BtnDeveloper.gameObject.SetActive(false);
+        BtnClose.gameObject.SetActive(false);
+        DeveloperView.SetActive(false);
     }
 
     public void OnAgree()

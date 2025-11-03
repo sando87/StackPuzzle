@@ -47,9 +47,9 @@ public static class PurchaseItemTypeExtensions
         {
             case PurchaseItemType.ExtendLimit: return "Extends limits";
             case PurchaseItemType.RemoveIce: return "Break obstacles";
-            case PurchaseItemType.MakeSkill1: return "Generate skill1 blocks";
+            case PurchaseItemType.MakeSkill1: return "Generate bomb blocks";
             case PurchaseItemType.KeepCombo: return "Keep combo";
-            case PurchaseItemType.MakeSkill2: return "Generate skill2 blocks";
+            case PurchaseItemType.MakeSkill2: return "Generate ranbow blocks";
             case PurchaseItemType.Meteor: return "Meteor fall";
             default: return "Unknown";
         }
