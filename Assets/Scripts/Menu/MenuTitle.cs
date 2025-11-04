@@ -87,6 +87,7 @@ public class MenuTitle : MonoBehaviour
         // 네트워크매니저
         _NetworkObject.EventConnection = OnNetConnected;
         _NetworkObject.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
         yield return new WaitUntil(() => !_NetworkObject.IsTryingConnect);
         LoadingText.text = "45%";
         if (!_NetworkObject.IsDisconnected())
