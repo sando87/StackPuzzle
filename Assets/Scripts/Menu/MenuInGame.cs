@@ -219,7 +219,7 @@ public class MenuInGame : MonoBehaviour
                 ComboNumber.SetNumber(value);
         }
     }
-    
+
     public bool IsItemPossible(PurchaseItemType itemType)
     {
         foreach (GameObject itemButton in ItemSlots)
@@ -246,9 +246,11 @@ public class MenuInGame : MonoBehaviour
                     Button btn = itemButton.GetComponentInChildren<Button>();
                     if (btn.enabled)
                     {
-                        UseItem(btn);
-                        btn.GetComponentInChildren<Image>().color = Color.gray;
-                        btn.enabled = false;
+                        if (UseItem(btn))
+                        {
+                            btn.GetComponentInChildren<Image>().color = Color.gray;
+                            btn.enabled = false;
+                        }
                         return;
                     }
                 }
@@ -280,13 +282,19 @@ public class MenuInGame : MonoBehaviour
         }
         else
         {
-            UseItem(btn);
-            btn.GetComponentInChildren<Image>().color = Color.gray;
-            btn.enabled = false;
+            if (UseItem(btn))
+            {
+                btn.GetComponentInChildren<Image>().color = Color.gray;
+                btn.enabled = false;
+            }
+            else
+            {
+                MenuMessageBox.PopUp("No effect right now", false, null);
+            }
         }
     }
 
-    void UseItem(Button btn)
+    bool UseItem(Button btn)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         PurchaseItemType itemType = int.Parse(btn.transform.parent.name).ToItemType();
@@ -301,7 +309,7 @@ public class MenuInGame : MonoBehaviour
                     if (ret)
                         break;
                     else
-                        return;
+                        return false;
                 }
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstStage.UseItemMakeSkill1(btn.transform.position, 5);
@@ -312,7 +320,7 @@ public class MenuInGame : MonoBehaviour
                     if (ret)
                         break;
                     else
-                        return;
+                        return false;
                 }
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstStage.UseItemMakeSkill2(btn.transform.position, 5);
@@ -327,6 +335,7 @@ public class MenuInGame : MonoBehaviour
 
         string log = "UseItem," + mStageInfo.Num + "," + itemType + "," + itemType.GetCount();
         LOG.trace(log);
+        return true;
     }
 
     public string TimeToString(int second)
@@ -501,7 +510,7 @@ public class MenuInGame : MonoBehaviour
     {
         if (InGameManager.InstStage.Billboard.CurrentScore < InGameManager.InstStage.Billboard.PredictScoreOnSkip)
             InGameManager.InstStage.Billboard.CurrentScore = InGameManager.InstStage.Billboard.PredictScoreOnSkip;
-            
+
         FinisStagehGame(true);
     }
 

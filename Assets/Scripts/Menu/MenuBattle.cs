@@ -140,7 +140,7 @@ public class MenuBattle : MonoBehaviour
         items = InGameManager.InstPVP_Opponent.UserInfo.PvpItems;
         for (int i = 0; i < 3; ++i)
         {
-            if(items[i] == PurchaseItemType.None)
+            if (items[i] == PurchaseItemType.None)
             {
                 if (isAdsAdded)
                 {
@@ -235,7 +235,7 @@ public class MenuBattle : MonoBehaviour
             Destroy(mMenu.gameObject);
             mMenu = null;
         }
-        
+
         int prevScore = UserSetting.UserScore;
 
         EndPVP req = new EndPVP();
@@ -253,10 +253,10 @@ public class MenuBattle : MonoBehaviour
             //     UserSetting.SetMaxLeague(currentLeague);
         });
 
-        if(!ret)
+        if (!ret)
             MenuInformBox.PopUp("Network Disconnected");
 
-        string log = "PVPEnd," + UserSetting.SessionID + "," + (success?"win":"lose") + "," + InGameManager.InstPVP_Opponent.UserPk;
+        string log = "PVPEnd," + UserSetting.SessionID + "," + (success ? "win" : "lose") + "," + InGameManager.InstPVP_Opponent.UserPk;
         LOG.trace(log);
 
         if (success)
@@ -318,8 +318,10 @@ public class MenuBattle : MonoBehaviour
         {
             if (itemButton.GetItem() == itemType && itemButton.IsUseable())
             {
-                UseItem(itemButton);
-                itemButton.SetEnable(false);
+                if (UseItem(itemButton))
+                {
+                    itemButton.SetEnable(false);
+                }
                 return;
             }
         }
@@ -373,14 +375,20 @@ public class MenuBattle : MonoBehaviour
         }
         else
         {
-            UseItem(btn);
-            btn.SetEnable(false);
+            if (UseItem(btn))
+            {
+                btn.SetEnable(false);
+            }
+            else
+            {
+                MenuMessageBox.PopUp("No effect right now", false, null);
+            }
         }
     }
 
     public void GetOpponentItem(PurchaseItemType itemType, int slotIndex)
     {
-        if(slotIndex < 0 || slotIndex >= OpponentItemSlots.Length)
+        if (slotIndex < 0 || slotIndex >= OpponentItemSlots.Length)
             return;
 
         OpponentItemSlots[slotIndex].SetItem(itemType);
@@ -390,7 +398,7 @@ public class MenuBattle : MonoBehaviour
         OpponentItemSlots[slotIndex].GetComponent<Button>().enabled = false;
     }
 
-    void UseItem(ItemButton btn)
+    bool UseItem(ItemButton btn)
     {
         SoundPlayer.Inst.PlaySoundEffect(SoundPlayer.Inst.EffectButton2);
         PurchaseItemType itemType = btn.GetItem();
@@ -405,7 +413,7 @@ public class MenuBattle : MonoBehaviour
                     if (ret)
                         break;
                     else
-                        return;
+                        return false;
                 }
             case PurchaseItemType.MakeSkill1:
                 InGameManager.InstPVP_Player.UseItemMakeSkill1(btn.transform.position, 5);
@@ -416,7 +424,7 @@ public class MenuBattle : MonoBehaviour
                     if (ret)
                         break;
                     else
-                        return;
+                        return false;
                 }
             case PurchaseItemType.MakeSkill2:
                 InGameManager.InstPVP_Player.UseItemMakeSkill2(btn.transform.position, 5);
@@ -431,24 +439,25 @@ public class MenuBattle : MonoBehaviour
 
         string log = "UseItem," + itemType + "," + itemType.GetCount();
         LOG.trace(log);
+        return true;
     }
 
     public void UseOpponentItem(PurchaseItemType itemType)
     {
         ItemButton btn = null;
-        foreach(ItemButton itemBtn in OpponentItemSlots)
+        foreach (ItemButton itemBtn in OpponentItemSlots)
         {
             if (!itemBtn.IsUseable())
                 continue;
 
-            if(itemBtn.GetItem() == itemType)
+            if (itemBtn.GetItem() == itemType)
             {
                 btn = itemBtn;
                 break;
             }
         }
 
-        if(null == btn)
+        if (null == btn)
             return;
 
         switch (itemType)
