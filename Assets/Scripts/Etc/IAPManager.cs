@@ -25,7 +25,7 @@ public class IAPProduct
 public class IAPManager : MonoBehaviour
 {
     private static IAPManager mInst = null;
-    public static IAPManager Inst { get { if (mInst == null) mInst = FindObjectOfType<IAPManager>(); return mInst; } }
+    public static IAPManager Inst { get { if (mInst == null) mInst = FindFirstObjectByType<IAPManager>(); return mInst; } }
 
     [SerializeField] IAPProduct[] RegistorProducts = null;
 
@@ -62,6 +62,7 @@ public class IAPManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            LOG.trace("[IAP]" + e.Message);
             IsConnected = false;
         }
     }
@@ -95,7 +96,7 @@ public class IAPManager : MonoBehaviour
 
     public void BuyProduct(IAPProductType productType, Action<bool> eventResult)
     {
-        LOG.trace($"Purchase request - Product: {productType.ToString()}");
+        LOG.trace($"[IAP] Purchase request - Product: {productType.ToString()}");
 
         string proID = productType.ToString();
         mProducts[proID].EventResult = eventResult;
@@ -107,14 +108,14 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            LOG.trace("Could not find product in failed order.");
+            LOG.trace("[IAP] Could not find product in failed order.");
             return;
         }
 
-        LOG.trace($"Purchase failed - Product: '{product?.definition.id}'," +
+        LOG.trace($"[IAP] Purchase failed - Product: '{product?.definition.id}'," +
                     $"PurchaseFailureReason: {order.FailureReason.ToString()},"
                     + $"Purchase Failure Details: {order.Details}");
-        
+
         string proID = product.definition.id;
         if (mProducts.ContainsKey(proID))
         {
@@ -128,12 +129,12 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product is null)
         {
-            LOG.trace("Could not find product in order.");
+            LOG.trace("[IAP] Could not find product in order.");
             return;
         }
-        
-        LOG.trace($"Purchase complete - Product: {product.definition.id}");
-        
+
+        LOG.trace($"[IAP] Purchase complete - Product: {product.definition.id}");
+
         m_StoreController.ConfirmPurchase(order);
 
         //Add the purchased product to the players inventory
@@ -156,7 +157,7 @@ public class IAPManager : MonoBehaviour
                 OnPurchaseConfirmationFailed(failedOrder);
                 break;
             default:
-                LOG.trace("Unknown OnPurchaseConfirmed result.");
+                LOG.trace("[IAP] Unknown OnPurchaseConfirmed result.");
                 break;
         }
     }
@@ -166,11 +167,11 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            LOG.trace("Could not find product in purchase confirmation.");
+            LOG.trace("[IAP] Could not find product in purchase confirmation.");
         }
         else
         {
-            LOG.trace($"Purchase confirmed- Product: {product?.definition.id}");
+            LOG.trace($"[IAP] Purchase confirmed- Product: {product?.definition.id}");
         }
     }
 
@@ -179,11 +180,11 @@ public class IAPManager : MonoBehaviour
         var product = GetFirstProductInOrder(order);
         if (product == null)
         {
-            LOG.trace("Could not find product in failed confirmation.");
+            LOG.trace("[IAP] Could not find product in failed confirmation.");
         }
         else
         {
-            LOG.trace($"Confirmation failed - Product: '{product?.definition.id}'," +
+            LOG.trace($"[IAP] Confirmation failed - Product: '{product?.definition.id}'," +
                         $"PurchaseFailureReason: {order.FailureReason.ToString()},"
                         + $"Confirmation Failure Details: {order.Details}");
         }
@@ -197,18 +198,18 @@ public class IAPManager : MonoBehaviour
     // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
     void OnStoreDisconnected(StoreConnectionFailureDescription description)
     {
-        // LOG.trace($"Store disconnected details: {description.message}");
+        LOG.trace($"[IAP] Store disconnected details: {description.message}");
         IsConnected = false;
     }
 
     // Calling StoreController.Connect without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.
     void OnProductsFetched(List<Product> products)
     {
-        // LOG.trace($"Products fetched successfully for {products.Count} products.");
+        // LOG.trace($"[IAP] Products fetched successfully for {products.Count} products.");
     }
 
     void OnProductsFetchedFailed(ProductFetchFailed failure)
     {
-        // LOG.trace($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
+        LOG.trace($"[IAP] Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
     }
 }
