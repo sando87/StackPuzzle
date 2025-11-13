@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,6 +8,11 @@ using UnityEngine.UI;
 public class MenuDiamondShop : MonoBehaviour
 {
     private const string UIObjName = "UISpace/CanvasGameUI/DiamondShop";
+
+    [SerializeField] TextMeshProUGUI _PriceDia1 = null;
+    [SerializeField] TextMeshProUGUI _PriceDia2 = null;
+    [SerializeField] TextMeshProUGUI _PriceDia3 = null;
+    [SerializeField] TextMeshProUGUI _PriceAds = null;
 
     public static void PopUp()
     {
@@ -24,6 +30,11 @@ public class MenuDiamondShop : MonoBehaviour
         // UnityEngine.Purchasing.IAPButton[] btns = GetComponentsInChildren<UnityEngine.Purchasing.IAPButton>();
         // foreach (UnityEngine.Purchasing.IAPButton btn in btns)
         //     btn.IsOKPurchase = OnClickPurchase;
+
+        _PriceDia1.text = IAPManager.Inst.GetPriceString(IAPProductType.joypop_product_dia1.ToString());
+        _PriceDia2.text = IAPManager.Inst.GetPriceString(IAPProductType.joypop_product_dia2.ToString());
+        _PriceDia3.text = IAPManager.Inst.GetPriceString(IAPProductType.joypop_product_dia3.ToString());
+        _PriceAds.text = IAPManager.Inst.GetPriceString(IAPProductType.joypop_product_ads.ToString());
     }
 
     public void OnClose()
@@ -55,7 +66,7 @@ public class MenuDiamondShop : MonoBehaviour
 #else
         MenuMessageBox.PopUp("Purchase(Test) : " + productID, true, (isOK) =>
         {
-            if(isOK)
+            if (isOK)
                 OnResultPurchase(productID, true);
         });
 #endif

@@ -19,6 +19,9 @@ public enum IAPProductType
 public class IAPProduct
 {
     public IAPProductType ID;
+    public string localizedPriceString;
+    public decimal localizedPrice;
+    public string isoCurrencyCode;
     public Action<bool> EventResult;
 }
 
@@ -33,6 +36,7 @@ public class IAPManager : MonoBehaviour
     Dictionary<string, IAPProduct> mProducts = new Dictionary<string, IAPProduct>();
 
     public bool IsConnected { get; private set; } = false;
+    public string GetPriceString(string proID) { return mProducts.ContainsKey(proID) ? mProducts[proID].localizedPriceString : ""; }
 
     void Awake()
     {
@@ -206,6 +210,16 @@ public class IAPManager : MonoBehaviour
     void OnProductsFetched(List<Product> products)
     {
         // LOG.trace($"[IAP] Products fetched successfully for {products.Count} products.");
+        foreach (Product product in products)
+        {
+            string proID = product.definition.id;
+            if (mProducts.ContainsKey(proID))
+            {
+                mProducts[proID].localizedPriceString = product.metadata.localizedPriceString;
+                mProducts[proID].localizedPrice = product.metadata.localizedPrice;
+                mProducts[proID].isoCurrencyCode = product.metadata.isoCurrencyCode;
+            }
+        }
     }
 
     void OnProductsFetchedFailed(ProductFetchFailed failure)
