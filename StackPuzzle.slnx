@@ -1,0 +1,7 @@
+﻿<Solution>
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Google.Play.Common.csproj" />
+  <Project Path="Assembly-CSharp-firstpass.csproj" />
+  <Project Path="Google.Play.Core.csproj" />
+  <Project Path="Google.Play.Review.csproj" />
+</Solution>

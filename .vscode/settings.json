@@ -53,5 +53,5 @@
         "Temp/": true
     },
     "dotnet.preferCSharpExtension": true,
-    "dotnet.defaultSolution": "StackPuzzle.sln"
+    "dotnet.defaultSolution": "StackPuzzle.slnx"
 }
